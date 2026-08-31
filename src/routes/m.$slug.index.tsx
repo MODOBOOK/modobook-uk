@@ -3176,60 +3176,59 @@ function TreatmentRow({
               );
             })()}
           </div>
-          {(() => {
-            const mode = ((t as any).price_mode ?? "fixed") as "fixed" | "from" | "poa" | "free";
-            const pct = (t as any).discount_percent as number | null;
-            const startsAt = (t as any).discount_starts_at as string | null;
-            const endsAt = (t as any).discount_ends_at as string | null;
-            const dows = (t as any).discount_days_of_week as number[] | null;
-            const now = new Date();
-            const inWindow = (!startsAt || new Date(startsAt) <= now)
-              && (!endsAt || new Date(endsAt) >= now)
-              && (!dows || dows.length === 0 || dows.includes(now.getDay()));
-            const allowDiscount = mode !== "poa" && mode !== "free";
-            const hasDisc = allowDiscount && pct != null && pct > 0 && inWindow && price > 0;
-            const discounted = hasDisc ? price * (1 - pct / 100) : price;
-            return (
-              <div className={`flex flex-col items-end leading-tight ${priceSize} ${bold ? "font-bold" : "font-semibold"}`} style={{ color: priceColor }}>
-                {hasDisc && ((t as any).discount_show_was_now !== false) && (
-                  <span className="text-xs font-normal text-muted-foreground line-through">{formatPrice(price, mode)}</span>
-                )}
-                <span className="whitespace-nowrap">{formatPrice(discounted, mode)}</span>
-                {hasDisc && (
-                  <span className="mt-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">−{pct}%</span>
-                )}
-              </div>
-            );
-          })()}
         </div>
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-          <span>{duration} min</span>
-
-          {((t as { session_count?: number }).session_count ?? 1) > 1 && (
-            <span
-              className="rounded-full px-2 py-0.5 text-xs font-semibold"
-              style={{ backgroundColor: `${brand}1a`, color: brand }}
-            >
-              {formatTreatmentSessions(t)}
-            </span>
-          )}
-          {(t as { allow_split_payment?: boolean }).allow_split_payment && (
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-              Split payment available
-            </span>
-          )}
-          {capInfo && (
-            capInfo.full ? (
-              <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">
-                Fully booked
+        {(() => {
+          const mode = ((t as any).price_mode ?? "fixed") as "fixed" | "from" | "poa" | "free";
+          const pct = (t as any).discount_percent as number | null;
+          const startsAt = (t as any).discount_starts_at as string | null;
+          const endsAt = (t as any).discount_ends_at as string | null;
+          const dows = (t as any).discount_days_of_week as number[] | null;
+          const now = new Date();
+          const inWindow = (!startsAt || new Date(startsAt) <= now)
+            && (!endsAt || new Date(endsAt) >= now)
+            && (!dows || dows.length === 0 || dows.includes(now.getDay()));
+          const allowDiscount = mode !== "poa" && mode !== "free";
+          const hasDisc = allowDiscount && pct != null && pct > 0 && inWindow && price > 0;
+          const discounted = hasDisc ? price * (1 - pct / 100) : price;
+          return (
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
+              {hasDisc && ((t as any).discount_show_was_now !== false) && (
+                <span className="text-xs font-normal line-through">{formatPrice(price, mode)}</span>
+              )}
+              <span className={`whitespace-nowrap font-bold ${priceSize}`} style={{ color: priceColor }}>
+                {formatPrice(discounted, mode)}
               </span>
-            ) : (
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                Only {capInfo.left} of {capInfo.cap} left
-              </span>
-            )
-          )}
-        </div>
+              <span>· {duration} min</span>
+              {hasDisc && (
+                <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">−{pct}%</span>
+              )}
+              {((t as { session_count?: number }).session_count ?? 1) > 1 && (
+                <span
+                  className="rounded-full px-2 py-0.5 text-xs font-semibold"
+                  style={{ backgroundColor: `${brand}1a`, color: brand }}
+                >
+                  {formatTreatmentSessions(t)}
+                </span>
+              )}
+              {(t as { allow_split_payment?: boolean }).allow_split_payment && (
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                  Split payment available
+                </span>
+              )}
+              {capInfo && (
+                capInfo.full ? (
+                  <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">
+                    Fully booked
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                    Only {capInfo.left} of {capInfo.cap} left
+                  </span>
+                )
+              )}
+            </div>
+          );
+        })()}
 
 
         {expanded && picture && (

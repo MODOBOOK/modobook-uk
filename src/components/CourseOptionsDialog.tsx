@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { createCourseTreatmentOption, updateTreatment, renameCourseGroup } from "@/lib/treatments.functions";
+import { courseGroupKeyFor, courseGroupLabel } from "@/lib/course-group-label";
 import {
   Dialog,
   DialogContent,
@@ -181,13 +182,17 @@ export function CourseOptionsEditor({
 
   const dbGroupName = useMemo(() => {
     const existing = groupsOf(treatment).find((group) => !isSessionLabel(group));
-    return existing || baseTreatmentName(treatment.name);
+    return existing || courseGroupKeyFor(baseTreatmentName(treatment.name), treatment.id);
   }, [treatment]);
-  const [serviceName, setServiceName] = useState(dbGroupName);
+  const [serviceName, setServiceName] = useState(() => courseGroupLabel(dbGroupName));
   const [savingServiceName, setSavingServiceName] = useState(false);
-  useEffect(() => setServiceName(dbGroupName), [dbGroupName]);
+  useEffect(() => setServiceName(courseGroupLabel(dbGroupName)), [dbGroupName]);
 
-  const groupName = serviceName.trim();
+  // displayLabel is what the client sees; groupName is the internal grouping
+  // key. A treatment with no explicit group gets a unique key so two separate
+  // treatments with the same name never merge into one course row.
+  const displayLabel = serviceName.trim() || courseGroupLabel(dbGroupName);
+  const groupName = displayLabel === courseGroupLabel(dbGroupName) ? dbGroupName : displayLabel;
 
   const matchingOptions = useMemo(() => {
     const inGroup = allTreatments.filter((t) => {
@@ -253,7 +258,7 @@ export function CourseOptionsEditor({
             recommended: d.recommended,
           },
         }) as CourseTreatment;
-        const savedName = `${groupName} — ${sessionLabel}`;
+        const savedName = `${displayLabel} — ${sessionLabel}`;
         await update({
           data: {
             id: created.id,
@@ -287,7 +292,7 @@ export function CourseOptionsEditor({
       await update({
         data: {
           id: t.id,
-          name: `${groupName} — ${sessionLabel}`,
+          name: `${displayLabel} — ${sessionLabel}`,
           course_option_label: sessionLabel,
           price,
           session_count: sessions,
@@ -306,7 +311,7 @@ export function CourseOptionsEditor({
           option.id === t.id
             ? {
                 ...option,
-                 name: `${groupName} — ${sessionLabel}`,
+                 name: `${displayLabel} — ${sessionLabel}`,
                 course_option_label: sessionLabel,
                 price,
                 session_count: sessions,
@@ -367,7 +372,7 @@ export function CourseOptionsEditor({
     const option: CourseTreatment = {
       ...treatment,
       id,
-      name: `${groupName} — ${sessionLabel}`,
+      name: `${displayLabel} — ${sessionLabel}`,
       course_option_label: sessionLabel,
       price: 0,
       session_count: sessions,
@@ -413,7 +418,7 @@ export function CourseOptionsEditor({
       toast.error("Enter a service name");
       return;
     }
-    if (trimmed === dbGroupName) return;
+    if (trimmed === courseGroupLabel(dbGroupName)) return;
     setSavingServiceName(true);
     try {
       await renameGroup({ data: { oldGroup: dbGroupName, newGroup: trimmed } });
