@@ -98,7 +98,7 @@ function MultiBookPage() {
   const search = Route.useSearch();
   const ids = (search.ids ?? "").split(",").filter(Boolean);
   const packageIds = (search.pkgs ?? "").split(",").filter(Boolean);
-  const selectedPackages = ((ctx as { selectedPackages?: Array<{ id: string; name: string; price: number; session_count: number; allow_split_payment?: boolean; firstTreatmentId: string | null }> }).selectedPackages ?? [])
+  const selectedPackages = ((ctx as { selectedPackages?: Array<{ id: string; name: string; description?: string | null; is_custom?: boolean; compare_at_price?: number | null; price: number; session_count: number; allow_split_payment?: boolean; firstTreatmentId: string | null }> }).selectedPackages ?? [])
     .filter((p) => packageIds.includes(p.id));
   const redirectPath = `/m/${slug}/book-multi?ids=${encodeURIComponent(ids.join(","))}${packageIds.length ? `&pkgs=${encodeURIComponent(packageIds.join(","))}` : ""}`;
 
