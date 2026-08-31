@@ -258,7 +258,7 @@ export function CourseOptionsEditor({
             recommended: d.recommended,
           },
         }) as CourseTreatment;
-        const savedName = `${groupName} — ${sessionLabel}`;
+        const savedName = `${displayLabel} — ${sessionLabel}`;
         await update({
           data: {
             id: created.id,
@@ -292,7 +292,7 @@ export function CourseOptionsEditor({
       await update({
         data: {
           id: t.id,
-          name: `${groupName} — ${sessionLabel}`,
+          name: `${displayLabel} — ${sessionLabel}`,
           course_option_label: sessionLabel,
           price,
           session_count: sessions,
@@ -311,7 +311,7 @@ export function CourseOptionsEditor({
           option.id === t.id
             ? {
                 ...option,
-                 name: `${groupName} — ${sessionLabel}`,
+                 name: `${displayLabel} — ${sessionLabel}`,
                 course_option_label: sessionLabel,
                 price,
                 session_count: sessions,
@@ -372,7 +372,7 @@ export function CourseOptionsEditor({
     const option: CourseTreatment = {
       ...treatment,
       id,
-      name: `${groupName} — ${sessionLabel}`,
+      name: `${displayLabel} — ${sessionLabel}`,
       course_option_label: sessionLabel,
       price: 0,
       session_count: sessions,
