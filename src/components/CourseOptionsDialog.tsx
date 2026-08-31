@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { createCourseTreatmentOption, updateTreatment } from "@/lib/treatments.functions";
+import { createCourseTreatmentOption, updateTreatment, renameCourseGroup } from "@/lib/treatments.functions";
 import {
   Dialog,
   DialogContent,
@@ -170,6 +170,7 @@ export function CourseOptionsEditor({
 }) {
   const createOption = useServerFn(createCourseTreatmentOption);
   const update = useServerFn(updateTreatment);
+  const renameGroup = useServerFn(renameCourseGroup);
   const [newSessions, setNewSessions] = useState("3 sessions");
   const [newCount, setNewCount] = useState("3");
   const [unitLabel, setUnitLabel] = useState(
@@ -178,21 +179,26 @@ export function CourseOptionsEditor({
   const [ctaLabel, setCtaLabel] = useState((treatment.course_cta_label ?? "").trim());
   const [savingWording, setSavingWording] = useState(false);
 
-  const groupName = useMemo(() => {
+  const dbGroupName = useMemo(() => {
     const existing = groupsOf(treatment).find((group) => !isSessionLabel(group));
     return existing || baseTreatmentName(treatment.name);
   }, [treatment]);
+  const [serviceName, setServiceName] = useState(dbGroupName);
+  const [savingServiceName, setSavingServiceName] = useState(false);
+  useEffect(() => setServiceName(dbGroupName), [dbGroupName]);
+
+  const groupName = serviceName.trim();
 
   const matchingOptions = useMemo(() => {
     const inGroup = allTreatments.filter((t) => {
       const explicitGroup = groupsOf(t).find((group) => !isSessionLabel(group));
-      return (explicitGroup || baseTreatmentName(t.name)) === groupName && groupsOf(t).length > 0;
+      return (explicitGroup || baseTreatmentName(t.name)) === dbGroupName && groupsOf(t).length > 0;
     });
     const list = inGroup.length ? inGroup : [treatment];
     return [...list].sort(
       (a, b) => (a.session_count ?? 1) - (b.session_count ?? 1) || a.price - b.price,
     );
-  }, [allTreatments, groupName, treatment]);
+  }, [allTreatments, dbGroupName, treatment]);
   const [options, setOptions] = useState<CourseTreatment[]>(matchingOptions);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
     () => new Set(matchingOptions.slice(0, 1).map((option) => option.id)),
@@ -397,7 +403,37 @@ export function CourseOptionsEditor({
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save wording");
     } finally {
-      setSavingWording(false);
+    setSavingWording(false);
+    }
+  }
+
+  async function saveServiceName() {
+    const trimmed = serviceName.trim();
+    if (!trimmed) {
+      toast.error("Enter a service name");
+      return;
+    }
+    if (trimmed === dbGroupName) return;
+    setSavingServiceName(true);
+    try {
+      await renameGroup({ data: { oldGroup: dbGroupName, newGroup: trimmed } });
+      setOptions((current) =>
+        current.map((o) => {
+          const label = (o.course_option_label ?? "").trim();
+          return {
+            ...o,
+            name: label ? `${trimmed} — ${label}` : trimmed,
+            course_group: trimmed,
+            course_groups: [trimmed],
+          };
+        }),
+      );
+      toast.success("Service name updated");
+      await onSaved();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update service name");
+    } finally {
+      setSavingServiceName(false);
     }
   }
 
@@ -405,10 +441,28 @@ export function CourseOptionsEditor({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border bg-muted/30 p-3">
-        <p className="text-sm font-semibold">{groupName}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Add a session amount, then open its section to set the price, payment choice and spacing.
+      <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+        <Label className="text-xs">Service name</Label>
+        <div className="flex items-end gap-2">
+          <Input
+            value={serviceName}
+            onChange={(e) => setServiceName(e.target.value)}
+            placeholder="e.g. Chin Filler"
+            disabled={savingServiceName}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={savingServiceName || serviceName.trim() === dbGroupName}
+            onClick={saveServiceName}
+          >
+            <Save className="mr-1.5 h-4 w-4" />
+            {savingServiceName ? "Saving…" : "Update"}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          This is the name patients see on the booking page.
         </p>
       </div>
 

@@ -324,6 +324,51 @@ export const createCourseTreatmentOption = createServerFn({ method: "POST" })
     return created;
   });
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export const renameCourseGroup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: { oldGroup: string; newGroup: string }) => input,
+  )
+  .handler(async ({ data, context }) => {
+    const profileId = await __activeProfileId(context.supabase, context.userId);
+    const oldGroup = data.oldGroup.trim();
+    const newGroup = data.newGroup.trim();
+    if (!oldGroup || !newGroup) throw new Error("Enter a service name");
+    if (oldGroup === newGroup) return { updated: 0 };
+
+    const { data: rows, error: fetchErr } = await context.supabase
+      .from("treatments")
+      .select("id, name, course_option_label, session_count")
+      .eq("profile_id", profileId)
+      .or(`course_group.eq.${oldGroup},course_groups.cs.{${oldGroup}}`);
+    if (fetchErr) throw fetchErr;
+
+    const prefixRe = new RegExp(`^${escapeRegExp(oldGroup)}\\s*[—-]\\s*`, "i");
+    let updated = 0;
+    for (const row of rows ?? []) {
+      const savedLabel = (row.course_option_label ?? "").trim();
+      const remainder = savedLabel || row.name.replace(prefixRe, "").trim();
+      const label = remainder && remainder !== row.name ? remainder : null;
+      const newName = label ? `${newGroup} — ${label}` : newGroup;
+      const { error } = await context.supabase
+        .from("treatments")
+        .update({
+          name: newName,
+          course_group: newGroup,
+          course_groups: [newGroup],
+        })
+        .eq("id", row.id)
+        .eq("profile_id", profileId);
+      if (error) throw error;
+      updated++;
+    }
+    return { updated };
+  });
+
 
 export const deleteTreatment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

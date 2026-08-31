@@ -90,7 +90,7 @@ export function CourseGroupRow({
   const cta = ctaRaw || `Choose your ${unitPlural}`;
   const sorted = [...options].sort((a, b) => a.session_count - b.session_count || a.price - b.price);
   const single = sorted.find((o) => o.session_count <= 1) ?? sorted[0];
-  const displayName = treatmentName(single?.name ?? "") || groupName;
+  const displayName = groupName || treatmentName(single?.name ?? "");
   const chosen = sorted.filter((o) => isSelected(o.id));
   const blurb = single?.description ?? sorted.find((o) => o.description)?.description ?? null;
   const anySplit = sorted.some((o) => o.allow_split_payment && o.session_count > 1);
