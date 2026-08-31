@@ -1087,7 +1087,7 @@ function BookPage() {
           <section
             data-modo-section
             className="relative overflow-hidden"
-            style={{ backgroundColor: brand, color: heroTextColor }}
+            style={{ backgroundColor: theme?.hero_overlay_color || brand, color: heroTextColor }}
           >
             {/* Faint radial accent behind the portrait */}
             <div
