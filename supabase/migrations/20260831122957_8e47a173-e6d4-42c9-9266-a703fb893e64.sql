@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.add_default_reminder_rule() FROM PUBLIC, anon, authenticated;
