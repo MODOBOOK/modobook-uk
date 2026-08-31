@@ -812,11 +812,18 @@ function MultiBookPage() {
                       <div key={p.id} className="flex items-center justify-between text-sm border-b last:border-b-0 py-2">
                         <div>
                           <div className="font-medium" style={{ color: brand }}>{p.name}</div>
+                          {p.description && <div className="text-xs opacity-80">{p.description}</div>}
                           <div className="text-xs opacity-70">{p.session_count} session{p.session_count === 1 ? "" : "s"} · first session booked below, remaining tracked in your account</div>
                         </div>
                         {showPrices && (
                           <div className="text-right">
-                            <div className="font-semibold whitespace-nowrap" style={{ color: brand }}>£{p.price.toFixed(2)}</div>
+                            <div className="font-semibold whitespace-nowrap" style={{ color: brand }}>
+                              {p.compare_at_price != null && p.compare_at_price > p.price && (
+                                <span className="mr-1.5 text-xs font-normal opacity-50 line-through">£{p.compare_at_price.toFixed(2)}</span>
+                              )}
+                              £{p.price.toFixed(2)}
+                            </div>
+
                             {Boolean(p.allow_split_payment) && Math.max(1, Number(p.session_count ?? 1)) > 1 && (
                               <div className="text-[11px] opacity-70">
                                 or £{(p.price / Math.max(1, Number(p.session_count ?? 1))).toFixed(2)} per session
