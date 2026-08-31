@@ -126,6 +126,10 @@ function PayPage() {
     window.addEventListener("pagehide", onPageHide);
     return () => {
       window.removeEventListener("pagehide", onPageHide);
+      // Also release on in-app navigation away (e.g. browser Back inside the
+      // SPA never fires pagehide). Guarded: once the patient has pressed Pay,
+      // confirmingRef/confirmed keep the hold alive through bank auth.
+      release();
     };
   }, [details, confirmed]);
 

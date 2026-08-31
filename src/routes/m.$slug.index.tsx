@@ -1087,7 +1087,7 @@ function BookPage() {
           <section
             data-modo-section
             className="relative overflow-hidden"
-            style={{ backgroundColor: brand, color: heroTextColor }}
+            style={{ backgroundColor: theme?.hero_overlay_color || brand, color: heroTextColor }}
           >
             {/* Faint radial accent behind the portrait */}
             <div
@@ -1212,7 +1212,7 @@ function BookPage() {
       <div
         aria-hidden
         className="h-10 sm:h-14"
-        style={{ background: `linear-gradient(to bottom, ${brand}, ${bgColor})` }}
+        style={{ background: `linear-gradient(to bottom, ${theme?.hero_overlay_color || brand}, ${bgColor})` }}
       />
 
 

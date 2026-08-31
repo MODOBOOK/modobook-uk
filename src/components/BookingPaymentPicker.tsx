@@ -68,15 +68,16 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
 
   const treatmentTotalCents = Math.round(totalAmount * 100);
 
-  // An explicit treatment-level override of £0 waives the deposit entirely for
-  // this treatment — the patient books with no deposit, or pays in full.
-  const depositWaived = depositOverrideCents != null && depositOverrideCents <= 0;
+  // Only a positive treatment-level amount counts as an override. The column
+  // historically defaulted to 0, which must NOT waive the clinic deposit.
+  const effectiveOverride = depositOverrideCents != null && depositOverrideCents > 0 ? depositOverrideCents : null;
+  const depositWaived = false;
 
   const effectiveDepositCents = useMemo(() => {
     if (!configured) return 0;
     if (depositWaived) return 0;
     const o = opts as ConfiguredOptions;
-    if (depositOverrideCents != null && depositOverrideCents > 0) return depositOverrideCents;
+    if (effectiveOverride != null) return effectiveOverride;
     if (o.depositType === "percent" && o.depositPercent > 0) {
       return Math.round((treatmentTotalCents * o.depositPercent) / 100);
     }

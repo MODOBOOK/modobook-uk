@@ -1115,12 +1115,12 @@ async function maybeCreateBookingCheckout(args: {
           treatments?: { deposit_amount?: number | null; price?: number | null } | null;
         };
         const t = row.treatments;
-        const override = t?.deposit_amount != null ? Math.round(Number(t.deposit_amount) * 100) : null;
+        const overrideRaw = t?.deposit_amount != null ? Math.round(Number(t.deposit_amount) * 100) : null;
+        // Only a positive amount counts as an override — the column used to
+        // default to 0, which silently waived deposits for every treatment.
+        const override = overrideRaw != null && overrideRaw > 0 ? overrideRaw : null;
         if (override != null) {
-          // An explicit override wins — including £0, which waives the deposit
-          // for this treatment entirely.
-          total += Math.max(0, override);
-
+          total += override;
         } else if (depositTypeMode === "percent" && depositPct > 0) {
           // Standard bookings: % of the treatment price, exactly as before.
           // Model slots are priced separately, so they use the booked amount.

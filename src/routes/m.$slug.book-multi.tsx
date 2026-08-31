@@ -1500,8 +1500,8 @@ function MultiBookPage() {
                       accent={brand}
                       depositOverrideCents={(() => {
                         const values = treatments.map((t) => (t as { deposit_amount?: number | null }).deposit_amount);
-                        // Every treatment explicitly waived (£0) → no deposit at all.
-                        if (values.length > 0 && values.every((v) => v != null && Number(v) <= 0)) return 0;
+                        // Only positive amounts count as overrides — 0 was the
+                        // old column default and must fall back to clinic default.
                         const overrides = values.filter((v): v is number => v != null && v > 0);
                         if (overrides.length === 0) return null;
                         return Math.round(overrides.reduce((a, b) => a + b, 0) * 100);
