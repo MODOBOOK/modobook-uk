@@ -90,10 +90,21 @@ export function upcomingEnabled(slug?: string | null) {
  * pilot clinics while we finish carrier-filter testing. Everyone else sees
  * "Coming soon" and can never send (even test messages).
  */
-export const WHATSAPP_SLUGS: string[] = ["aestheticsbynurseryan", "aesthetiqbyjen"];
+export const WHATSAPP_SLUGS: string[] = ["aestheticsbynurseryan", "aesthetiqbyjen", "na-aesthetics"];
 
 export function whatsappMessagingEnabled(slug?: string | null) {
   return isFeatureLive(WHATSAPP_SLUGS, slug);
+}
+
+/**
+ * Clinics in the SMS pilot but limited to appointment-reminder texts only
+ * (no confirmations, cancellations, rebook or review texts) until the full
+ * rollout to everyone.
+ */
+export const WHATSAPP_REMINDER_ONLY_SLUGS: string[] = ["na-aesthetics"];
+
+export function whatsappReminderOnly(slug?: string | null) {
+  return isFeatureLive(WHATSAPP_REMINDER_ONLY_SLUGS, slug);
 }
 
 
