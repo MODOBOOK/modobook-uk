@@ -87,9 +87,6 @@ export function CourseGroupRow({
   const unitOf = (n: number) => (n === 1 ? unitSingular : unitPlural);
   const ctaRaw = (options.find((o) => (o.cta_label ?? "").trim())?.cta_label ?? "").trim();
   const cta = ctaRaw || `Choose your ${unitPlural}`;
-  const ctaWords = cta.split(" ");
-  const ctaTail = ctaWords.length > 1 ? (ctaWords.pop() ?? "") : "";
-  const ctaHead = ctaWords.join(" ");
   const sorted = [...options].sort((a, b) => a.session_count - b.session_count || a.price - b.price);
   const single = sorted.find((o) => o.session_count <= 1) ?? sorted[0];
   const displayName = treatmentName(single?.name ?? "") || groupName;
@@ -143,32 +140,35 @@ export function CourseGroupRow({
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
-            <div className={`min-w-0 flex-1 leading-tight ${nameSize} ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
-              {displayName}
+            <div className="min-w-0 flex-1">
+              <div className={`leading-tight ${nameSize} ${bold ? "font-bold" : "font-medium"}`} style={{ color: nameColor }}>
+                {displayName}
+              </div>
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
+                {Number.isFinite(fromPrice) && (
+                  <span className="font-bold" style={{ color: priceColor }}>
+                    <span className="text-xs font-semibold opacity-70">from </span>£{fromPrice.toFixed(2)}
+                  </span>
+                )}
+                {single?.duration ? <span>· {single.duration} min</span> : null}
+                {anySplit && (
+                  <span className="rounded-full bg-emerald-100 px-2 py-px text-[11px] font-semibold text-emerald-700">
+                    Split payment
+                  </span>
+                )}
+              </div>
             </div>
-            <div className={`shrink-0 text-right font-bold leading-tight ${actionSize}`} style={{ color: priceColor }}>
-              {Number.isFinite(fromPrice) && (
-                <span className="block">
-                  <span className="text-xs font-semibold opacity-70">from </span>£{fromPrice.toFixed(2)}
-                </span>
-              )}
-              <span className="block text-sm font-semibold opacity-80">{ctaHead}</span>
-              {ctaTail && <span className="block text-sm font-semibold opacity-80">{ctaTail}</span>}
-            </div>
+            <span
+              className={`shrink-0 self-center rounded-full px-3 py-1.5 text-xs font-semibold ${actionSize === "text-lg" ? "sm:px-4 sm:py-2 sm:text-sm" : ""}`}
+              style={{ backgroundColor: `${brand}14`, color: brand }}
+            >
+              {cta}
+            </span>
           </div>
 
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-            {single?.duration ? <span>{single.duration} min</span> : null}
-            {anySplit && (
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                Split payment available
-              </span>
-            )}
-          </div>
-
-          {blurb && <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{blurb}</p>}
+          {blurb && <p className="mt-1 line-clamp-2 text-sm leading-snug text-muted-foreground">{blurb}</p>}
           {chosen.length > 0 && (
-            <div className="mt-1.5 text-sm font-semibold" style={{ color: brand }}>
+            <div className="mt-1 text-sm font-semibold" style={{ color: brand }}>
               Added: {chosen.map((c) => optionName(c.name, groupName, c.session_count, unitPlural, c.option_label)).join(", ")}
             </div>
           )}
@@ -179,7 +179,7 @@ export function CourseGroupRow({
                 e.stopPropagation();
                 setDetailsOpen(true);
               }}
-              className="mt-1.5 text-sm font-semibold"
+              className="mt-1 text-xs font-semibold"
               style={{ color: brand }}
             >
               Read more
