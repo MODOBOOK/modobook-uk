@@ -157,7 +157,7 @@ export function CourseGroupRow({
             </div>
           </div>
 
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
             {single?.duration ? <span>{single.duration} min</span> : null}
             {anySplit && (
               <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
@@ -166,7 +166,7 @@ export function CourseGroupRow({
             )}
           </div>
 
-          {blurb && <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{blurb}</p>}
+          {blurb && <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{blurb}</p>}
           {chosen.length > 0 && (
             <div className="mt-1.5 text-sm font-semibold" style={{ color: brand }}>
               Added: {chosen.map((c) => optionName(c.name, groupName, c.session_count, unitPlural, c.option_label)).join(", ")}
