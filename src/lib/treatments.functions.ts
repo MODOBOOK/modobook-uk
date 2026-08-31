@@ -240,8 +240,25 @@ export const updateTreatment = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw error;
+
+    // Keep every option of a course in the same category as the treatment that
+    // was just moved — otherwise the sessions picker splits across categories
+    // and the course looks like it lost its sessions on the booking page.
+    if (data.category_id !== undefined && treatment) {
+      const row = treatment as { course_group?: string | null; profile_id?: string | null };
+      const group = (row.course_group ?? "").trim();
+      if (group && row.profile_id) {
+        await supabase
+          .from("treatments")
+          .update({ category_id: data.category_id } as never)
+          .eq("profile_id", row.profile_id)
+          .eq("course_group", group)
+          .neq("id", data.id);
+      }
+    }
     return treatment;
   });
+
 
 export const createCourseTreatmentOption = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
