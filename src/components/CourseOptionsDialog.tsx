@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { createCourseTreatmentOption, updateTreatment, renameCourseGroup } from "@/lib/treatments.functions";
+import { courseGroupKeyFor, courseGroupLabel } from "@/lib/course-group-label";
 import {
   Dialog,
   DialogContent,
@@ -417,7 +418,7 @@ export function CourseOptionsEditor({
       toast.error("Enter a service name");
       return;
     }
-    if (trimmed === dbGroupName) return;
+    if (trimmed === courseGroupLabel(dbGroupName)) return;
     setSavingServiceName(true);
     try {
       await renameGroup({ data: { oldGroup: dbGroupName, newGroup: trimmed } });
