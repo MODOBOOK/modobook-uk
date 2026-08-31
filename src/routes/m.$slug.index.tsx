@@ -3190,29 +3190,25 @@ function TreatmentRow({
             const hasDisc = allowDiscount && pct != null && pct > 0 && inWindow && price > 0;
             const discounted = hasDisc ? price * (1 - pct / 100) : price;
             return (
-              <div className={`flex flex-col items-end leading-tight ${priceSize} ${bold ? "font-bold" : "font-semibold"}`} style={{ color: priceColor }}>
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
                 {hasDisc && ((t as any).discount_show_was_now !== false) && (
-                  <span className="text-xs font-normal text-muted-foreground line-through">{formatPrice(price, mode)}</span>
+                  <span className="text-xs font-normal line-through">{formatPrice(price, mode)}</span>
                 )}
-                <span className="whitespace-nowrap">{formatPrice(discounted, mode)}</span>
+                <span className={`whitespace-nowrap font-bold ${priceSize}`} style={{ color: priceColor }}>
+                  {formatPrice(discounted, mode)}
+                </span>
+                <span>· {duration} min</span>
                 {hasDisc && (
-                  <span className="mt-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">−{pct}%</span>
+                  <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">−{pct}%</span>
                 )}
-              </div>
-            );
-          })()}
-        </div>
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-          <span>{duration} min</span>
-
-          {((t as { session_count?: number }).session_count ?? 1) > 1 && (
-            <span
-              className="rounded-full px-2 py-0.5 text-xs font-semibold"
-              style={{ backgroundColor: `${brand}1a`, color: brand }}
-            >
-              {formatTreatmentSessions(t)}
-            </span>
-          )}
+                {((t as { session_count?: number }).session_count ?? 1) > 1 && (
+                  <span
+                    className="rounded-full px-2 py-0.5 text-xs font-semibold"
+                    style={{ backgroundColor: `${brand}1a`, color: brand }}
+                  >
+                    {formatTreatmentSessions(t)}
+                  </span>
+                )}
           {(t as { allow_split_payment?: boolean }).allow_split_payment && (
             <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
               Split payment available
