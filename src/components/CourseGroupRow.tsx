@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Check, Sparkles } from "lucide-react";
+import { courseGroupLabel } from "@/lib/course-group-label";
 
 export type CourseOption = {
   id: string;
