@@ -164,6 +164,21 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
       return { ok: false, skipped: 'clinic-not-enabled' }
     }
 
+    // Reminder-only clinics (e.g. NA Aesthetics): block every text type
+    // except appointment reminders until the full SMS rollout.
+    if (input.profileId && input.kind !== 'appointment-reminder') {
+      const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+      const { data: prof } = await supabaseAdmin
+        .from('profiles')
+        .select('slug')
+        .eq('id', input.profileId)
+        .maybeSingle()
+      const { whatsappReminderOnly } = await import('@/lib/feature-flags')
+      if (whatsappReminderOnly((prof as { slug?: string } | null)?.slug ?? null)) {
+        return { ok: false, skipped: 'reminder-only' }
+      }
+    }
+
     // Per-clinic master switch + per-message-type switch
     if (!input.force) {
       const cfg = await getClinicWhatsAppSettings(input.profileId)

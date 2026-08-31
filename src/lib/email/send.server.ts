@@ -75,7 +75,11 @@ export async function enqueueAppEmail(
         (chProfile as { sms_channels?: Record<string, unknown> } | null)?.sms_channels ?? null,
         channelKey as never,
       )
-      if (ch === 'sms' || ch === 'off') {
+      // Reminder types always go by email too: a clinic that chose "text
+      // only" still gets the email unless they turned the reminder off.
+      const REMINDER_TYPES = new Set(['appointment-reminder', 'rebook-reminder', 'topup-reminder'])
+      const emailForced = REMINDER_TYPES.has(input.templateName as string)
+      if (ch === 'off' || (ch === 'sms' && !emailForced)) {
         return { ok: true, skipped: `channel-${ch}` }
       }
     } catch { /* channel lookup is best-effort */ }
