@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   getMyCategories,
   createCategory,
@@ -1036,8 +1036,8 @@ function CategoryDialog({
   onClose: () => void;
   onSubmit: (v: {
     name: string;
-    description?: string;
-    icon?: string;
+    description?: string | null;
+    icon?: string | null;
     coming_soon_at?: string | null;
     parent_id?: string | null;
     is_limited?: boolean;
@@ -1056,7 +1056,7 @@ function CategoryDialog({
   const [limStart, setLimStart] = useState("");
   const [limEnd, setLimEnd] = useState("");
 
-  useMemo(() => {
+  useEffect(() => {
     if (open) {
       setName(state?.cat?.name ?? "");
       setDescription(state?.cat?.description ?? "");
@@ -1193,8 +1193,8 @@ function CategoryDialog({
               setSaving(true);
               await onSubmit({
                 name: name.trim(),
-                description: description.trim() || undefined,
-                icon: icon.trim() || undefined,
+                description: description.trim() || null,
+                icon: icon.trim() || null,
                 coming_soon_at: comingSoon ? new Date(comingSoon + "T00:00:00").toISOString() : null,
                 parent_id: parentId,
                 is_limited: limited,
