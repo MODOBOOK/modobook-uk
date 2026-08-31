@@ -743,11 +743,20 @@ function MultiBookPage() {
           <div key={p.id} className="flex justify-between gap-3 border-b pb-2 last:border-b-0">
             <div>
               <div className="font-medium" style={{ color: brand }}>{p.name}</div>
+              {p.description && <div className="text-[11px] opacity-70">{p.description}</div>}
               <div className="text-[11px] opacity-70">{p.session_count} session{p.session_count === 1 ? "" : "s"}</div>
             </div>
-            {showPrices && <div className="whitespace-nowrap font-semibold" style={{ color: brand }}>£{p.price.toFixed(2)}</div>}
+            {showPrices && (
+              <div className="whitespace-nowrap text-right font-semibold" style={{ color: brand }}>
+                {p.compare_at_price != null && p.compare_at_price > p.price && (
+                  <span className="mr-1.5 text-[11px] font-normal opacity-50 line-through">£{p.compare_at_price.toFixed(2)}</span>
+                )}
+                £{p.price.toFixed(2)}
+              </div>
+            )}
           </div>
         ))}
+
         {treatments.map((t) => (
           <div key={t.id} className="flex justify-between gap-3 border-b pb-2 last:border-b-0">
             <div>
