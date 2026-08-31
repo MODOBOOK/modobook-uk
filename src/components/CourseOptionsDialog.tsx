@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { ChevronDown, ChevronUp, Layers, Plus, Save, Sparkles, Unlink } from "lucide-react";
@@ -254,9 +255,11 @@ export function CourseOptionsEditor({
             course_option_label: sessionLabel,
             course_unit_label: unitLabel.trim() || "sessions",
             course_cta_label: ctaLabel.trim() || null,
+            description: d.desc.trim() || null,
           },
         });
         created.name = savedName;
+        created.description = d.desc.trim() || null;
         setOptions((current) => current
           .map((option) => option.id === t.id ? created : option)
           .sort((a, b) => (a.session_count ?? 1) - (b.session_count ?? 1) || a.price - b.price));
@@ -289,6 +292,7 @@ export function CourseOptionsEditor({
           course_groups: [groupName],
           course_unit_label: unitLabel.trim() || "sessions",
           course_cta_label: ctaLabel.trim() || null,
+          description: d.desc.trim() || null,
         },
       });
       setOptions((current) =>
@@ -302,10 +306,11 @@ export function CourseOptionsEditor({
                 session_count: sessions,
                 allow_split_payment: sessions > 1 ? d.split : false,
                 session_interval_days: weeks > 0 ? Math.round(weeks * 7) : null,
-                course_recommended: d.recommended,
-                course_group: groupName,
-                course_groups: [groupName],
-              }
+                 course_recommended: d.recommended,
+                 course_group: groupName,
+                 course_groups: [groupName],
+                 description: d.desc.trim() || null,
+               }
             : option,
         ),
       );
@@ -525,8 +530,17 @@ export function CourseOptionsEditor({
                       <Label className="text-xs">Weeks apart</Label>
                       <Input type="number" min={0} placeholder="e.g. 4" value={d.weeks} onChange={(e) => patch(o.id, o, { weeks: e.target.value })} />
                     </div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-4">
+                   </div>
+                   <div className="space-y-1">
+                     <Label className="text-xs">Description (optional)</Label>
+                     <Textarea
+                       rows={2}
+                       placeholder="Short note clients see for this option, e.g. what's included"
+                       value={d.desc}
+                       onChange={(e) => patch(o.id, o, { desc: e.target.value })}
+                     />
+                   </div>
+                   <div className="flex flex-wrap items-center gap-4">
                     <label className="flex items-center gap-2 text-sm">
                       <Switch checked={d.split && sessions > 1} disabled={sessions <= 1} onCheckedChange={(v) => patch(o.id, o, { split: v })} />
                       Split payment
