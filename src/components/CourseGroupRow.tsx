@@ -87,9 +87,6 @@ export function CourseGroupRow({
   const unitOf = (n: number) => (n === 1 ? unitSingular : unitPlural);
   const ctaRaw = (options.find((o) => (o.cta_label ?? "").trim())?.cta_label ?? "").trim();
   const cta = ctaRaw || `Choose your ${unitPlural}`;
-  const ctaWords = cta.split(" ");
-  const ctaTail = ctaWords.length > 1 ? (ctaWords.pop() ?? "") : "";
-  const ctaHead = ctaWords.join(" ");
   const sorted = [...options].sort((a, b) => a.session_count - b.session_count || a.price - b.price);
   const single = sorted.find((o) => o.session_count <= 1) ?? sorted[0];
   const displayName = treatmentName(single?.name ?? "") || groupName;
