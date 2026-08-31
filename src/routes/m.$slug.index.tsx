@@ -1212,7 +1212,7 @@ function BookPage() {
       <div
         aria-hidden
         className="h-10 sm:h-14"
-        style={{ background: `linear-gradient(to bottom, ${brand}, ${bgColor})` }}
+        style={{ background: `linear-gradient(to bottom, ${theme?.hero_overlay_color || brand}, ${bgColor})` }}
       />
 
 
