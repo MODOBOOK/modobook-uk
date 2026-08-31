@@ -178,8 +178,21 @@ function MultiBookPage() {
     return t.duration ?? 30;
   };
 
+  // Treatments auto-added by a package are covered by the package price —
+  // don't charge for them twice.
+  const packageCoveredIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of selectedPackages) {
+      if (p.firstTreatmentId && !ids.includes(p.firstTreatmentId)) set.add(p.firstTreatmentId);
+    }
+    return set;
+  }, [selectedPackages, ids]);
+
   const totalDurationBase = treatments.reduce((s, t) => s + durationFor(t), 0);
-  const totalPriceBase = treatments.reduce((s, t) => s + priceFor(t), 0);
+  const packagesPrice = selectedPackages.reduce((s, p) => s + Number(p.price ?? 0), 0);
+  const totalPriceBase =
+    treatments.reduce((s, t) => s + (packageCoveredIds.has(t.id) ? 0 : priceFor(t)), 0) + packagesPrice;
+
 
   // Add-ons (new system) — fetched after treatment selection
   const addonsQuery = useQuery({
