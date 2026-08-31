@@ -127,7 +127,7 @@ export const updateTreatment = createServerFn({ method: "POST" })
       name?: string;
       duration?: number;
       price?: number;
-      description?: string;
+      description?: string | null;
       timing_notes?: string;
       consent_form_url?: string;
       picture_url?: string;
