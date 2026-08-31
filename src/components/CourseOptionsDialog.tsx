@@ -98,6 +98,7 @@ function sessionLabelFrom(t: CourseTreatment): string {
 type Draft = {
   id: string;
   sessions: string;
+  desc: string;
   count: string;
   price: string;
   weeks: string;
@@ -111,6 +112,7 @@ function draftFrom(t: CourseTreatment): Draft {
   return {
     id: t.id,
     sessions: sessionLabelFrom(t),
+    desc: t.description ?? "",
     count: String(t.session_count ?? sessionCountFromLabel(sessionLabelFrom(t)) ?? 1),
     price: String(t.price ?? 0),
     weeks: days > 0 ? String(Math.round(days / 7)) : "",

@@ -234,6 +234,9 @@ export function CourseGroupRow({
                         {o.duration ? `${o.duration} min each` : ""}
                         {o.full ? " · fully booked" : ""}
                       </div>
+                      {o.description && o.description !== blurb && (
+                        <p className="mt-1 whitespace-pre-line text-xs leading-relaxed opacity-80">{o.description}</p>
+                      )}
                       {o.session_count > 1 && (
                         <p className="mt-1 text-xs opacity-70">
                           £{perSession.toFixed(2)} per {unitSingular}
@@ -325,6 +328,9 @@ export function CourseGroupRow({
                       {o.duration ? `${o.duration} min each` : null}
                       {spacingLabel(o.interval_days) ? ` · ${spacingLabel(o.interval_days)}` : ""}
                     </div>
+                    {o.description && o.description !== blurb && (
+                      <p className="mt-1 whitespace-pre-line text-xs leading-relaxed opacity-80">{o.description}</p>
+                    )}
                     {o.allow_split_payment && o.session_count > 1 && (
                       <div className="mt-0.5 text-xs font-medium" style={{ color: brand }}>
                         Split payment available
