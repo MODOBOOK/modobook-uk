@@ -98,7 +98,7 @@ function MultiBookPage() {
   const search = Route.useSearch();
   const ids = (search.ids ?? "").split(",").filter(Boolean);
   const packageIds = (search.pkgs ?? "").split(",").filter(Boolean);
-  const selectedPackages = ((ctx as { selectedPackages?: Array<{ id: string; name: string; price: number; session_count: number; allow_split_payment?: boolean; firstTreatmentId: string | null }> }).selectedPackages ?? [])
+  const selectedPackages = ((ctx as { selectedPackages?: Array<{ id: string; name: string; description?: string | null; is_custom?: boolean; compare_at_price?: number | null; price: number; session_count: number; allow_split_payment?: boolean; firstTreatmentId: string | null }> }).selectedPackages ?? [])
     .filter((p) => packageIds.includes(p.id));
   const redirectPath = `/m/${slug}/book-multi?ids=${encodeURIComponent(ids.join(","))}${packageIds.length ? `&pkgs=${encodeURIComponent(packageIds.join(","))}` : ""}`;
 
@@ -178,8 +178,21 @@ function MultiBookPage() {
     return t.duration ?? 30;
   };
 
+  // Treatments auto-added by a package are covered by the package price —
+  // don't charge for them twice.
+  const packageCoveredIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of selectedPackages) {
+      if (p.firstTreatmentId && !ids.includes(p.firstTreatmentId)) set.add(p.firstTreatmentId);
+    }
+    return set;
+  }, [selectedPackages, ids]);
+
   const totalDurationBase = treatments.reduce((s, t) => s + durationFor(t), 0);
-  const totalPriceBase = treatments.reduce((s, t) => s + priceFor(t), 0);
+  const packagesPrice = selectedPackages.reduce((s, p) => s + Number(p.price ?? 0), 0);
+  const totalPriceBase =
+    treatments.reduce((s, t) => s + (packageCoveredIds.has(t.id) ? 0 : priceFor(t)), 0) + packagesPrice;
+
 
   // Add-ons (new system) — fetched after treatment selection
   const addonsQuery = useQuery({
@@ -730,11 +743,20 @@ function MultiBookPage() {
           <div key={p.id} className="flex justify-between gap-3 border-b pb-2 last:border-b-0">
             <div>
               <div className="font-medium" style={{ color: brand }}>{p.name}</div>
+              {p.description && <div className="text-[11px] opacity-70">{p.description}</div>}
               <div className="text-[11px] opacity-70">{p.session_count} session{p.session_count === 1 ? "" : "s"}</div>
             </div>
-            {showPrices && <div className="whitespace-nowrap font-semibold" style={{ color: brand }}>£{p.price.toFixed(2)}</div>}
+            {showPrices && (
+              <div className="whitespace-nowrap text-right font-semibold" style={{ color: brand }}>
+                {p.compare_at_price != null && p.compare_at_price > p.price && (
+                  <span className="mr-1.5 text-[11px] font-normal opacity-50 line-through">£{p.compare_at_price.toFixed(2)}</span>
+                )}
+                £{p.price.toFixed(2)}
+              </div>
+            )}
           </div>
         ))}
+
         {treatments.map((t) => (
           <div key={t.id} className="flex justify-between gap-3 border-b pb-2 last:border-b-0">
             <div>
@@ -790,11 +812,18 @@ function MultiBookPage() {
                       <div key={p.id} className="flex items-center justify-between text-sm border-b last:border-b-0 py-2">
                         <div>
                           <div className="font-medium" style={{ color: brand }}>{p.name}</div>
+                          {p.description && <div className="text-xs opacity-80">{p.description}</div>}
                           <div className="text-xs opacity-70">{p.session_count} session{p.session_count === 1 ? "" : "s"} · first session booked below, remaining tracked in your account</div>
                         </div>
                         {showPrices && (
                           <div className="text-right">
-                            <div className="font-semibold whitespace-nowrap" style={{ color: brand }}>£{p.price.toFixed(2)}</div>
+                            <div className="font-semibold whitespace-nowrap" style={{ color: brand }}>
+                              {p.compare_at_price != null && p.compare_at_price > p.price && (
+                                <span className="mr-1.5 text-xs font-normal opacity-50 line-through">£{p.compare_at_price.toFixed(2)}</span>
+                              )}
+                              £{p.price.toFixed(2)}
+                            </div>
+
                             {Boolean(p.allow_split_payment) && Math.max(1, Number(p.session_count ?? 1)) > 1 && (
                               <div className="text-[11px] opacity-70">
                                 or £{(p.price / Math.max(1, Number(p.session_count ?? 1))).toFixed(2)} per session
@@ -818,10 +847,15 @@ function MultiBookPage() {
                       <div className="font-medium" style={{ color: brand }}>{t.name}</div>
                       <div className="flex items-center gap-3 opacity-80">
                         <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{durationFor(t)} min</span>
-                        {showPrices && <span className="font-semibold" style={{ color: brand }}>£{priceFor(t).toFixed(2)}</span>}
+                        {showPrices && (
+                          packageCoveredIds.has(t.id)
+                            ? <span className="text-xs font-medium opacity-70">Included in package</span>
+                            : <span className="font-semibold" style={{ color: brand }}>£{priceFor(t).toFixed(2)}</span>
+                        )}
                       </div>
                     </div>
                   ))}
+
                   <div className="flex items-center justify-between pt-3 text-sm font-semibold">
                     <span>Total ({totalDuration} min)</span>
                     {showPrices && (
