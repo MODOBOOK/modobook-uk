@@ -9,3 +9,5 @@
 - [x] Release held time slots when a client leaves the booking page without booking.
 - [ ] Expo production build command documented and wired (`npx eas-cli@latest build --profile production`).
 - [x] Install `expo-dev-client` for Expo development builds.
+- [x] Restyled /demo marketing page to match the premium warm-sand MODO brand.
+- [x] Fixed loutuston@gmail.com admin access for Form Clinic (removed empty duplicate profile, promoted to admin, clinic-switcher cookie now respected).
