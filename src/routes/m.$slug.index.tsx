@@ -56,7 +56,7 @@ import { CourseGroupRow } from "@/components/CourseGroupRow";
 import { packageBuilderEnabled, linkButtonEnabled, treatmentLeafletsEnabled, coursePickerEnabled } from "@/lib/feature-flags";
 import { getLeafletSignedUrl } from "@/lib/leaflets.functions";
 import { resolveDisplayNames } from "@/lib/display-name";
-import { formatPrice, BADGE_LABEL, badgeClasses, type TreatmentBadge } from "@/lib/price-display";
+import { formatPrice, BADGE_LABEL, badgeClasses, treatmentPricing, type TreatmentBadge } from "@/lib/price-display";
 
 
 import { describeCancellationRules } from "@/lib/policy";
@@ -677,10 +677,16 @@ function BookPage() {
               bold={menuTreatmentBold}
               isSelected={isSelected}
               onToggle={toggleSelect}
-              options={arr.map((o) => ({
+              options={arr.map((o) => {
+                const pr = treatmentPricing(o as never, priceFor(o));
+                return {
                 id: o.id,
                 name: o.name,
-                price: priceFor(o),
+                price: pr.price,
+                base_price: pr.base,
+                discount_percent: pr.hasDiscount ? pr.percent : 0,
+                show_was_now: pr.showWasNow,
+                discount_label: pr.label,
                 duration: durationFor(o),
                 session_count: (o as { session_count?: number }).session_count ?? 1,
                 allow_split_payment: Boolean((o as { allow_split_payment?: boolean }).allow_split_payment),
@@ -692,7 +698,8 @@ function BookPage() {
                 unit_label: (o as { course_unit_label?: string | null }).course_unit_label ?? null,
                 cta_label: (o as { course_cta_label?: string | null }).course_cta_label ?? null,
                 option_label: (o as { course_option_label?: string | null }).course_option_label ?? null,
-              }))}
+              };
+              })}
             />,
           );
         }

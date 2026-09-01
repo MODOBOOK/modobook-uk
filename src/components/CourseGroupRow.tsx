@@ -13,7 +13,13 @@ import { courseGroupLabel } from "@/lib/course-group-label";
 export type CourseOption = {
   id: string;
   name: string;
+  /** Live price the client pays (already discounted). */
   price: number;
+  /** Original price before any active discount. */
+  base_price?: number;
+  discount_percent?: number;
+  show_was_now?: boolean;
+  discount_label?: string | null;
   duration: number;
   session_count: number;
   allow_split_payment: boolean;
@@ -97,7 +103,15 @@ export function CourseGroupRow({
   const blurb = single?.description ?? sorted.find((o) => o.description)?.description ?? null;
   const anySplit = sorted.some((o) => o.allow_split_payment && o.session_count > 1);
   const bookable = sorted.filter((o) => !o.full);
-  const fromPrice = (bookable.length ? bookable : sorted).reduce((min, o) => Math.min(min, o.price), Number.POSITIVE_INFINITY);
+  const priceList = bookable.length ? bookable : sorted;
+  const fromPrice = priceList.reduce((min, o) => Math.min(min, o.price), Number.POSITIVE_INFINITY);
+  const cheapest = priceList.find((o) => o.price === fromPrice) ?? priceList[0];
+  const maxPercent = Math.max(0, ...sorted.map((o) => Number(o.discount_percent ?? 0)));
+  const fromWas =
+    cheapest && Number(cheapest.discount_percent ?? 0) > 0 && cheapest.show_was_now !== false
+      ? Number(cheapest.base_price ?? cheapest.price)
+      : null;
+  const offerLabel = sorted.find((o) => (o.discount_label ?? "").trim())?.discount_label ?? null;
   const spacingLabel = (days?: number | null) => {
     if (!days || days <= 0) return null;
     if (days % 7 === 0) {
@@ -149,8 +163,17 @@ export function CourseGroupRow({
               </div>
               <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
                 {Number.isFinite(fromPrice) && (
-                  <span className="font-bold" style={{ color: priceColor }}>
-                    <span className="text-xs font-semibold opacity-70">from </span>£{fromPrice.toFixed(2)}
+                  <span className="flex items-center gap-1.5 font-bold" style={{ color: priceColor }}>
+                    <span className="text-xs font-semibold opacity-70">from </span>
+                    {fromWas != null && fromWas > fromPrice && (
+                      <span className="text-xs font-medium line-through opacity-60">£{fromWas.toFixed(2)}</span>
+                    )}
+                    £{fromPrice.toFixed(2)}
+                  </span>
+                )}
+                {maxPercent > 0 && (
+                  <span className="rounded-full bg-rose-100 px-2 py-px text-[11px] font-bold uppercase tracking-wide text-rose-700">
+                    {offerLabel || `${Math.round(maxPercent)}% off`}
                   </span>
                 )}
                 {single?.duration ? <span>· {single.duration} min</span> : null}
@@ -255,8 +278,16 @@ export function CourseGroupRow({
                         </p>
                       )}
                     </div>
-                    <div className="shrink-0 text-base font-bold" style={{ color: brand }}>
-                      £{o.price.toFixed(2)}
+                    <div className="shrink-0 text-right">
+                      {Number(o.discount_percent ?? 0) > 0 && o.show_was_now !== false && Number(o.base_price ?? 0) > o.price && (
+                        <div className="text-xs font-medium line-through opacity-60">£{Number(o.base_price).toFixed(2)}</div>
+                      )}
+                      <div className="text-base font-bold" style={{ color: brand }}>£{o.price.toFixed(2)}</div>
+                      {Number(o.discount_percent ?? 0) > 0 && (
+                        <div className="text-[10px] font-bold uppercase tracking-wide text-rose-700">
+                          {Math.round(Number(o.discount_percent))}% off
+                        </div>
+                      )}
                     </div>
                   </div>
                 </button>
@@ -340,7 +371,10 @@ export function CourseGroupRow({
                       </div>
                     )}
                   </div>
-                  <div className="shrink-0 font-bold" style={{ color: brand }}>
+                  <div className="shrink-0 text-right font-bold" style={{ color: brand }}>
+                    {Number(o.discount_percent ?? 0) > 0 && o.show_was_now !== false && Number(o.base_price ?? 0) > o.price && (
+                      <span className="mr-1.5 text-xs font-medium line-through opacity-60">£{Number(o.base_price).toFixed(2)}</span>
+                    )}
                     £{o.price.toFixed(2)}
                   </div>
                 </div>
