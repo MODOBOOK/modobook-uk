@@ -32,26 +32,36 @@ export async function resolveClinicAccess(
   supabase: any,
   userId: string,
 ): Promise<ClinicAccess> {
-  const [{ data: own }, { data: memberships }] = await Promise.all([
-    supabase.from("profiles").select("id").eq("user_id", userId).maybeSingle(),
-    supabase
-      .from("staff_members")
-      .select("id, profile_id, role, data_scope, practitioner_id, status")
-      .eq("user_id", userId)
-      .eq("status", "active"),
-  ]);
+  if (!userId) return NONE;
 
-  const staff = (memberships ?? []) as Array<{
+  const { data: own } = await supabase
+    .from("profiles")
+    .select("id")
+    .or(`user_id.eq.${userId},id.eq.${userId}`)
+    .maybeSingle();
+
+  let staff: Array<{
     id: string;
     profile_id: string;
     role: StaffRole;
     data_scope: "clinic" | "own" | null;
     practitioner_id: string | null;
-  }>;
+  }> = [];
+
+  try {
+    const { data: memberships } = await supabase
+      .from("staff_members")
+      .select("id, profile_id, role, data_scope, practitioner_id, status")
+      .eq("user_id", userId)
+      .eq("status", "active");
+    staff = memberships ?? [];
+  } catch {
+    staff = [];
+  }
 
   const wanted = selectedClinicCookie();
 
-  if (own?.id && (!wanted || wanted === own.id)) {
+  if (own?.id) {
     return {
       profileId: own.id,
       isOwner: true,
@@ -71,17 +81,6 @@ export async function resolveClinicAccess(
       dataScope: match.data_scope === "own" ? "own" : "clinic",
       staffId: match.id,
       staffPractitionerId: match.practitioner_id ?? null,
-    };
-  }
-
-  if (own?.id) {
-    return {
-      profileId: own.id,
-      isOwner: true,
-      role: "owner",
-      dataScope: "clinic",
-      staffId: null,
-      staffPractitionerId: null,
     };
   }
 
