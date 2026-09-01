@@ -698,7 +698,8 @@ function BookPage() {
                 unit_label: (o as { course_unit_label?: string | null }).course_unit_label ?? null,
                 cta_label: (o as { course_cta_label?: string | null }).course_cta_label ?? null,
                 option_label: (o as { course_option_label?: string | null }).course_option_label ?? null,
-              }))}
+              };
+              })}
             />,
           );
         }
