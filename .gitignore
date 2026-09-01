@@ -30,3 +30,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Expo
+expo/node_modules/
+expo/.expo/
+expo/dist/
+expo/ios/
+expo/android/
+expo/.env.local

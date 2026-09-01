@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "Modo Practitioner",
+    "slug": "modo-practitioner",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "../public/icon-512.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F5EFE6",
+    "splash": {
+      "image": "../public/icon-512.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5EFE6"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "bundleIdentifier": "uk.modobook.practitioner.expo",
+      "buildNumber": "1.0.0.1",
+      "supportsTablet": true,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "uk.modobook.practitioner.expo",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "../public/icon-512.png",
+        "backgroundColor": "#F5EFE6"
+      }
+    },
+    "web": {
+      "favicon": "../public/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "8d03f216-aba9-4601-a756-33cd265d8cc4"
+      }
+    },
+    "owner": "modobook"
+  }
+}
