@@ -677,10 +677,16 @@ function BookPage() {
               bold={menuTreatmentBold}
               isSelected={isSelected}
               onToggle={toggleSelect}
-              options={arr.map((o) => ({
+              options={arr.map((o) => {
+                const pr = treatmentPricing(o as never, priceFor(o));
+                return {
                 id: o.id,
                 name: o.name,
-                price: priceFor(o),
+                price: pr.price,
+                base_price: pr.base,
+                discount_percent: pr.hasDiscount ? pr.percent : 0,
+                show_was_now: pr.showWasNow,
+                discount_label: pr.label,
                 duration: durationFor(o),
                 session_count: (o as { session_count?: number }).session_count ?? 1,
                 allow_split_payment: Boolean((o as { allow_split_payment?: boolean }).allow_split_payment),
