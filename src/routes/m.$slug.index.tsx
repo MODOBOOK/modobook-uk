@@ -361,7 +361,7 @@ function BookPage() {
   const brand = theme?.primary_color || profile.brand_color || "#1f2a44";
   // Hero band colour: keep each clinic on their own brand colour. Only the
   // pilot clinic opted into a separate dark hero band via hero_overlay_color.
-  const heroBandColor = profile.slug === "aestheticsbynurseryan" ? (theme?.hero_overlay_color || brand) : brand;
+  const heroBandColor = slug === "aestheticsbynurseryan" ? (theme?.hero_overlay_color || brand) : brand;
 
   const accent = theme?.accent_color || brand;
   const bgColor = theme?.background_color || "#ffffff";
