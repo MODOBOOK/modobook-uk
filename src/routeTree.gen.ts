@@ -38,6 +38,7 @@ import { Route as PrivacyComplaintsRouteImport } from './routes/privacy.complain
 import { Route as PrivacyBreachResponseRouteImport } from './routes/privacy.breach-response'
 import { Route as PrivacyAcceptableUseRouteImport } from './routes/privacy.acceptable-use'
 import { Route as PlanTokenRouteImport } from './routes/plan.$token'
+import { Route as MobileLoginRouteImport } from './routes/mobile.login'
 import { Route as MSlugRouteImport } from './routes/m.$slug'
 import { Route as FTokenRouteImport } from './routes/f.$token'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
@@ -319,6 +320,11 @@ const PrivacyAcceptableUseRoute = PrivacyAcceptableUseRouteImport.update({
 const PlanTokenRoute = PlanTokenRouteImport.update({
   id: '/plan/$token',
   path: '/plan/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MobileLoginRoute = MobileLoginRouteImport.update({
+  id: '/mobile/login',
+  path: '/mobile/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MSlugRoute = MSlugRouteImport.update({
@@ -1144,6 +1150,7 @@ export interface FileRoutesByFullPath {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$token': typeof FTokenRoute
   '/m/$slug': typeof MSlugRouteWithChildren
+  '/mobile/login': typeof MobileLoginRoute
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/acceptable-use': typeof PrivacyAcceptableUseRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
@@ -1307,6 +1314,7 @@ export interface FileRoutesByTo {
   '/c/$token': typeof CTokenRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$token': typeof FTokenRoute
+  '/mobile/login': typeof MobileLoginRoute
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/acceptable-use': typeof PrivacyAcceptableUseRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
@@ -1471,6 +1479,7 @@ export interface FileRoutesById {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$token': typeof FTokenRoute
   '/m/$slug': typeof MSlugRouteWithChildren
+  '/mobile/login': typeof MobileLoginRoute
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/acceptable-use': typeof PrivacyAcceptableUseRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
@@ -1641,6 +1650,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/f/$token'
     | '/m/$slug'
+    | '/mobile/login'
     | '/plan/$token'
     | '/privacy/acceptable-use'
     | '/privacy/breach-response'
@@ -1804,6 +1814,7 @@ export interface FileRouteTypes {
     | '/c/$token'
     | '/email/unsubscribe'
     | '/f/$token'
+    | '/mobile/login'
     | '/plan/$token'
     | '/privacy/acceptable-use'
     | '/privacy/breach-response'
@@ -1967,6 +1978,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/f/$token'
     | '/m/$slug'
+    | '/mobile/login'
     | '/plan/$token'
     | '/privacy/acceptable-use'
     | '/privacy/breach-response'
@@ -2131,6 +2143,7 @@ export interface RootRouteChildren {
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   FTokenRoute: typeof FTokenRoute
   MSlugRoute: typeof MSlugRouteWithChildren
+  MobileLoginRoute: typeof MobileLoginRoute
   PlanTokenRoute: typeof PlanTokenRoute
   RCodeRoute: typeof RCodeRoute
   StaffAcceptTokenRoute: typeof StaffAcceptTokenRoute
@@ -2359,6 +2372,13 @@ declare module '@tanstack/react-router' {
       path: '/plan/$token'
       fullPath: '/plan/$token'
       preLoaderRoute: typeof PlanTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mobile/login': {
+      id: '/mobile/login'
+      path: '/mobile/login'
+      fullPath: '/mobile/login'
+      preLoaderRoute: typeof MobileLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/m/$slug': {
@@ -3806,6 +3826,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   FTokenRoute: FTokenRoute,
   MSlugRoute: MSlugRouteWithChildren,
+  MobileLoginRoute: MobileLoginRoute,
   PlanTokenRoute: PlanTokenRoute,
   RCodeRoute: RCodeRoute,
   StaffAcceptTokenRoute: StaffAcceptTokenRoute,
