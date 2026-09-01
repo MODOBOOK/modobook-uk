@@ -75,6 +75,7 @@ import { Route as AuthenticatedPrescriberInvoicesRouteImport } from './routes/_a
 import { Route as AuthenticatedPrescriberDirectionsRouteImport } from './routes/_authenticated/prescriber.directions'
 import { Route as AuthenticatedPrescriberDashboardRouteImport } from './routes/_authenticated/prescriber.dashboard'
 import { Route as AuthenticatedPrescriberConnectionsRouteImport } from './routes/_authenticated/prescriber.connections'
+import { Route as AuthenticatedMobileClientsRouteImport } from './routes/_authenticated/mobile.clients'
 import { Route as AuthenticatedHubVisitsRouteImport } from './routes/_authenticated/hub.visits'
 import { Route as AuthenticatedHubVerificationRouteImport } from './routes/_authenticated/hub.verification'
 import { Route as AuthenticatedHubReferralsRouteImport } from './routes/_authenticated/hub.referrals'
@@ -520,6 +521,12 @@ const AuthenticatedPrescriberConnectionsRoute =
     id: '/connections',
     path: '/connections',
     getParentRoute: () => AuthenticatedPrescriberRoute,
+  } as any)
+const AuthenticatedMobileClientsRoute =
+  AuthenticatedMobileClientsRouteImport.update({
+    id: '/clients',
+    path: '/clients',
+    getParentRoute: () => AuthenticatedMobileRoute,
   } as any)
 const AuthenticatedHubVisitsRoute = AuthenticatedHubVisitsRouteImport.update({
   id: '/visits',
@@ -1237,6 +1244,7 @@ export interface FileRoutesByFullPath {
   '/hub/referrals': typeof AuthenticatedHubReferralsRoute
   '/hub/verification': typeof AuthenticatedHubVerificationRoute
   '/hub/visits': typeof AuthenticatedHubVisitsRoute
+  '/mobile/clients': typeof AuthenticatedMobileClientsRoute
   '/prescriber/connections': typeof AuthenticatedPrescriberConnectionsRoute
   '/prescriber/dashboard': typeof AuthenticatedPrescriberDashboardRoute
   '/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
@@ -1399,6 +1407,7 @@ export interface FileRoutesByTo {
   '/hub/referrals': typeof AuthenticatedHubReferralsRoute
   '/hub/verification': typeof AuthenticatedHubVerificationRoute
   '/hub/visits': typeof AuthenticatedHubVisitsRoute
+  '/mobile/clients': typeof AuthenticatedMobileClientsRoute
   '/prescriber/connections': typeof AuthenticatedPrescriberConnectionsRoute
   '/prescriber/dashboard': typeof AuthenticatedPrescriberDashboardRoute
   '/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
@@ -1571,6 +1580,7 @@ export interface FileRoutesById {
   '/_authenticated/hub/referrals': typeof AuthenticatedHubReferralsRoute
   '/_authenticated/hub/verification': typeof AuthenticatedHubVerificationRoute
   '/_authenticated/hub/visits': typeof AuthenticatedHubVisitsRoute
+  '/_authenticated/mobile/clients': typeof AuthenticatedMobileClientsRoute
   '/_authenticated/prescriber/connections': typeof AuthenticatedPrescriberConnectionsRoute
   '/_authenticated/prescriber/dashboard': typeof AuthenticatedPrescriberDashboardRoute
   '/_authenticated/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
@@ -1745,6 +1755,7 @@ export interface FileRouteTypes {
     | '/hub/referrals'
     | '/hub/verification'
     | '/hub/visits'
+    | '/mobile/clients'
     | '/prescriber/connections'
     | '/prescriber/dashboard'
     | '/prescriber/directions'
@@ -1907,6 +1918,7 @@ export interface FileRouteTypes {
     | '/hub/referrals'
     | '/hub/verification'
     | '/hub/visits'
+    | '/mobile/clients'
     | '/prescriber/connections'
     | '/prescriber/dashboard'
     | '/prescriber/directions'
@@ -2078,6 +2090,7 @@ export interface FileRouteTypes {
     | '/_authenticated/hub/referrals'
     | '/_authenticated/hub/verification'
     | '/_authenticated/hub/visits'
+    | '/_authenticated/mobile/clients'
     | '/_authenticated/prescriber/connections'
     | '/_authenticated/prescriber/dashboard'
     | '/_authenticated/prescriber/directions'
@@ -2668,6 +2681,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/prescriber/connections'
       preLoaderRoute: typeof AuthenticatedPrescriberConnectionsRouteImport
       parentRoute: typeof AuthenticatedPrescriberRoute
+    }
+    '/_authenticated/mobile/clients': {
+      id: '/_authenticated/mobile/clients'
+      path: '/clients'
+      fullPath: '/mobile/clients'
+      preLoaderRoute: typeof AuthenticatedMobileClientsRouteImport
+      parentRoute: typeof AuthenticatedMobileRoute
     }
     '/_authenticated/hub/visits': {
       id: '/_authenticated/hub/visits'
@@ -3719,11 +3739,13 @@ const AuthenticatedHubRouteWithChildren =
   AuthenticatedHubRoute._addFileChildren(AuthenticatedHubRouteChildren)
 
 interface AuthenticatedMobileRouteChildren {
+  AuthenticatedMobileClientsRoute: typeof AuthenticatedMobileClientsRoute
   AuthenticatedMobileIndexRoute: typeof AuthenticatedMobileIndexRoute
   AuthenticatedMobileBookingIdRoute: typeof AuthenticatedMobileBookingIdRoute
 }
 
 const AuthenticatedMobileRouteChildren: AuthenticatedMobileRouteChildren = {
+  AuthenticatedMobileClientsRoute: AuthenticatedMobileClientsRoute,
   AuthenticatedMobileIndexRoute: AuthenticatedMobileIndexRoute,
   AuthenticatedMobileBookingIdRoute: AuthenticatedMobileBookingIdRoute,
 }
