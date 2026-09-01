@@ -13,7 +13,13 @@ import { courseGroupLabel } from "@/lib/course-group-label";
 export type CourseOption = {
   id: string;
   name: string;
+  /** Live price the client pays (already discounted). */
   price: number;
+  /** Original price before any active discount. */
+  base_price?: number;
+  discount_percent?: number;
+  show_was_now?: boolean;
+  discount_label?: string | null;
   duration: number;
   session_count: number;
   allow_split_payment: boolean;
