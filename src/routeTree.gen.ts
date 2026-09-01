@@ -46,6 +46,7 @@ import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as AuthenticatedPrescriberRouteImport } from './routes/_authenticated/prescriber'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedMobileRouteImport } from './routes/_authenticated/mobile'
 import { Route as AuthenticatedHubRouteImport } from './routes/_authenticated/hub'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminPrescribersRouteImport } from './routes/_authenticated/admin-prescribers'
@@ -360,6 +361,11 @@ const AuthenticatedPrescriberRoute = AuthenticatedPrescriberRouteImport.update({
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedMobileRoute = AuthenticatedMobileRouteImport.update({
+  id: '/mobile',
+  path: '/mobile',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedHubRoute = AuthenticatedHubRouteImport.update({
@@ -1143,6 +1149,7 @@ export interface FileRoutesByFullPath {
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/hub': typeof AuthenticatedHubRouteWithChildren
+  '/mobile': typeof AuthenticatedMobileRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/prescriber': typeof AuthenticatedPrescriberRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
@@ -1309,6 +1316,7 @@ export interface FileRoutesByTo {
   '/waitlist': typeof WaitlistRoute
   '/who-its-for': typeof WhoItsForRoute
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
+  '/mobile': typeof AuthenticatedMobileRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
@@ -1472,6 +1480,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/hub': typeof AuthenticatedHubRouteWithChildren
+  '/_authenticated/mobile': typeof AuthenticatedMobileRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/prescriber': typeof AuthenticatedPrescriberRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
@@ -1643,6 +1652,7 @@ export interface FileRouteTypes {
     | '/admin-prescribers'
     | '/dashboard'
     | '/hub'
+    | '/mobile'
     | '/onboarding'
     | '/prescriber'
     | '/book/$slug'
@@ -1809,6 +1819,7 @@ export interface FileRouteTypes {
     | '/waitlist'
     | '/who-its-for'
     | '/admin-prescribers'
+    | '/mobile'
     | '/onboarding'
     | '/book/$slug'
     | '/c/$token'
@@ -1971,6 +1982,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-prescribers'
     | '/_authenticated/dashboard'
     | '/_authenticated/hub'
+    | '/_authenticated/mobile'
     | '/_authenticated/onboarding'
     | '/_authenticated/prescriber'
     | '/book/$slug'
@@ -2428,6 +2440,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/mobile': {
+      id: '/_authenticated/mobile'
+      path: '/mobile'
+      fullPath: '/mobile'
+      preLoaderRoute: typeof AuthenticatedMobileRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/hub': {
@@ -3713,6 +3732,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminPrescribersRoute: typeof AuthenticatedAdminPrescribersRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
   AuthenticatedHubRoute: typeof AuthenticatedHubRouteWithChildren
+  AuthenticatedMobileRoute: typeof AuthenticatedMobileRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPrescriberRoute: typeof AuthenticatedPrescriberRouteWithChildren
 }
@@ -3722,6 +3742,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminPrescribersRoute: AuthenticatedAdminPrescribersRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
   AuthenticatedHubRoute: AuthenticatedHubRouteWithChildren,
+  AuthenticatedMobileRoute: AuthenticatedMobileRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPrescriberRoute: AuthenticatedPrescriberRouteWithChildren,
 }
