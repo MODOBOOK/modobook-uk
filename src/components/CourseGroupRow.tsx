@@ -371,7 +371,10 @@ export function CourseGroupRow({
                       </div>
                     )}
                   </div>
-                  <div className="shrink-0 font-bold" style={{ color: brand }}>
+                  <div className="shrink-0 text-right font-bold" style={{ color: brand }}>
+                    {Number(o.discount_percent ?? 0) > 0 && o.show_was_now !== false && Number(o.base_price ?? 0) > o.price && (
+                      <span className="mr-1.5 text-xs font-medium line-through opacity-60">£{Number(o.base_price).toFixed(2)}</span>
+                    )}
                     £{o.price.toFixed(2)}
                   </div>
                 </div>
