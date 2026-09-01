@@ -160,6 +160,7 @@ import { Route as ApiPublicHooksBillingReconcileRouteImport } from './routes/api
 import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
 import { Route as ApiPublicBookingReleaseRouteImport } from './routes/api/public/booking/release'
 import { Route as AuthenticatedPrescriberRequestsIdRouteImport } from './routes/_authenticated/prescriber.requests.$id'
+import { Route as AuthenticatedMobileBookingIdRouteImport } from './routes/_authenticated/mobile.booking.$id'
 import { Route as AuthenticatedDashboardTrainingBookingsRouteImport } from './routes/_authenticated/dashboard.training.bookings'
 import { Route as AuthenticatedDashboardRxRequestsNewRouteImport } from './routes/_authenticated/dashboard.rx-requests.new'
 import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_authenticated/dashboard.patients.$id'
@@ -1018,6 +1019,12 @@ const AuthenticatedPrescriberRequestsIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedPrescriberRequestsRoute,
   } as any)
+const AuthenticatedMobileBookingIdRoute =
+  AuthenticatedMobileBookingIdRouteImport.update({
+    id: '/booking/$id',
+    path: '/booking/$id',
+    getParentRoute: () => AuthenticatedMobileRoute,
+  } as any)
 const AuthenticatedDashboardTrainingBookingsRoute =
   AuthenticatedDashboardTrainingBookingsRouteImport.update({
     id: '/bookings',
@@ -1266,6 +1273,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRouteWithChildren
   '/dashboard/rx-requests/new': typeof AuthenticatedDashboardRxRequestsNewRoute
   '/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
+  '/mobile/booking/$id': typeof AuthenticatedMobileBookingIdRoute
   '/prescriber/requests/$id': typeof AuthenticatedPrescriberRequestsIdRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
@@ -1425,6 +1433,7 @@ export interface FileRoutesByTo {
   '/dashboard/notifications/sms': typeof AuthenticatedDashboardNotificationsSmsRoute
   '/dashboard/rx-requests/new': typeof AuthenticatedDashboardRxRequestsNewRoute
   '/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
+  '/mobile/booking/$id': typeof AuthenticatedMobileBookingIdRoute
   '/prescriber/requests/$id': typeof AuthenticatedPrescriberRequestsIdRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
@@ -1598,6 +1607,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRouteWithChildren
   '/_authenticated/dashboard/rx-requests/new': typeof AuthenticatedDashboardRxRequestsNewRoute
   '/_authenticated/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
+  '/_authenticated/mobile/booking/$id': typeof AuthenticatedMobileBookingIdRoute
   '/_authenticated/prescriber/requests/$id': typeof AuthenticatedPrescriberRequestsIdRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
@@ -1771,6 +1781,7 @@ export interface FileRouteTypes {
     | '/dashboard/patients/$id'
     | '/dashboard/rx-requests/new'
     | '/dashboard/training/bookings'
+    | '/mobile/booking/$id'
     | '/prescriber/requests/$id'
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
@@ -1930,6 +1941,7 @@ export interface FileRouteTypes {
     | '/dashboard/notifications/sms'
     | '/dashboard/rx-requests/new'
     | '/dashboard/training/bookings'
+    | '/mobile/booking/$id'
     | '/prescriber/requests/$id'
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
@@ -2102,6 +2114,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/patients/$id'
     | '/_authenticated/dashboard/rx-requests/new'
     | '/_authenticated/dashboard/training/bookings'
+    | '/_authenticated/mobile/booking/$id'
     | '/_authenticated/prescriber/requests/$id'
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
@@ -3251,6 +3264,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPrescriberRequestsIdRouteImport
       parentRoute: typeof AuthenticatedPrescriberRequestsRoute
     }
+    '/_authenticated/mobile/booking/$id': {
+      id: '/_authenticated/mobile/booking/$id'
+      path: '/booking/$id'
+      fullPath: '/mobile/booking/$id'
+      preLoaderRoute: typeof AuthenticatedMobileBookingIdRouteImport
+      parentRoute: typeof AuthenticatedMobileRoute
+    }
     '/_authenticated/dashboard/training/bookings': {
       id: '/_authenticated/dashboard/training/bookings'
       path: '/bookings'
@@ -3700,10 +3720,12 @@ const AuthenticatedHubRouteWithChildren =
 
 interface AuthenticatedMobileRouteChildren {
   AuthenticatedMobileIndexRoute: typeof AuthenticatedMobileIndexRoute
+  AuthenticatedMobileBookingIdRoute: typeof AuthenticatedMobileBookingIdRoute
 }
 
 const AuthenticatedMobileRouteChildren: AuthenticatedMobileRouteChildren = {
   AuthenticatedMobileIndexRoute: AuthenticatedMobileIndexRoute,
+  AuthenticatedMobileBookingIdRoute: AuthenticatedMobileBookingIdRoute,
 }
 
 const AuthenticatedMobileRouteWithChildren =
