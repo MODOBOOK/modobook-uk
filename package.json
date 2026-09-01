@@ -17,7 +17,8 @@
     "expo:ios": "cd expo && bun run ios",
     "expo:android": "cd expo && bun run android",
     "expo:build:ios": "cd expo && bun run build:ios",
-    "expo:build:android": "cd expo && bun run build:android"
+    "expo:build:android": "cd expo && bun run build:android",
+    "expo:build:production": "cd expo && npx eas-cli@latest build --profile production"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^10.0.0",
