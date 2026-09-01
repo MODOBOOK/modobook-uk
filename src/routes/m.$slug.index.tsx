@@ -56,7 +56,7 @@ import { CourseGroupRow } from "@/components/CourseGroupRow";
 import { packageBuilderEnabled, linkButtonEnabled, treatmentLeafletsEnabled, coursePickerEnabled } from "@/lib/feature-flags";
 import { getLeafletSignedUrl } from "@/lib/leaflets.functions";
 import { resolveDisplayNames } from "@/lib/display-name";
-import { formatPrice, BADGE_LABEL, badgeClasses, type TreatmentBadge } from "@/lib/price-display";
+import { formatPrice, treatmentPricing, BADGE_LABEL, badgeClasses, type TreatmentBadge } from "@/lib/price-display";
 
 
 import { describeCancellationRules } from "@/lib/policy";
