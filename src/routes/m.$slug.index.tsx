@@ -359,6 +359,9 @@ function BookPage() {
 
   const { primary: displayPrimary } = resolveDisplayNames(profile);
   const brand = theme?.primary_color || profile.brand_color || "#1f2a44";
+  // Hero band colour: keep each clinic on their own brand colour. Only the
+  // pilot clinic opted into a separate dark hero band via hero_overlay_color.
+  const heroBandColor = profile.slug === "aestheticsbynurseryan" ? (theme?.hero_overlay_color || brand) : brand;
 
   const accent = theme?.accent_color || brand;
   const bgColor = theme?.background_color || "#ffffff";
@@ -1087,7 +1090,7 @@ function BookPage() {
           <section
             data-modo-section
             className="relative overflow-hidden"
-            style={{ backgroundColor: theme?.hero_overlay_color || brand, color: heroTextColor }}
+            style={{ backgroundColor: heroBandColor, color: heroTextColor }}
           >
             {/* Faint radial accent behind the portrait */}
             <div
@@ -1212,7 +1215,7 @@ function BookPage() {
       <div
         aria-hidden
         className="h-10 sm:h-14"
-        style={{ background: `linear-gradient(to bottom, ${theme?.hero_overlay_color || brand}, ${bgColor})` }}
+        style={{ background: `linear-gradient(to bottom, ${heroBandColor}, ${bgColor})` }}
       />
 
 
