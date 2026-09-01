@@ -12,7 +12,12 @@
     "format": "prettier --write .",
     "cap:add-ios": "cap add ios",
     "cap:sync": "cap sync ios",
-    "cap:open": "cap open ios"
+    "cap:open": "cap open ios",
+    "expo:start": "cd expo && bun run start",
+    "expo:ios": "cd expo && bun run ios",
+    "expo:android": "cd expo && bun run android",
+    "expo:build:ios": "cd expo && bun run build:ios",
+    "expo:build:android": "cd expo && bun run build:android"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^10.0.0",
