@@ -103,7 +103,15 @@ export function CourseGroupRow({
   const blurb = single?.description ?? sorted.find((o) => o.description)?.description ?? null;
   const anySplit = sorted.some((o) => o.allow_split_payment && o.session_count > 1);
   const bookable = sorted.filter((o) => !o.full);
-  const fromPrice = (bookable.length ? bookable : sorted).reduce((min, o) => Math.min(min, o.price), Number.POSITIVE_INFINITY);
+  const priceList = bookable.length ? bookable : sorted;
+  const fromPrice = priceList.reduce((min, o) => Math.min(min, o.price), Number.POSITIVE_INFINITY);
+  const cheapest = priceList.find((o) => o.price === fromPrice) ?? priceList[0];
+  const maxPercent = Math.max(0, ...sorted.map((o) => Number(o.discount_percent ?? 0)));
+  const fromWas =
+    cheapest && Number(cheapest.discount_percent ?? 0) > 0 && cheapest.show_was_now !== false
+      ? Number(cheapest.base_price ?? cheapest.price)
+      : null;
+  const offerLabel = sorted.find((o) => (o.discount_label ?? "").trim())?.discount_label ?? null;
   const spacingLabel = (days?: number | null) => {
     if (!days || days <= 0) return null;
     if (days % 7 === 0) {
