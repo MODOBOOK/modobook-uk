@@ -144,13 +144,29 @@ export async function assertSeatAvailable(
 export const getMyBillingStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: profile, error: pErr } = await context.supabase
+    let { data: profile, error: pErr } = await context.supabase
       .from("profiles")
       .select("id, email")
       .eq("user_id", context.userId)
       .maybeSingle();
     if (pErr) throw pErr;
+    if (!profile) {
+      // Staff members (receptionists / clinic admins) have no clinic profile of
+      // their own — bill against the clinic they actually work for so they are
+      // never locked out by a missing personal subscription.
+      const { resolveClinicAccess } = await import("./clinic-context.server");
+      const access = await resolveClinicAccess(context.supabase, context.userId);
+      if (access.profileId) {
+        const { data: clinic } = await context.supabase
+          .from("profiles")
+          .select("id, email")
+          .eq("id", access.profileId)
+          .maybeSingle();
+        profile = clinic ?? null;
+      }
+    }
     if (!profile) return { state: "blocked", hasAccess: false, daysLeft: 0, deadline: null, arrearsCents: 0, arrearsInvoiceUrl: null };
+
     const readStatus = async () => {
       const { data, error } = await context.supabase.rpc("practitioner_billing_status", { _profile_id: profile.id });
       if (error) throw error;
