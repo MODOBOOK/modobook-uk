@@ -30,6 +30,17 @@ bun run ios      # iOS simulator
 bun run android  # Android emulator
 ```
 
+## Development builds
+
+`expo-dev-client` is installed so you can run a development build for faster native iteration:
+
+```bash
+cd expo
+npx eas-cli@latest build --profile development --platform ios
+# then install the build and run
+bun run start --dev-client
+```
+
 ## Build with EAS
 
 ```bash

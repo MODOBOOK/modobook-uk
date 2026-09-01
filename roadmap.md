@@ -8,3 +8,4 @@
 - [x] Fix: deposits enabled but not transferring to booking page.
 - [x] Release held time slots when a client leaves the booking page without booking.
 - [ ] Expo production build command documented and wired (`npx eas-cli@latest build --profile production`).
+- [x] Install `expo-dev-client` for Expo development builds.
