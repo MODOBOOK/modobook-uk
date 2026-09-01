@@ -38,6 +38,7 @@ import { Route as PrivacyComplaintsRouteImport } from './routes/privacy.complain
 import { Route as PrivacyBreachResponseRouteImport } from './routes/privacy.breach-response'
 import { Route as PrivacyAcceptableUseRouteImport } from './routes/privacy.acceptable-use'
 import { Route as PlanTokenRouteImport } from './routes/plan.$token'
+import { Route as MobileLoginRouteImport } from './routes/mobile.login'
 import { Route as MSlugRouteImport } from './routes/m.$slug'
 import { Route as FTokenRouteImport } from './routes/f.$token'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
@@ -45,12 +46,14 @@ import { Route as CTokenRouteImport } from './routes/c.$token'
 import { Route as BookSlugRouteImport } from './routes/book.$slug'
 import { Route as AuthenticatedPrescriberRouteImport } from './routes/_authenticated/prescriber'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedMobileRouteImport } from './routes/_authenticated/mobile'
 import { Route as AuthenticatedHubRouteImport } from './routes/_authenticated/hub'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminPrescribersRouteImport } from './routes/_authenticated/admin-prescribers'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as MSlugIndexRouteImport } from './routes/m.$slug.index'
 import { Route as AuthenticatedPrescriberIndexRouteImport } from './routes/_authenticated/prescriber.index'
+import { Route as AuthenticatedMobileIndexRouteImport } from './routes/_authenticated/mobile.index'
 import { Route as AuthenticatedHubIndexRouteImport } from './routes/_authenticated/hub.index'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -72,6 +75,7 @@ import { Route as AuthenticatedPrescriberInvoicesRouteImport } from './routes/_a
 import { Route as AuthenticatedPrescriberDirectionsRouteImport } from './routes/_authenticated/prescriber.directions'
 import { Route as AuthenticatedPrescriberDashboardRouteImport } from './routes/_authenticated/prescriber.dashboard'
 import { Route as AuthenticatedPrescriberConnectionsRouteImport } from './routes/_authenticated/prescriber.connections'
+import { Route as AuthenticatedMobileClientsRouteImport } from './routes/_authenticated/mobile.clients'
 import { Route as AuthenticatedHubVisitsRouteImport } from './routes/_authenticated/hub.visits'
 import { Route as AuthenticatedHubVerificationRouteImport } from './routes/_authenticated/hub.verification'
 import { Route as AuthenticatedHubReferralsRouteImport } from './routes/_authenticated/hub.referrals'
@@ -157,6 +161,7 @@ import { Route as ApiPublicHooksBillingReconcileRouteImport } from './routes/api
 import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
 import { Route as ApiPublicBookingReleaseRouteImport } from './routes/api/public/booking/release'
 import { Route as AuthenticatedPrescriberRequestsIdRouteImport } from './routes/_authenticated/prescriber.requests.$id'
+import { Route as AuthenticatedMobileBookingIdRouteImport } from './routes/_authenticated/mobile.booking.$id'
 import { Route as AuthenticatedDashboardTrainingBookingsRouteImport } from './routes/_authenticated/dashboard.training.bookings'
 import { Route as AuthenticatedDashboardRxRequestsNewRouteImport } from './routes/_authenticated/dashboard.rx-requests.new'
 import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_authenticated/dashboard.patients.$id'
@@ -321,6 +326,11 @@ const PlanTokenRoute = PlanTokenRouteImport.update({
   path: '/plan/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MobileLoginRoute = MobileLoginRouteImport.update({
+  id: '/mobile/login',
+  path: '/mobile/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MSlugRoute = MSlugRouteImport.update({
   id: '/m/$slug',
   path: '/m/$slug',
@@ -356,6 +366,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMobileRoute = AuthenticatedMobileRouteImport.update({
+  id: '/mobile',
+  path: '/mobile',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedHubRoute = AuthenticatedHubRouteImport.update({
   id: '/hub',
   path: '/hub',
@@ -387,6 +402,12 @@ const AuthenticatedPrescriberIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedPrescriberRoute,
+  } as any)
+const AuthenticatedMobileIndexRoute =
+  AuthenticatedMobileIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedMobileRoute,
   } as any)
 const AuthenticatedHubIndexRoute = AuthenticatedHubIndexRouteImport.update({
   id: '/',
@@ -500,6 +521,12 @@ const AuthenticatedPrescriberConnectionsRoute =
     id: '/connections',
     path: '/connections',
     getParentRoute: () => AuthenticatedPrescriberRoute,
+  } as any)
+const AuthenticatedMobileClientsRoute =
+  AuthenticatedMobileClientsRouteImport.update({
+    id: '/clients',
+    path: '/clients',
+    getParentRoute: () => AuthenticatedMobileRoute,
   } as any)
 const AuthenticatedHubVisitsRoute = AuthenticatedHubVisitsRouteImport.update({
   id: '/visits',
@@ -999,6 +1026,12 @@ const AuthenticatedPrescriberRequestsIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedPrescriberRequestsRoute,
   } as any)
+const AuthenticatedMobileBookingIdRoute =
+  AuthenticatedMobileBookingIdRouteImport.update({
+    id: '/booking/$id',
+    path: '/booking/$id',
+    getParentRoute: () => AuthenticatedMobileRoute,
+  } as any)
 const AuthenticatedDashboardTrainingBookingsRoute =
   AuthenticatedDashboardTrainingBookingsRouteImport.update({
     id: '/bookings',
@@ -1137,6 +1170,7 @@ export interface FileRoutesByFullPath {
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/hub': typeof AuthenticatedHubRouteWithChildren
+  '/mobile': typeof AuthenticatedMobileRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/prescriber': typeof AuthenticatedPrescriberRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
@@ -1144,6 +1178,7 @@ export interface FileRoutesByFullPath {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$token': typeof FTokenRoute
   '/m/$slug': typeof MSlugRouteWithChildren
+  '/mobile/login': typeof MobileLoginRoute
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/acceptable-use': typeof PrivacyAcceptableUseRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
@@ -1209,6 +1244,7 @@ export interface FileRoutesByFullPath {
   '/hub/referrals': typeof AuthenticatedHubReferralsRoute
   '/hub/verification': typeof AuthenticatedHubVerificationRoute
   '/hub/visits': typeof AuthenticatedHubVisitsRoute
+  '/mobile/clients': typeof AuthenticatedMobileClientsRoute
   '/prescriber/connections': typeof AuthenticatedPrescriberConnectionsRoute
   '/prescriber/dashboard': typeof AuthenticatedPrescriberDashboardRoute
   '/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
@@ -1230,6 +1266,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/hub/': typeof AuthenticatedHubIndexRoute
+  '/mobile/': typeof AuthenticatedMobileIndexRoute
   '/prescriber/': typeof AuthenticatedPrescriberIndexRoute
   '/m/$slug/': typeof MSlugIndexRoute
   '/admin/practitioners/$id': typeof AuthenticatedAdminPractitionersIdRoute
@@ -1244,6 +1281,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRouteWithChildren
   '/dashboard/rx-requests/new': typeof AuthenticatedDashboardRxRequestsNewRoute
   '/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
+  '/mobile/booking/$id': typeof AuthenticatedMobileBookingIdRoute
   '/prescriber/requests/$id': typeof AuthenticatedPrescriberRequestsIdRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
@@ -1307,6 +1345,7 @@ export interface FileRoutesByTo {
   '/c/$token': typeof CTokenRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$token': typeof FTokenRoute
+  '/mobile/login': typeof MobileLoginRoute
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/acceptable-use': typeof PrivacyAcceptableUseRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
@@ -1368,6 +1407,7 @@ export interface FileRoutesByTo {
   '/hub/referrals': typeof AuthenticatedHubReferralsRoute
   '/hub/verification': typeof AuthenticatedHubVerificationRoute
   '/hub/visits': typeof AuthenticatedHubVisitsRoute
+  '/mobile/clients': typeof AuthenticatedMobileClientsRoute
   '/prescriber/connections': typeof AuthenticatedPrescriberConnectionsRoute
   '/prescriber/dashboard': typeof AuthenticatedPrescriberDashboardRoute
   '/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
@@ -1388,6 +1428,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/hub': typeof AuthenticatedHubIndexRoute
+  '/mobile': typeof AuthenticatedMobileIndexRoute
   '/prescriber': typeof AuthenticatedPrescriberIndexRoute
   '/m/$slug': typeof MSlugIndexRoute
   '/admin/practitioners/$id': typeof AuthenticatedAdminPractitionersIdRoute
@@ -1401,6 +1442,7 @@ export interface FileRoutesByTo {
   '/dashboard/notifications/sms': typeof AuthenticatedDashboardNotificationsSmsRoute
   '/dashboard/rx-requests/new': typeof AuthenticatedDashboardRxRequestsNewRoute
   '/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
+  '/mobile/booking/$id': typeof AuthenticatedMobileBookingIdRoute
   '/prescriber/requests/$id': typeof AuthenticatedPrescriberRequestsIdRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
@@ -1464,6 +1506,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/hub': typeof AuthenticatedHubRouteWithChildren
+  '/_authenticated/mobile': typeof AuthenticatedMobileRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/prescriber': typeof AuthenticatedPrescriberRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
@@ -1471,6 +1514,7 @@ export interface FileRoutesById {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/f/$token': typeof FTokenRoute
   '/m/$slug': typeof MSlugRouteWithChildren
+  '/mobile/login': typeof MobileLoginRoute
   '/plan/$token': typeof PlanTokenRoute
   '/privacy/acceptable-use': typeof PrivacyAcceptableUseRoute
   '/privacy/breach-response': typeof PrivacyBreachResponseRoute
@@ -1536,6 +1580,7 @@ export interface FileRoutesById {
   '/_authenticated/hub/referrals': typeof AuthenticatedHubReferralsRoute
   '/_authenticated/hub/verification': typeof AuthenticatedHubVerificationRoute
   '/_authenticated/hub/visits': typeof AuthenticatedHubVisitsRoute
+  '/_authenticated/mobile/clients': typeof AuthenticatedMobileClientsRoute
   '/_authenticated/prescriber/connections': typeof AuthenticatedPrescriberConnectionsRoute
   '/_authenticated/prescriber/dashboard': typeof AuthenticatedPrescriberDashboardRoute
   '/_authenticated/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
@@ -1557,6 +1602,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/hub/': typeof AuthenticatedHubIndexRoute
+  '/_authenticated/mobile/': typeof AuthenticatedMobileIndexRoute
   '/_authenticated/prescriber/': typeof AuthenticatedPrescriberIndexRoute
   '/m/$slug/': typeof MSlugIndexRoute
   '/_authenticated/admin/practitioners/$id': typeof AuthenticatedAdminPractitionersIdRoute
@@ -1571,6 +1617,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/patients/$id': typeof AuthenticatedDashboardPatientsIdRouteWithChildren
   '/_authenticated/dashboard/rx-requests/new': typeof AuthenticatedDashboardRxRequestsNewRoute
   '/_authenticated/dashboard/training/bookings': typeof AuthenticatedDashboardTrainingBookingsRoute
+  '/_authenticated/mobile/booking/$id': typeof AuthenticatedMobileBookingIdRoute
   '/_authenticated/prescriber/requests/$id': typeof AuthenticatedPrescriberRequestsIdRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
@@ -1634,6 +1681,7 @@ export interface FileRouteTypes {
     | '/admin-prescribers'
     | '/dashboard'
     | '/hub'
+    | '/mobile'
     | '/onboarding'
     | '/prescriber'
     | '/book/$slug'
@@ -1641,6 +1689,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/f/$token'
     | '/m/$slug'
+    | '/mobile/login'
     | '/plan/$token'
     | '/privacy/acceptable-use'
     | '/privacy/breach-response'
@@ -1706,6 +1755,7 @@ export interface FileRouteTypes {
     | '/hub/referrals'
     | '/hub/verification'
     | '/hub/visits'
+    | '/mobile/clients'
     | '/prescriber/connections'
     | '/prescriber/dashboard'
     | '/prescriber/directions'
@@ -1727,6 +1777,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/dashboard/'
     | '/hub/'
+    | '/mobile/'
     | '/prescriber/'
     | '/m/$slug/'
     | '/admin/practitioners/$id'
@@ -1741,6 +1792,7 @@ export interface FileRouteTypes {
     | '/dashboard/patients/$id'
     | '/dashboard/rx-requests/new'
     | '/dashboard/training/bookings'
+    | '/mobile/booking/$id'
     | '/prescriber/requests/$id'
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
@@ -1804,6 +1856,7 @@ export interface FileRouteTypes {
     | '/c/$token'
     | '/email/unsubscribe'
     | '/f/$token'
+    | '/mobile/login'
     | '/plan/$token'
     | '/privacy/acceptable-use'
     | '/privacy/breach-response'
@@ -1865,6 +1918,7 @@ export interface FileRouteTypes {
     | '/hub/referrals'
     | '/hub/verification'
     | '/hub/visits'
+    | '/mobile/clients'
     | '/prescriber/connections'
     | '/prescriber/dashboard'
     | '/prescriber/directions'
@@ -1885,6 +1939,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/hub'
+    | '/mobile'
     | '/prescriber'
     | '/m/$slug'
     | '/admin/practitioners/$id'
@@ -1898,6 +1953,7 @@ export interface FileRouteTypes {
     | '/dashboard/notifications/sms'
     | '/dashboard/rx-requests/new'
     | '/dashboard/training/bookings'
+    | '/mobile/booking/$id'
     | '/prescriber/requests/$id'
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
@@ -1960,6 +2016,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-prescribers'
     | '/_authenticated/dashboard'
     | '/_authenticated/hub'
+    | '/_authenticated/mobile'
     | '/_authenticated/onboarding'
     | '/_authenticated/prescriber'
     | '/book/$slug'
@@ -1967,6 +2024,7 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/f/$token'
     | '/m/$slug'
+    | '/mobile/login'
     | '/plan/$token'
     | '/privacy/acceptable-use'
     | '/privacy/breach-response'
@@ -2032,6 +2090,7 @@ export interface FileRouteTypes {
     | '/_authenticated/hub/referrals'
     | '/_authenticated/hub/verification'
     | '/_authenticated/hub/visits'
+    | '/_authenticated/mobile/clients'
     | '/_authenticated/prescriber/connections'
     | '/_authenticated/prescriber/dashboard'
     | '/_authenticated/prescriber/directions'
@@ -2053,6 +2112,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/dashboard/'
     | '/_authenticated/hub/'
+    | '/_authenticated/mobile/'
     | '/_authenticated/prescriber/'
     | '/m/$slug/'
     | '/_authenticated/admin/practitioners/$id'
@@ -2067,6 +2127,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/patients/$id'
     | '/_authenticated/dashboard/rx-requests/new'
     | '/_authenticated/dashboard/training/bookings'
+    | '/_authenticated/mobile/booking/$id'
     | '/_authenticated/prescriber/requests/$id'
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
@@ -2131,6 +2192,7 @@ export interface RootRouteChildren {
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   FTokenRoute: typeof FTokenRoute
   MSlugRoute: typeof MSlugRouteWithChildren
+  MobileLoginRoute: typeof MobileLoginRoute
   PlanTokenRoute: typeof PlanTokenRoute
   RCodeRoute: typeof RCodeRoute
   StaffAcceptTokenRoute: typeof StaffAcceptTokenRoute
@@ -2361,6 +2423,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlanTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mobile/login': {
+      id: '/mobile/login'
+      path: '/mobile/login'
+      fullPath: '/mobile/login'
+      preLoaderRoute: typeof MobileLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/m/$slug': {
       id: '/m/$slug'
       path: '/m/$slug'
@@ -2410,6 +2479,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/mobile': {
+      id: '/_authenticated/mobile'
+      path: '/mobile'
+      fullPath: '/mobile'
+      preLoaderRoute: typeof AuthenticatedMobileRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/hub': {
       id: '/_authenticated/hub'
       path: '/hub'
@@ -2451,6 +2527,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/prescriber/'
       preLoaderRoute: typeof AuthenticatedPrescriberIndexRouteImport
       parentRoute: typeof AuthenticatedPrescriberRoute
+    }
+    '/_authenticated/mobile/': {
+      id: '/_authenticated/mobile/'
+      path: '/'
+      fullPath: '/mobile/'
+      preLoaderRoute: typeof AuthenticatedMobileIndexRouteImport
+      parentRoute: typeof AuthenticatedMobileRoute
     }
     '/_authenticated/hub/': {
       id: '/_authenticated/hub/'
@@ -2598,6 +2681,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/prescriber/connections'
       preLoaderRoute: typeof AuthenticatedPrescriberConnectionsRouteImport
       parentRoute: typeof AuthenticatedPrescriberRoute
+    }
+    '/_authenticated/mobile/clients': {
+      id: '/_authenticated/mobile/clients'
+      path: '/clients'
+      fullPath: '/mobile/clients'
+      preLoaderRoute: typeof AuthenticatedMobileClientsRouteImport
+      parentRoute: typeof AuthenticatedMobileRoute
     }
     '/_authenticated/hub/visits': {
       id: '/_authenticated/hub/visits'
@@ -3194,6 +3284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPrescriberRequestsIdRouteImport
       parentRoute: typeof AuthenticatedPrescriberRequestsRoute
     }
+    '/_authenticated/mobile/booking/$id': {
+      id: '/_authenticated/mobile/booking/$id'
+      path: '/booking/$id'
+      fullPath: '/mobile/booking/$id'
+      preLoaderRoute: typeof AuthenticatedMobileBookingIdRouteImport
+      parentRoute: typeof AuthenticatedMobileRoute
+    }
     '/_authenticated/dashboard/training/bookings': {
       id: '/_authenticated/dashboard/training/bookings'
       path: '/bookings'
@@ -3641,6 +3738,21 @@ const AuthenticatedHubRouteChildren: AuthenticatedHubRouteChildren = {
 const AuthenticatedHubRouteWithChildren =
   AuthenticatedHubRoute._addFileChildren(AuthenticatedHubRouteChildren)
 
+interface AuthenticatedMobileRouteChildren {
+  AuthenticatedMobileClientsRoute: typeof AuthenticatedMobileClientsRoute
+  AuthenticatedMobileIndexRoute: typeof AuthenticatedMobileIndexRoute
+  AuthenticatedMobileBookingIdRoute: typeof AuthenticatedMobileBookingIdRoute
+}
+
+const AuthenticatedMobileRouteChildren: AuthenticatedMobileRouteChildren = {
+  AuthenticatedMobileClientsRoute: AuthenticatedMobileClientsRoute,
+  AuthenticatedMobileIndexRoute: AuthenticatedMobileIndexRoute,
+  AuthenticatedMobileBookingIdRoute: AuthenticatedMobileBookingIdRoute,
+}
+
+const AuthenticatedMobileRouteWithChildren =
+  AuthenticatedMobileRoute._addFileChildren(AuthenticatedMobileRouteChildren)
+
 interface AuthenticatedPrescriberRequestsRouteChildren {
   AuthenticatedPrescriberRequestsIdRoute: typeof AuthenticatedPrescriberRequestsIdRoute
 }
@@ -3693,6 +3805,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminPrescribersRoute: typeof AuthenticatedAdminPrescribersRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
   AuthenticatedHubRoute: typeof AuthenticatedHubRouteWithChildren
+  AuthenticatedMobileRoute: typeof AuthenticatedMobileRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPrescriberRoute: typeof AuthenticatedPrescriberRouteWithChildren
 }
@@ -3702,6 +3815,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminPrescribersRoute: AuthenticatedAdminPrescribersRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
   AuthenticatedHubRoute: AuthenticatedHubRouteWithChildren,
+  AuthenticatedMobileRoute: AuthenticatedMobileRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPrescriberRoute: AuthenticatedPrescriberRouteWithChildren,
 }
@@ -3806,6 +3920,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   FTokenRoute: FTokenRoute,
   MSlugRoute: MSlugRouteWithChildren,
+  MobileLoginRoute: MobileLoginRoute,
   PlanTokenRoute: PlanTokenRoute,
   RCodeRoute: RCodeRoute,
   StaffAcceptTokenRoute: StaffAcceptTokenRoute,
