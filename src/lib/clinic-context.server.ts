@@ -117,6 +117,7 @@ export async function assertClinicOwner(supabase: any, userId: string) {
   const access = await resolveClinicAccess(supabase, userId);
   if (!access.isOwner) throw new Error("Only the clinic owner can do this.");
   return access.profileId!;
+}
 
 
 function getServerSupabasePublic() {
