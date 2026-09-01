@@ -11,6 +11,7 @@
     "prebuild": "expo prebuild",
     "build:ios": "eas build --platform ios",
     "build:android": "eas build --platform android",
+    "build:production": "npx eas-cli@latest build --profile production",
     "submit:ios": "eas submit --platform ios",
     "submit:android": "eas submit --platform android"
   },

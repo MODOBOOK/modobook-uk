@@ -7,3 +7,4 @@
 - [x] Redesign Ryan's booking page with his brand palette (#2F4349 dark, #E7E3D8 cream, #C9BFB2 taupe, #3F7F7C teal, #4FB3BD bright teal) — darker, premium medical.
 - [x] Fix: deposits enabled but not transferring to booking page.
 - [x] Release held time slots when a client leaves the booking page without booking.
+- [ ] Expo production build command documented and wired (`npx eas-cli@latest build --profile production`).

@@ -39,7 +39,7 @@ cd expo
 bun run build:ios --profile preview
 
 # App Store production build
-bun run build:ios --profile production
+npx eas-cli@latest build --profile production
 ```
 
 ## What the app does today
