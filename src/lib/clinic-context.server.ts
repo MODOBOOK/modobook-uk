@@ -61,6 +61,21 @@ export async function resolveClinicAccess(
 
   const wanted = selectedClinicCookie();
 
+  // An explicit clinic selection (ClinicSwitcher cookie) always wins — even
+  // for users who own a clinic but are staff/admin of another. Without this,
+  // owners can never switch into a clinic they administer.
+  const chosen = wanted ? staff.find((s) => s.profile_id === wanted) : undefined;
+  if (chosen) {
+    return {
+      profileId: chosen.profile_id,
+      isOwner: false,
+      role: chosen.role,
+      dataScope: chosen.data_scope === "own" ? "own" : "clinic",
+      staffId: chosen.id,
+      staffPractitionerId: chosen.practitioner_id ?? null,
+    };
+  }
+
   if (own?.id) {
     return {
       profileId: own.id,
@@ -72,7 +87,7 @@ export async function resolveClinicAccess(
     };
   }
 
-  const match = (wanted && staff.find((s) => s.profile_id === wanted)) || staff[0];
+  const match = staff[0];
   if (match) {
     return {
       profileId: match.profile_id,
