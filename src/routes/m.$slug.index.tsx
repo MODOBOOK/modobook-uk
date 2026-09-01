@@ -677,7 +677,9 @@ function BookPage() {
               options={arr.map((o) => ({
                 id: o.id,
                 name: o.name,
-                price: priceFor(o),
+                price: treatmentPricing(o as never, priceFor(o)).price,
+                base_price: priceFor(o),
+                discount_percent: treatmentPricing(o as never, priceFor(o)).percent,
                 duration: durationFor(o),
                 session_count: (o as { session_count?: number }).session_count ?? 1,
                 allow_split_payment: Boolean((o as { allow_split_payment?: boolean }).allow_split_payment),

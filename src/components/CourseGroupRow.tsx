@@ -25,6 +25,8 @@ export type CourseOption = {
   unit_label?: string | null;
   cta_label?: string | null;
   option_label?: string | null;
+  base_price?: number | null;
+  discount_percent?: number | null;
 };
 
 function treatmentName(name: string) {
@@ -97,7 +99,12 @@ export function CourseGroupRow({
   const blurb = single?.description ?? sorted.find((o) => o.description)?.description ?? null;
   const anySplit = sorted.some((o) => o.allow_split_payment && o.session_count > 1);
   const bookable = sorted.filter((o) => !o.full);
-  const fromPrice = (bookable.length ? bookable : sorted).reduce((min, o) => Math.min(min, o.price), Number.POSITIVE_INFINITY);
+  const priceList = bookable.length ? bookable : sorted;
+  const fromPrice = priceList.reduce((min, o) => Math.min(min, o.price), Number.POSITIVE_INFINITY);
+  const fromOption = priceList.find((o) => o.price === fromPrice);
+  const fromBase = fromOption?.base_price ?? null;
+  const fromHasDiscount = fromBase != null && fromBase > fromPrice + 0.001;
+  const maxDiscountPercent = priceList.reduce((max, o) => Math.max(max, o.discount_percent ?? 0), 0);
   const spacingLabel = (days?: number | null) => {
     if (!days || days <= 0) return null;
     if (days % 7 === 0) {
@@ -150,7 +157,16 @@ export function CourseGroupRow({
               <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
                 {Number.isFinite(fromPrice) && (
                   <span className="font-bold" style={{ color: priceColor }}>
-                    <span className="text-xs font-semibold opacity-70">from </span>£{fromPrice.toFixed(2)}
+                    <span className="text-xs font-semibold opacity-70">from </span>
+                    {fromHasDiscount && (
+                      <span className="mr-1 text-xs font-medium line-through opacity-60">£{(fromBase as number).toFixed(2)}</span>
+                    )}
+                    £{fromPrice.toFixed(2)}
+                  </span>
+                )}
+                {maxDiscountPercent > 0 && (
+                  <span className="rounded-full bg-rose-100 px-2 py-px text-[11px] font-bold uppercase tracking-wide text-rose-700">
+                    {Math.round(maxDiscountPercent)}% off
                   </span>
                 )}
                 {single?.duration ? <span>· {single.duration} min</span> : null}
@@ -255,8 +271,18 @@ export function CourseGroupRow({
                         </p>
                       )}
                     </div>
-                    <div className="shrink-0 text-base font-bold" style={{ color: brand }}>
-                      £{o.price.toFixed(2)}
+                    <div className="shrink-0 text-right">
+                      {o.base_price != null && o.base_price > o.price + 0.001 && (
+                        <div className="text-xs font-medium line-through opacity-60">£{o.base_price.toFixed(2)}</div>
+                      )}
+                      <div className="text-base font-bold" style={{ color: brand }}>
+                        £{o.price.toFixed(2)}
+                      </div>
+                      {(o.discount_percent ?? 0) > 0 && (
+                        <div className="text-[11px] font-bold uppercase tracking-wide text-rose-600">
+                          {Math.round(o.discount_percent as number)}% off
+                        </div>
+                      )}
                     </div>
                   </div>
                 </button>
@@ -340,8 +366,11 @@ export function CourseGroupRow({
                       </div>
                     )}
                   </div>
-                  <div className="shrink-0 font-bold" style={{ color: brand }}>
-                    £{o.price.toFixed(2)}
+                  <div className="shrink-0 text-right">
+                    {o.base_price != null && o.base_price > o.price + 0.001 && (
+                      <div className="text-xs font-medium line-through opacity-60">£{o.base_price.toFixed(2)}</div>
+                    )}
+                    <div className="font-bold" style={{ color: brand }}>£{o.price.toFixed(2)}</div>
                   </div>
                 </div>
               );
