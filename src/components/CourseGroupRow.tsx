@@ -163,8 +163,17 @@ export function CourseGroupRow({
               </div>
               <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
                 {Number.isFinite(fromPrice) && (
-                  <span className="font-bold" style={{ color: priceColor }}>
-                    <span className="text-xs font-semibold opacity-70">from </span>£{fromPrice.toFixed(2)}
+                  <span className="flex items-center gap-1.5 font-bold" style={{ color: priceColor }}>
+                    <span className="text-xs font-semibold opacity-70">from </span>
+                    {fromWas != null && fromWas > fromPrice && (
+                      <span className="text-xs font-medium line-through opacity-60">£{fromWas.toFixed(2)}</span>
+                    )}
+                    £{fromPrice.toFixed(2)}
+                  </span>
+                )}
+                {maxPercent > 0 && (
+                  <span className="rounded-full bg-rose-100 px-2 py-px text-[11px] font-bold uppercase tracking-wide text-rose-700">
+                    {offerLabel || `${Math.round(maxPercent)}% off`}
                   </span>
                 )}
                 {single?.duration ? <span>· {single.duration} min</span> : null}
