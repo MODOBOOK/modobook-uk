@@ -53,6 +53,7 @@ import { Route as AuthenticatedAdminPrescribersRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as MSlugIndexRouteImport } from './routes/m.$slug.index'
 import { Route as AuthenticatedPrescriberIndexRouteImport } from './routes/_authenticated/prescriber.index'
+import { Route as AuthenticatedMobileIndexRouteImport } from './routes/_authenticated/mobile.index'
 import { Route as AuthenticatedHubIndexRouteImport } from './routes/_authenticated/hub.index'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -399,6 +400,12 @@ const AuthenticatedPrescriberIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedPrescriberRoute,
+  } as any)
+const AuthenticatedMobileIndexRoute =
+  AuthenticatedMobileIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedMobileRoute,
   } as any)
 const AuthenticatedHubIndexRoute = AuthenticatedHubIndexRouteImport.update({
   id: '/',
@@ -1149,7 +1156,7 @@ export interface FileRoutesByFullPath {
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/hub': typeof AuthenticatedHubRouteWithChildren
-  '/mobile': typeof AuthenticatedMobileRoute
+  '/mobile': typeof AuthenticatedMobileRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/prescriber': typeof AuthenticatedPrescriberRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
@@ -1244,6 +1251,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/hub/': typeof AuthenticatedHubIndexRoute
+  '/mobile/': typeof AuthenticatedMobileIndexRoute
   '/prescriber/': typeof AuthenticatedPrescriberIndexRoute
   '/m/$slug/': typeof MSlugIndexRoute
   '/admin/practitioners/$id': typeof AuthenticatedAdminPractitionersIdRoute
@@ -1316,7 +1324,6 @@ export interface FileRoutesByTo {
   '/waitlist': typeof WaitlistRoute
   '/who-its-for': typeof WhoItsForRoute
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
-  '/mobile': typeof AuthenticatedMobileRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/book/$slug': typeof BookSlugRoute
   '/c/$token': typeof CTokenRoute
@@ -1404,6 +1411,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/hub': typeof AuthenticatedHubIndexRoute
+  '/mobile': typeof AuthenticatedMobileIndexRoute
   '/prescriber': typeof AuthenticatedPrescriberIndexRoute
   '/m/$slug': typeof MSlugIndexRoute
   '/admin/practitioners/$id': typeof AuthenticatedAdminPractitionersIdRoute
@@ -1480,7 +1488,7 @@ export interface FileRoutesById {
   '/_authenticated/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/_authenticated/hub': typeof AuthenticatedHubRouteWithChildren
-  '/_authenticated/mobile': typeof AuthenticatedMobileRoute
+  '/_authenticated/mobile': typeof AuthenticatedMobileRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/prescriber': typeof AuthenticatedPrescriberRouteWithChildren
   '/book/$slug': typeof BookSlugRoute
@@ -1575,6 +1583,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/hub/': typeof AuthenticatedHubIndexRoute
+  '/_authenticated/mobile/': typeof AuthenticatedMobileIndexRoute
   '/_authenticated/prescriber/': typeof AuthenticatedPrescriberIndexRoute
   '/m/$slug/': typeof MSlugIndexRoute
   '/_authenticated/admin/practitioners/$id': typeof AuthenticatedAdminPractitionersIdRoute
@@ -1747,6 +1756,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/dashboard/'
     | '/hub/'
+    | '/mobile/'
     | '/prescriber/'
     | '/m/$slug/'
     | '/admin/practitioners/$id'
@@ -1819,7 +1829,6 @@ export interface FileRouteTypes {
     | '/waitlist'
     | '/who-its-for'
     | '/admin-prescribers'
-    | '/mobile'
     | '/onboarding'
     | '/book/$slug'
     | '/c/$token'
@@ -1907,6 +1916,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/dashboard'
     | '/hub'
+    | '/mobile'
     | '/prescriber'
     | '/m/$slug'
     | '/admin/practitioners/$id'
@@ -2077,6 +2087,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/dashboard/'
     | '/_authenticated/hub/'
+    | '/_authenticated/mobile/'
     | '/_authenticated/prescriber/'
     | '/m/$slug/'
     | '/_authenticated/admin/practitioners/$id'
@@ -2490,6 +2501,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/prescriber/'
       preLoaderRoute: typeof AuthenticatedPrescriberIndexRouteImport
       parentRoute: typeof AuthenticatedPrescriberRoute
+    }
+    '/_authenticated/mobile/': {
+      id: '/_authenticated/mobile/'
+      path: '/'
+      fullPath: '/mobile/'
+      preLoaderRoute: typeof AuthenticatedMobileIndexRouteImport
+      parentRoute: typeof AuthenticatedMobileRoute
     }
     '/_authenticated/hub/': {
       id: '/_authenticated/hub/'
@@ -3680,6 +3698,17 @@ const AuthenticatedHubRouteChildren: AuthenticatedHubRouteChildren = {
 const AuthenticatedHubRouteWithChildren =
   AuthenticatedHubRoute._addFileChildren(AuthenticatedHubRouteChildren)
 
+interface AuthenticatedMobileRouteChildren {
+  AuthenticatedMobileIndexRoute: typeof AuthenticatedMobileIndexRoute
+}
+
+const AuthenticatedMobileRouteChildren: AuthenticatedMobileRouteChildren = {
+  AuthenticatedMobileIndexRoute: AuthenticatedMobileIndexRoute,
+}
+
+const AuthenticatedMobileRouteWithChildren =
+  AuthenticatedMobileRoute._addFileChildren(AuthenticatedMobileRouteChildren)
+
 interface AuthenticatedPrescriberRequestsRouteChildren {
   AuthenticatedPrescriberRequestsIdRoute: typeof AuthenticatedPrescriberRequestsIdRoute
 }
@@ -3732,7 +3761,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminPrescribersRoute: typeof AuthenticatedAdminPrescribersRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
   AuthenticatedHubRoute: typeof AuthenticatedHubRouteWithChildren
-  AuthenticatedMobileRoute: typeof AuthenticatedMobileRoute
+  AuthenticatedMobileRoute: typeof AuthenticatedMobileRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPrescriberRoute: typeof AuthenticatedPrescriberRouteWithChildren
 }
@@ -3742,7 +3771,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminPrescribersRoute: AuthenticatedAdminPrescribersRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
   AuthenticatedHubRoute: AuthenticatedHubRouteWithChildren,
-  AuthenticatedMobileRoute: AuthenticatedMobileRoute,
+  AuthenticatedMobileRoute: AuthenticatedMobileRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPrescriberRoute: AuthenticatedPrescriberRouteWithChildren,
 }
