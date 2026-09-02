@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { SaveReminder } from "@/components/SaveReminder";
+import { PLATFORM_FEE_LABEL, PLATFORM_FEE_DESCRIPTION, PLATFORM_FEE_PERCENT, PLATFORM_FEE_FIXED_CENTS } from "@/lib/platform-fee";
 
 
 
@@ -196,13 +197,13 @@ const [saving, setSaving] = useState(false);
           />
           <ToggleRow
             label="Klarna"
-            hint="Pay in 3 / pay later via Klarna. Patient pays the Klarna fee on top."
+            hint="Pay in 3 / pay later via Klarna. Same platform fee as every other method."
             checked={s.payment_klarna_enabled}
             onChange={(v) => set("payment_klarna_enabled", v)}
           />
           <ToggleRow
             label="Clearpay"
-            hint="Buy-now-pay-later via Clearpay. Patient pays the Clearpay fee on top."
+            hint="Buy-now-pay-later via Clearpay. Same platform fee as every other method."
             checked={s.payment_clearpay_enabled}
             onChange={(v) => set("payment_clearpay_enabled", v)}
           />
