@@ -128,7 +128,9 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
       return o.cardEnabled ? (["card"] as Array<"card" | "klarna" | "clearpay">) : [];
     }
     const arr: Array<"card" | "klarna" | "clearpay"> = [];
-    if (o.cardEnabled) arr.push("card");
+    // Card in "pay in full" mode is governed by its own toggle — a clinic can
+    // take card deposits while keeping full payments Klarna/Clearpay only.
+    if (o.fullCardEnabled) arr.push("card");
     if (o.klarnaEnabled) arr.push("klarna");
     if (o.clearpayEnabled) arr.push("clearpay");
     return arr;
