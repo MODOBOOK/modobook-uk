@@ -1411,6 +1411,12 @@ function BookPage() {
                 </p>
               )}
               {profile.deposit_policy_text && <p>{profile.deposit_policy_text}</p>}
+              {passFees && (
+                <p>
+                  A platform fee ({PLATFORM_FEE_DESCRIPTION}) applies to all online payments (card, Klarna and
+                  Clearpay) and is shown in your total before you pay. Cash and pay-in-clinic bookings carry no fee.
+                </p>
+              )}
               {profile.cancellation_rules && profile.cancellation_rules.length > 0 && (
                 <ul className="ml-4 list-disc space-y-1">
                   {describeCancellationRules(profile.cancellation_rules).map((r, i) => <li key={i}>{r}</li>)}
