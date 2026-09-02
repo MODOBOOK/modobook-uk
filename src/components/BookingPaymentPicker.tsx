@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo } from "react";
 import { getPublicPaymentOptions, type PaymentChoice } from "@/lib/public-booking.functions";
 import { CreditCard, ShieldCheck } from "lucide-react";
+import { platformFeeCents, PLATFORM_FEE_LABEL } from "@/lib/platform-fee";
 
 type BookingMode = "deposit" | "full" | "cash" | "card_capture";
 
@@ -195,23 +196,10 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   const forceDepositCard = !depositWaived && o.requireDepositToConfirm && chosen?.mode === "deposit";
 
   const baseCents = chosen?.mode === "deposit" ? effectiveDepositCents : treatmentTotalCents;
-  const pct = !chosen
-    ? 0
-    : chosen.mode === "deposit"
-      ? o.surcharges.depositPercent
-      : chosen.method === "card"
-        ? o.surcharges.cardPercent
-        : o.surcharges.bnplPercent;
-  const clinicFeeCents = pct > 0 && chosen ? Math.ceil((baseCents * pct) / 100) : 0;
-
-  const isBnpl = chosen?.method === "klarna" || chosen?.method === "clearpay";
-  const stripePct = o.stripeFee.passToPatient ? (isBnpl ? o.stripeFee.bnplPercent : o.stripeFee.cardPercent) : 0;
-  const stripeFixed = o.stripeFee.passToPatient ? (isBnpl ? o.stripeFee.bnplFixedCents : o.stripeFee.cardFixedCents) : 0;
-  const stripeFeeCents = o.stripeFee.passToPatient && chosen
-    ? Math.ceil((baseCents * stripePct) / 100) + Math.max(0, stripeFixed)
-    : 0;
-
-  const surchargeCents = clinicFeeCents + stripeFeeCents;
+  // One uniform platform fee across every online payment method. Cash / pay in
+  // clinic never carries it, and neither does a card-capture-only booking.
+  const isOnlinePayment = !!chosen && chosen.mode !== "cash";
+  const surchargeCents = isOnlinePayment ? platformFeeCents(baseCents, o.passFees) : 0;
   const totalCents = chosen ? baseCents + surchargeCents : 0;
 
   
@@ -408,16 +396,10 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
               <span className="opacity-70">{chosen.mode === "deposit" ? "Deposit" : "Subtotal"}</span>
               <span>{formatGBP(baseCents)}</span>
             </div>
-            {clinicFeeCents > 0 && (
+            {surchargeCents > 0 && (
               <div className="flex items-baseline justify-between">
-                <span className="opacity-70">Platform fee ({pct}%)</span>
-                <span>{formatGBP(clinicFeeCents)}</span>
-              </div>
-            )}
-            {stripeFeeCents > 0 && (
-              <div className="flex items-baseline justify-between">
-                <span className="opacity-70">Platform fee</span>
-                <span>{formatGBP(stripeFeeCents)}</span>
+                <span className="opacity-70">{PLATFORM_FEE_LABEL}</span>
+                <span>{formatGBP(surchargeCents)}</span>
               </div>
             )}
             <div
