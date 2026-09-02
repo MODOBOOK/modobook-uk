@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getPublicClinic } from "@/lib/public-clinic.functions";
 import { listPublicCourses } from "@/lib/training-public.functions";
 import { listPublicGiftCards } from "@/lib/gift-cards.functions";
+import { PLATFORM_FEE_DESCRIPTION } from "@/lib/platform-fee";
 import { listPublicClinicVisits, listPublicStaleClinicTreatments } from "@/lib/clinic-visits.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
