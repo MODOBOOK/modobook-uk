@@ -1394,7 +1394,8 @@ function BookPage() {
         const noRefundText =
           (profile.no_refund_policy_text ?? "").trim() ||
           "All deposits and payments are non-refundable. If you cancel or reschedule, your payment cannot be returned.";
-        if (!hasDeposit && !noRefund && !profile.deposit_policy_text && !(profile.cancellation_rules && profile.cancellation_rules.length > 0)) return null;
+        const passFees = !!profile.payment_pass_fees_to_customer;
+        if (!hasDeposit && !noRefund && !passFees && !profile.deposit_policy_text && !(profile.cancellation_rules && profile.cancellation_rules.length > 0)) return null;
         return (
         <section className="mx-auto mt-4 max-w-3xl px-4">
           <details className="rounded-2xl border bg-card px-5 py-4 text-sm sm:px-7" style={{ borderColor: `${brand}1a` }}>
