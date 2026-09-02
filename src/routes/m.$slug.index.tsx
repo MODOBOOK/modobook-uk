@@ -261,6 +261,7 @@ function BookPage() {
         deposit_policy_text?: string | null;
         no_refund_policy_enabled?: boolean | null;
         no_refund_policy_text?: string | null;
+        payment_pass_fees_to_customer?: boolean | null;
         cancellation_rules?: { hours_before: number; fee_percent: number }[] | null;
         chooser_enabled?: boolean | null;
         chooser_show_know?: boolean | null;
