@@ -1200,38 +1200,12 @@ async function maybeCreateBookingCheckout(args: {
     if (methodTypes.length === 0) methodTypes.push("card");
   }
 
-  // Practitioner-set platform fee. When the patient picked a method we apply
-  // the exact percentage for that rail; otherwise apply the worst-case among
-  // the enabled methods so the practitioner nets the intended amount.
-  const cardPct = p.payment_surcharge_card_enabled ? Number(p.payment_surcharge_card_percent ?? 0) : 0;
-  const bnplPct = p.payment_surcharge_bnpl_enabled ? Number(p.payment_surcharge_bnpl_percent ?? 0) : 0;
-  const depPct = p.payment_surcharge_deposit_enabled ? Number(p.payment_surcharge_deposit_percent ?? 0) : 0;
-  let pct = 0;
-  if (kind === "deposit") {
-    pct = depPct;
-  } else if (args.choice) {
-    pct = args.choice.method === "card" ? cardPct : bnplPct;
-  } else {
-    const bnplOn = methodTypes.includes("klarna") || methodTypes.includes("afterpay_clearpay");
-    pct = Math.max(cardPct, bnplOn ? bnplPct : 0);
-  }
-  let surchargeCents = pct > 0 ? Math.ceil((amountCents * pct) / 100) : 0;
+  // Uniform platform fee. Same fixed rate on every online payment method
+  // (card, Klarna, Clearpay, deposits) so we never surcharge by payment
+  // instrument — that would breach the UK Payment Services Regulations 2017.
+  // The practitioner only chooses whether they absorb it or pass it on.
+  const surchargeCents = platformFeeCents(amountCents, !!p.payment_pass_fees_to_customer);
 
-  // Optionally add Stripe's own processing fee (rate% + fixed) for the chosen rail.
-  {
-    const isBnpl = args.choice
-      ? args.choice.method === "klarna" || args.choice.method === "clearpay"
-      : methodTypes.includes("klarna") || methodTypes.includes("afterpay_clearpay");
-    const cardPassOn = !!p.stripe_fee_pass_to_patient;
-    const bnplPassOn = !!(p as { stripe_fee_bnpl_pass_to_patient?: boolean }).stripe_fee_bnpl_pass_to_patient;
-    const passOn = isBnpl ? bnplPassOn : cardPassOn;
-    if (passOn) {
-      const stripePct = Number((isBnpl ? p.stripe_fee_bnpl_percent : p.stripe_fee_card_percent) ?? 0);
-      const stripeFixed = Math.round(Number((isBnpl ? p.stripe_fee_bnpl_fixed_cents : p.stripe_fee_card_fixed_cents) ?? 0));
-      const stripeCents = Math.ceil((amountCents * stripePct) / 100) + Math.max(0, stripeFixed);
-      surchargeCents += stripeCents;
-    }
-  }
 
 
   const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
