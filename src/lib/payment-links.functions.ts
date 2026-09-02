@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { platformFeeCents } from "@/lib/platform-fee";
 
 async function __activeProfileId(supabase: any, userId: string) {
   const { activeProfileId } = await import("./clinic-context.server");
@@ -37,37 +38,11 @@ type FeeProfile = {
 // fee, even if the automatic pass-through settings are switched off — falling
 // back to standard card processing rates so the toggle is never a no-op.
 function computeCardSurchargeCents(subtotalCents: number, p: FeeProfile, force = false) {
-  let surcharge = 0;
-  let configured = false;
-
-  if (p.payment_pass_fees_to_customer && p.payment_surcharge_card_enabled) {
-    const pct = Number(p.payment_surcharge_card_percent ?? 0);
-    if (pct > 0) {
-      surcharge += (subtotalCents * pct) / 100;
-      configured = true;
-    }
-  }
-  if (p.stripe_fee_pass_to_patient) {
-    const pct = Number(p.stripe_fee_card_percent ?? 0);
-    const fixed = Number(p.stripe_fee_card_fixed_cents ?? 0);
-    if (pct > 0) {
-      surcharge += (subtotalCents * pct) / 100;
-      configured = true;
-    }
-    if (fixed > 0) {
-      surcharge += fixed;
-      configured = true;
-    }
-  }
-
-  if (!configured && force) {
-    // Fall back to the practitioner's saved rates if present, else defaults.
-    const pct = Number(p.stripe_fee_card_percent ?? 0) || Number(p.payment_surcharge_card_percent ?? 0) || DEFAULT_CARD_FEE_PERCENT;
-    const fixed = Number(p.stripe_fee_card_fixed_cents ?? DEFAULT_CARD_FEE_FIXED_CENTS);
-    surcharge = (subtotalCents * pct) / 100 + fixed;
-  }
-
-  return Math.round(surcharge);
+  // One uniform platform fee on every payment method (UK PSR 2017 forbids
+  // surcharging by payment instrument). `force` is used when the practitioner
+  // explicitly ticks "add fees" on an individual link.
+  const pass = force || !!p.payment_pass_fees_to_customer;
+  return platformFeeCents(subtotalCents, pass);
 }
 
 // Preview the fee that would be added to a link of a given amount, so the

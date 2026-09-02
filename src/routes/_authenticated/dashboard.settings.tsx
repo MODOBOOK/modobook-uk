@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { SaveReminder } from "@/components/SaveReminder";
+import { PLATFORM_FEE_LABEL, PLATFORM_FEE_DESCRIPTION, PLATFORM_FEE_PERCENT, PLATFORM_FEE_FIXED_CENTS } from "@/lib/platform-fee";
 
 
 
@@ -196,76 +197,64 @@ const [saving, setSaving] = useState(false);
           />
           <ToggleRow
             label="Klarna"
-            hint="Pay in 3 / pay later via Klarna. Patient pays the Klarna fee on top."
+            hint="Pay in 3 / pay later via Klarna. Same platform fee as every other method."
             checked={s.payment_klarna_enabled}
             onChange={(v) => set("payment_klarna_enabled", v)}
           />
           <ToggleRow
             label="Clearpay"
-            hint="Buy-now-pay-later via Clearpay. Patient pays the Clearpay fee on top."
+            hint="Buy-now-pay-later via Clearpay. Same platform fee as every other method."
             checked={s.payment_clearpay_enabled}
             onChange={(v) => set("payment_clearpay_enabled", v)}
           />
           <div className="rounded-md border p-3 space-y-3">
             <div>
-              <div className="text-sm font-medium">Stripe processing fee</div>
+              <div className="text-sm font-medium">{PLATFORM_FEE_LABEL} — who pays?</div>
               <p className="text-xs text-muted-foreground">
-                Stripe's own rate per transaction. Toggle on to pass it to the patient at checkout. Defaults are UK domestic — edit to match your Stripe pricing.
+                A fixed {PLATFORM_FEE_DESCRIPTION} on every online payment — card, Klarna and Clearpay
+                are all charged exactly the same. Cash / pay-in-clinic bookings and card-on-file
+                captures never carry a fee.
               </p>
             </div>
-            <div className="flex items-center justify-between gap-3 rounded-md bg-muted/40 p-2">
-              <div className="text-sm">Pass to patient — card payments</div>
-              <Switch
-                checked={s.stripe_fee_pass_to_patient}
-                onCheckedChange={(v) => set("stripe_fee_pass_to_patient", v)}
-              />
+            <div className="grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => set("payment_pass_fees_to_customer", false)}
+                className={`rounded-md border p-3 text-left text-sm transition ${
+                  s.payment_pass_fees_to_customer ? "opacity-70" : "border-primary bg-primary/5"
+                }`}
+              >
+                <div className="font-medium">I pay the fee</div>
+                <div className="text-xs text-muted-foreground">
+                  Client pays the advertised price. The fee comes out of your payout.
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => set("payment_pass_fees_to_customer", true)}
+                className={`rounded-md border p-3 text-left text-sm transition ${
+                  s.payment_pass_fees_to_customer ? "border-primary bg-primary/5" : "opacity-70"
+                }`}
+              >
+                <div className="font-medium">My client pays the fee</div>
+                <div className="text-xs text-muted-foreground">
+                  Shown as a separate "{PLATFORM_FEE_LABEL}" line at checkout, on top of the price.
+                </div>
+              </button>
             </div>
-            <div className="flex items-center justify-between gap-3 rounded-md bg-muted/40 p-2">
-              <div className="text-sm">Pass to patient — Klarna &amp; Clearpay</div>
-              <Switch
-                checked={s.stripe_fee_bnpl_pass_to_patient}
-                onCheckedChange={(v) => set("stripe_fee_bnpl_pass_to_patient", v)}
-              />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1">
-                <Label className="text-xs">Card — %</Label>
-                <Input
-                  type="number" step="0.01" inputMode="decimal"
-                  value={s.stripe_fee_card_percent}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => set("stripe_fee_card_percent", Number(e.target.value) || 0)}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Card — fixed (pence)</Label>
-                <Input
-                  type="number" step="1" inputMode="numeric"
-                  value={s.stripe_fee_card_fixed_cents}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => set("stripe_fee_card_fixed_cents", Math.max(0, Math.round(Number(e.target.value) || 0)))}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Klarna / Clearpay — %</Label>
-                <Input
-                  type="number" step="0.01" inputMode="decimal"
-                  value={s.stripe_fee_bnpl_percent}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => set("stripe_fee_bnpl_percent", Number(e.target.value) || 0)}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">Klarna / Clearpay — fixed (pence)</Label>
-                <Input
-                  type="number" step="1" inputMode="numeric"
-                  value={s.stripe_fee_bnpl_fixed_cents}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => set("stripe_fee_bnpl_fixed_cents", Math.max(0, Math.round(Number(e.target.value) || 0)))}
-                />
-              </div>
-            </div>
+            {s.payment_pass_fees_to_customer && (
+              <p className="text-xs text-muted-foreground">
+                Example: a £100 payment adds {`£${((100 * 100 * PLATFORM_FEE_PERCENT) / 100 / 100 + PLATFORM_FEE_FIXED_CENTS / 100).toFixed(2)}`} — the client pays{" "}
+                {`£${(100 + (100 * PLATFORM_FEE_PERCENT) / 100 + PLATFORM_FEE_FIXED_CENTS / 100).toFixed(2)}`}.
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              UK rules (Payment Services Regulations 2017) don't allow charging clients more for
+              paying by card or with Klarna / Clearpay, so this fee is always the same rate on
+              every method.
+            </p>
           </div>
+
           {/* Deposit is now always required when Deposits is enabled — no toggle. */}
           <ToggleRow
             label="Allow pay in clinic"
