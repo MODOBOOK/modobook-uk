@@ -99,7 +99,9 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
       // Card on file secures the booking without charging now — a valid
       // alternative to a deposit when the clinic offers it.
       if (o.cardCaptureEnabled && o.cardEnabled) arr.push("card_capture");
-      if (arr.length === 0) arr.push("cash");
+      // Even when a deposit is required, honour the clinic's explicit
+      // "Allow pay in clinic" setting so patients can still choose cash.
+      if (o.cashEnabled || arr.length === 0) arr.push("cash");
       return arr;
     }
     if (depositMakesSense) arr.push("deposit");
