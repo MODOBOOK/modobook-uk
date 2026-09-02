@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getPublicClinic } from "@/lib/public-clinic.functions";
 import { listPublicCourses } from "@/lib/training-public.functions";
 import { listPublicGiftCards } from "@/lib/gift-cards.functions";
+import { PLATFORM_FEE_DESCRIPTION } from "@/lib/platform-fee";
 import { listPublicClinicVisits, listPublicStaleClinicTreatments } from "@/lib/clinic-visits.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -261,6 +262,7 @@ function BookPage() {
         deposit_policy_text?: string | null;
         no_refund_policy_enabled?: boolean | null;
         no_refund_policy_text?: string | null;
+        payment_pass_fees_to_customer?: boolean | null;
         cancellation_rules?: { hours_before: number; fee_percent: number }[] | null;
         chooser_enabled?: boolean | null;
         chooser_show_know?: boolean | null;
@@ -1393,7 +1395,8 @@ function BookPage() {
         const noRefundText =
           (profile.no_refund_policy_text ?? "").trim() ||
           "All deposits and payments are non-refundable. If you cancel or reschedule, your payment cannot be returned.";
-        if (!hasDeposit && !noRefund && !profile.deposit_policy_text && !(profile.cancellation_rules && profile.cancellation_rules.length > 0)) return null;
+        const passFees = !!profile.payment_pass_fees_to_customer;
+        if (!hasDeposit && !noRefund && !passFees && !profile.deposit_policy_text && !(profile.cancellation_rules && profile.cancellation_rules.length > 0)) return null;
         return (
         <section className="mx-auto mt-4 max-w-3xl px-4">
           <details className="rounded-2xl border bg-card px-5 py-4 text-sm sm:px-7" style={{ borderColor: `${brand}1a` }}>
@@ -1409,6 +1412,12 @@ function BookPage() {
                 </p>
               )}
               {profile.deposit_policy_text && <p>{profile.deposit_policy_text}</p>}
+              {passFees && (
+                <p>
+                  A platform fee ({PLATFORM_FEE_DESCRIPTION}) applies to all online payments (card, Klarna and
+                  Clearpay) and is shown in your total before you pay. Cash and pay-in-clinic bookings carry no fee.
+                </p>
+              )}
               {profile.cancellation_rules && profile.cancellation_rules.length > 0 && (
                 <ul className="ml-4 list-disc space-y-1">
                   {describeCancellationRules(profile.cancellation_rules).map((r, i) => <li key={i}>{r}</li>)}
