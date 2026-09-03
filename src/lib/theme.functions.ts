@@ -211,7 +211,7 @@ export const saveThemeDraft = createServerFn({ method: "POST" })
       .upsert(
         {
           profile_id: profileId,
-          draft: sanitizeTheme(data) as unknown as Record<string, unknown>,
+          draft: sanitizeTheme(data) as unknown as never,
           draft_updated_at: new Date().toISOString(),
         },
         { onConflict: "profile_id" },

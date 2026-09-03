@@ -70,9 +70,8 @@ type Category = Database["public"]["Tables"]["treatment_categories"]["Row"];
 type Pricing = Database["public"]["Tables"]["treatment_location_pricing"]["Row"];
 
 export const Route = createFileRoute("/m/$slug/")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    draft: search.draft === "1" || search.draft === true ? true : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { draft?: true } =>
+    search.draft === "1" || search.draft === true ? { draft: true } : {},
   loaderDeps: ({ search }) => ({ draft: search.draft }),
   loader: async ({ params, deps }) =>
     getPublicClinic({ data: { slug: params.slug, draft: deps.draft } }),
