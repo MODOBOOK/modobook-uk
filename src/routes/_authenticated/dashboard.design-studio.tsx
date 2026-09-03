@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   Circle,
   Monitor,
+  MousePointerClick,
   RefreshCw,
   Smartphone,
   Rocket,
