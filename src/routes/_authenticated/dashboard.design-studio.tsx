@@ -20,12 +20,14 @@ import {
   CheckCircle2,
   Circle,
   Monitor,
+  MousePointerClick,
   RefreshCw,
   Smartphone,
   Rocket,
   Undo2,
 } from "lucide-react";
 import { designStudioEnabled } from "@/lib/feature-flags";
+import { buildThemeVars } from "@/lib/theme-vars";
 
 export const Route = createFileRoute("/_authenticated/dashboard/design-studio")({
   component: DesignStudioPage,
@@ -72,6 +74,18 @@ const COLOR_FIELDS: { key: keyof ClinicThemeInput; label: string; hint: string }
   { key: "menu_card_bg", label: "Card background", hint: "Treatment cards" },
 ];
 
+/** What a clicked bit of the preview maps onto. */
+type EditTarget = { key: keyof ClinicThemeInput; label: string };
+
+const CLICK_MAP: { selector: string; key: keyof ClinicThemeInput; label: string }[] = [
+  { selector: "header, [data-region='header']", key: "header_bg_color", label: "Header background" },
+  { selector: "footer, [data-region='footer']", key: "footer_bg_color", label: "Footer background" },
+  { selector: "button, a[role='button'], .btn", key: "primary_color", label: "Brand colour (buttons)" },
+  { selector: "h1, h2, h3, h4", key: "text_color", label: "Headings & text" },
+  { selector: "[data-region='card'], article, li, .rounded-xl, .rounded-2xl", key: "menu_card_bg", label: "Card background" },
+  { selector: "body, main, section, div", key: "background_color", label: "Page background" },
+];
+
 function DesignStudioPage() {
   const fetchTheme = useServerFn(getMyTheme);
   const fetchProfile = useServerFn(getMyProfile);
@@ -89,7 +103,11 @@ function DesignStudioPage() {
   const [busy, setBusy] = useState(false);
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
   const [previewKey, setPreviewKey] = useState(0);
+  const [editMode, setEditMode] = useState(true);
+  const [target, setTarget] = useState<EditTarget | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const allowed = designStudioEnabled(slug);
+
 
   useEffect(() => {
     (async () => {
@@ -131,6 +149,72 @@ function DesignStudioPage() {
     });
     setDirty(true);
   }
+
+  // --- Click-to-edit preview -------------------------------------------------
+  // The preview is same-origin, so we can highlight what the practitioner hovers
+  // and open the matching colour control when they click it.
+  const wirePreview = useCallback(() => {
+    const doc = iframeRef.current?.contentDocument;
+    if (!doc) return;
+    doc.querySelectorAll("[data-modo-edit-style]").forEach((n) => n.remove());
+    doc.body?.classList.remove("modo-edit-on");
+    if (!editMode) return;
+
+    const style = doc.createElement("style");
+    style.setAttribute("data-modo-edit-style", "");
+    style.textContent = `
+      .modo-edit-on * { cursor: crosshair !important; }
+      .modo-edit-hover { outline: 2px solid #2563eb !important; outline-offset: -2px !important; }
+    `;
+    doc.head?.appendChild(style);
+    doc.body?.classList.add("modo-edit-on");
+
+    const match = (el: Element) => {
+      for (const m of CLICK_MAP) {
+        const hit = el.closest(m.selector);
+        if (hit) return { hit, key: m.key, label: m.label };
+      }
+      return null;
+    };
+
+    let last: Element | null = null;
+    const onOver = (e: Event) => {
+      const found = match(e.target as Element);
+      if (last) last.classList.remove("modo-edit-hover");
+      last = found?.hit ?? null;
+      last?.classList.add("modo-edit-hover");
+    };
+    const onClick = (e: MouseEvent) => {
+      const found = match(e.target as Element);
+      if (!found) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setTarget({ key: found.key, label: found.label });
+    };
+    doc.addEventListener("mouseover", onOver, true);
+    doc.addEventListener("click", onClick, true);
+    return () => {
+      doc.removeEventListener("mouseover", onOver, true);
+      doc.removeEventListener("click", onClick, true);
+    };
+  }, [editMode]);
+
+  useEffect(() => {
+    const cleanup = wirePreview();
+    return cleanup;
+  }, [wirePreview, previewKey]);
+
+  // Apply colour/font changes to the preview instantly, before the draft saves.
+  useEffect(() => {
+    const doc = iframeRef.current?.contentDocument;
+    if (!doc) return;
+    const vars = buildThemeVars(state as Record<string, unknown>);
+    for (const [k, v] of Object.entries(vars)) doc.documentElement.style.setProperty(k, String(v));
+    const body = doc.body;
+    if (body && state.background_color) body.style.backgroundColor = state.background_color;
+  }, [state]);
+
+
 
   const persistDraft = useCallback(
     async (silent = true) => {
@@ -379,8 +463,25 @@ function DesignStudioPage() {
 
         <Card className="overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-            <CardTitle className="text-base">Live preview</CardTitle>
+            <div>
+              <CardTitle className="text-base">Live preview</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                {editMode
+                  ? "Click anything in the preview to change its colour."
+                  : "Click-to-edit is off — the preview behaves like the real page."}
+              </p>
+            </div>
             <div className="flex items-center gap-1">
+              <Button
+                variant={editMode ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => {
+                  setEditMode((v) => !v);
+                  setTarget(null);
+                }}
+              >
+                <MousePointerClick className="mr-1 h-4 w-4" /> {editMode ? "Editing" : "Edit"}
+              </Button>
               <Button
                 variant={device === "mobile" ? "secondary" : "ghost"}
                 size="icon"
@@ -408,10 +509,32 @@ function DesignStudioPage() {
             </div>
           </CardHeader>
           <CardContent className="bg-muted/30 p-3">
+            {target && (
+              <div className="mb-3 flex items-center gap-3 rounded-lg border border-border bg-background p-3">
+                <input
+                  type="color"
+                  aria-label={target.label}
+                  value={(state[target.key] as string) || "#ffffff"}
+                  onChange={(e) => setColor(target.key, e.target.value)}
+                  className="h-9 w-12 cursor-pointer rounded border border-border bg-transparent p-1"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">{target.label}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Changes show straight away and save as a draft.
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setTarget(null)}>
+                  Done
+                </Button>
+              </div>
+            )}
             {previewSrc ? (
               <div className="mx-auto overflow-hidden rounded-xl border border-border bg-background shadow-sm" style={{ maxWidth: device === "mobile" ? 390 : "100%" }}>
                 <iframe
                   key={previewKey}
+                  ref={iframeRef}
+                  onLoad={() => wirePreview()}
                   src={previewSrc}
                   title="Booking page preview"
                   className="h-[70vh] w-full"
