@@ -114,3 +114,13 @@ export const COURSE_PICKER_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
 export function coursePickerEnabled(slug?: string | null) {
   return isFeatureLive(COURSE_PICKER_SLUGS, slug);
 }
+
+/**
+ * Live design studio (split-screen booking-page editor with draft/publish).
+ * Trialling with the two pilot clinics before opening to everyone.
+ */
+export const DESIGN_STUDIO_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
+
+export function designStudioEnabled(slug?: string | null) {
+  return isFeatureLive(DESIGN_STUDIO_SLUGS, slug);
+}
