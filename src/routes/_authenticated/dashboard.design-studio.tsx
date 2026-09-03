@@ -72,6 +72,18 @@ const COLOR_FIELDS: { key: keyof ClinicThemeInput; label: string; hint: string }
   { key: "menu_card_bg", label: "Card background", hint: "Treatment cards" },
 ];
 
+/** What a clicked bit of the preview maps onto. */
+type EditTarget = { key: keyof ClinicThemeInput; label: string };
+
+const CLICK_MAP: { selector: string; key: keyof ClinicThemeInput; label: string }[] = [
+  { selector: "header, [data-region='header']", key: "header_bg_color", label: "Header background" },
+  { selector: "footer, [data-region='footer']", key: "footer_bg_color", label: "Footer background" },
+  { selector: "button, a[role='button'], .btn", key: "primary_color", label: "Brand colour (buttons)" },
+  { selector: "h1, h2, h3, h4", key: "text_color", label: "Headings & text" },
+  { selector: "[data-region='card'], article, li, .rounded-xl, .rounded-2xl", key: "menu_card_bg", label: "Card background" },
+  { selector: "body, main, section, div", key: "background_color", label: "Page background" },
+];
+
 function DesignStudioPage() {
   const fetchTheme = useServerFn(getMyTheme);
   const fetchProfile = useServerFn(getMyProfile);
@@ -89,7 +101,11 @@ function DesignStudioPage() {
   const [busy, setBusy] = useState(false);
   const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
   const [previewKey, setPreviewKey] = useState(0);
+  const [editMode, setEditMode] = useState(true);
+  const [target, setTarget] = useState<EditTarget | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const allowed = designStudioEnabled(slug);
+
 
   useEffect(() => {
     (async () => {
