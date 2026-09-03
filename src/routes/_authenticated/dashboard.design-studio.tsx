@@ -544,8 +544,6 @@ function DesignStudioPage() {
             )}
           </CardContent>
         </Card>
-
-        </Card>
       </div>
     </div>
   );
