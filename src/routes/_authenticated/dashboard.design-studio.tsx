@@ -462,8 +462,25 @@ function DesignStudioPage() {
 
         <Card className="overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-            <CardTitle className="text-base">Live preview</CardTitle>
+            <div>
+              <CardTitle className="text-base">Live preview</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                {editMode
+                  ? "Click anything in the preview to change its colour."
+                  : "Click-to-edit is off — the preview behaves like the real page."}
+              </p>
+            </div>
             <div className="flex items-center gap-1">
+              <Button
+                variant={editMode ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => {
+                  setEditMode((v) => !v);
+                  setTarget(null);
+                }}
+              >
+                <MousePointerClick className="mr-1 h-4 w-4" /> {editMode ? "Editing" : "Edit"}
+              </Button>
               <Button
                 variant={device === "mobile" ? "secondary" : "ghost"}
                 size="icon"
@@ -491,10 +508,32 @@ function DesignStudioPage() {
             </div>
           </CardHeader>
           <CardContent className="bg-muted/30 p-3">
+            {target && (
+              <div className="mb-3 flex items-center gap-3 rounded-lg border border-border bg-background p-3">
+                <input
+                  type="color"
+                  aria-label={target.label}
+                  value={(state[target.key] as string) || "#ffffff"}
+                  onChange={(e) => setColor(target.key, e.target.value)}
+                  className="h-9 w-12 cursor-pointer rounded border border-border bg-transparent p-1"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">{target.label}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Changes show straight away and save as a draft.
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setTarget(null)}>
+                  Done
+                </Button>
+              </div>
+            )}
             {previewSrc ? (
               <div className="mx-auto overflow-hidden rounded-xl border border-border bg-background shadow-sm" style={{ maxWidth: device === "mobile" ? 390 : "100%" }}>
                 <iframe
                   key={previewKey}
+                  ref={iframeRef}
+                  onLoad={() => wirePreview()}
                   src={previewSrc}
                   title="Booking page preview"
                   className="h-[70vh] w-full"
@@ -504,6 +543,8 @@ function DesignStudioPage() {
               <p className="text-sm text-muted-foreground">Set your booking link first to see a preview.</p>
             )}
           </CardContent>
+        </Card>
+
         </Card>
       </div>
     </div>
