@@ -13,7 +13,7 @@ function getServerSupabasePublic() {
 }
 
 export const getPublicClinic = createServerFn({ method: "GET" })
-  .inputValidator((input: { slug: string }) => input)
+  .inputValidator((input: { slug: string; draft?: boolean }) => input)
   .handler(async ({ data }) => {
     const supabase = getServerSupabasePublic();
     const { data: profile, error: profileError } = await supabase
@@ -157,7 +157,15 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       locations: locations ?? [],
       categories: categories ?? [],
       pricing: pricing ?? [],
-      theme: theme ?? null,
+      theme: (() => {
+        // Design studio preview: overlay the unpublished draft so the
+        // practitioner sees exactly what publishing would look like.
+        const draft = (theme as { draft?: Record<string, unknown> | null } | null)?.draft;
+        if (data.draft && theme && draft && typeof draft === "object") {
+          return { ...theme, ...draft } as typeof theme;
+        }
+        return theme ?? null;
+      })(),
       reviews: reviewsCombined,
       concernAreas: concernAreas.data ?? [],
       concerns: concerns.data ?? [],
