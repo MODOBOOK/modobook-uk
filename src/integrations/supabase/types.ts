@@ -2280,6 +2280,8 @@ export type Database = {
           contact_tile_layout: string
           created_at: string
           custom_css: string | null
+          draft: Json | null
+          draft_updated_at: string | null
           favicon_url: string | null
           footer_bg_color: string
           footer_text_color: string
@@ -2367,6 +2369,8 @@ export type Database = {
           contact_tile_layout?: string
           created_at?: string
           custom_css?: string | null
+          draft?: Json | null
+          draft_updated_at?: string | null
           favicon_url?: string | null
           footer_bg_color?: string
           footer_text_color?: string
@@ -2454,6 +2458,8 @@ export type Database = {
           contact_tile_layout?: string
           created_at?: string
           custom_css?: string | null
+          draft?: Json | null
+          draft_updated_at?: string | null
           favicon_url?: string | null
           footer_bg_color?: string
           footer_text_color?: string
