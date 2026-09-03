@@ -42,7 +42,7 @@ export function associateBillingEnabled(slug?: string | null) {
  * associate oversight, clinic-owner grouping). Pilot account only until we
  * flip these live for everyone.
  */
-export const PILOT_SLUGS = ["aestheticsbynurseryan"];
+export const PILOT_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
 
 export function pilotFeaturesEnabled(slug?: string | null) {
   return isFeatureLive(PILOT_SLUGS, slug);
@@ -61,7 +61,7 @@ export function packagesEnabled(slug?: string | null) {
  * Custom link button on the public booking page (e.g. a skincare store) —
  * pilot account only until we're happy with it.
  */
-export const LINK_BUTTON_SLUGS = ["aestheticsbynurseryan"];
+export const LINK_BUTTON_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
 
 export function linkButtonEnabled(slug?: string | null) {
   return isFeatureLive(LINK_BUTTON_SLUGS, slug);
@@ -71,7 +71,7 @@ export function linkButtonEnabled(slug?: string | null) {
  * Treatment information leaflets (open/close panel on the booking page) —
  * pilot account only for now.
  */
-export const TREATMENT_LEAFLET_SLUGS = ["aestheticsbynurseryan"];
+export const TREATMENT_LEAFLET_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
 
 export function treatmentLeafletsEnabled(slug?: string | null) {
   return isFeatureLive(TREATMENT_LEAFLET_SLUGS, slug);
@@ -109,7 +109,7 @@ export function whatsappReminderOnly(slug?: string | null) {
 
 
 /** Course pop-up picker on the public menu (grouped session options). */
-export const COURSE_PICKER_SLUGS = ["aestheticsbynurseryan"];
+export const COURSE_PICKER_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
 
 export function coursePickerEnabled(slug?: string | null) {
   return isFeatureLive(COURSE_PICKER_SLUGS, slug);
