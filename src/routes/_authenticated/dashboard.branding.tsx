@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyTheme, upsertMyTheme, type ClinicThemeInput } from "@/lib/theme.functions";
@@ -14,7 +14,7 @@ import { Palette, Check, X, Wand2 } from "lucide-react";
 import { PRESETS, LAYOUTS, type ThemePresetKey, type BookingLayoutKey, type ThemePreset } from "@/lib/theme-presets";
 import { COLOR_PALETTES, CUSTOM_PALETTE_SLOTS, buildCustomPalette, type ColorPalette } from "@/lib/color-palettes";
 import { SaveReminder } from "@/components/SaveReminder";
-import { linkButtonEnabled } from "@/lib/feature-flags";
+import { linkButtonEnabled, designStudioEnabled } from "@/lib/feature-flags";
 
 export const Route = createFileRoute("/_authenticated/dashboard/branding")({
   component: BrandingPage,
@@ -391,9 +391,16 @@ function BrandingPage() {
             Pick a style preset to start, then make every colour, font and layout your own.
           </p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="sm:w-auto">
-          {saving ? "Saving…" : "Save changes"}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {designStudioEnabled(slug) && (
+            <Button asChild variant="outline" className="sm:w-auto">
+              <Link to="/dashboard/design-studio">Open design studio</Link>
+            </Button>
+          )}
+          <Button onClick={handleSave} disabled={saving} className="sm:w-auto">
+            {saving ? "Saving…" : "Save changes"}
+          </Button>
+        </div>
       </div>
       <SaveReminder />
 

@@ -169,3 +169,103 @@ export const upsertMyTheme = createServerFn({ method: "POST" })
     }
     return row;
   });
+
+// ---------------------------------------------------------------------------
+// Draft design studio: practitioners edit a private copy of their branding and
+// only push it to the live booking page when they hit Publish.
+// ---------------------------------------------------------------------------
+
+function sanitizeTheme(data: ClinicThemeInput): ClinicThemeInput {
+  const sanitized: ClinicThemeInput = { ...data };
+  if (typeof sanitized.heading_font === "string") {
+    sanitized.heading_font = sanitized.heading_font.replace(/[^a-zA-Z0-9\s\-_,'"]/g, "").slice(0, 80);
+  }
+  if (typeof sanitized.body_font === "string") {
+    sanitized.body_font = sanitized.body_font.replace(/[^a-zA-Z0-9\s\-_,'"]/g, "").slice(0, 80);
+  }
+  if (typeof sanitized.custom_css === "string") {
+    sanitized.custom_css = sanitized.custom_css
+      .replace(/<\/?\s*style\b[^>]*>/gi, "")
+      .replace(/<\/?\s*script\b[^>]*>/gi, "")
+      .replace(/<!--[\s\S]*?-->/g, "")
+      .slice(0, 20000);
+  }
+  if (typeof sanitized.link_button_url === "string") {
+    const raw = sanitized.link_button_url.trim();
+    if (!raw) sanitized.link_button_url = null;
+    else if (/^https?:\/\//i.test(raw)) sanitized.link_button_url = raw.slice(0, 500);
+    else sanitized.link_button_url = `https://${raw.replace(/^\/+/, "")}`.slice(0, 500);
+  }
+  return sanitized;
+}
+
+/** Save the in-progress design without touching the public booking page. */
+export const saveThemeDraft = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: ClinicThemeInput) => input)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { data: row, error } = await context.supabase
+      .from("clinic_theme")
+      .upsert(
+        {
+          profile_id: profileId,
+          draft: sanitizeTheme(data) as unknown as never,
+          draft_updated_at: new Date().toISOString(),
+        },
+        { onConflict: "profile_id" },
+      )
+      .select()
+      .single();
+    if (error) throw error;
+    return row;
+  });
+
+/** Push the saved draft onto the live booking page and clear it. */
+export const publishThemeDraft = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { data: existing } = await context.supabase
+      .from("clinic_theme")
+      .select("draft")
+      .eq("profile_id", profileId)
+      .maybeSingle();
+    const draft = (existing?.draft ?? null) as ClinicThemeInput | null;
+    if (!draft) throw new Error("Nothing to publish yet");
+
+    const sanitized = sanitizeTheme(draft);
+    const { data: row, error } = await context.supabase
+      .from("clinic_theme")
+      .upsert(
+        { profile_id: profileId, ...sanitized, draft: null, draft_updated_at: null },
+        { onConflict: "profile_id" },
+      )
+      .select()
+      .single();
+    if (error) throw error;
+
+    const profileUpdate: { brand_color?: string | null; hero_url?: string | null } = {};
+    if (sanitized.primary_color !== undefined) profileUpdate.brand_color = sanitized.primary_color;
+    if (sanitized.hero_image_url !== undefined) profileUpdate.hero_url = sanitized.hero_image_url;
+    if (Object.keys(profileUpdate).length > 0) {
+      await context.supabase.from("profiles").update(profileUpdate).eq("id", profileId);
+    }
+    return row;
+  });
+
+/** Throw the draft away and go back to whatever is live. */
+export const discardThemeDraft = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { error } = await context.supabase
+      .from("clinic_theme")
+      .update({ draft: null, draft_updated_at: null })
+      .eq("profile_id", profileId);
+    if (error) throw error;
+    return { ok: true };
+  });
