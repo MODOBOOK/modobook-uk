@@ -148,6 +148,72 @@ function DesignStudioPage() {
     setDirty(true);
   }
 
+  // --- Click-to-edit preview -------------------------------------------------
+  // The preview is same-origin, so we can highlight what the practitioner hovers
+  // and open the matching colour control when they click it.
+  const wirePreview = useCallback(() => {
+    const doc = iframeRef.current?.contentDocument;
+    if (!doc) return;
+    doc.querySelectorAll("[data-modo-edit-style]").forEach((n) => n.remove());
+    doc.body?.classList.remove("modo-edit-on");
+    if (!editMode) return;
+
+    const style = doc.createElement("style");
+    style.setAttribute("data-modo-edit-style", "");
+    style.textContent = `
+      .modo-edit-on * { cursor: crosshair !important; }
+      .modo-edit-hover { outline: 2px solid #2563eb !important; outline-offset: -2px !important; }
+    `;
+    doc.head?.appendChild(style);
+    doc.body?.classList.add("modo-edit-on");
+
+    const match = (el: Element) => {
+      for (const m of CLICK_MAP) {
+        const hit = el.closest(m.selector);
+        if (hit) return { hit, key: m.key, label: m.label };
+      }
+      return null;
+    };
+
+    let last: Element | null = null;
+    const onOver = (e: Event) => {
+      const found = match(e.target as Element);
+      if (last) last.classList.remove("modo-edit-hover");
+      last = found?.hit ?? null;
+      last?.classList.add("modo-edit-hover");
+    };
+    const onClick = (e: MouseEvent) => {
+      const found = match(e.target as Element);
+      if (!found) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setTarget({ key: found.key, label: found.label });
+    };
+    doc.addEventListener("mouseover", onOver, true);
+    doc.addEventListener("click", onClick, true);
+    return () => {
+      doc.removeEventListener("mouseover", onOver, true);
+      doc.removeEventListener("click", onClick, true);
+    };
+  }, [editMode]);
+
+  useEffect(() => {
+    const cleanup = wirePreview();
+    return cleanup;
+  }, [wirePreview, previewKey]);
+
+  // Apply colour/font changes to the preview instantly, before the draft saves.
+  useEffect(() => {
+    const doc = iframeRef.current?.contentDocument;
+    if (!doc) return;
+    const vars = buildThemeVars(state as Record<string, unknown>);
+    for (const [k, v] of Object.entries(vars)) doc.documentElement.style.setProperty(k, v);
+    const body = doc.body;
+    if (body && state.background_color) body.style.backgroundColor = state.background_color;
+  }, [state]);
+
+
+
   const persistDraft = useCallback(
     async (silent = true) => {
       setSavingDraft(true);
