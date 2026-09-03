@@ -26,6 +26,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { designStudioEnabled } from "@/lib/feature-flags";
+import { buildThemeVars } from "@/lib/theme-vars";
 
 export const Route = createFileRoute("/_authenticated/dashboard/design-studio")({
   component: DesignStudioPage,
@@ -207,7 +208,7 @@ function DesignStudioPage() {
     const doc = iframeRef.current?.contentDocument;
     if (!doc) return;
     const vars = buildThemeVars(state as Record<string, unknown>);
-    for (const [k, v] of Object.entries(vars)) doc.documentElement.style.setProperty(k, v);
+    for (const [k, v] of Object.entries(vars)) doc.documentElement.style.setProperty(k, String(v));
     const body = doc.body;
     if (body && state.background_color) body.style.backgroundColor = state.background_color;
   }, [state]);
