@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { signUpFromWaitlist } from "@/lib/waitlist.functions";
@@ -14,6 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fetchActiveTerms, recordTermsAcceptance } from "@/lib/platform-terms";
+import { captureReferralFromUrl, getStoredReferral, storeReferral } from "@/lib/referral-capture";
+import { Gift } from "lucide-react";
 
 
 import { toast } from "sonner";
@@ -48,6 +50,11 @@ function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signup");
   const [signupName, setSignupName] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [referralCode, setReferralCode] = useState("");
+  useEffect(() => {
+    const stored = captureReferralFromUrl() ?? getStoredReferral();
+    if (stored) setReferralCode(stored);
+  }, []);
 
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
@@ -170,6 +177,26 @@ function AuthPage() {
               <div className="space-y-2">
                 <Label htmlFor="signup-password">Password</Label>
                 <Input id="signup-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} placeholder="At least 8 characters" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-ref" className="flex items-center gap-1.5">
+                  <Gift className="h-3.5 w-3.5 text-primary" /> Referral code <span className="font-normal text-muted-foreground">(optional)</span>
+                </Label>
+                <Input
+                  id="signup-ref"
+                  value={referralCode}
+                  onChange={(e) => {
+                    const v = e.target.value.toUpperCase();
+                    setReferralCode(v);
+                    storeReferral(v);
+                  }}
+                  placeholder="e.g. AESTHETICSB25"
+                  className="uppercase"
+                  autoComplete="off"
+                />
+                {referralCode.trim() && (
+                  <p className="text-xs text-primary">Referred — 25% off your first 3 paid months will apply automatically.</p>
+                )}
               </div>
               <label className="flex items-start gap-3 rounded-lg border bg-muted/30 p-3 text-xs leading-relaxed">
                 <Checkbox
