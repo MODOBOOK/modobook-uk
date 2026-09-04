@@ -8,6 +8,7 @@ import {
   adminOpenViewAs,
   adminEditPractitioner,
   adminSetActive,
+  adminSetLoginEmail,
   adminListAudit,
 } from "@/lib/admin-console.functions";
 import {
@@ -337,11 +338,14 @@ function EditTab({
   }
 
   return (
+    <div className="space-y-4">
+    <LoginEmailCard id={id} profile={profile} onSaved={onSaved} />
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Edit on behalf of practitioner</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+
         <p className="text-sm text-muted-foreground">
           Only branding / public profile fields can be edited here. Patient records, appointments, prescriptions and forms are never editable from admin.
         </p>
@@ -388,8 +392,78 @@ function EditTab({
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 }
+
+function LoginEmailCard({
+  id,
+  profile,
+  onSaved,
+}: {
+  id: string;
+  profile: any;
+  onSaved: () => void;
+}) {
+  const setLoginEmail = useServerFn(adminSetLoginEmail);
+  const [email, setEmail] = useState<string>(profile.email ?? "");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function save() {
+    setBusy(true);
+    try {
+      await setLoginEmail({ data: { id, email, reason: reason.trim() } });
+      toast.success("Login email updated");
+      setReason("");
+      onSaved();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Login email address</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          Changes the address this practitioner signs in with (and their contact email). It is
+          confirmed immediately — no verification email is sent.
+        </p>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="space-y-1">
+            <Label>New login email</Label>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@clinic.co.uk"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label>Reason (required, logged)</Label>
+            <Input
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="e.g. practitioner changed business email"
+            />
+          </div>
+        </div>
+        <Button
+          onClick={save}
+          disabled={busy || !email.trim() || email.trim().toLowerCase() === (profile.email ?? "").toLowerCase()}
+        >
+          {busy ? "Updating…" : "Update login email"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 
 function AuditTab({ id }: { id: string }) {
   const listAudit = useServerFn(adminListAudit);

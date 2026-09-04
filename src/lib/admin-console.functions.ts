@@ -216,6 +216,55 @@ export const adminSetActive = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ---- Login (account) email ----------------------------------------------
+
+export const adminSetLoginEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string; email: string; reason: string }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const email = (data.email ?? "").trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Enter a valid email address.");
+    if (!data.reason || data.reason.trim().length < 3) {
+      throw new Error("A short reason is required.");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+
+    const { data: profile, error: pErr } = await db
+      .from("profiles")
+      .select("id, user_id, email")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (pErr) throw pErr;
+    if (!profile) throw new Error("Not found");
+    if (!profile.user_id) throw new Error("This practitioner has no login account yet.");
+
+    const { error: authErr } = await db.auth.admin.updateUserById(profile.user_id, {
+      email,
+      email_confirm: true,
+    });
+    if (authErr) {
+      const msg = String(authErr.message || authErr);
+      throw new Error(
+        /already/i.test(msg) ? "That email is already used by another account." : msg,
+      );
+    }
+
+    // Keep the contact email in sync so notifications go to the new address.
+    await db.from("profiles").update({ email }).eq("id", data.id);
+
+    await logAction(context, {
+      target_profile_id: data.id,
+      action: "login_email_change",
+      reason: data.reason,
+      diff: { before: profile.email, after: email },
+    });
+    return { ok: true, email };
+  });
+
+
 // ---- Audit log ----------------------------------------------------------
 
 export const adminListAudit = createServerFn({ method: "POST" })
