@@ -185,18 +185,22 @@ function DesignStudioPage() {
     doc.head?.appendChild(style);
     doc.body?.classList.add("modo-edit-on");
 
-    const match = (el: Element) => {
+    type Match =
+      | { hit: Element; text: TextKey }
+      | { hit: Element; key: keyof ClinicThemeInput; label: string };
+    const match = (el: Element): Match | null => {
       const text = el.closest("[data-modo-text]");
       if (text) {
         const tk = text.getAttribute("data-modo-text") as TextKey;
-        if (tk in TEXT_LABELS) return { hit: text, text: tk } as const;
+        if (tk in TEXT_LABELS) return { hit: text, text: tk };
       }
       for (const m of CLICK_MAP) {
         const hit = el.closest(m.selector);
-        if (hit) return { hit, key: m.key, label: m.label } as const;
+        if (hit) return { hit, key: m.key, label: m.label };
       }
       return null;
     };
+
 
     let last: Element | null = null;
     const onOver = (e: Event) => {
