@@ -41,8 +41,9 @@ export const saveEmailCustomization = createServerFn({ method: 'POST' })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context
+    const profileId = await activeClinicProfileId(supabase, userId)
     const row = {
-      profile_id: userId,
+      profile_id: profileId,
       template_key: data.template_key,
       subject_override: data.subject_override?.trim() || null,
       intro_override: data.intro_override?.trim() || null,
