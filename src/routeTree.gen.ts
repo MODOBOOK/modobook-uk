@@ -68,7 +68,6 @@ import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
 import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
 import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
-import { Route as ApiPublicTmpBookingAlertTestRouteImport } from './routes/api/public/tmp-booking-alert-test'
 import { Route as AuthenticatedPrescriberVisitsRouteImport } from './routes/_authenticated/prescriber.visits'
 import { Route as AuthenticatedPrescriberRequestsRouteImport } from './routes/_authenticated/prescriber.requests'
 import { Route as AuthenticatedPrescriberLibraryRouteImport } from './routes/_authenticated/prescriber.library'
@@ -483,12 +482,6 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicTmpBookingAlertTestRoute =
-  ApiPublicTmpBookingAlertTestRouteImport.update({
-    id: '/api/public/tmp-booking-alert-test',
-    path: '/api/public/tmp-booking-alert-test',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const AuthenticatedPrescriberVisitsRoute =
   AuthenticatedPrescriberVisitsRouteImport.update({
     id: '/visits',
@@ -1275,7 +1268,6 @@ export interface FileRoutesByFullPath {
   '/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/prescriber/requests': typeof AuthenticatedPrescriberRequestsRouteWithChildren
   '/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
-  '/api/public/tmp-booking-alert-test': typeof ApiPublicTmpBookingAlertTestRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -1441,7 +1433,6 @@ export interface FileRoutesByTo {
   '/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/prescriber/requests': typeof AuthenticatedPrescriberRequestsRouteWithChildren
   '/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
-  '/api/public/tmp-booking-alert-test': typeof ApiPublicTmpBookingAlertTestRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -1617,7 +1608,6 @@ export interface FileRoutesById {
   '/_authenticated/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/_authenticated/prescriber/requests': typeof AuthenticatedPrescriberRequestsRouteWithChildren
   '/_authenticated/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
-  '/api/public/tmp-booking-alert-test': typeof ApiPublicTmpBookingAlertTestRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -1795,7 +1785,6 @@ export interface FileRouteTypes {
     | '/prescriber/library'
     | '/prescriber/requests'
     | '/prescriber/visits'
-    | '/api/public/tmp-booking-alert-test'
     | '/lovable/email/suppression'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -1961,7 +1950,6 @@ export interface FileRouteTypes {
     | '/prescriber/library'
     | '/prescriber/requests'
     | '/prescriber/visits'
-    | '/api/public/tmp-booking-alert-test'
     | '/lovable/email/suppression'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -2136,7 +2124,6 @@ export interface FileRouteTypes {
     | '/_authenticated/prescriber/library'
     | '/_authenticated/prescriber/requests'
     | '/_authenticated/prescriber/visits'
-    | '/api/public/tmp-booking-alert-test'
     | '/lovable/email/suppression'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -2235,7 +2222,6 @@ export interface RootRouteChildren {
   PlanTokenRoute: typeof PlanTokenRoute
   RCodeRoute: typeof RCodeRoute
   StaffAcceptTokenRoute: typeof StaffAcceptTokenRoute
-  ApiPublicTmpBookingAlertTestRoute: typeof ApiPublicTmpBookingAlertTestRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicBookingReleaseRoute: typeof ApiPublicBookingReleaseRoute
   ApiPublicHooksAppointmentRemindersRoute: typeof ApiPublicHooksAppointmentRemindersRoute
@@ -2671,13 +2657,6 @@ declare module '@tanstack/react-router' {
       path: '/lovable/email/suppression'
       fullPath: '/lovable/email/suppression'
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/tmp-booking-alert-test': {
-      id: '/api/public/tmp-booking-alert-test'
-      path: '/api/public/tmp-booking-alert-test'
-      fullPath: '/api/public/tmp-booking-alert-test'
-      preLoaderRoute: typeof ApiPublicTmpBookingAlertTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/prescriber/visits': {
@@ -3991,7 +3970,6 @@ const rootRouteChildren: RootRouteChildren = {
   PlanTokenRoute: PlanTokenRoute,
   RCodeRoute: RCodeRoute,
   StaffAcceptTokenRoute: StaffAcceptTokenRoute,
-  ApiPublicTmpBookingAlertTestRoute: ApiPublicTmpBookingAlertTestRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicBookingReleaseRoute: ApiPublicBookingReleaseRoute,
   ApiPublicHooksAppointmentRemindersRoute:
