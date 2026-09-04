@@ -8,6 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { SaveReminder } from "@/components/SaveReminder";
 import { EmailTemplatesPanel } from "@/components/settings/EmailTemplatesPanel";
+import { Input } from "@/components/ui/input";
+import { sendTestEmail } from "@/lib/emails.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard/notifications/email")({
   ssr: false,
@@ -37,6 +39,27 @@ function EmailNotificationsPage() {
     (profile.reminder_hours_before as number[] | null) ?? [24, 2],
   );
   const [saving, setSaving] = useState(false);
+  const [notifyNewBooking, setNotifyNewBooking] = useState(
+    (profile as { notify_new_booking_email?: boolean }).notify_new_booking_email !== false,
+  );
+  const [newBookingTo, setNewBookingTo] = useState(
+    ((profile as { new_booking_email_to?: string | null }).new_booking_email_to ?? "") as string,
+  );
+  const [testing, setTesting] = useState(false);
+
+  async function sendNewBookingTest() {
+    setTesting(true);
+    try {
+      const res = (await sendTestEmail({ data: { template_key: "new-booking-practitioner" } })) as {
+        sentTo?: string;
+      };
+      toast.success(`Test alert sent to ${res?.sentTo ?? "your inbox"}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to send test");
+    } finally {
+      setTesting(false);
+    }
+  }
 
   function toggleReminder(hours: number) {
     setReminderHours((p) => {
@@ -53,6 +76,8 @@ function EmailNotificationsPage() {
           id: profile.id,
           auto_confirm_bookings: autoConfirm,
           email_confirmations_enabled: confirmations,
+          notify_new_booking_email: notifyNewBooking,
+          new_booking_email_to: newBookingTo.trim() || null,
           reminder_hours_before: reminderHours,
         },
       });
@@ -128,6 +153,39 @@ function EmailNotificationsPage() {
               <p className="mt-2 text-xs text-muted-foreground italic">No reminders will be sent.</p>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>New booking alerts (to you)</CardTitle>
+          <CardDescription>
+            Get an email the moment a patient books, with their details, the treatment and the time.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">Email me every new booking</p>
+              <p className="text-xs text-muted-foreground">Sent as soon as the booking is made.</p>
+            </div>
+            <Switch checked={notifyNewBooking} onCheckedChange={setNotifyNewBooking} />
+          </div>
+          <div className="rounded-lg border p-3">
+            <Label className="text-sm font-medium">Send alerts to</Label>
+            <p className="mb-2 text-xs text-muted-foreground">
+              Leave blank to use your clinic email address.
+            </p>
+            <Input
+              type="email"
+              value={newBookingTo}
+              onChange={(e) => setNewBookingTo(e.target.value)}
+              placeholder="bookings@yourclinic.co.uk"
+            />
+          </div>
+          <Button variant="outline" onClick={sendNewBookingTest} disabled={testing}>
+            {testing ? "Sending…" : "Send me a test alert"}
+          </Button>
         </CardContent>
       </Card>
 

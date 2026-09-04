@@ -185,6 +185,16 @@ export const sendTestEmail = createServerFn({ method: 'POST' })
         treatmentName: 'Lip filler consultation',
         reviewUrl: 'https://modobook.uk',
       },
+      'new-booking-practitioner': {
+        patientName: 'Alex Morgan',
+        patientEmail: 'alex@example.com',
+        patientPhone: '07700 900123',
+        treatmentName: 'Lip filler consultation',
+        locationName: 'Main studio',
+        dateTime: 'Fri 12 Jul 2026 · 2:30 PM',
+        paymentSummary: 'Deposit paid — £30.00',
+        dashboardUrl: 'https://modobook.uk/dashboard/appointments',
+      },
       'patient-message': {
         patientName: 'Alex',
         message: 'This is where your message to the patient appears.',

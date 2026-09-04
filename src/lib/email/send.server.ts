@@ -314,7 +314,7 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
 
   const { data: appts, error } = await supabaseAdmin
     .from('appointments')
-    .select('id, patient_name, patient_email, patient_phone, scheduled_date, start_time, manage_token, profile_id, treatments(name), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug)')
+    .select('id, patient_name, patient_email, patient_phone, scheduled_date, start_time, manage_token, profile_id, notes, payment_method, payment_status, amount_paid_cents, total_amount, treatments(name), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug, email, notify_new_booking_email, new_booking_email_to)')
     .in('id', appointmentIds)
 
   if (error) throw error
@@ -332,10 +332,21 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
       start_time: string
       manage_token: string | null
       profile_id: string
+      notes?: string | null
+      payment_method?: string | null
+      payment_status?: string | null
+      amount_paid_cents?: number | null
+      total_amount?: number | null
       treatments?: { name?: string } | null
       practitioners?: { name?: string } | null
       locations?: { name?: string; address_line1?: string; city?: string; postcode?: string } | null
-      profiles?: { clinic_name?: string; slug?: string } | null
+      profiles?: {
+        clinic_name?: string
+        slug?: string
+        email?: string | null
+        notify_new_booking_email?: boolean | null
+        new_booking_email_to?: string | null
+      } | null
     }
 
     let branding = brandingCache.get(a.profile_id)
@@ -378,6 +389,42 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
       console.error('[whatsapp] booking confirmation failed', e)
     }
 
+
+    // Alert the practitioner that a new booking has come in.
+    try {
+      const alertTo = (a.profiles?.new_booking_email_to || a.profiles?.email || '').trim()
+      if (alertTo && a.profiles?.notify_new_booking_email !== false) {
+        const paid = (a.amount_paid_cents ?? 0) / 100
+        const paymentSummary = a.payment_method === 'cash' || a.payment_method === 'in_clinic'
+          ? 'Paying in clinic'
+          : paid > 0
+            ? `${a.payment_status === 'paid' ? 'Paid in full' : 'Deposit paid'} — £${paid.toFixed(2)}`
+            : undefined
+        await tryEnqueueAppEmail({
+          templateName: 'new-booking-practitioner',
+          recipientEmail: alertTo,
+          messageId: `new-booking-alert-${a.id}`,
+          templateData: {
+            profileId: a.profile_id,
+            clinicName: a.profiles?.clinic_name ?? branding.clinicName,
+            patientName: a.patient_name ?? 'A patient',
+            patientEmail: a.patient_email ?? undefined,
+            patientPhone: a.patient_phone ?? undefined,
+            treatmentName: a.treatments?.name ?? 'a treatment',
+            practitionerName: a.practitioners?.name,
+            locationName: loc?.name ?? loc?.city ?? undefined,
+            dateTime: formatBookingDateTime(a.scheduled_date, a.start_time),
+            paymentSummary,
+            patientNote: a.notes ?? undefined,
+            dashboardUrl: `${origin}/dashboard/appointments`,
+            logoUrl: branding.logoUrl,
+            brandColor: branding.brandColor,
+          },
+        })
+      }
+    } catch (e) {
+      console.error('[email] practitioner new-booking alert failed', e)
+    }
 
     if (!a.patient_email) continue
 

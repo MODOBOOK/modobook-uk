@@ -6623,8 +6623,10 @@ export type Database = {
           is_demo: boolean
           late_cancel_mode: string
           model_slots_position: string
+          new_booking_email_to: string | null
           no_refund_policy_enabled: boolean
           no_refund_policy_text: string | null
+          notify_new_booking_email: boolean
           packages_countdown_ends_at: string | null
           packages_countdown_label: string | null
           packages_label: string | null
@@ -6761,8 +6763,10 @@ export type Database = {
           is_demo?: boolean
           late_cancel_mode?: string
           model_slots_position?: string
+          new_booking_email_to?: string | null
           no_refund_policy_enabled?: boolean
           no_refund_policy_text?: string | null
+          notify_new_booking_email?: boolean
           packages_countdown_ends_at?: string | null
           packages_countdown_label?: string | null
           packages_label?: string | null
@@ -6899,8 +6903,10 @@ export type Database = {
           is_demo?: boolean
           late_cancel_mode?: string
           model_slots_position?: string
+          new_booking_email_to?: string | null
           no_refund_policy_enabled?: boolean
           no_refund_policy_text?: string | null
+          notify_new_booking_email?: boolean
           packages_countdown_ends_at?: string | null
           packages_countdown_label?: string | null
           packages_label?: string | null
