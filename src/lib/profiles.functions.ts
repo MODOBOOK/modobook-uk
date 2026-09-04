@@ -180,6 +180,8 @@ export const updateProfile = createServerFn({ method: "POST" })
       // Confirmations & reminders
       auto_confirm_bookings?: boolean;
       email_confirmations_enabled?: boolean;
+      notify_new_booking_email?: boolean;
+      new_booking_email_to?: string | null;
       sms_reminders_enabled?: boolean;
       whatsapp_reminders_enabled?: boolean;
       whatsapp_notify_confirmation?: boolean;
