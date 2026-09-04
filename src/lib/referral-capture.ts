@@ -19,6 +19,17 @@ export function captureReferralFromUrl(): string | null {
   }
 }
 
+export function storeReferral(code: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const clean = code.trim().toUpperCase();
+    if (clean) localStorage.setItem(KEY, clean);
+    else localStorage.removeItem(KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function getStoredReferral(): string | null {
   if (typeof window === "undefined") return null;
   try {
