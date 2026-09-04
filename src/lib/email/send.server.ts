@@ -314,7 +314,7 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
 
   const { data: appts, error } = await supabaseAdmin
     .from('appointments')
-    .select('id, patient_name, patient_email, patient_phone, scheduled_date, start_time, manage_token, profile_id, treatments(name), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug)')
+    .select('id, patient_name, patient_email, patient_phone, scheduled_date, start_time, manage_token, profile_id, notes, payment_method, payment_status, amount_paid_cents, total_amount, treatments(name), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug, email, notify_new_booking_email, new_booking_email_to)')
     .in('id', appointmentIds)
 
   if (error) throw error
