@@ -240,8 +240,76 @@ function ClinicPage() {
         </CardContent>
       </Card>
 
+      <LoginEmailCard />
 
       <Button onClick={save} disabled={saving} className="w-full sm:w-auto">{saving ? "Saving…" : "Save changes"}</Button>
     </div>
   );
 }
+
+function LoginEmailCard() {
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrent(data.user?.email ?? "");
+      setNext(data.user?.email ?? "");
+    });
+  }, []);
+
+  async function change() {
+    const email = next.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Enter a valid email address");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.updateUser(
+        { email },
+        { emailRedirectTo: `${window.location.origin}/dashboard/clinic` },
+      );
+      if (error) throw error;
+      setSent(true);
+      toast.success("Confirmation link sent — check both inboxes to finish the change");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not change login email");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Login email</CardTitle>
+        <CardDescription>
+          The address you sign in with. Changing it sends a confirmation link — the change only
+          takes effect once you click it.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div>
+          <Label>New login email</Label>
+          <Input type="email" value={next} onChange={(e) => setNext(e.target.value)} />
+        </div>
+        {sent && (
+          <p className="text-xs text-muted-foreground">
+            Confirmation sent. Until it&rsquo;s confirmed, keep signing in with {current}.
+          </p>
+        )}
+        <Button
+          variant="outline"
+          onClick={change}
+          disabled={busy || !next.trim() || next.trim().toLowerCase() === current.toLowerCase()}
+        >
+          {busy ? "Sending…" : "Change login email"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
