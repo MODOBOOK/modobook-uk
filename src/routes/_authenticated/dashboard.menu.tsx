@@ -234,6 +234,26 @@ function comingSoonFor(to: string): ComingSoonKey | null {
         </CardContent>
       </Card>
 
+      {practitionerReferralsEnabled(profile.slug) && (
+        <Link
+          to="/dashboard/partner-referrals"
+          className="block overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/60 p-5 text-primary-foreground shadow-md transition active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/20 ring-1 ring-white/30">
+              <Gift className="h-7 w-7" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-lg font-extrabold leading-tight">Give &amp; get back</p>
+              <p className="mt-0.5 text-xs leading-snug text-primary-foreground/90">
+                Refer a fellow practitioner to MODO — they get 25% off for 3 months, you earn 50% off a month for every referral.
+              </p>
+            </div>
+            <ChevronRight className="h-5 w-5 shrink-0" />
+          </div>
+        </Link>
+      )}
+
       {filtered.map((g) => (
         <section key={g.title} className="space-y-3">
           <h2 className="px-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{g.title}</h2>
