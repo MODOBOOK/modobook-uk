@@ -98,7 +98,7 @@ export const saveReminderRule = createServerFn({ method: 'POST' })
       enabled: data.enabled,
     }
     const query = data.id
-      ? supabase.from('appointment_reminder_rules').update(row).eq('id', data.id).eq('profile_id', userId).select().single()
+      ? supabase.from('appointment_reminder_rules').update(row).eq('id', data.id).eq('profile_id', profileId).select().single()
       : supabase.from('appointment_reminder_rules').upsert({ ...row }, { onConflict: 'profile_id,hours_before' }).select().single()
     const { data: saved, error } = await query
     if (error) throw new Error(error.message)
@@ -110,11 +110,12 @@ export const deleteReminderRule = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context
+    const profileId = await activeClinicProfileId(supabase, userId)
     const { error } = await supabase
       .from('appointment_reminder_rules')
       .delete()
       .eq('id', data.id)
-      .eq('profile_id', userId)
+      .eq('profile_id', profileId)
     if (error) throw new Error(error.message)
     return { ok: true }
   })
