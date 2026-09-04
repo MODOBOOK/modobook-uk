@@ -8,7 +8,7 @@ import {
   discardThemeDraft,
   type ClinicThemeInput,
 } from "@/lib/theme.functions";
-import { getMyProfile } from "@/lib/profiles.functions";
+import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +24,9 @@ import {
   RefreshCw,
   Smartphone,
   Rocket,
+  SlidersHorizontal,
   Undo2,
+  X,
 } from "lucide-react";
 import { designStudioEnabled } from "@/lib/feature-flags";
 import { buildThemeVars } from "@/lib/theme-vars";
@@ -74,8 +76,18 @@ const COLOR_FIELDS: { key: keyof ClinicThemeInput; label: string; hint: string }
   { key: "menu_card_bg", label: "Card background", hint: "Treatment cards" },
 ];
 
+/** Text on the page that can be typed straight into from the preview. */
+type TextKey = "clinic_name" | "tagline";
+
 /** What a clicked bit of the preview maps onto. */
-type EditTarget = { key: keyof ClinicThemeInput; label: string };
+type EditTarget =
+  | { kind: "color"; key: keyof ClinicThemeInput; label: string }
+  | { kind: "text"; textKey: TextKey; label: string; value: string };
+
+const TEXT_LABELS: Record<TextKey, string> = {
+  clinic_name: "Clinic name",
+  tagline: "Tagline",
+};
 
 const CLICK_MAP: { selector: string; key: keyof ClinicThemeInput; label: string }[] = [
   { selector: "header, [data-region='header']", key: "header_bg_color", label: "Header background" },
@@ -92,6 +104,7 @@ function DesignStudioPage() {
   const saveDraft = useServerFn(saveThemeDraft);
   const publish = useServerFn(publishThemeDraft);
   const discard = useServerFn(discardThemeDraft);
+  const saveProfile = useServerFn(updateProfile);
 
   const [state, setState] = useState<ClinicThemeInput>({ ...BLANK });
   const [profileId, setProfileId] = useState("");
@@ -101,13 +114,14 @@ function DesignStudioPage() {
   const [savingDraft, setSavingDraft] = useState(false);
   const [hasDraft, setHasDraft] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [device, setDevice] = useState<"mobile" | "desktop">("mobile");
+  const [device, setDevice] = useState<"mobile" | "desktop">("desktop");
   const [previewKey, setPreviewKey] = useState(0);
   const [editMode, setEditMode] = useState(true);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [target, setTarget] = useState<EditTarget | null>(null);
+  const [savingText, setSavingText] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const allowed = designStudioEnabled(slug);
-
 
   useEffect(() => {
     (async () => {
@@ -152,7 +166,8 @@ function DesignStudioPage() {
 
   // --- Click-to-edit preview -------------------------------------------------
   // The preview is same-origin, so we can highlight what the practitioner hovers
-  // and open the matching colour control when they click it.
+  // and open the matching control — a colour picker, or a text box for the bits
+  // of writing that are editable.
   const wirePreview = useCallback(() => {
     const doc = iframeRef.current?.contentDocument;
     if (!doc) return;
@@ -165,11 +180,20 @@ function DesignStudioPage() {
     style.textContent = `
       .modo-edit-on * { cursor: crosshair !important; }
       .modo-edit-hover { outline: 2px solid #2563eb !important; outline-offset: -2px !important; }
+      .modo-edit-text { outline: 2px dashed #16a34a !important; outline-offset: -2px !important; }
     `;
     doc.head?.appendChild(style);
     doc.body?.classList.add("modo-edit-on");
 
-    const match = (el: Element) => {
+    type Match =
+      | { hit: Element; text: TextKey }
+      | { hit: Element; key: keyof ClinicThemeInput; label: string };
+    const match = (el: Element): Match | null => {
+      const text = el.closest("[data-modo-text]");
+      if (text) {
+        const tk = text.getAttribute("data-modo-text") as TextKey;
+        if (tk in TEXT_LABELS) return { hit: text, text: tk };
+      }
       for (const m of CLICK_MAP) {
         const hit = el.closest(m.selector);
         if (hit) return { hit, key: m.key, label: m.label };
@@ -177,19 +201,30 @@ function DesignStudioPage() {
       return null;
     };
 
+
     let last: Element | null = null;
     const onOver = (e: Event) => {
       const found = match(e.target as Element);
-      if (last) last.classList.remove("modo-edit-hover");
+      if (last) last.classList.remove("modo-edit-hover", "modo-edit-text");
       last = found?.hit ?? null;
-      last?.classList.add("modo-edit-hover");
+      if (found && "text" in found) last?.classList.add("modo-edit-text");
+      else last?.classList.add("modo-edit-hover");
     };
     const onClick = (e: MouseEvent) => {
       const found = match(e.target as Element);
       if (!found) return;
       e.preventDefault();
       e.stopPropagation();
-      setTarget({ key: found.key, label: found.label });
+      if ("text" in found) {
+        setTarget({
+          kind: "text",
+          textKey: found.text,
+          label: TEXT_LABELS[found.text],
+          value: (found.hit.textContent ?? "").trim(),
+        });
+      } else {
+        setTarget({ kind: "color", key: found.key, label: found.label });
+      }
     };
     doc.addEventListener("mouseover", onOver, true);
     doc.addEventListener("click", onClick, true);
@@ -214,7 +249,29 @@ function DesignStudioPage() {
     if (body && state.background_color) body.style.backgroundColor = state.background_color;
   }, [state]);
 
+  // Live-type into the preview while the practitioner edits a piece of writing.
+  function previewText(key: TextKey, value: string) {
+    const doc = iframeRef.current?.contentDocument;
+    const el = doc?.querySelector(`[data-modo-text="${key}"]`);
+    if (el) el.textContent = value;
+  }
 
+  async function saveTextTarget() {
+    if (!target || target.kind !== "text" || !profileId) return;
+    setSavingText(true);
+    try {
+      await saveProfile({
+        data: { id: profileId, [target.textKey]: target.value } as { id: string },
+      });
+      toast.success(`${target.label} updated`);
+      setTarget(null);
+      setPreviewKey((k) => k + 1);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not save that text");
+    } finally {
+      setSavingText(false);
+    }
+  }
 
   const persistDraft = useCallback(
     async (silent = true) => {
@@ -304,25 +361,191 @@ function DesignStudioPage() {
 
   const previewSrc = slug ? `/m/${slug}?draft=1&v=${previewKey}` : null;
 
-  return (
+  const controls = (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Getting started</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {steps.map((s) => (
+            <div key={s.label} className="flex items-center gap-2 text-sm">
+              {s.done ? (
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              ) : (
+                <Circle className="h-4 w-4 text-muted-foreground" />
+              )}
+              <span className={s.done ? "text-muted-foreground line-through" : ""}>{s.label}</span>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Your pictures</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ImageUploader
+            label="Logo"
+            value={state.logo_url}
+            onChange={(v) => set("logo_url", v)}
+            profileId={profileId}
+            folder="logo"
+            previewClass="mt-2 h-16 object-contain rounded bg-muted/30 p-2"
+          />
+          <ImageUploader
+            label="Banner photo"
+            value={state.hero_image_url}
+            onChange={(v) => set("hero_image_url", v)}
+            profileId={profileId}
+            folder="hero"
+            previewClass="mt-2 h-32 w-full rounded-md bg-muted/30 object-cover"
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Colours</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {COLOR_FIELDS.map((f) => (
+            <div key={f.key as string} className="flex items-center gap-3">
+              <input
+                type="color"
+                aria-label={f.label}
+                value={(state[f.key] as string) || "#ffffff"}
+                onChange={(e) => setColor(f.key, e.target.value)}
+                className="h-9 w-12 cursor-pointer rounded border border-border bg-transparent p-1"
+              />
+              <div className="min-w-0">
+                <p className="text-sm font-medium">{f.label}</p>
+                <p className="text-xs text-muted-foreground">{f.hint}</p>
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Words &amp; fonts</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <Label htmlFor="hero_heading">Welcome headline</Label>
+            <Input
+              id="hero_heading"
+              value={state.hero_heading ?? ""}
+              placeholder="e.g. Advanced aesthetics, done properly"
+              onChange={(e) => set("hero_heading", e.target.value || null)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="hero_subheading">Sub-heading</Label>
+            <Input
+              id="hero_subheading"
+              value={state.hero_subheading ?? ""}
+              placeholder="e.g. Book online in under a minute"
+              onChange={(e) => set("hero_subheading", e.target.value || null)}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="heading_font">Heading font</Label>
+              <select
+                id="heading_font"
+                className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                value={state.heading_font ?? "Syne"}
+                onChange={(e) => set("heading_font", e.target.value)}
+              >
+                {FONTS.map((f) => (
+                  <option key={f} value={f}>{f}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="body_font">Body font</Label>
+              <select
+                id="body_font"
+                className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                value={state.body_font ?? "Plus Jakarta Sans"}
+                onChange={(e) => set("body_font", e.target.value)}
+              >
+                {FONTS.map((f) => (
+                  <option key={f} value={f}>{f}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <p className="text-xs text-muted-foreground">
+        Everything else — welcome card, layout, buttons and menu styling — still lives on the{" "}
+        <Link to="/dashboard/branding" className="underline">Branding page</Link>.
+      </p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
-          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-1">
+          <Button asChild variant="ghost" size="sm" className="-ml-2">
             <Link to="/dashboard/branding">
               <ArrowLeft className="mr-1 h-4 w-4" /> Branding
             </Link>
           </Button>
-          <h1 className="text-2xl font-semibold">Design studio</h1>
-          <p className="text-sm text-muted-foreground">
-            Change colours and photos on the left and watch your booking page update on the right.
-            Nothing goes live until you publish.
+          <h1 className="text-xl font-semibold">Design studio</h1>
+          <p className="text-xs text-muted-foreground">
+            {editMode
+              ? "Tap anything on your page — colours open a picker, writing opens a text box."
+              : "Click-to-edit is off — the preview behaves like the real page."}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground">
-            {savingDraft ? "Saving draft…" : hasDraft ? "Draft saved — not live" : "Matches what's live"}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 text-xs text-muted-foreground">
+            {savingDraft ? "Saving draft…" : hasDraft ? "Draft — not live" : "Matches what's live"}
           </span>
+          <Button variant="outline" size="sm" onClick={() => setPanelOpen(true)}>
+            <SlidersHorizontal className="mr-1 h-4 w-4" /> Design tools
+          </Button>
+          <Button
+            variant={editMode ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => {
+              setEditMode((v) => !v);
+              setTarget(null);
+            }}
+          >
+            <MousePointerClick className="mr-1 h-4 w-4" /> {editMode ? "Editing" : "Edit"}
+          </Button>
+          <Button
+            variant={device === "mobile" ? "secondary" : "ghost"}
+            size="icon"
+            onClick={() => setDevice("mobile")}
+            aria-label="Mobile preview"
+          >
+            <Smartphone className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={device === "desktop" ? "secondary" : "ghost"}
+            size="icon"
+            onClick={() => setDevice("desktop")}
+            aria-label="Desktop preview"
+          >
+            <Monitor className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => void persistDraft(false)}
+            aria-label="Refresh preview"
+          >
+            <RefreshCw className={`h-4 w-4 ${savingDraft ? "animate-spin" : ""}`} />
+          </Button>
           {hasDraft && (
             <Button variant="outline" size="sm" onClick={handleDiscard} disabled={busy}>
               <Undo2 className="mr-1 h-4 w-4" /> Discard
@@ -334,218 +557,95 @@ function DesignStudioPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
-        <div className="space-y-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Getting started</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {steps.map((s) => (
-                <div key={s.label} className="flex items-center gap-2 text-sm">
-                  {s.done ? (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  ) : (
-                    <Circle className="h-4 w-4 text-muted-foreground" />
-                  )}
-                  <span className={s.done ? "text-muted-foreground line-through" : ""}>{s.label}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Your pictures</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ImageUploader
-                label="Logo"
-                value={state.logo_url}
-                onChange={(v) => set("logo_url", v)}
-                profileId={profileId}
-                folder="logo"
-                previewClass="mt-2 h-16 object-contain rounded bg-muted/30 p-2"
-              />
-              <ImageUploader
-                label="Banner photo"
-                value={state.hero_image_url}
-                onChange={(v) => set("hero_image_url", v)}
-                profileId={profileId}
-                folder="hero"
-                previewClass="mt-2 h-32 w-full rounded-md bg-muted/30 object-cover"
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Colours</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {COLOR_FIELDS.map((f) => (
-                <div key={f.key as string} className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    aria-label={f.label}
-                    value={(state[f.key] as string) || "#ffffff"}
-                    onChange={(e) => setColor(f.key, e.target.value)}
-                    className="h-9 w-12 cursor-pointer rounded border border-border bg-transparent p-1"
-                  />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{f.label}</p>
-                    <p className="text-xs text-muted-foreground">{f.hint}</p>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Words &amp; fonts</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <Label htmlFor="hero_heading">Welcome headline</Label>
-                <Input
-                  id="hero_heading"
-                  value={state.hero_heading ?? ""}
-                  placeholder="e.g. Advanced aesthetics, done properly"
-                  onChange={(e) => set("hero_heading", e.target.value || null)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="hero_subheading">Sub-heading</Label>
-                <Input
-                  id="hero_subheading"
-                  value={state.hero_subheading ?? ""}
-                  placeholder="e.g. Book online in under a minute"
-                  onChange={(e) => set("hero_subheading", e.target.value || null)}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="heading_font">Heading font</Label>
-                  <select
-                    id="heading_font"
-                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-                    value={state.heading_font ?? "Syne"}
-                    onChange={(e) => set("heading_font", e.target.value)}
-                  >
-                    {FONTS.map((f) => (
-                      <option key={f} value={f}>{f}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="body_font">Body font</Label>
-                  <select
-                    id="body_font"
-                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-                    value={state.body_font ?? "Plus Jakarta Sans"}
-                    onChange={(e) => set("body_font", e.target.value)}
-                  >
-                    {FONTS.map((f) => (
-                      <option key={f} value={f}>{f}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <p className="text-xs text-muted-foreground">
-            Everything else — welcome card, layout, buttons and menu styling — still lives on the{" "}
-            <Link to="/dashboard/branding" className="underline">Branding page</Link>.
-          </p>
+      {previewSrc ? (
+        <div
+          className="mx-auto w-full overflow-hidden rounded-xl border border-border bg-background shadow-sm"
+          style={{ maxWidth: device === "mobile" ? 390 : "100%" }}
+        >
+          <iframe
+            key={previewKey}
+            ref={iframeRef}
+            onLoad={() => wirePreview()}
+            src={previewSrc}
+            title="Booking page preview"
+            className="h-[calc(100vh-9rem)] w-full"
+          />
         </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">Set your booking link first to see a preview.</p>
+      )}
 
-        <Card className="overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-            <div>
-              <CardTitle className="text-base">Live preview</CardTitle>
-              <p className="text-xs text-muted-foreground">
-                {editMode
-                  ? "Click anything in the preview to change its colour."
-                  : "Click-to-edit is off — the preview behaves like the real page."}
-              </p>
+      {/* Inspector — floats over the full-page preview */}
+      {target && (
+        <div className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-xl rounded-xl border border-border bg-background p-3 shadow-xl sm:inset-x-auto sm:right-6 sm:w-[26rem]">
+          {target.kind === "color" ? (
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                aria-label={target.label}
+                value={(state[target.key] as string) || "#ffffff"}
+                onChange={(e) => setColor(target.key, e.target.value)}
+                className="h-9 w-12 cursor-pointer rounded border border-border bg-transparent p-1"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium">{target.label}</p>
+                <p className="text-xs text-muted-foreground">
+                  Changes show straight away and save as a draft.
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setTarget(null)}>Done</Button>
             </div>
-            <div className="flex items-center gap-1">
-              <Button
-                variant={editMode ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => {
-                  setEditMode((v) => !v);
-                  setTarget(null);
-                }}
-              >
-                <MousePointerClick className="mr-1 h-4 w-4" /> {editMode ? "Editing" : "Edit"}
-              </Button>
-              <Button
-                variant={device === "mobile" ? "secondary" : "ghost"}
-                size="icon"
-                onClick={() => setDevice("mobile")}
-                aria-label="Mobile preview"
-              >
-                <Smartphone className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={device === "desktop" ? "secondary" : "ghost"}
-                size="icon"
-                onClick={() => setDevice("desktop")}
-                aria-label="Desktop preview"
-              >
-                <Monitor className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => void persistDraft(false)}
-                aria-label="Refresh preview"
-              >
-                <RefreshCw className={`h-4 w-4 ${savingDraft ? "animate-spin" : ""}`} />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="bg-muted/30 p-3">
-            {target && (
-              <div className="mb-3 flex items-center gap-3 rounded-lg border border-border bg-background p-3">
-                <input
-                  type="color"
-                  aria-label={target.label}
-                  value={(state[target.key] as string) || "#ffffff"}
-                  onChange={(e) => setColor(target.key, e.target.value)}
-                  className="h-9 w-12 cursor-pointer rounded border border-border bg-transparent p-1"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium">{target.label}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Changes show straight away and save as a draft.
-                  </p>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => setTarget(null)}>
-                  Done
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">{target.label}</p>
+                <Button variant="ghost" size="icon" onClick={() => setTarget(null)} aria-label="Close">
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
-            )}
-            {previewSrc ? (
-              <div className="mx-auto overflow-hidden rounded-xl border border-border bg-background shadow-sm" style={{ maxWidth: device === "mobile" ? 390 : "100%" }}>
-                <iframe
-                  key={previewKey}
-                  ref={iframeRef}
-                  onLoad={() => wirePreview()}
-                  src={previewSrc}
-                  title="Booking page preview"
-                  className="h-[70vh] w-full"
-                />
+              <Input
+                autoFocus
+                value={target.value}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setTarget((t) => (t && t.kind === "text" ? { ...t, value } : t));
+                  previewText(target.textKey, value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void saveTextTarget();
+                }}
+              />
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground">This writing goes live as soon as you save it.</p>
+                <Button size="sm" onClick={() => void saveTextTarget()} disabled={savingText}>
+                  {savingText ? "Saving…" : "Save"}
+                </Button>
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Set your booking link first to see a preview.</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Design tools drawer */}
+      {panelOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          <button
+            type="button"
+            aria-label="Close design tools"
+            className="flex-1 bg-black/30"
+            onClick={() => setPanelOpen(false)}
+          />
+          <div className="h-full w-full max-w-sm overflow-y-auto border-l border-border bg-background p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-base font-semibold">Design tools</p>
+              <Button variant="ghost" size="icon" onClick={() => setPanelOpen(false)} aria-label="Close">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            {controls}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

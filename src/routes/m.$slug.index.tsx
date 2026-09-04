@@ -1180,6 +1180,8 @@ function BookPage() {
                     />
                   ) : (
                     <h1
+                      data-modo-text="clinic_name"
+
                       className="font-light leading-[0.95] tracking-tight [overflow-wrap:normal] hyphens-none text-balance text-[clamp(1.75rem,8.5vw,3rem)] sm:text-[clamp(2rem,4.5vw,5rem)]"
                       style={{
                         fontFamily: nameFont,
@@ -1191,10 +1193,11 @@ function BookPage() {
                   )}
 
                   {profile.tagline && (
-                    <p className="mt-3 max-w-md text-sm leading-relaxed sm:text-base" style={{ color: heroMuted }}>
+                    <p data-modo-text="tagline" className="mt-3 max-w-md text-sm leading-relaxed sm:text-base" style={{ color: heroMuted }}>
                       {profile.tagline}
                     </p>
                   )}
+
 
                   {(theme?.welcome_card_show_rating ?? true) && (
                     <Link
