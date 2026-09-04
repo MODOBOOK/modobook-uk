@@ -14,6 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fetchActiveTerms, recordTermsAcceptance } from "@/lib/platform-terms";
+import { captureReferralFromUrl, getStoredReferral } from "@/lib/referral-capture";
+import { Gift } from "lucide-react";
 
 
 import { toast } from "sonner";
@@ -48,6 +50,7 @@ function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signup");
   const [signupName, setSignupName] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [referralCode, setReferralCode] = useState(() => captureReferralFromUrl() ?? getStoredReferral() ?? "");
 
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
