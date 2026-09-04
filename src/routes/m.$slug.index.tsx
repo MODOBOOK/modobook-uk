@@ -1119,7 +1119,7 @@ function BookPage() {
                 {/* Portrait slideshow — swipeable + auto-advance */}
                 <div className="sm:col-span-6">
                   <div
-                    className="relative overflow-hidden rounded-2xl bg-white/10 aspect-[3/4] touch-pan-y select-none"
+                    data-modo-image="hero_image_url"
                     onTouchStart={handleEditorialTouchStart}
                     onTouchEnd={handleEditorialTouchEnd}
                   >
