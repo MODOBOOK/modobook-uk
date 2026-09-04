@@ -1175,10 +1175,12 @@ function BookPage() {
                 <div className="min-w-0 sm:col-span-6 sm:flex sm:flex-col sm:justify-end">
                   {heroUseLogo ? (
                     <img
+                      data-modo-image="logo_url"
                       src={themeAny!.logo_url!}
                       alt={displayPrimary}
                       className="max-h-28 w-auto max-w-full object-contain sm:max-h-40"
                     />
+
                   ) : (
                     <h1
                       data-modo-text="clinic_name"
