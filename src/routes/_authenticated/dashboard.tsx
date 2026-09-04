@@ -114,7 +114,7 @@ const navItems = [
   
   { label: "Reviews", to: "/dashboard/reviews", icon: Star },
   { label: "Referrals & Rewards", to: "/dashboard/rewards", icon: Gift },
-  { label: "Refer a practitioner", to: "/dashboard/partner-referrals", icon: Gift },
+  { label: "Refer a practitioner", to: "/dashboard/partner-referrals", icon: Gift, referrals: true },
 
 { label: "Marketing", to: "/dashboard/marketing", icon: Mail },
   { label: "SMS Marketing", to: "/dashboard/sms-marketing", icon: MessageCircle, soon: true, soonKey: "sms-marketing" as ComingSoonKey },
@@ -214,6 +214,7 @@ function DashboardLayout() {
             const clinicRole = ((profile as Record<string, unknown>)?.__clinic_role as ClinicRole) ?? "owner";
             const visible = navItems.filter((item) => {
 if (!canAccessRoute(clinicRole, item.to)) return false;
+              if ((item as { referrals?: boolean }).referrals) return practitionerReferralsEnabled(profile?.slug);
               // Not-yet-built features (soon: true) stay visible for everyone as a "Soon" chip.
               if ((item as { soon?: boolean }).soon) return true;
               // Pilot features stay visible for everyone — non-pilot clinics see
