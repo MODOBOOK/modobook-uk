@@ -1191,10 +1191,11 @@ function BookPage() {
                   )}
 
                   {profile.tagline && (
-                    <p className="mt-3 max-w-md text-sm leading-relaxed sm:text-base" style={{ color: heroMuted }}>
+                    <p data-modo-text="tagline" className="mt-3 max-w-md text-sm leading-relaxed sm:text-base" style={{ color: heroMuted }}>
                       {profile.tagline}
                     </p>
                   )}
+
 
                   {(theme?.welcome_card_show_rating ?? true) && (
                     <Link
