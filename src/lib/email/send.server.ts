@@ -332,10 +332,21 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
       start_time: string
       manage_token: string | null
       profile_id: string
+      notes?: string | null
+      payment_method?: string | null
+      payment_status?: string | null
+      amount_paid_cents?: number | null
+      total_amount?: number | null
       treatments?: { name?: string } | null
       practitioners?: { name?: string } | null
       locations?: { name?: string; address_line1?: string; city?: string; postcode?: string } | null
-      profiles?: { clinic_name?: string; slug?: string } | null
+      profiles?: {
+        clinic_name?: string
+        slug?: string
+        email?: string | null
+        notify_new_booking_email?: boolean | null
+        new_booking_email_to?: string | null
+      } | null
     }
 
     let branding = brandingCache.get(a.profile_id)
