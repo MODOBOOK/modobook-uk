@@ -20,6 +20,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Minus, Plus, MapPin, Users, FileText, ExternalLink } from "lucide-react";
+import { captureReferralFromUrl, clearStoredReferral } from "@/lib/referral-capture";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard/billing")({
   ssr: false,
