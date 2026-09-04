@@ -45,7 +45,7 @@ const Email = ({
     <Head />
     <Preview>{`New booking: ${patientName} — ${dateTime}`}</Preview>
     <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
-      <Heading as="h1" style={styles.h1}>You have a new booking</Heading>
+      <Heading as="h1" style={styles.h1}>Congratulations! You have a new booking!</Heading>
       <Text style={styles.text}>
         {patientName} has just booked in with {clinicName}.
       </Text>
@@ -65,9 +65,6 @@ const Email = ({
           <Button href={dashboardUrl} style={brandedButton(brandColor)}>View in your diary</Button>
         </Section>
       )}
-      <Text style={styles.muted}>
-        You can turn these alerts off in Patient notifications &rarr; Email in your MODO dashboard.
-      </Text>
     </ModoShell>
   </Html>
 )
