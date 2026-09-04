@@ -15,6 +15,7 @@ import { template as waitlistWelcome } from './waitlist-welcome'
 import { template as waitlistOpen } from './waitlist-open'
 import { template as prescriberInvoice } from './prescriber-invoice'
 import { template as giftCardDelivery } from './gift-card-delivery'
+import { template as newBookingPractitioner } from './new-booking-practitioner'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -45,4 +46,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'waitlist-open': waitlistOpen,
   'prescriber-invoice': prescriberInvoice,
   'gift-card-delivery': giftCardDelivery,
+  'new-booking-practitioner': newBookingPractitioner,
 }
