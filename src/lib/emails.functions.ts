@@ -198,7 +198,7 @@ export const sendTestEmail = createServerFn({ method: 'POST' })
       // Fresh id every test so we don't hit dedup
       messageId: `test-${data.template_key}-${userId}-${Date.now()}`,
       templateData: {
-        profileId: userId,
+        profileId,
         clinicName,
         logoUrl: branding.logoUrl,
         brandColor: branding.brandColor,
