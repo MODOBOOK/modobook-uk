@@ -114,6 +114,8 @@ const navItems = [
   
   { label: "Reviews", to: "/dashboard/reviews", icon: Star },
   { label: "Referrals & Rewards", to: "/dashboard/rewards", icon: Gift },
+  { label: "Refer a practitioner", to: "/dashboard/partner-referrals", icon: Gift },
+
 { label: "Marketing", to: "/dashboard/marketing", icon: Mail },
   { label: "SMS Marketing", to: "/dashboard/sms-marketing", icon: MessageCircle, soon: true, soonKey: "sms-marketing" as ComingSoonKey },
   { label: "Payments", to: "/dashboard/payments", icon: CreditCard },

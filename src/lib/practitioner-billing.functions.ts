@@ -898,7 +898,21 @@ export const redeemDiscountCode = createServerFn({ method: "POST" })
       update.stripe_subscription_id = null;
     }
     await context.supabase.from("practitioner_subscriptions").update(update as any).eq("id", sub!.id);
+
+    // If this was another practitioner's referral code, record the introduction
+    // so they bank their reward once this clinic starts paying.
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.rpc("record_practitioner_referral" as never, {
+        _referred_profile_id: profile.id,
+        _discount_code_id: code.id,
+      } as never);
+    } catch (err) {
+      console.error("[redeemDiscountCode] referral link failed", err instanceof Error ? err.message : err);
+    }
+
     return { ok: true as const, code: code.code, fullyFree: isFullyFree };
+
   });
 
 /** Remove a redeemed code from the plan (and from the live direct debit). */

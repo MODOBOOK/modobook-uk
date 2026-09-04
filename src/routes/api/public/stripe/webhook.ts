@@ -833,7 +833,19 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                   .update({ status: "active" } as never)
                   .eq("stripe_customer_id", customerId)
                   .eq("status", "past_due");
+
+                // First successful MODO payment makes any referral count, so
+                // the practitioner who introduced them banks their reward.
+                if (profileId) {
+                  try {
+                    const { qualifyReferralForProfile } = await import("@/lib/practitioner-referrals.functions");
+                    await qualifyReferralForProfile(profileId);
+                  } catch (e) {
+                    console.error("[stripe-webhook] referral qualify failed", e);
+                  }
+                }
               }
+
               break;
             }
 

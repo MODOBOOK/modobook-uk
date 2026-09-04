@@ -5433,6 +5433,99 @@ export type Database = {
           },
         ]
       }
+      practitioner_referral_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          discount_code_id: string | null
+          id: string
+          owner_profile_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          discount_code_id?: string | null
+          id?: string
+          owner_profile_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          discount_code_id?: string | null
+          id?: string
+          owner_profile_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practitioner_referral_codes_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "platform_discount_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practitioner_referral_codes_owner_profile_id_fkey"
+            columns: ["owner_profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      practitioner_referral_signups: {
+        Row: {
+          created_at: string
+          id: string
+          qualified_at: string | null
+          referral_code_id: string
+          referred_profile_id: string
+          reward_granted_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          qualified_at?: string | null
+          referral_code_id: string
+          referred_profile_id: string
+          reward_granted_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          qualified_at?: string | null
+          referral_code_id?: string
+          referred_profile_id?: string
+          reward_granted_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practitioner_referral_signups_referral_code_id_fkey"
+            columns: ["referral_code_id"]
+            isOneToOne: false
+            referencedRelation: "practitioner_referral_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practitioner_referral_signups_referred_profile_id_fkey"
+            columns: ["referred_profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       practitioner_subscriptions: {
         Row: {
           cancel_at_period_end: boolean
@@ -5452,6 +5545,8 @@ export type Database = {
           notes: string | null
           plan_id: string | null
           profile_id: string
+          referral_reward_months_earned: number
+          referral_reward_months_remaining: number
           status: string
           stripe_addon_items: Json
           stripe_customer_id: string | null
@@ -5479,6 +5574,8 @@ export type Database = {
           notes?: string | null
           plan_id?: string | null
           profile_id: string
+          referral_reward_months_earned?: number
+          referral_reward_months_remaining?: number
           status?: string
           stripe_addon_items?: Json
           stripe_customer_id?: string | null
@@ -5506,6 +5603,8 @@ export type Database = {
           notes?: string | null
           plan_id?: string | null
           profile_id?: string
+          referral_reward_months_earned?: number
+          referral_reward_months_remaining?: number
           status?: string
           stripe_addon_items?: Json
           stripe_customer_id?: string | null
@@ -8832,6 +8931,13 @@ export type Database = {
         Args: { p_clinic_profile_id: string; p_patient_user_id: string }
         Returns: string
       }
+      ensure_practitioner_referral_code: {
+        Args: { _profile_id: string }
+        Returns: {
+          code: string
+          discount_code_id: string
+        }[]
+      }
       get_about_page_by_slug: { Args: { p_slug: string }; Returns: Json }
       get_appointment_by_manage_token: {
         Args: { p_token: string }
@@ -9242,6 +9348,10 @@ export type Database = {
         Args: { p_referral_id: string }
         Returns: Json
       }
+      qualify_practitioner_referral: {
+        Args: { _referred_profile_id: string }
+        Returns: boolean
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -9258,6 +9368,10 @@ export type Database = {
           p_user_agent?: string
         }
         Returns: string
+      }
+      record_practitioner_referral: {
+        Args: { _discount_code_id: string; _referred_profile_id: string }
+        Returns: boolean
       }
       resolve_hub_code: {
         Args: { p_code: string }

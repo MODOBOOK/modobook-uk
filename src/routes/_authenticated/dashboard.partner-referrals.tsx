@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Copy, Gift, Users } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/dashboard/referrals")({
+export const Route = createFileRoute("/_authenticated/dashboard/partner-referrals")({
   component: ReferralsPage,
 });
 
