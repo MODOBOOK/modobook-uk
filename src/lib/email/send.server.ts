@@ -405,6 +405,7 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
           recipientEmail: alertTo,
           messageId: `new-booking-alert-${a.id}`,
           templateData: {
+            profileId: a.profile_id,
             clinicName: a.profiles?.clinic_name ?? branding.clinicName,
             patientName: a.patient_name ?? 'A patient',
             patientEmail: a.patient_email ?? undefined,
