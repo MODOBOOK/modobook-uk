@@ -612,6 +612,33 @@ function DesignStudioPage() {
               </div>
               <Button variant="ghost" size="sm" onClick={() => setTarget(null)}>Done</Button>
             </div>
+          ) : target.kind === "image" ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">{target.label}</p>
+                <Button variant="ghost" size="icon" onClick={() => setTarget(null)} aria-label="Close">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <ImageUploader
+                label=""
+                value={state[target.imageKey] as string | null}
+                onChange={(v) => {
+                  set(target.imageKey, v);
+                  previewImage(target.imageKey, v);
+                }}
+                profileId={profileId}
+                folder={target.imageKey === "logo_url" ? "logo" : "hero"}
+                previewClass={
+                  target.imageKey === "logo_url"
+                    ? "mt-2 h-16 object-contain rounded bg-muted/30 p-2"
+                    : "mt-2 h-28 w-full rounded-md bg-muted/30 object-cover"
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                Pick a new picture — it saves as a draft until you publish.
+              </p>
+            </div>
           ) : (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -640,6 +667,7 @@ function DesignStudioPage() {
               </div>
             </div>
           )}
+
         </div>
       )}
 
