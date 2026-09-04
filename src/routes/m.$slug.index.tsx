@@ -1180,6 +1180,8 @@ function BookPage() {
                     />
                   ) : (
                     <h1
+                      data-modo-text="clinic_name"
+
                       className="font-light leading-[0.95] tracking-tight [overflow-wrap:normal] hyphens-none text-balance text-[clamp(1.75rem,8.5vw,3rem)] sm:text-[clamp(2rem,4.5vw,5rem)]"
                       style={{
                         fontFamily: nameFont,
