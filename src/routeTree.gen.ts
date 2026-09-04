@@ -98,6 +98,7 @@ import { Route as AuthenticatedDashboardPractitionersRouteImport } from './route
 import { Route as AuthenticatedDashboardPoliciesRouteImport } from './routes/_authenticated/dashboard.policies'
 import { Route as AuthenticatedDashboardPaymentsRouteImport } from './routes/_authenticated/dashboard.payments'
 import { Route as AuthenticatedDashboardPatientsRouteImport } from './routes/_authenticated/dashboard.patients'
+import { Route as AuthenticatedDashboardPartnerReferralsRouteImport } from './routes/_authenticated/dashboard.partner-referrals'
 import { Route as AuthenticatedDashboardPackagesRouteImport } from './routes/_authenticated/dashboard.packages'
 import { Route as AuthenticatedDashboardNewAppointmentRouteImport } from './routes/_authenticated/dashboard.new-appointment'
 import { Route as AuthenticatedDashboardModelSlotsRouteImport } from './routes/_authenticated/dashboard.model-slots'
@@ -658,6 +659,12 @@ const AuthenticatedDashboardPatientsRoute =
   AuthenticatedDashboardPatientsRouteImport.update({
     id: '/patients',
     path: '/patients',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardPartnerReferralsRoute =
+  AuthenticatedDashboardPartnerReferralsRouteImport.update({
+    id: '/partner-referrals',
+    path: '/partner-referrals',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardPackagesRoute =
@@ -1230,6 +1237,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/model-slots': typeof AuthenticatedDashboardModelSlotsRoute
   '/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
   '/dashboard/packages': typeof AuthenticatedDashboardPackagesRoute
+  '/dashboard/partner-referrals': typeof AuthenticatedDashboardPartnerReferralsRoute
   '/dashboard/patients': typeof AuthenticatedDashboardPatientsRouteWithChildren
   '/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
@@ -1396,6 +1404,7 @@ export interface FileRoutesByTo {
   '/dashboard/model-slots': typeof AuthenticatedDashboardModelSlotsRoute
   '/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
   '/dashboard/packages': typeof AuthenticatedDashboardPackagesRoute
+  '/dashboard/partner-referrals': typeof AuthenticatedDashboardPartnerReferralsRoute
   '/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
   '/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
@@ -1568,6 +1577,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/model-slots': typeof AuthenticatedDashboardModelSlotsRoute
   '/_authenticated/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
   '/_authenticated/dashboard/packages': typeof AuthenticatedDashboardPackagesRoute
+  '/_authenticated/dashboard/partner-referrals': typeof AuthenticatedDashboardPartnerReferralsRoute
   '/_authenticated/dashboard/patients': typeof AuthenticatedDashboardPatientsRouteWithChildren
   '/_authenticated/dashboard/payments': typeof AuthenticatedDashboardPaymentsRoute
   '/_authenticated/dashboard/policies': typeof AuthenticatedDashboardPoliciesRoute
@@ -1744,6 +1754,7 @@ export interface FileRouteTypes {
     | '/dashboard/model-slots'
     | '/dashboard/new-appointment'
     | '/dashboard/packages'
+    | '/dashboard/partner-referrals'
     | '/dashboard/patients'
     | '/dashboard/payments'
     | '/dashboard/policies'
@@ -1910,6 +1921,7 @@ export interface FileRouteTypes {
     | '/dashboard/model-slots'
     | '/dashboard/new-appointment'
     | '/dashboard/packages'
+    | '/dashboard/partner-referrals'
     | '/dashboard/payments'
     | '/dashboard/policies'
     | '/dashboard/practitioners'
@@ -2081,6 +2093,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/model-slots'
     | '/_authenticated/dashboard/new-appointment'
     | '/_authenticated/dashboard/packages'
+    | '/_authenticated/dashboard/partner-referrals'
     | '/_authenticated/dashboard/patients'
     | '/_authenticated/dashboard/payments'
     | '/_authenticated/dashboard/policies'
@@ -2856,6 +2869,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardPatientsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/partner-referrals': {
+      id: '/_authenticated/dashboard/partner-referrals'
+      path: '/partner-referrals'
+      fullPath: '/dashboard/partner-referrals'
+      preLoaderRoute: typeof AuthenticatedDashboardPartnerReferralsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/packages': {
       id: '/_authenticated/dashboard/packages'
       path: '/packages'
@@ -3628,6 +3648,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardModelSlotsRoute: typeof AuthenticatedDashboardModelSlotsRoute
   AuthenticatedDashboardNewAppointmentRoute: typeof AuthenticatedDashboardNewAppointmentRoute
   AuthenticatedDashboardPackagesRoute: typeof AuthenticatedDashboardPackagesRoute
+  AuthenticatedDashboardPartnerReferralsRoute: typeof AuthenticatedDashboardPartnerReferralsRoute
   AuthenticatedDashboardPatientsRoute: typeof AuthenticatedDashboardPatientsRouteWithChildren
   AuthenticatedDashboardPaymentsRoute: typeof AuthenticatedDashboardPaymentsRoute
   AuthenticatedDashboardPoliciesRoute: typeof AuthenticatedDashboardPoliciesRoute
@@ -3696,6 +3717,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardNewAppointmentRoute:
       AuthenticatedDashboardNewAppointmentRoute,
     AuthenticatedDashboardPackagesRoute: AuthenticatedDashboardPackagesRoute,
+    AuthenticatedDashboardPartnerReferralsRoute:
+      AuthenticatedDashboardPartnerReferralsRoute,
     AuthenticatedDashboardPatientsRoute:
       AuthenticatedDashboardPatientsRouteWithChildren,
     AuthenticatedDashboardPaymentsRoute: AuthenticatedDashboardPaymentsRoute,
