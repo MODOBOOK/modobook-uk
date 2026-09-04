@@ -1120,6 +1120,7 @@ function BookPage() {
                 <div className="sm:col-span-6">
                   <div
                     data-modo-image="hero_image_url"
+                    className="relative overflow-hidden rounded-2xl bg-white/10 aspect-[3/4] touch-pan-y select-none"
                     onTouchStart={handleEditorialTouchStart}
                     onTouchEnd={handleEditorialTouchEnd}
                   >
