@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { signUpFromWaitlist } from "@/lib/waitlist.functions";
@@ -50,7 +50,11 @@ function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signup");
   const [signupName, setSignupName] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [referralCode, setReferralCode] = useState(() => captureReferralFromUrl() ?? getStoredReferral() ?? "");
+  const [referralCode, setReferralCode] = useState("");
+  useEffect(() => {
+    const stored = captureReferralFromUrl() ?? getStoredReferral();
+    if (stored) setReferralCode(stored);
+  }, []);
 
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
