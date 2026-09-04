@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { SaveReminder } from "@/components/SaveReminder";
 import { buildBookingUrl, bookingUrlLabel } from "@/lib/booking-url";
 import { Check, X, Loader2, Copy } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/dashboard/clinic")({
   ssr: false,
