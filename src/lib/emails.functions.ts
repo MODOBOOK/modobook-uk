@@ -150,7 +150,7 @@ export const sendTestEmail = createServerFn({ method: 'POST' })
     if (!profile.email) throw new Error('No email on your account — add one first.')
 
     const { tryEnqueueAppEmail, getPractitionerBranding } = await import('@/lib/email/send.server')
-    const branding = await getPractitionerBranding(userId)
+    const branding = await getPractitionerBranding(profileId)
     const clinicName = profile.clinic_name || branding.clinicName
 
     // Per-template sample data. `profileId` triggers the send helper to merge
