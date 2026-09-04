@@ -64,10 +64,11 @@ export const listReminderRules = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context
+    const profileId = await activeClinicProfileId(supabase, userId)
     const { data, error } = await supabase
       .from('appointment_reminder_rules')
       .select('*')
-      .eq('profile_id', userId)
+      .eq('profile_id', profileId)
       .order('hours_before', { ascending: false })
     if (error) throw new Error(error.message)
     return data ?? []
@@ -87,8 +88,9 @@ export const saveReminderRule = createServerFn({ method: 'POST' })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context
+    const profileId = await activeClinicProfileId(supabase, userId)
     const row = {
-      profile_id: userId,
+      profile_id: profileId,
       hours_before: data.hours_before,
       subject: data.subject?.trim() || null,
       intro: data.intro?.trim() || null,
