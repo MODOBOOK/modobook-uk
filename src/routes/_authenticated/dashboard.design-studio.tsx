@@ -78,16 +78,24 @@ const COLOR_FIELDS: { key: keyof ClinicThemeInput; label: string; hint: string }
 
 /** Text on the page that can be typed straight into from the preview. */
 type TextKey = "clinic_name" | "tagline";
+type ImageKey = "logo_url" | "hero_image_url";
 
 /** What a clicked bit of the preview maps onto. */
 type EditTarget =
   | { kind: "color"; key: keyof ClinicThemeInput; label: string }
-  | { kind: "text"; textKey: TextKey; label: string; value: string };
+  | { kind: "text"; textKey: TextKey; label: string; value: string }
+  | { kind: "image"; imageKey: ImageKey; label: string };
 
 const TEXT_LABELS: Record<TextKey, string> = {
   clinic_name: "Clinic name",
   tagline: "Tagline",
 };
+
+const IMAGE_LABELS: Record<ImageKey, string> = {
+  logo_url: "Logo",
+  hero_image_url: "Banner photo",
+};
+
 
 const CLICK_MAP: { selector: string; key: keyof ClinicThemeInput; label: string }[] = [
   { selector: "header, [data-region='header']", key: "header_bg_color", label: "Header background" },
@@ -187,12 +195,18 @@ function DesignStudioPage() {
 
     type Match =
       | { hit: Element; text: TextKey }
+      | { hit: Element; image: ImageKey }
       | { hit: Element; key: keyof ClinicThemeInput; label: string };
     const match = (el: Element): Match | null => {
       const text = el.closest("[data-modo-text]");
       if (text) {
         const tk = text.getAttribute("data-modo-text") as TextKey;
         if (tk in TEXT_LABELS) return { hit: text, text: tk };
+      }
+      const img = el.closest("[data-modo-image]");
+      if (img) {
+        const ik = img.getAttribute("data-modo-image") as ImageKey;
+        if (ik in IMAGE_LABELS) return { hit: img, image: ik };
       }
       for (const m of CLICK_MAP) {
         const hit = el.closest(m.selector);
@@ -207,7 +221,7 @@ function DesignStudioPage() {
       const found = match(e.target as Element);
       if (last) last.classList.remove("modo-edit-hover", "modo-edit-text");
       last = found?.hit ?? null;
-      if (found && "text" in found) last?.classList.add("modo-edit-text");
+      if (found && ("text" in found || "image" in found)) last?.classList.add("modo-edit-text");
       else last?.classList.add("modo-edit-hover");
     };
     const onClick = (e: MouseEvent) => {
@@ -222,10 +236,13 @@ function DesignStudioPage() {
           label: TEXT_LABELS[found.text],
           value: (found.hit.textContent ?? "").trim(),
         });
+      } else if ("image" in found) {
+        setTarget({ kind: "image", imageKey: found.image, label: IMAGE_LABELS[found.image] });
       } else {
         setTarget({ kind: "color", key: found.key, label: found.label });
       }
     };
+
     doc.addEventListener("mouseover", onOver, true);
     doc.addEventListener("click", onClick, true);
     return () => {
@@ -255,6 +272,21 @@ function DesignStudioPage() {
     const el = doc?.querySelector(`[data-modo-text="${key}"]`);
     if (el) el.textContent = value;
   }
+
+  // Swap the picture in the preview straight away.
+  function previewImage(key: ImageKey, url: string | null) {
+    const doc = iframeRef.current?.contentDocument;
+    const host = doc?.querySelector(`[data-modo-image="${key}"]`);
+    if (!host || !url) return;
+    if (host instanceof HTMLImageElement) host.src = url;
+    else {
+      const inner = host.querySelector("img");
+      if (inner) inner.setAttribute("src", url);
+      else (host as HTMLElement).style.backgroundImage = `url(${url})`;
+    }
+  }
+
+
 
   async function saveTextTarget() {
     if (!target || target.kind !== "text" || !profileId) return;
@@ -595,6 +627,33 @@ function DesignStudioPage() {
               </div>
               <Button variant="ghost" size="sm" onClick={() => setTarget(null)}>Done</Button>
             </div>
+          ) : target.kind === "image" ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">{target.label}</p>
+                <Button variant="ghost" size="icon" onClick={() => setTarget(null)} aria-label="Close">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <ImageUploader
+                label=""
+                value={state[target.imageKey] as string | null}
+                onChange={(v) => {
+                  set(target.imageKey, v);
+                  previewImage(target.imageKey, v);
+                }}
+                profileId={profileId}
+                folder={target.imageKey === "logo_url" ? "logo" : "hero"}
+                previewClass={
+                  target.imageKey === "logo_url"
+                    ? "mt-2 h-16 object-contain rounded bg-muted/30 p-2"
+                    : "mt-2 h-28 w-full rounded-md bg-muted/30 object-cover"
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                Pick a new picture — it saves as a draft until you publish.
+              </p>
+            </div>
           ) : (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -623,6 +682,7 @@ function DesignStudioPage() {
               </div>
             </div>
           )}
+
         </div>
       )}
 
