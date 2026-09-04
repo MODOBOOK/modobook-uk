@@ -337,11 +337,14 @@ function EditTab({
   }
 
   return (
+    <div className="space-y-4">
+    <LoginEmailCard id={id} profile={profile} onSaved={onSaved} />
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Edit on behalf of practitioner</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+
         <p className="text-sm text-muted-foreground">
           Only branding / public profile fields can be edited here. Patient records, appointments, prescriptions and forms are never editable from admin.
         </p>
