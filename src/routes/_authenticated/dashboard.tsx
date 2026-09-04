@@ -1,4 +1,4 @@
-import { pilotFeaturesEnabled } from "@/lib/feature-flags";
+import { pilotFeaturesEnabled, practitionerReferralsEnabled } from "@/lib/feature-flags";
 import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
@@ -114,7 +114,7 @@ const navItems = [
   
   { label: "Reviews", to: "/dashboard/reviews", icon: Star },
   { label: "Referrals & Rewards", to: "/dashboard/rewards", icon: Gift },
-  { label: "Refer a practitioner", to: "/dashboard/partner-referrals", icon: Gift },
+  { label: "Refer a practitioner", to: "/dashboard/partner-referrals", icon: Gift, referrals: true },
 
 { label: "Marketing", to: "/dashboard/marketing", icon: Mail },
   { label: "SMS Marketing", to: "/dashboard/sms-marketing", icon: MessageCircle, soon: true, soonKey: "sms-marketing" as ComingSoonKey },
@@ -189,12 +189,32 @@ function DashboardLayout() {
           </div>
         </div>
         <ClinicSwitcher />
+        {practitionerReferralsEnabled(profile?.slug) && (
+          <div className="px-4 pt-4">
+            <Link
+              to="/dashboard/partner-referrals"
+              className="block rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-4 text-primary-foreground shadow-md transition hover:shadow-lg hover:brightness-105"
+            >
+              <div className="flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
+                  <Gift className="h-4.5 w-4.5" />
+                </div>
+                <p className="text-sm font-bold leading-tight">Give &amp; get back</p>
+              </div>
+              <p className="mt-2 text-xs leading-snug text-primary-foreground/90">
+                Refer a fellow practitioner to MODO — they save 25%, you earn 50% off a month.
+              </p>
+              <p className="mt-2 text-[11px] font-semibold underline underline-offset-2">Share your code →</p>
+            </Link>
+          </div>
+        )}
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-4 py-6">
           {(() => {
             const pilotOn = pilotFeaturesEnabled(profile?.slug);
             const clinicRole = ((profile as Record<string, unknown>)?.__clinic_role as ClinicRole) ?? "owner";
             const visible = navItems.filter((item) => {
 if (!canAccessRoute(clinicRole, item.to)) return false;
+              if ((item as { referrals?: boolean }).referrals) return practitionerReferralsEnabled(profile?.slug);
               // Not-yet-built features (soon: true) stay visible for everyone as a "Soon" chip.
               if ((item as { soon?: boolean }).soon) return true;
               // Pilot features stay visible for everyone — non-pilot clinics see
