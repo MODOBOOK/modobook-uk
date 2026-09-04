@@ -273,6 +273,21 @@ function DesignStudioPage() {
     if (el) el.textContent = value;
   }
 
+  // Swap the picture in the preview straight away.
+  function previewImage(key: ImageKey, url: string | null) {
+    const doc = iframeRef.current?.contentDocument;
+    const host = doc?.querySelector(`[data-modo-image="${key}"]`);
+    if (!host || !url) return;
+    if (host instanceof HTMLImageElement) host.src = url;
+    else {
+      const inner = host.querySelector("img");
+      if (inner) inner.setAttribute("src", url);
+      else (host as HTMLElement).style.backgroundImage = `url(${url})`;
+    }
+  }
+
+
+
   async function saveTextTarget() {
     if (!target || target.kind !== "text" || !profileId) return;
     setSavingText(true);
