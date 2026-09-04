@@ -78,16 +78,24 @@ const COLOR_FIELDS: { key: keyof ClinicThemeInput; label: string; hint: string }
 
 /** Text on the page that can be typed straight into from the preview. */
 type TextKey = "clinic_name" | "tagline";
+type ImageKey = "logo_url" | "hero_image_url";
 
 /** What a clicked bit of the preview maps onto. */
 type EditTarget =
   | { kind: "color"; key: keyof ClinicThemeInput; label: string }
-  | { kind: "text"; textKey: TextKey; label: string; value: string };
+  | { kind: "text"; textKey: TextKey; label: string; value: string }
+  | { kind: "image"; imageKey: ImageKey; label: string };
 
 const TEXT_LABELS: Record<TextKey, string> = {
   clinic_name: "Clinic name",
   tagline: "Tagline",
 };
+
+const IMAGE_LABELS: Record<ImageKey, string> = {
+  logo_url: "Logo",
+  hero_image_url: "Banner photo",
+};
+
 
 const CLICK_MAP: { selector: string; key: keyof ClinicThemeInput; label: string }[] = [
   { selector: "header, [data-region='header']", key: "header_bg_color", label: "Header background" },
