@@ -295,6 +295,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       "patient_reschedule_max","patient_reschedule_cutoff_hours","patient_cancel_cutoff_hours","late_cancel_mode",
       "auto_refund_on_cancel","no_refund_policy_enabled","no_refund_policy_text",
       "auto_confirm_bookings","email_confirmations_enabled","sms_reminders_enabled",
+      "notify_new_booking_email","new_booking_email_to",
       "whatsapp_reminders_enabled","whatsapp_notify_confirmation","whatsapp_notify_reminder",
       "whatsapp_notify_cancellation","whatsapp_notify_rebook","reminder_hours_before",
       "sms_templates","sms_channels","sms_timings",
