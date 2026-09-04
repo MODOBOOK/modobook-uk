@@ -124,3 +124,14 @@ export const DESIGN_STUDIO_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
 export function designStudioEnabled(slug?: string | null) {
   return isFeatureLive(DESIGN_STUDIO_SLUGS, slug);
 }
+
+/**
+ * Practitioner referral programme (introduce another practitioner to MODO).
+ * Held back to the two pilot clinics until we're ready to launch it publicly.
+ */
+export const PRACTITIONER_REFERRALS_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
+
+export function practitionerReferralsEnabled(slug?: string | null) {
+  return isFeatureLive(PRACTITIONER_REFERRALS_SLUGS, slug);
+}
+
