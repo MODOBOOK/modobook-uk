@@ -131,11 +131,12 @@ export const sendTestEmail = createServerFn({ method: 'POST' })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId, claims } = context
+    const profileId = await activeClinicProfileId(supabase, userId)
 
     const { data: profileRow, error: profErr } = await supabase
       .from('profiles')
       .select('email, clinic_name, slug')
-      .eq('id', userId)
+      .eq('id', profileId)
       .maybeSingle()
     if (profErr) throw new Error(profErr.message)
     // Fall back to the authenticated user's account email (from the JWT)
