@@ -4,14 +4,26 @@ import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { requireSupabaseAuth } from '@/integrations/supabase/auth-middleware'
 
+// Staff/admins of a clinic may not have their own profiles row, so saves must
+// target the active clinic's profile (matches how the rest of the dashboard
+// resolves context) instead of the raw auth user id — otherwise the
+// email_customizations_profile_id_fkey constraint rejects the write.
+async function activeClinicProfileId(supabase: any, userId: string): Promise<string> {
+  const { activeProfileId } = await import('./clinic-context.server')
+  const id = await activeProfileId(supabase, userId)
+  if (!id) throw new Error('No clinic profile found for your account.')
+  return id
+}
+
 export const listEmailCustomizations = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context
+    const profileId = await activeClinicProfileId(supabase, userId)
     const { data, error } = await supabase
       .from('email_customizations')
       .select('*')
-      .eq('profile_id', userId)
+      .eq('profile_id', profileId)
     if (error) throw new Error(error.message)
     return data ?? []
   })
