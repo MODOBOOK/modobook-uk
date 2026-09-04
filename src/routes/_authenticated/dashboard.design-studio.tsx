@@ -195,12 +195,18 @@ function DesignStudioPage() {
 
     type Match =
       | { hit: Element; text: TextKey }
+      | { hit: Element; image: ImageKey }
       | { hit: Element; key: keyof ClinicThemeInput; label: string };
     const match = (el: Element): Match | null => {
       const text = el.closest("[data-modo-text]");
       if (text) {
         const tk = text.getAttribute("data-modo-text") as TextKey;
         if (tk in TEXT_LABELS) return { hit: text, text: tk };
+      }
+      const img = el.closest("[data-modo-image]");
+      if (img) {
+        const ik = img.getAttribute("data-modo-image") as ImageKey;
+        if (ik in IMAGE_LABELS) return { hit: img, image: ik };
       }
       for (const m of CLICK_MAP) {
         const hit = el.closest(m.selector);
@@ -215,7 +221,7 @@ function DesignStudioPage() {
       const found = match(e.target as Element);
       if (last) last.classList.remove("modo-edit-hover", "modo-edit-text");
       last = found?.hit ?? null;
-      if (found && "text" in found) last?.classList.add("modo-edit-text");
+      if (found && ("text" in found || "image" in found)) last?.classList.add("modo-edit-text");
       else last?.classList.add("modo-edit-hover");
     };
     const onClick = (e: MouseEvent) => {
@@ -230,10 +236,13 @@ function DesignStudioPage() {
           label: TEXT_LABELS[found.text],
           value: (found.hit.textContent ?? "").trim(),
         });
+      } else if ("image" in found) {
+        setTarget({ kind: "image", imageKey: found.image, label: IMAGE_LABELS[found.image] });
       } else {
         setTarget({ kind: "color", key: found.key, label: found.label });
       }
     };
+
     doc.addEventListener("mouseover", onOver, true);
     doc.addEventListener("click", onClick, true);
     return () => {
