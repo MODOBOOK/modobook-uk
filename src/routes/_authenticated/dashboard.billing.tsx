@@ -89,6 +89,30 @@ function BillingPage() {
   }
   useEffect(() => { reload(); }, []);
 
+  // A referral code arriving from ?ref= (or saved on the pricing page) is
+  // pre-filled and applied automatically the first time we see the plan.
+  const autoRefRef = useRef(false);
+  useEffect(() => {
+    if (loading || !state || autoRefRef.current) return;
+    if ((state as any).discountCode) return;
+    const stored = captureReferralFromUrl();
+    if (!stored) return;
+    autoRefRef.current = true;
+    setCode(stored);
+    (async () => {
+      try {
+        const res = await redeem({ data: { code: stored } });
+        if (res.ok) {
+          toast.success(`Referral code ${res.code} applied — 25% off your first 3 months`);
+          clearStoredReferral();
+          setCode("");
+          reload();
+        }
+      } catch { /* leave it pre-filled for a manual Apply */ }
+    })();
+  }, [loading, state]);
+
+
   // Persist add-on selection during trial so it pre-fills at checkout.
   const dirtyRef = useRef(false);
   useEffect(() => {
