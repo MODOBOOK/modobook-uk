@@ -1,4 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { captureReferralFromUrl } from "@/lib/referral-capture";
+
 import { CheckCircle2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SiteHeader, SiteFooter } from "./index";
@@ -96,10 +99,23 @@ const tiers: Tier[] = [
 ];
 
 function PricingPage() {
+  const [ref, setRef] = useState<string | null>(null);
+  useEffect(() => {
+    setRef(captureReferralFromUrl());
+  }, []);
   return (
     <div className="min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
       <SiteHeader />
       <main>
+        {ref && (
+          <div className="mx-auto mt-4 max-w-5xl px-5 lg:px-8">
+            <div className="rounded-xl border border-[color:var(--ink)]/10 bg-[color:var(--ink)]/[0.04] px-4 py-3 text-sm">
+              Referral code <strong>{ref}</strong> saved — it'll be applied automatically on your
+              Plan &amp; billing page when you sign up. That's 25% off your first 3 months.
+            </div>
+          </div>
+        )}
+
         <section className="mx-auto max-w-5xl px-5 pt-16 pb-8 text-center lg:px-8 lg:pt-24">
           <div className="eyebrow">§ Pricing</div>
           <h1 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
