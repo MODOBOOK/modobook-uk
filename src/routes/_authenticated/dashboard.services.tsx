@@ -788,12 +788,16 @@ function ServiceCard({
   treat,
   picker,
   onDelete,
+  onMoveUp,
+  onMoveDown,
   onMoveTo,
   onChangeCategory,
 }: {
   treat: Treat;
   picker?: { id: string; label: string; depth: number }[];
   onDelete: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
   onMoveTo?: () => void;
   onChangeCategory?: (categoryId: string | null) => void | Promise<void>;
 }) {
