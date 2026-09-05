@@ -471,6 +471,56 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
           })}
         </nav>
 
+        <Sheet open={addOpen} onOpenChange={setAddOpen}>
+          <SheetContent side="bottom" className="rounded-t-2xl pb-8 pt-4">
+            <SheetHeader className="mb-4 text-left">
+              <SheetTitle className="text-lg">Create new</SheetTitle>
+            </SheetHeader>
+            <div className="grid grid-cols-2 gap-3">
+              <Link
+                to="/dashboard/new-appointment"
+                onClick={() => setAddOpen(false)}
+                className="flex flex-col items-center justify-center gap-2 rounded-xl border bg-background p-4 text-center transition active:scale-95 hover:bg-muted/50"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/12 text-primary">
+                  <CalendarPlus className="h-5 w-5" />
+                </span>
+                <span className="text-sm font-medium">Appointment</span>
+              </Link>
+              <Link
+                to="/dashboard/services"
+                onClick={() => setAddOpen(false)}
+                className="flex flex-col items-center justify-center gap-2 rounded-xl border bg-background p-4 text-center transition active:scale-95 hover:bg-muted/50"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/12 text-primary">
+                  <Scissors className="h-5 w-5" />
+                </span>
+                <span className="text-sm font-medium">Service</span>
+              </Link>
+              <Link
+                to="/dashboard/packages"
+                onClick={() => setAddOpen(false)}
+                className="flex flex-col items-center justify-center gap-2 rounded-xl border bg-background p-4 text-center transition active:scale-95 hover:bg-muted/50"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/12 text-primary">
+                  <Package className="h-5 w-5" />
+                </span>
+                <span className="text-sm font-medium">Package</span>
+              </Link>
+              <Link
+                to="/dashboard/consultations"
+                onClick={() => setAddOpen(false)}
+                className="flex flex-col items-center justify-center gap-2 rounded-xl border bg-background p-4 text-center transition active:scale-95 hover:bg-muted/50"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/12 text-primary">
+                  <ClipboardList className="h-5 w-5" />
+                </span>
+                <span className="text-sm font-medium">Consultation</span>
+              </Link>
+            </div>
+          </SheetContent>
+        </Sheet>
+
       </div>
       <ComingSoonDialog
         open={comingSoon !== null}
