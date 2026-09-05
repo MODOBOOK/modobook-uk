@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Download, Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { getIncomeReport } from "@/lib/analytics.functions";
 import { generateIncomeReportPdf } from "@/lib/income-report-pdf";
 import { toast } from "sonner";
