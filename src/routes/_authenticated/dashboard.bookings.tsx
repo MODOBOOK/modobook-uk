@@ -797,9 +797,9 @@ function MonthView({
 
   return (
     <Card className="overflow-hidden">
-      <div className="grid grid-cols-7 border-b bg-muted/30 text-[11px] uppercase">
+      <div className="grid grid-cols-7 border-b bg-muted/30 text-xs uppercase sm:text-[11px]">
         {weekdayLabels.map((w) => (
-          <div key={w} className="px-2 py-2 text-center text-muted-foreground">{w}</div>
+          <div key={w} className="px-2 py-3 text-center font-medium text-muted-foreground sm:py-2">{w}</div>
         ))}
       </div>
       <div className="grid grid-cols-7">
@@ -832,7 +832,7 @@ function MonthView({
               key={key}
               onClick={() => onPickDay(d)}
               disabled={isPast}
-              className={`relative min-h-[52px] border-b border-r p-1 text-left transition hover:bg-accent/40 disabled:cursor-not-allowed disabled:hover:bg-transparent sm:min-h-[88px] sm:p-1.5 ${
+              className={`relative flex min-h-[72px] flex-col border-b border-r p-1.5 text-left transition active:scale-[0.98] hover:bg-accent/40 disabled:cursor-not-allowed disabled:hover:bg-transparent sm:min-h-[88px] sm:p-1.5 ${
                 !inMonth ? "bg-muted/20 text-muted-foreground" : ""
               } ${unavailable && inMonth ? "bg-muted/50 text-muted-foreground" : ""} ${
                 isPast ? "opacity-60" : ""
@@ -848,30 +848,30 @@ function MonthView({
               title={title}
             >
               <div className="flex items-center justify-between">
-                <span className={`inline-flex h-6 w-6 items-center justify-center rounded-md text-xs font-semibold ${
+                <span className={`inline-flex h-7 w-7 items-center justify-center rounded-md text-sm font-bold sm:h-6 sm:w-6 sm:text-xs ${
                   isToday ? "bg-primary text-primary-foreground" : ""
                 }`}>{d.getDate()}</span>
                 {dayAppts.length > 0 && (
-                  <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary sm:text-[10px]">
                     {dayAppts.length}
                   </span>
                 )}
               </div>
-              <div className="mt-1 hidden space-y-0.5 sm:block">
-                {dayAppts.slice(0, 3).map((a) => {
+              <div className="mt-1.5 flex-1 space-y-1">
+                {dayAppts.slice(0, 2).map((a) => {
                   const color = a.treatments?.color || "#3b82f6";
                   return (
                     <div
                       key={a.id}
-                      className="truncate rounded px-1 py-0.5 text-[10px]"
+                      className="truncate rounded px-1 py-0.5 text-[10px] sm:text-[10px]"
                       style={{ backgroundColor: hexToRgba(color, 0.18), borderLeft: `2px solid ${color}` }}
                     >
                       {a.start_time.slice(0, 5)} {a.patient_name}
                     </div>
                   );
                 })}
-                {dayAppts.length > 3 && (
-                  <div className="text-[10px] text-muted-foreground">+{dayAppts.length - 3} more</div>
+                {dayAppts.length > 2 && (
+                  <div className="text-[10px] font-medium text-muted-foreground sm:text-[10px]">+{dayAppts.length - 2} more</div>
                 )}
               </div>
             </button>
