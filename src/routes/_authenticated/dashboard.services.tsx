@@ -497,6 +497,15 @@ function ServicesPage() {
         onClose={() => setMoveCatState(null)}
         onConfirm={(parentId) => moveCatState && moveCatToParent(moveCatState.id, parentId)}
       />
+      <ReorderCategoriesDialog
+        open={reorderOpen}
+        categories={roots}
+        onClose={() => setReorderOpen(false)}
+        onSave={async (ids) => {
+          await reorderCatsByIds(ids);
+          setReorderOpen(false);
+        }}
+      />
 
 
 
