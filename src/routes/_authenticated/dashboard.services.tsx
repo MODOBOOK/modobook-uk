@@ -1966,8 +1966,8 @@ function FavouritesCard({ treatments }: { treatments: Treat[] }) {
   return (
     <Card className="rounded-3xl">
       <CardContent className="space-y-4 p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+          <div className="flex min-w-0 items-start gap-3">
             <div className="rounded-xl bg-amber-100 p-2 text-amber-600">
               <Star className="h-5 w-5 fill-amber-500 stroke-amber-600" />
             </div>
