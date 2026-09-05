@@ -471,14 +471,14 @@ function mobilePageTitle(pathname: string): string {
   return last.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function BackButton() {
+function BackButton({ className }: { className?: string }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   if (pathname === "/dashboard" || pathname === "/dashboard/") return null;
   return (
     <Button
       variant="ghost"
       size="icon"
-      className="shrink-0"
+      className={cn("shrink-0", className)}
       aria-label="Back"
       onClick={() => window.history.back()}
     >
