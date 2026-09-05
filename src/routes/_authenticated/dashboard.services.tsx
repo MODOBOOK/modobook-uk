@@ -768,26 +768,22 @@ function SubcategorySection({
   child,
   forceOpen,
   matchTreat,
-  picker,
   onAddService,
   onEditCat,
   onDeleteCat,
   onDeleteTreat,
-  onMoveTreat,
+  onReorderTreatsByIds,
   onMoveTreatTo,
-  onChangeTreatCategory,
 }: {
   child: CatNode;
   forceOpen?: boolean;
   matchTreat: (t: Treat) => boolean;
-  picker: { id: string; label: string; depth: number }[];
   onAddService: (catId: string) => void;
   onEditCat: (c: Cat) => void;
   onDeleteCat: (c: Cat) => void;
   onDeleteTreat: (t: Treat) => void;
-  onMoveTreat: (siblings: Treat[], id: string, dir: -1 | 1) => void;
+  onReorderTreatsByIds: (ids: string[]) => void;
   onMoveTreatTo: (t: Treat) => void;
-  onChangeTreatCategory: (treatId: string, categoryId: string | null) => void | Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
   const expanded = forceOpen || open;
