@@ -83,6 +83,7 @@ const groups: Group[] = [
   {
     title: "Clinic owner",
     items: [
+      { label: "Clinic Compliance", description: "Regulated checks & audits — fridge, cleaning, equipment, HIS-style audits", to: "/dashboard/compliance", icon: ClipboardList, ...T.mocha },
       { label: "Associates", description: "Self-employed practitioners hosted in your clinic — oversight, compliance & records", to: "/dashboard/associates", icon: ShieldCheck, ...T.sand },
       { label: "Room rental", description: "Rent your rooms by the hour, half day or full day", to: "/dashboard/room-rental", icon: DoorOpen, ...T.cream },
     ],
@@ -187,6 +188,7 @@ function comingSoonFor(to: string): ComingSoonKey | null {
       ...g,
       items: g.items
         .filter((i) => canAccessRoute(clinicRole, i.to))
+        .filter((i) => (i.to === "/dashboard/compliance" ? pilot : true))
         .filter((i) =>
           i.to === "/dashboard/associates"
             ? pilot
