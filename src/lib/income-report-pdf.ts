@@ -4,13 +4,12 @@ export type IncomeReportPdfData = {
   clinicName: string;
   brandColor?: string | null;
   periodLabel: string;
-  totals: { gross: number; discounts: number; refunds: number; net: number; bookings: number; outstanding: number };
+  totals: { gross: number; discounts: number; refunds: number; net: number; bookings: number };
   byMethod: { label: string; amount: number; count: number }[];
   byTreatment: { label: string; amount: number; count: number }[];
   byMonth: { label: string; amount: number; count: number }[];
   rows: {
     date: string;
-    patient: string;
     treatment: string;
     method: string;
     gross: number;
@@ -71,10 +70,9 @@ export function generateIncomeReportPdf(d: IncomeReportPdfData): jsPDF {
   // Summary boxes
   const cards: [string, string][] = [
     ["Net income", money(d.totals.net)],
-    ["Collected", money(d.totals.gross)],
+    ["Income", money(d.totals.gross)],
     ["Refunds", money(d.totals.refunds)],
     ["Discounts", money(d.totals.discounts)],
-    ["Outstanding", money(d.totals.outstanding)],
     ["Bookings", String(d.totals.bookings)],
   ];
   const cw = (W - M * 2 - 12 * 2) / 3;
@@ -130,7 +128,7 @@ export function generateIncomeReportPdf(d: IncomeReportPdfData): jsPDF {
   doc.text("Transactions", M, y);
   y += 16;
 
-  const cols = [M, M + 68, M + 180, M + 300, M + 372, M + 440, W - M];
+  const cols = [M, M + 80, M + 300, M + 400, W - M];
   const header = () => {
     doc.setFillColor(br, bg, bb);
     doc.rect(M, y - 11, W - M * 2, 16, "F");
@@ -138,11 +136,10 @@ export function generateIncomeReportPdf(d: IncomeReportPdfData): jsPDF {
     doc.setFontSize(8);
     doc.setFont("helvetica", "bold");
     doc.text("Date", cols[0]! + 4, y);
-    doc.text("Patient", cols[1]! + 4, y);
-    doc.text("Treatment", cols[2]! + 4, y);
-    doc.text("Method", cols[3]! + 4, y);
-    doc.text("Refund", cols[5]! - 6, y, { align: "right" });
-    doc.text("Net", cols[6]! - 4, y, { align: "right" });
+    doc.text("Treatment", cols[1]! + 4, y);
+    doc.text("Method", cols[2]! + 4, y);
+    doc.text("Refund", cols[3]! - 6, y, { align: "right" });
+    doc.text("Net", cols[4]! - 4, y, { align: "right" });
     doc.setFont("helvetica", "normal");
     y += 16;
   };
@@ -157,12 +154,11 @@ export function generateIncomeReportPdf(d: IncomeReportPdfData): jsPDF {
     }
     doc.setTextColor(60, 60, 60);
     doc.text(r.date, cols[0]! + 4, y);
-    doc.text(String(r.patient).slice(0, 20), cols[1]! + 4, y);
-    doc.text(String(r.treatment).slice(0, 22), cols[2]! + 4, y);
-    doc.text(String(r.method).replace(/_/g, " ").slice(0, 14), cols[3]! + 4, y);
-    doc.text(r.refunded ? money(r.refunded) : "—", cols[5]! - 6, y, { align: "right" });
+    doc.text(String(r.treatment).slice(0, 40), cols[1]! + 4, y);
+    doc.text(String(r.method).replace(/_/g, " ").slice(0, 18), cols[2]! + 4, y);
+    doc.text(r.refunded ? money(r.refunded) : "—", cols[3]! - 6, y, { align: "right" });
     doc.setTextColor(20, 20, 20);
-    doc.text(money(r.net), cols[6]! - 4, y, { align: "right" });
+    doc.text(money(r.net), cols[4]! - 4, y, { align: "right" });
     y += 13;
   }
 

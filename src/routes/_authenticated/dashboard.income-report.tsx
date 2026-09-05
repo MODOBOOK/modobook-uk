@@ -143,10 +143,9 @@ function IncomeReportPage() {
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
             {[
               ["Net income", money(t!.net)],
-              ["Collected", money(t!.gross)],
+              ["Income", money(t!.gross)],
               ["Refunds", money(t!.refunds)],
               ["Discounts given", money(t!.discounts)],
-              ["Outstanding", money(t!.outstanding)],
               ["Bookings", String(t!.bookings)],
             ].map(([label, value]) => (
               <Card key={label}>
@@ -199,23 +198,14 @@ function IncomeReportPage() {
                   <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2">Date</th>
-                      <th className="px-3 py-2">Patient</th>
                       <th className="px-3 py-2">Treatment</th>
                       <th className="px-3 py-2">Method</th>
                       <th className="px-3 py-2 text-right">Refund</th>
                       <th className="px-3 py-2 text-right">Net</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.rows.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">No bookings in this period.</td>
-                      </tr>
-                    )}
-                    {data.rows.map((r) => (
+...
+                     {data.rows.map((r) => (
                       <tr key={r.id} className="border-t">
                         <td className="px-3 py-2 whitespace-nowrap">{r.date}</td>
-                        <td className="px-3 py-2">{r.patient}</td>
                         <td className="px-3 py-2">{r.treatment}</td>
                         <td className="px-3 py-2 capitalize">{r.method.replace(/_/g, " ")}</td>
                         <td className="px-3 py-2 text-right">{r.refunded ? money(r.refunded) : "—"}</td>
