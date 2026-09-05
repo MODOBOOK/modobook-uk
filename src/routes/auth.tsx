@@ -7,11 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fetchActiveTerms, recordTermsAcceptance } from "@/lib/platform-terms";
 import { captureReferralFromUrl, getStoredReferral, storeReferral } from "@/lib/referral-capture";
