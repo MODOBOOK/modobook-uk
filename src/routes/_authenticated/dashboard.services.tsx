@@ -324,6 +324,16 @@ function ServicesPage() {
     }
   }
 
+  async function reorderCatsByIds(ids: string[]) {
+    try {
+      await reorderCats({ data: { ids } });
+      toast.success("Category order saved");
+      cats.refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
   async function moveTreatToCategory(treatId: string, categoryId: string | null) {
     try {
       await patchTreat({ data: { id: treatId, category_id: categoryId } });
