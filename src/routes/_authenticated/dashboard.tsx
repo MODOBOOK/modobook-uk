@@ -44,6 +44,14 @@ import {
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useDashboardThemeStyle } from "@/hooks/use-dashboard-theme";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { countPendingReviews } from "@/lib/patient.functions";
