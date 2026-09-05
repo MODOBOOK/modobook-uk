@@ -287,47 +287,30 @@ function ServicesPage() {
 
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Services</h1>
-        <p className="text-sm text-muted-foreground">
-          Organise your services into categories and subcategories. Clients see the same structure on your booking page.
+    <div className="services-page font-body space-y-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">Services</h1>
+        <p className="text-base text-muted-foreground">
+          Build your treatment menu. Patients see the same categories and services on your booking page.
         </p>
       </div>
 
-      <div className="relative">
-
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search for service"
-          className="h-12 rounded-xl pl-10"
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search services or categories…"
+            className="h-14 rounded-2xl pl-12 text-base"
+          />
+        </div>
+        <AddMenu
+          hasCategories={picker.length > 0}
+          onAddCategory={() => setCatDialog({ mode: "create", parentId: null })}
+          onAddService={() => setSvcDialog({ defaultCatId: null })}
+          onAddLimited={() => setCatDialog({ mode: "create", parentId: null, limited: true })}
         />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <Button
-          className="h-12 rounded-full bg-black font-semibold text-white hover:bg-black/90"
-          onClick={() => setCatDialog({ mode: "create", parentId: null })}
-        >
-          Add Category
-        </Button>
-        <Button
-          className="h-12 rounded-full bg-black font-semibold text-white hover:bg-black/90"
-          onClick={() => setSvcDialog({ defaultCatId: null })}
-          disabled={picker.length === 0}
-          title={picker.length === 0 ? "Create a category first" : ""}
-        >
-          Add Service
-        </Button>
-        <Button
-          variant="outline"
-          className="col-span-2 h-12 rounded-full border-rose-300 bg-rose-50 font-semibold text-rose-900 hover:bg-rose-100"
-          onClick={() => setCatDialog({ mode: "create", parentId: null, limited: true })}
-        >
-          Add Limited Time Category
-        </Button>
       </div>
 
 
