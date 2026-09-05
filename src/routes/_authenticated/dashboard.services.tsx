@@ -698,12 +698,6 @@ function CategoryCard({
               <DropdownMenuItem onSelect={() => onMoveCatTo(node)}>
                 <FolderPlus className="mr-2 h-4 w-4" /> Move to…
               </DropdownMenuItem>
-              <DropdownMenuItem disabled={!canUp} onSelect={() => onMoveCat(siblings, node.id, -1)}>
-                <ArrowUp className="mr-2 h-4 w-4" /> Move up
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled={!canDown} onSelect={() => onMoveCat(siblings, node.id, 1)}>
-                <ArrowDown className="mr-2 h-4 w-4" /> Move down
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => onEditCat(node)}>
                 <Pencil className="mr-2 h-4 w-4" /> Edit
@@ -743,14 +737,12 @@ function CategoryCard({
                 child={child}
                 forceOpen={forceOpen}
                 matchTreat={matchTreat}
-                picker={picker}
                 onAddService={onAddService}
                 onEditCat={onEditCat}
                 onDeleteCat={onDeleteCat}
                 onDeleteTreat={onDeleteTreat}
-                onMoveTreat={onMoveTreat}
+                onReorderTreatsByIds={onReorderTreatsByIds}
                 onMoveTreatTo={onMoveTreatTo}
-                onChangeTreatCategory={onChangeTreatCategory}
               />
             ))}
           </div>
