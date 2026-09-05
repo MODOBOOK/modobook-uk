@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useServerFn } from '@tanstack/react-start'
 import {
   listCampaigns, saveCampaignDraft, deleteCampaign, getMarketingOverview,
+  previewBulkMarketingOptIn, bulkMarketingOptIn,
 } from '@/lib/marketing.functions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -11,7 +12,7 @@ import { Input } from '@/components/ui/input'
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog'
-import { Plus, Mail, Trash2, Loader2, Users2 } from 'lucide-react'
+import { Plus, Mail, Trash2, Loader2, Users2, ShieldCheck, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 
 export const Route = createFileRoute('/_authenticated/dashboard/marketing/')({
@@ -160,7 +161,7 @@ function BulkOptInDialog({ onDone }: { onDone: () => void }) {
   useEffect(() => {
     if (!open) return
     setData(null); setConfirmText(''); setAck({ existingCustomers: false, similarServices: false, optOutOffered: false, responsible: false })
-    preview().then((d: any) => setData(d)).catch((e) => toast.error(e.message))
+    preview().then((d: any) => setData(d)).catch((e: any) => toast.error(e.message))
   }, [open])
 
   async function handleRun() {
