@@ -20,6 +20,7 @@ import {
   Star,
   HelpCircle,
   ChevronRight,
+  ChevronLeft,
   ShieldCheck,
   LogOut,
   ExternalLink,
@@ -50,7 +51,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/menu")({
 
 type Item = { label: string; description: string; to: string; icon: React.ElementType; tone: string; iconColor: string };
 
-type Group = { title: string; items: Item[] };
+type Group = { title: string; icon: React.ElementType; blurb: string; items: Item[] };
 
 // Theme-aware icon tones — pull from the practitioner's branding tokens so
 // changing the preset/colours updates every icon chip across the dashboard.
@@ -68,6 +69,8 @@ const T = {
 const groups: Group[] = [
   {
     title: "Your business",
+    icon: Store,
+    blurb: "Profile, branding, locations & staff",
     items: [
       { label: "Dashboard home", description: "Today's overview & analytics", to: "/dashboard", icon: Sparkles, ...T.taupe },
       { label: "Import with AI", description: "Upload PDFs, photos or a website to set up faster", to: "/dashboard/ai-import", icon: Sparkles, ...T.ivory },
@@ -82,6 +85,8 @@ const groups: Group[] = [
   },
   {
     title: "Clinic owner",
+    icon: ShieldCheck,
+    blurb: "Compliance, associates & room rental",
     items: [
       { label: "Clinic Compliance", description: "Regulated checks & audits — fridge, cleaning, equipment, HIS-style audits", to: "/dashboard/compliance", icon: ClipboardList, ...T.mocha },
       { label: "Associates", description: "Self-employed practitioners hosted in your clinic — oversight, compliance & records", to: "/dashboard/associates", icon: ShieldCheck, ...T.sand },
@@ -91,6 +96,8 @@ const groups: Group[] = [
 
   {
     title: "Services & forms",
+    icon: Scissors,
+    blurb: "Treatments, packages, forms & training",
     items: [
       { label: "Services", description: "Treatments, categories, pricing", to: "/dashboard/services", icon: Scissors, ...T.taupe },
       { label: "Add-ons", description: "Optional extras offered with treatments", to: "/dashboard/addons", icon: Sparkles, ...T.ivory },
@@ -108,6 +115,8 @@ const groups: Group[] = [
   },
   {
     title: "Bookings",
+    icon: CalendarDays,
+    blurb: "Appointments, patients & reviews",
     items: [
       { label: "Booking flow", description: "Concern picker shown before treatments", to: "/dashboard/booking-flow", icon: HelpCircle, ...T.taupe },
       { label: "Availability", description: "Opening times & ad-hoc slots", to: "/dashboard/availability", icon: CalendarDays, ...T.espresso },
@@ -121,6 +130,8 @@ const groups: Group[] = [
   },
   {
     title: "Payments",
+    icon: CreditCard,
+    blurb: "Stripe, your MODO plan & invoices",
     items: [
       { label: "Payments & payouts", description: "Connect Stripe & manage payouts", to: "/dashboard/payments", icon: CreditCard, ...T.espresso },
       { label: "Plan & billing", description: "Choose your MODO plan, add-ons & direct debit", to: "/dashboard/billing", icon: CreditCard, ...T.mocha },
@@ -129,6 +140,8 @@ const groups: Group[] = [
   },
   {
     title: "Patient notifications",
+    icon: Mail,
+    blurb: "Email & SMS templates and timings",
     items: [
       { label: "Email", description: "Edit wording, timings, reminders & review requests", to: "/dashboard/notifications/email", icon: Mail, ...T.taupe },
       { label: "SMS", description: "Text confirmations, reminders & review requests", to: "/dashboard/notifications/sms", icon: MessageCircle, ...T.cream },
@@ -136,7 +149,8 @@ const groups: Group[] = [
   },
   {
     title: "Communications",
-
+    icon: Megaphone,
+    blurb: "Email & SMS marketing campaigns",
     items: [
 { label: "Marketing", description: "Send branded campaigns to opted-in patients", to: "/dashboard/marketing", icon: Megaphone, ...T.espresso },
       { label: "SMS Marketing", description: "Promotional text campaigns to opted-in patients", to: "/dashboard/sms-marketing", icon: MessageCircle, ...T.cream },
@@ -144,12 +158,16 @@ const groups: Group[] = [
   },
   {
     title: "Settings",
+    icon: Shield,
+    blurb: "Booking rules, deposits & reminders",
     items: [
       { label: "Booking settings", description: "Notice, buffers, deposits, reminders & patient rules", to: "/dashboard/settings", icon: Shield, ...T.mocha },
     ],
   },
   {
     title: "Support",
+    icon: HelpCircle,
+    blurb: "Guides & answers",
     items: [
       { label: "Help & FAQ", description: "How-to guides for running your clinic", to: "/dashboard/help", icon: HelpCircle, ...T.taupe },
     ],
@@ -168,6 +186,7 @@ function MenuPage() {
   const clinicRole: ClinicRole = profile.__clinic_role ?? "owner";
   const { admin } = Route.useLoaderData();
   const [query, setQuery] = useState("");
+  const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [comingSoon, setComingSoon] = useState<ComingSoonKey | null>(null);
 
 
@@ -183,8 +202,8 @@ function comingSoonFor(to: string): ComingSoonKey | null {
     return null;
   }
 
-  const filtered = useMemo(() => {
-    const visible = groups.map((g) => ({
+  const visible = useMemo(() => {
+    return groups.map((g) => ({
       ...g,
       items: g.items
         .filter((i) => canAccessRoute(clinicRole, i.to))
@@ -197,13 +216,94 @@ function comingSoonFor(to: string): ComingSoonKey | null {
             : true,
         ),
     })).filter((g) => g.items.length > 0);
-    if (!query.trim()) return visible;
-    const q = query.toLowerCase();
-    return visible
-      .map((g) => ({ ...g, items: g.items.filter((i) => i.label.toLowerCase().includes(q) || i.description.toLowerCase().includes(q)) }))
-      .filter((g) => g.items.length > 0);
-  }, [query, profile.associates_enabled, pilot, clinicRole]);
+  }, [profile.associates_enabled, pilot, clinicRole]);
 
+  const searchResults = useMemo(() => {
+    if (!query.trim()) return null;
+    const q = query.toLowerCase();
+    return visible.flatMap((g) =>
+      g.items
+        .filter((i) => i.label.toLowerCase().includes(q) || i.description.toLowerCase().includes(q))
+        .map((i) => ({ ...i, group: g.title })),
+    );
+  }, [query, visible]);
+
+  const openGroup = visible.find((g) => g.title === activeGroup) ?? null;
+
+  const renderItem = (item: Item, groupTitle?: string) => {
+    const soon = comingSoonFor(item.to);
+    const inner = (
+      <div className="flex items-center gap-4">
+        <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ring-1 ring-black/5 ${item.tone}`}>
+          <item.icon className={`h-6 w-6 ${item.iconColor}`} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-2 truncate text-base font-semibold leading-tight">
+            {item.label}
+            {soon && (
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-primary">
+                Soon
+              </span>
+            )}
+          </p>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+            {groupTitle ? `${groupTitle} · ` : ""}{item.description}
+          </p>
+        </div>
+        <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5" />
+      </div>
+    );
+    return soon ? (
+      <button
+        key={item.to}
+        type="button"
+        onClick={() => setComingSoon(soon)}
+        className="group block w-full rounded-2xl border border-primary/20 bg-card p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-primary/40 active:scale-[0.99]"
+      >
+        {inner}
+      </button>
+    ) : (
+      <Link
+        key={item.to}
+        to={item.to}
+        className="group block rounded-2xl border border-muted-foreground/10 bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-primary/30 hover:shadow-md active:scale-[0.99]"
+      >
+        {inner}
+      </Link>
+    );
+  };
+
+  // Sub-menu screen — slides in when a category is tapped.
+  if (openGroup && !searchResults) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-4 px-1 animate-in slide-in-from-right-6 fade-in duration-200">
+        <button
+          type="button"
+          onClick={() => setActiveGroup(null)}
+          className="mt-1 flex items-center gap-1.5 rounded-full border border-muted-foreground/15 bg-card px-4 py-2 text-sm font-semibold shadow-sm transition active:scale-[0.98]"
+        >
+          <ChevronLeft className="h-4 w-4" /> Menu
+        </button>
+        <div className="flex items-center gap-4 px-1">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md ring-1 ring-black/5">
+            <openGroup.icon className="h-7 w-7" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight">{openGroup.title}</h1>
+            <p className="text-xs text-muted-foreground">{openGroup.blurb}</p>
+          </div>
+        </div>
+        <div className="space-y-3">
+          {openGroup.items.map((item) => renderItem(item))}
+        </div>
+        <ComingSoonDialog
+          open={comingSoon !== null}
+          onOpenChange={(v) => !v && setComingSoon(null)}
+          feature={comingSoon ?? "general"}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-1">
@@ -221,135 +321,128 @@ function comingSoonFor(to: string): ComingSoonKey | null {
         />
       </div>
 
-      <Card className="overflow-hidden rounded-2xl border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background shadow-sm">
-        <CardContent className="flex items-center justify-between gap-3 p-4">
-          <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Your booking link</p>
-            <p className="mt-0.5 truncate text-sm font-semibold">/m/{profile.slug}</p>
-          </div>
-          <Button size="sm" asChild className="rounded-full">
-            <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
-              <ExternalLink className="mr-1.5 h-4 w-4" /> Open
-            </a>
-          </Button>
-        </CardContent>
-      </Card>
+      {searchResults ? (
+        <div className="space-y-3">
+          {searchResults.length === 0 && (
+            <p className="py-6 text-center text-sm text-muted-foreground">Nothing matches “{query}”.</p>
+          )}
+          {searchResults.map((item) => renderItem(item, item.group))}
+        </div>
+      ) : (
+        <>
+          <Card className="overflow-hidden rounded-2xl border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background shadow-sm">
+            <CardContent className="flex items-center justify-between gap-3 p-4">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Your booking link</p>
+                <p className="mt-0.5 truncate text-sm font-semibold">/m/{profile.slug}</p>
+              </div>
+              <Button size="sm" asChild className="rounded-full">
+                <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">
+                  <ExternalLink className="mr-1.5 h-4 w-4" /> Open
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
 
-      {practitionerReferralsEnabled(profile.slug) && (
-        <Link
-          to="/dashboard/partner-referrals"
-          className="block overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/60 p-5 text-primary-foreground shadow-md transition active:scale-[0.99]"
-        >
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/20 ring-1 ring-white/30">
-              <Gift className="h-7 w-7" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-lg font-extrabold leading-tight">Give &amp; get back</p>
-              <p className="mt-0.5 text-xs leading-snug text-primary-foreground/90">
-                Refer a fellow practitioner to MODO — they get 25% off for 3 months, you earn 50% off a month for every referral.
-              </p>
-            </div>
-            <ChevronRight className="h-5 w-5 shrink-0" />
-          </div>
-        </Link>
-      )}
-
-      {filtered.map((g) => (
-        <section key={g.title} className="space-y-3">
-          <h2 className="px-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{g.title}</h2>
-          <div className="space-y-3">
-            {g.items.map((item) => {
-              const soon = comingSoonFor(item.to);
-              const Wrapper = ({ children }: { children: React.ReactNode }) =>
-                soon ? (
-                  <button
-                    type="button"
-                    onClick={() => setComingSoon(soon)}
-                    className="group block w-full rounded-2xl border border-primary/20 bg-card p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-primary/40 active:scale-[0.99]"
-                  >
-                    {children}
-                  </button>
-                ) : (
-                  <Link
-                    to={item.to}
-                    className="group block rounded-2xl border border-muted-foreground/10 bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-primary/30 hover:shadow-md active:scale-[0.99]"
-                  >
-                    {children}
-                  </Link>
-                );
-              return (
-              <Wrapper key={item.to}>
-                <div className="flex items-center gap-4">
-                  <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full ring-1 ring-black/5 ${item.tone}`}>
-                    <item.icon className={`h-6 w-6 ${item.iconColor}`} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="flex items-center gap-2 truncate text-base font-semibold leading-tight">
-                      {item.label}
-                      {soon && (
-                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-primary">
-                          Soon
-                        </span>
-                      )}
-                    </p>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{item.description}</p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5" />
+          {practitionerReferralsEnabled(profile.slug) && (
+            <Link
+              to="/dashboard/partner-referrals"
+              className="block overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/90 to-primary/60 p-5 text-primary-foreground shadow-md transition active:scale-[0.99]"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/20 ring-1 ring-white/30">
+                  <Gift className="h-7 w-7" />
                 </div>
-              </Wrapper>
+                <div className="min-w-0 flex-1">
+                  <p className="text-lg font-extrabold leading-tight">Give &amp; get back</p>
+                  <p className="mt-0.5 text-xs leading-snug text-primary-foreground/90">
+                    Refer a fellow practitioner to MODO — they get 25% off for 3 months, you earn 50% off a month for every referral.
+                  </p>
+                </div>
+                <ChevronRight className="h-5 w-5 shrink-0" />
+              </div>
+            </Link>
+          )}
+
+          <div className="space-y-3">
+            {visible.map((g) => {
+              const soonCount = g.items.filter((i) => comingSoonFor(i.to)).length;
+              return (
+                <button
+                  key={g.title}
+                  type="button"
+                  onClick={() => setActiveGroup(g.title)}
+                  className="group block w-full rounded-2xl border border-muted-foreground/10 bg-card p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-primary/30 hover:shadow-md active:scale-[0.99]"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-black/5">
+                      <g.icon className="h-6 w-6" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="flex items-center gap-2 truncate text-base font-semibold leading-tight">
+                        {g.title}
+                        {soonCount > 0 && (
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-primary">
+                            Soon
+                          </span>
+                        )}
+                      </p>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">{g.blurb}</p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                      {g.items.length}
+                    </span>
+                    <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5" />
+                  </div>
+                </button>
               );
             })}
           </div>
-        </section>
-      ))}
 
+          {admin && (
+            <Link to="/admin" className="block rounded-2xl border border-muted-foreground/10 bg-card p-4 shadow-sm transition active:scale-[0.99]">
+              <div className="flex items-center gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-black/5">
+                  <ShieldCheck className="h-6 w-6" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-base font-semibold leading-tight">Platform admin</p>
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">Practitioners, admins & invites</p>
+                </div>
+                <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+              </div>
+            </Link>
+          )}
 
-      {admin && (
-        <section className="space-y-3">
-          <h2 className="px-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Platform</h2>
-          <Link to="/admin" className="block rounded-2xl border border-muted-foreground/10 bg-card p-4 shadow-sm transition active:scale-[0.99]">
+          <a
+            href="https://wa.me/447385790119"
+            target="_blank"
+            rel="noreferrer"
+            className="block rounded-2xl border border-primary/20 bg-primary/5 p-4 shadow-sm transition active:scale-[0.99]"
+          >
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-black/5">
-                <ShieldCheck className="h-6 w-6" />
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white ring-1 ring-black/5">
+                <MessageCircle className="h-6 w-6" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-base font-semibold leading-tight">Platform admin</p>
-                <p className="mt-0.5 truncate text-xs text-muted-foreground">Practitioners, admins & invites</p>
+                <p className="truncate text-base font-semibold leading-tight">WhatsApp support</p>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">Message the MODO team — +44 7385 790119</p>
               </div>
               <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
             </div>
-          </Link>
-        </section>
+          </a>
+
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full rounded-full"
+            onClick={() => supabase.auth.signOut()}
+          >
+            <LogOut className="mr-2 h-4 w-4" /> Log out
+          </Button>
+          <div className="h-4" />
+        </>
       )}
-
-      <a
-        href="https://wa.me/447385790119"
-        target="_blank"
-        rel="noreferrer"
-        className="block rounded-2xl border border-primary/20 bg-primary/5 p-4 shadow-sm transition active:scale-[0.99]"
-      >
-        <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white ring-1 ring-black/5">
-            <MessageCircle className="h-6 w-6" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-base font-semibold leading-tight">WhatsApp support</p>
-            <p className="mt-0.5 truncate text-xs text-muted-foreground">Message the MODO team — +44 7385 790119</p>
-          </div>
-          <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
-        </div>
-      </a>
-
-      <Button
-        variant="outline"
-        size="lg"
-        className="w-full rounded-full"
-        onClick={() => supabase.auth.signOut()}
-      >
-        <LogOut className="mr-2 h-4 w-4" /> Log out
-      </Button>
-      <div className="h-4" />
       <ComingSoonDialog
         open={comingSoon !== null}
         onOpenChange={(v) => !v && setComingSoon(null)}
