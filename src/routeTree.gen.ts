@@ -107,6 +107,7 @@ import { Route as AuthenticatedDashboardMedicalFormsRouteImport } from './routes
 import { Route as AuthenticatedDashboardMarketingRouteImport } from './routes/_authenticated/dashboard.marketing'
 import { Route as AuthenticatedDashboardLocationsRouteImport } from './routes/_authenticated/dashboard.locations'
 import { Route as AuthenticatedDashboardInvoicesRouteImport } from './routes/_authenticated/dashboard.invoices'
+import { Route as AuthenticatedDashboardIncomeReportRouteImport } from './routes/_authenticated/dashboard.income-report'
 import { Route as AuthenticatedDashboardHelpRouteImport } from './routes/_authenticated/dashboard.help'
 import { Route as AuthenticatedDashboardGiftCardsRouteImport } from './routes/_authenticated/dashboard.gift-cards'
 import { Route as AuthenticatedDashboardFormAllocationRouteImport } from './routes/_authenticated/dashboard.form-allocation'
@@ -718,6 +719,12 @@ const AuthenticatedDashboardInvoicesRoute =
     path: '/invoices',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardIncomeReportRoute =
+  AuthenticatedDashboardIncomeReportRouteImport.update({
+    id: '/income-report',
+    path: '/income-report',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardHelpRoute =
   AuthenticatedDashboardHelpRouteImport.update({
     id: '/help',
@@ -1251,6 +1258,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
   '/dashboard/gift-cards': typeof AuthenticatedDashboardGiftCardsRoute
   '/dashboard/help': typeof AuthenticatedDashboardHelpRoute
+  '/dashboard/income-report': typeof AuthenticatedDashboardIncomeReportRoute
   '/dashboard/invoices': typeof AuthenticatedDashboardInvoicesRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/marketing': typeof AuthenticatedDashboardMarketingRouteWithChildren
@@ -1422,6 +1430,7 @@ export interface FileRoutesByTo {
   '/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
   '/dashboard/gift-cards': typeof AuthenticatedDashboardGiftCardsRoute
   '/dashboard/help': typeof AuthenticatedDashboardHelpRoute
+  '/dashboard/income-report': typeof AuthenticatedDashboardIncomeReportRoute
   '/dashboard/invoices': typeof AuthenticatedDashboardInvoicesRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
@@ -1597,6 +1606,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
   '/_authenticated/dashboard/gift-cards': typeof AuthenticatedDashboardGiftCardsRoute
   '/_authenticated/dashboard/help': typeof AuthenticatedDashboardHelpRoute
+  '/_authenticated/dashboard/income-report': typeof AuthenticatedDashboardIncomeReportRoute
   '/_authenticated/dashboard/invoices': typeof AuthenticatedDashboardInvoicesRoute
   '/_authenticated/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/_authenticated/dashboard/marketing': typeof AuthenticatedDashboardMarketingRouteWithChildren
@@ -1777,6 +1787,7 @@ export interface FileRouteTypes {
     | '/dashboard/form-allocation'
     | '/dashboard/gift-cards'
     | '/dashboard/help'
+    | '/dashboard/income-report'
     | '/dashboard/invoices'
     | '/dashboard/locations'
     | '/dashboard/marketing'
@@ -1948,6 +1959,7 @@ export interface FileRouteTypes {
     | '/dashboard/form-allocation'
     | '/dashboard/gift-cards'
     | '/dashboard/help'
+    | '/dashboard/income-report'
     | '/dashboard/invoices'
     | '/dashboard/locations'
     | '/dashboard/medical-forms'
@@ -2122,6 +2134,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/form-allocation'
     | '/_authenticated/dashboard/gift-cards'
     | '/_authenticated/dashboard/help'
+    | '/_authenticated/dashboard/income-report'
     | '/_authenticated/dashboard/invoices'
     | '/_authenticated/dashboard/locations'
     | '/_authenticated/dashboard/marketing'
@@ -2972,6 +2985,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardInvoicesRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/income-report': {
+      id: '/_authenticated/dashboard/income-report'
+      path: '/income-report'
+      fullPath: '/dashboard/income-report'
+      preLoaderRoute: typeof AuthenticatedDashboardIncomeReportRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/help': {
       id: '/_authenticated/dashboard/help'
       path: '/help'
@@ -3702,6 +3722,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardFormAllocationRoute: typeof AuthenticatedDashboardFormAllocationRoute
   AuthenticatedDashboardGiftCardsRoute: typeof AuthenticatedDashboardGiftCardsRoute
   AuthenticatedDashboardHelpRoute: typeof AuthenticatedDashboardHelpRoute
+  AuthenticatedDashboardIncomeReportRoute: typeof AuthenticatedDashboardIncomeReportRoute
   AuthenticatedDashboardInvoicesRoute: typeof AuthenticatedDashboardInvoicesRoute
   AuthenticatedDashboardLocationsRoute: typeof AuthenticatedDashboardLocationsRoute
   AuthenticatedDashboardMarketingRoute: typeof AuthenticatedDashboardMarketingRouteWithChildren
@@ -3770,6 +3791,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardFormAllocationRoute,
     AuthenticatedDashboardGiftCardsRoute: AuthenticatedDashboardGiftCardsRoute,
     AuthenticatedDashboardHelpRoute: AuthenticatedDashboardHelpRoute,
+    AuthenticatedDashboardIncomeReportRoute:
+      AuthenticatedDashboardIncomeReportRoute,
     AuthenticatedDashboardInvoicesRoute: AuthenticatedDashboardInvoicesRoute,
     AuthenticatedDashboardLocationsRoute: AuthenticatedDashboardLocationsRoute,
     AuthenticatedDashboardMarketingRoute:
