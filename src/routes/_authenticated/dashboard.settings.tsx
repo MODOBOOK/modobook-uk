@@ -486,11 +486,11 @@ function ToggleRow({
 }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="text-sm font-medium">{label}</p>
         {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       </div>
-      <Switch checked={checked} onCheckedChange={onChange} />
+      <Switch checked={checked} onCheckedChange={onChange} className="ml-auto shrink-0" />
     </div>
   );
 }
