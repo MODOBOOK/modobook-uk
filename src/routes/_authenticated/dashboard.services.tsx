@@ -769,48 +769,22 @@ function CategoryCard({
         </div>
 
         {node.children.length > 0 && (
-          <div className="mt-4 space-y-3">
-            {node.children.map((child, ci) => (
-              <div key={child.id} className="rounded-2xl border bg-muted/20 p-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <h4 className="font-display text-sm font-semibold text-foreground">
-                    {child.icon ? `${child.icon} ` : ""}
-                    {child.name}
-                  </h4>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button type="button" className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted">
-                        <MoreVertical className="h-4 w-4" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onSelect={() => onAddService(child.id)}>
-                        <Plus className="mr-2 h-4 w-4" /> Add service
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => onEditCat(child)}>
-                        <Pencil className="mr-2 h-4 w-4" /> Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => onDeleteCat(child)} className="text-destructive focus:text-destructive">
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <div className="space-y-2">
-                  {child.treatments.filter(matchTreat).map((t, i, arr) => (
-                    <ServiceCard
-                      key={t.id}
-                      treat={t}
-                      picker={picker}
-                      onDelete={() => onDeleteTreat(t)}
-                      onMoveUp={i > 0 ? () => onMoveTreat(arr, t.id, -1) : undefined}
-                      onMoveDown={i < arr.length - 1 ? () => onMoveTreat(arr, t.id, 1) : undefined}
-                      onMoveTo={() => onMoveTreatTo(t)}
-                      onChangeCategory={(catId: string | null) => onChangeTreatCategory(t.id, catId)}
-                    />
-                  ))}
-                </div>
-              </div>
+          <div className="mt-4 space-y-2">
+            {node.children.map((child) => (
+              <SubcategorySection
+                key={child.id}
+                child={child}
+                forceOpen={forceOpen}
+                matchTreat={matchTreat}
+                picker={picker}
+                onAddService={onAddService}
+                onEditCat={onEditCat}
+                onDeleteCat={onDeleteCat}
+                onDeleteTreat={onDeleteTreat}
+                onMoveTreat={onMoveTreat}
+                onMoveTreatTo={onMoveTreatTo}
+                onChangeTreatCategory={onChangeTreatCategory}
+              />
             ))}
           </div>
         )}
