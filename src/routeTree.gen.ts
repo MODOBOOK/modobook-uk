@@ -137,6 +137,7 @@ import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authentic
 import { Route as MSlugTrainingIndexRouteImport } from './routes/m.$slug.training.index'
 import { Route as AuthenticatedDashboardTrainingIndexRouteImport } from './routes/_authenticated/dashboard.training.index'
 import { Route as AuthenticatedDashboardPatientsIndexRouteImport } from './routes/_authenticated/dashboard.patients.index'
+import { Route as AuthenticatedDashboardNotificationsIndexRouteImport } from './routes/_authenticated/dashboard.notifications.index'
 import { Route as AuthenticatedDashboardMarketingIndexRouteImport } from './routes/_authenticated/dashboard.marketing.index'
 import { Route as AuthenticatedDashboardConsultationsIndexRouteImport } from './routes/_authenticated/dashboard.consultations.index'
 import { Route as AuthenticatedDashboardAssociatesIndexRouteImport } from './routes/_authenticated/dashboard.associates.index'
@@ -895,6 +896,12 @@ const AuthenticatedDashboardPatientsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDashboardPatientsRoute,
   } as any)
+const AuthenticatedDashboardNotificationsIndexRoute =
+  AuthenticatedDashboardNotificationsIndexRouteImport.update({
+    id: '/notifications/',
+    path: '/notifications/',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardMarketingIndexRoute =
   AuthenticatedDashboardMarketingIndexRouteImport.update({
     id: '/',
@@ -1341,6 +1348,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/associates/': typeof AuthenticatedDashboardAssociatesIndexRoute
   '/dashboard/consultations/': typeof AuthenticatedDashboardConsultationsIndexRoute
   '/dashboard/marketing/': typeof AuthenticatedDashboardMarketingIndexRoute
+  '/dashboard/notifications/': typeof AuthenticatedDashboardNotificationsIndexRoute
   '/dashboard/patients/': typeof AuthenticatedDashboardPatientsIndexRoute
   '/dashboard/training/': typeof AuthenticatedDashboardTrainingIndexRoute
   '/m/$slug/training/': typeof MSlugTrainingIndexRoute
@@ -1506,6 +1514,7 @@ export interface FileRoutesByTo {
   '/dashboard/associates': typeof AuthenticatedDashboardAssociatesIndexRoute
   '/dashboard/consultations': typeof AuthenticatedDashboardConsultationsIndexRoute
   '/dashboard/marketing': typeof AuthenticatedDashboardMarketingIndexRoute
+  '/dashboard/notifications': typeof AuthenticatedDashboardNotificationsIndexRoute
   '/dashboard/patients': typeof AuthenticatedDashboardPatientsIndexRoute
   '/dashboard/training': typeof AuthenticatedDashboardTrainingIndexRoute
   '/m/$slug/training': typeof MSlugTrainingIndexRoute
@@ -1685,6 +1694,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/associates/': typeof AuthenticatedDashboardAssociatesIndexRoute
   '/_authenticated/dashboard/consultations/': typeof AuthenticatedDashboardConsultationsIndexRoute
   '/_authenticated/dashboard/marketing/': typeof AuthenticatedDashboardMarketingIndexRoute
+  '/_authenticated/dashboard/notifications/': typeof AuthenticatedDashboardNotificationsIndexRoute
   '/_authenticated/dashboard/patients/': typeof AuthenticatedDashboardPatientsIndexRoute
   '/_authenticated/dashboard/training/': typeof AuthenticatedDashboardTrainingIndexRoute
   '/m/$slug/training/': typeof MSlugTrainingIndexRoute
@@ -1864,6 +1874,7 @@ export interface FileRouteTypes {
     | '/dashboard/associates/'
     | '/dashboard/consultations/'
     | '/dashboard/marketing/'
+    | '/dashboard/notifications/'
     | '/dashboard/patients/'
     | '/dashboard/training/'
     | '/m/$slug/training/'
@@ -2029,6 +2040,7 @@ export interface FileRouteTypes {
     | '/dashboard/associates'
     | '/dashboard/consultations'
     | '/dashboard/marketing'
+    | '/dashboard/notifications'
     | '/dashboard/patients'
     | '/dashboard/training'
     | '/m/$slug/training'
@@ -2207,6 +2219,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/associates/'
     | '/_authenticated/dashboard/consultations/'
     | '/_authenticated/dashboard/marketing/'
+    | '/_authenticated/dashboard/notifications/'
     | '/_authenticated/dashboard/patients/'
     | '/_authenticated/dashboard/training/'
     | '/m/$slug/training/'
@@ -3169,6 +3182,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardPatientsIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardPatientsRoute
     }
+    '/_authenticated/dashboard/notifications/': {
+      id: '/_authenticated/dashboard/notifications/'
+      path: '/notifications'
+      fullPath: '/dashboard/notifications/'
+      preLoaderRoute: typeof AuthenticatedDashboardNotificationsIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/marketing/': {
       id: '/_authenticated/dashboard/marketing/'
       path: '/'
@@ -3715,6 +3735,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardNotificationsSmsRoute: typeof AuthenticatedDashboardNotificationsSmsRoute
   AuthenticatedDashboardAssociatesIndexRoute: typeof AuthenticatedDashboardAssociatesIndexRoute
   AuthenticatedDashboardConsultationsIndexRoute: typeof AuthenticatedDashboardConsultationsIndexRoute
+  AuthenticatedDashboardNotificationsIndexRoute: typeof AuthenticatedDashboardNotificationsIndexRoute
 }
 
 const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
@@ -3800,6 +3821,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardAssociatesIndexRoute,
     AuthenticatedDashboardConsultationsIndexRoute:
       AuthenticatedDashboardConsultationsIndexRoute,
+    AuthenticatedDashboardNotificationsIndexRoute:
+      AuthenticatedDashboardNotificationsIndexRoute,
   }
 
 const AuthenticatedDashboardRouteWithChildren =
