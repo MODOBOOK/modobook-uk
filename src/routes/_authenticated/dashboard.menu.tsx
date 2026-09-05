@@ -164,14 +164,6 @@ const groups: Group[] = [
       { label: "Booking settings", description: "Notice, buffers, deposits, reminders & patient rules", to: "/dashboard/settings", icon: Shield, ...T.mocha },
     ],
   },
-  {
-    title: "Support",
-    icon: HelpCircle,
-    blurb: "Guides & answers",
-    items: [
-      { label: "Help & FAQ", description: "How-to guides for running your clinic", to: "/dashboard/help", icon: HelpCircle, ...T.taupe },
-    ],
-  },
 ];
 
 function MenuPage() {
