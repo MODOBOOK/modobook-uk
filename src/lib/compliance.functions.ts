@@ -14,13 +14,13 @@ type Ctx = { supabase: any; userId: string; claims?: any };
 
 async function access(context: Ctx) {
   const { resolveClinicAccess } = await import("./clinic-context.server");
-  const a = await resolveClinicAccess(db, context.userId);
+  const a = await resolveClinicAccess(context.supabase, context.userId);
   if (!a.profileId) throw new Error("No clinic found for your account.");
   return { ...a, profileId: a.profileId as string };
 }
 
 async function actorName(context: Ctx, profileId: string) {
-  const db = db as any;
+  const db = context.supabase as any;
   const { data: staff } = await db
     .from("staff_members")
     .select("name")
