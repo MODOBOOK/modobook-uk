@@ -252,17 +252,6 @@ function DashboardIndex() {
         </Link>
       </section>
 
-
-      {/* Quick actions */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <QuickAction to="/dashboard/new-appointment" icon={CalendarPlus} label="New booking" />
-        <QuickAction to="/dashboard/availability" icon={CalendarDays} label="Availability" />
-        <QuickAction to="/dashboard/services" icon={Sparkles} label="Services" />
-        <QuickAction to="/dashboard/pre-treatment" icon={Info} label="Pre-treatment" />
-      </div>
-
-
-
       {/* Prescriber Hub — central, always visible */}
       <Link to="/hub" className="block">
         <Card className="border-2 border-primary/50 bg-gradient-to-br from-primary/10 via-background to-background transition hover:border-primary hover:shadow-luxe">
