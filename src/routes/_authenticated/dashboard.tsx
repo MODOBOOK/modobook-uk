@@ -301,34 +301,39 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
 
 
       <div className="flex min-w-0 flex-1 flex-col">
-        {/* Mobile header — sticky, compact, back + brand + actions */}
-        <header
-          className="sticky top-0 z-40 flex items-center justify-between gap-0.5 border-b bg-background px-2 lg:hidden"
-          style={{ paddingTop: "env(safe-area-inset-top)", minHeight: 44 }}
+        {/* Mobile: no sticky top bar — page title + actions sit inline in a brand-coloured band */}
+        <div
+          className="bg-primary text-primary-foreground lg:hidden"
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
         >
-          <BackButton />
-          <div className="flex min-w-0 flex-1 items-center gap-2 px-1">
-            <span className="truncate text-sm font-semibold">{displayName || "My Clinic"}</span>
+          <div className="flex items-center gap-2 px-4 py-3">
+            <BackButton />
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] uppercase tracking-[0.22em] text-primary-foreground/70">
+                {displayName || "My Clinic"}
+              </div>
+              <div className="truncate text-lg font-semibold leading-tight">
+                {mobilePageTitle(pathname)}
+              </div>
+            </div>
+            <div className="flex items-center gap-1 [&_button]:text-primary-foreground">
+              <NotificationsBell />
+              <Link to="/dashboard/settings" aria-label="Your account" className="ml-1 shrink-0">
+                {profile.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt=""
+                    className="h-9 w-9 rounded-full object-cover ring-2 ring-primary-foreground/40"
+                  />
+                ) : (
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/20 text-sm font-semibold">
+                    {(displayName || "M").charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </Link>
+            </div>
           </div>
-          <NotificationsBell />
-          <Link to="/hub" className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-foreground active:bg-muted" aria-label="Prescriber Hub">
-            <Stethoscope className="h-4 w-4" />
-            {hubCounts.total > 0 && (
-              <span className="absolute right-0 top-0 inline-flex min-w-[1rem] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-semibold leading-none text-destructive-foreground">
-                {hubCounts.total > 99 ? "99+" : hubCounts.total}
-              </span>
-            )}
-          </Link>
-          <a
-            href={`/m/${profile.slug}`}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Preview booking page"
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-foreground active:bg-muted"
-          >
-            <ExternalLink className="h-4 w-4" />
-          </a>
-        </header>
+        </div>
 
 
 
