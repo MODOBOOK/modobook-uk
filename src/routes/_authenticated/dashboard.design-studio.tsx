@@ -16,7 +16,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImageUploader } from "@/components/ImageUploader";
 import { toast } from "sonner";
 import {
-  ArrowLeft,
   CheckCircle2,
   Circle,
   Monitor,

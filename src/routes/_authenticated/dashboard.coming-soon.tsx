@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Sparkles, ArrowLeft } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { COMING_SOON_FEATURES } from "@/components/ComingSoonDialog";

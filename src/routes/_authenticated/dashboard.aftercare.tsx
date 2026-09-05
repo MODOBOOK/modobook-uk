@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, Pencil, Trash2, Copy, Sparkles, Wand2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Copy, Sparkles, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { AiGenerateAftercareDialog } from "@/components/aftercare/AiGenerateAftercareDialog";
 

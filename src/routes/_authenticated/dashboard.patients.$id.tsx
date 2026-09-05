@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getClient } from "@/lib/clients.functions";
 import {
-  ArrowLeft, Activity, Camera, Pill, FileText, AlertTriangle, Loader2, Receipt,
+  Activity, Camera, Pill, FileText, AlertTriangle, Loader2, Receipt,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 

@@ -26,7 +26,7 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  ArrowLeft, Mail, Phone as PhoneIcon, MessageSquare, Edit2, Plus, Trash2, Camera,
+  Mail, Phone as PhoneIcon, MessageSquare, Edit2, Plus, Trash2, Camera,
   Upload, FileText, AlertTriangle, Download, Loader2, ClipboardList, X, Check,
   CalendarPlus, CreditCard, FileSignature, Send, ChevronDown, ChevronRight, Info, CalendarClock, Syringe,
 } from "lucide-react";

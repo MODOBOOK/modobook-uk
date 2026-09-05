@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -17,7 +17,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Tag, Percent, ArrowLeft, ChevronDown, Check, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Tag, Percent, ChevronDown, Check, Search } from "lucide-react";
 
 type Category = { id: string; name: string };
 

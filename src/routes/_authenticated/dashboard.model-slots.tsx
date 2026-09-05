@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyModelSlots, upsertModelSlot, deleteModelSlot } from "@/lib/discounts.functions";
@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Sparkles, ArrowLeft, Calendar } from "lucide-react";
+import { Plus, Pencil, Trash2, Sparkles, Calendar } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/model-slots")({
   ssr: false,

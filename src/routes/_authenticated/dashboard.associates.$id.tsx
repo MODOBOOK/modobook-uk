@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { pilotFeaturesEnabled } from "@/lib/feature-flags";
 import { FaceMapView } from "@/components/consultation/FaceMapView";
 import { useState } from "react";
@@ -34,7 +34,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
-  ArrowLeft,
   AlertTriangle,
   CalendarDays,
   Download,

@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { listLinkedPartners, createRxRequest } from "@/lib/rx-requests.functions";
-import { ArrowLeft, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/rx-requests/new")({
