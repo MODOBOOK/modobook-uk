@@ -614,48 +614,34 @@ function ServicesPage() {
 
 function CategoryCard({
   node,
-  siblings,
-  index,
   matchTreat,
-  picker,
   forceOpen,
   onAddSub,
   onEditCat,
   onDeleteCat,
   onAddService,
   onDeleteTreat,
-  onMoveCat,
-  onMoveTreat,
   onReorderTreatsByIds,
   onMoveTreatTo,
   onMoveCatTo,
-  onChangeTreatCategory,
   isUncategorised,
 }: {
   node: CatNode;
-  siblings: CatNode[];
-  index: number;
   matchTreat: (t: Treat) => boolean;
-  picker: { id: string; label: string; depth: number }[];
   forceOpen?: boolean;
   onAddSub: (parentId: string) => void;
   onEditCat: (c: Cat) => void;
   onDeleteCat: (c: Cat) => void;
   onAddService: (catId: string) => void;
   onDeleteTreat: (t: Treat) => void;
-  onMoveCat: (siblings: Cat[], id: string, dir: -1 | 1) => void;
-  onMoveTreat: (siblings: Treat[], id: string, dir: -1 | 1) => void;
   onReorderTreatsByIds: (ids: string[]) => void;
   onMoveTreatTo: (t: Treat) => void;
   onMoveCatTo: (c: Cat) => void;
-  onChangeTreatCategory: (treatId: string, categoryId: string | null) => void | Promise<void>;
   isUncategorised?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const expanded = forceOpen || open;
   const treatsHere = node.treatments.filter(matchTreat);
-  const canUp = index > 0;
-  const canDown = index < siblings.length - 1;
   const limited = (node as Cat & { is_limited?: boolean | null }).is_limited;
   const limitedEnds = (node as Cat & { limited_ends_at?: string | null }).limited_ends_at;
 
