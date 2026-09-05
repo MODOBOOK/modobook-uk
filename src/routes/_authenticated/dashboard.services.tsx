@@ -805,6 +805,101 @@ function CategoryCard({
   );
 }
 
+function SubcategorySection({
+  child,
+  forceOpen,
+  matchTreat,
+  picker,
+  onAddService,
+  onEditCat,
+  onDeleteCat,
+  onDeleteTreat,
+  onMoveTreat,
+  onMoveTreatTo,
+  onChangeTreatCategory,
+}: {
+  child: CatNode;
+  forceOpen?: boolean;
+  matchTreat: (t: Treat) => boolean;
+  picker: { id: string; label: string; depth: number }[];
+  onAddService: (catId: string) => void;
+  onEditCat: (c: Cat) => void;
+  onDeleteCat: (c: Cat) => void;
+  onDeleteTreat: (t: Treat) => void;
+  onMoveTreat: (siblings: Treat[], id: string, dir: -1 | 1) => void;
+  onMoveTreatTo: (t: Treat) => void;
+  onChangeTreatCategory: (treatId: string, categoryId: string | null) => void | Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const expanded = forceOpen || open;
+  const treats = child.treatments.filter(matchTreat);
+
+  return (
+    <Collapsible open={expanded} onOpenChange={setOpen} className="rounded-2xl border bg-muted/20">
+      <CollapsibleTrigger asChild>
+        <button
+          type="button"
+          className="flex w-full items-center justify-between gap-2 p-3 text-left"
+          aria-expanded={expanded}
+        >
+          <div className="flex min-w-0 items-center gap-1.5">
+            <ChevronDown
+              className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
+            />
+            {child.icon && <span className="text-base">{child.icon}</span>}
+            <FitText className="font-display font-semibold text-foreground" max={14} min={10}>
+              {child.name}
+            </FitText>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+                aria-label="Subcategory actions"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => onAddService(child.id)}>
+                <Plus className="mr-2 h-4 w-4" /> Add service
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => onEditCat(child)}>
+                <Pencil className="mr-2 h-4 w-4" /> Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => onDeleteCat(child)} className="text-destructive focus:text-destructive">
+                <Trash2 className="mr-2 h-4 w-4" /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </button>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="space-y-2 px-3 pb-3">
+          {treats.length === 0 ? (
+            <p className="py-2 text-center text-xs text-muted-foreground">No services yet.</p>
+          ) : (
+            treats.map((t, i, arr) => (
+              <ServiceCard
+                key={t.id}
+                treat={t}
+                picker={picker}
+                onDelete={() => onDeleteTreat(t)}
+                onMoveUp={i > 0 ? () => onMoveTreat(arr, t.id, -1) : undefined}
+                onMoveDown={i < arr.length - 1 ? () => onMoveTreat(arr, t.id, 1) : undefined}
+                onMoveTo={() => onMoveTreatTo(t)}
+                onChangeCategory={(catId: string | null) => onChangeTreatCategory(t.id, catId)}
+              />
+            ))
+          )}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
 function ServiceCard({
   treat,
   picker,
