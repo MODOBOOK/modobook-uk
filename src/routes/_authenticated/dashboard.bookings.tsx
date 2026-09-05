@@ -449,7 +449,7 @@ function BookingsPage() {
         </div>
         <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
 
-          <div className="inline-flex rounded-full bg-muted p-0.5 text-xs">
+          <div className="inline-flex rounded-full bg-muted p-0.5 text-xs sm:text-sm">
             {([
               { v: "day" as ViewMode, label: "1" },
               { v: "3day" as ViewMode, label: "3" },
@@ -459,7 +459,7 @@ function BookingsPage() {
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`rounded-full px-3 py-1 transition ${
+                className={`rounded-full px-3 py-1.5 transition active:scale-95 sm:px-3 sm:py-1 ${
                   view === v ? "bg-background shadow-sm font-medium" : "text-muted-foreground"
                 }`}
               >
