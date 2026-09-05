@@ -710,12 +710,14 @@ function CategoryCard({
         )}
 
         <div className="space-y-2">
-          {treatsHere.map((t) => (
+          {treatsHere.map((t, i) => (
             <ServiceCard
               key={t.id}
               treat={t}
               picker={picker}
               onDelete={() => onDeleteTreat(t)}
+              onMoveUp={i > 0 ? () => onMoveTreat(treatsHere, t.id, -1) : undefined}
+              onMoveDown={i < treatsHere.length - 1 ? () => onMoveTreat(treatsHere, t.id, 1) : undefined}
               onMoveTo={() => onMoveTreatTo(t)}
               onChangeCategory={(catId: string | null) => onChangeTreatCategory(t.id, catId)}
             />
