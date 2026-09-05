@@ -391,35 +391,49 @@ function ServicesPage() {
       </div>
 
 
-      <FavouritesCard treatments={(treats.data ?? []) as Treat[]} />
-
-      <PrescribingClinicCard />
-
+      <div className="grid gap-4 md:grid-cols-2">
+        <FavouritesCard treatments={(treats.data ?? []) as Treat[]} />
+        <PrescribingClinicCard />
+      </div>
 
       {cats.isLoading || treats.isLoading ? (
-
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="h-48 animate-pulse bg-muted/40" />
+          ))}
+        </div>
       ) : roots.length === 0 && uncategorised.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center text-sm text-muted-foreground">
-            No categories or services yet. Start by adding a category, then add services inside it.
+        <Card className="rounded-3xl border-dashed">
+          <CardContent className="flex flex-col items-center justify-center gap-3 p-10 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <FolderPlus className="h-7 w-7" />
+            </div>
+            <div>
+              <p className="font-display text-lg font-semibold text-foreground">No services yet</p>
+              <p className="text-sm text-muted-foreground">
+                Start by adding a category, then add services inside it.
+              </p>
+            </div>
+            <Button
+              className="mt-2 h-12 rounded-full bg-primary px-6 text-base font-semibold text-primary-foreground hover:bg-primary/90"
+              onClick={() => setCatDialog({ mode: "create", parentId: null })}
+            >
+              <Plus className="mr-2 h-5 w-5" /> Add category
+            </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="divide-y rounded-2xl border bg-card">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {roots.map((node, idx) => (
-            <CategoryRow
+            <CategoryCard
               key={node.id}
               node={node}
-              depth={0}
               siblings={roots}
               index={idx}
               matchTreat={matchTreat}
               picker={picker}
               onAddSub={(parentId) => setCatDialog({ mode: "create", parentId })}
-              onEditCat={(c) =>
-                setCatDialog({ mode: "edit", parentId: c.parent_id, cat: c })
-              }
+              onEditCat={(c) => setCatDialog({ mode: "edit", parentId: c.parent_id, cat: c })}
               onDeleteCat={handleDeleteCat}
               onAddService={(catId) => setSvcDialog({ defaultCatId: catId })}
               onDeleteTreat={handleDeleteTreat}
@@ -431,26 +445,36 @@ function ServicesPage() {
               onChangeTreatCategory={moveTreatToCategory}
             />
           ))}
-
-
           {uncategorised.filter(matchTreat).length > 0 && (
-            <div className="p-4">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Uncategorised services
-              </p>
-              <div className="space-y-2">
-                {uncategorised.filter(matchTreat).map((t) => (
-                  <ServiceRow
-                    key={t.id}
-                    treat={t}
-                    picker={picker}
-                    onDelete={() => handleDeleteTreat(t)}
-                    onMoveTo={() => setMoveTreatState(t)}
-                    onChangeCategory={(catId) => moveTreatToCategory(t.id, catId)}
-                  />
-                ))}
-              </div>
-            </div>
+            <CategoryCard
+              node={{
+                id: "__uncategorised__",
+                parent_id: null,
+                name: "Uncategorised",
+                description: null,
+                icon: null,
+                sort_order: 9999,
+                coming_soon_at: null,
+                children: [],
+                treatments: uncategorised.filter(matchTreat),
+              }}
+              isUncategorised
+              siblings={[]}
+              index={0}
+              matchTreat={matchTreat}
+              picker={picker}
+              onAddSub={() => {}}
+              onEditCat={() => {}}
+              onDeleteCat={() => {}}
+              onAddService={() => setSvcDialog({ defaultCatId: null })}
+              onDeleteTreat={handleDeleteTreat}
+              onMoveCat={() => {}}
+              onMoveTreat={moveTreat}
+              onReorderTreatsByIds={reorderTreatsByIds}
+              onMoveTreatTo={(t) => setMoveTreatState(t)}
+              onMoveCatTo={() => {}}
+              onChangeTreatCategory={moveTreatToCategory}
+            />
           )}
         </div>
       )}
