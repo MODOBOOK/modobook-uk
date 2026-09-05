@@ -506,10 +506,10 @@ function BookingsPage() {
       </div>
 
       {locations.length > 1 && (
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setLocationFilter("all")}
-            className={`rounded-full border px-3 py-1 text-xs transition ${
+            className={`rounded-full border px-3.5 py-1.5 text-xs transition active:scale-95 sm:px-3 sm:py-1 ${
               locationFilter === "all"
                 ? "bg-foreground text-background border-foreground"
                 : "bg-background text-muted-foreground hover:bg-muted"
@@ -521,7 +521,7 @@ function BookingsPage() {
             <button
               key={l.id}
               onClick={() => setLocationFilter(l.id)}
-              className={`rounded-full border px-3 py-1 text-xs transition ${
+              className={`rounded-full border px-3.5 py-1.5 text-xs transition active:scale-95 sm:px-3 sm:py-1 ${
                 locationFilter === l.id
                   ? "bg-foreground text-background border-foreground"
                   : "bg-background text-muted-foreground hover:bg-muted"
