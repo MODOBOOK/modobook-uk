@@ -2078,7 +2078,7 @@ function FavouritesCard({ treatments }: { treatments: Treat[] }) {
           <ul className="min-w-0 divide-y overflow-hidden rounded-lg border">
             {selected.map((t, idx) => (
               <li key={t.id} className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 p-2.5">
-                <div className="flex min-w-0 items-center justify-between gap-2 sm:flex-1">
+                <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
                   <span className="truncate text-sm font-medium">{t.name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">£{Number(t.price ?? 0).toFixed(2)}</span>
                 </div>
@@ -2092,7 +2092,7 @@ function FavouritesCard({ treatments }: { treatments: Treat[] }) {
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="hidden h-7 w-7 text-destructive sm:inline-flex"
+                    className="h-7 w-7 text-destructive"
                     onClick={() => save({ favourite_treatment_ids: ids.filter((x) => x !== t.id) })}
                   >
                     <X className="h-3.5 w-3.5" />
