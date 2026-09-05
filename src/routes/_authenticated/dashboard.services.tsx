@@ -801,36 +801,34 @@ function CategoryCard({
   );
 }
 
-function ServiceRow({
+function ServiceCard({
   treat,
   picker,
   onDelete,
-  onMoveUp,
-  onMoveDown,
   onMoveTo,
   onChangeCategory,
 }: {
   treat: Treat;
   picker?: { id: string; label: string; depth: number }[];
   onDelete: () => void;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
   onMoveTo?: () => void;
   onChangeCategory?: (categoryId: string | null) => void | Promise<void>;
 }) {
   const currentVal = treat.category_id ?? "__none__";
   return (
-    <div className="flex flex-col gap-2 py-2 sm:flex-row sm:flex-wrap sm:items-center">
-      <div className="flex min-w-0 flex-1 items-center gap-2">
+    <div className="group flex flex-col gap-3 rounded-2xl border bg-background p-3 transition-colors hover:border-primary/30 sm:flex-row sm:items-center">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         <span
-          className="h-2.5 w-2.5 shrink-0 rounded-full"
+          className="h-3 w-3 shrink-0 rounded-full"
           style={{ backgroundColor: treat.color || "hsl(var(--muted-foreground))" }}
           aria-label="Calendar colour"
         />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium leading-tight text-[hsl(var(--primary))] break-words">{treat.name}</p>
-          <p className="text-[11px] text-muted-foreground">
-            £{treat.price} · {treat.duration} min
+          <p className="font-display text-base font-semibold leading-tight text-foreground break-words">{treat.name}</p>
+          <p className="mt-0.5 text-sm font-medium text-primary">
+            £{Number(treat.price ?? 0).toFixed(2)}
+            <span className="mx-1.5 text-muted-foreground">·</span>
+            <span className="text-muted-foreground">{treat.duration} min</span>
           </p>
         </div>
       </div>
@@ -840,7 +838,7 @@ function ServiceRow({
             value={currentVal}
             onValueChange={(v) => onChangeCategory(v === "__none__" ? null : v)}
           >
-            <SelectTrigger className="h-8 w-[180px] text-xs sm:w-[220px]" aria-label="Move to category or subcategory">
+            <SelectTrigger className="h-10 w-full text-xs sm:w-[200px]" aria-label="Move to category or subcategory">
               <SelectValue placeholder="Move to category…" />
             </SelectTrigger>
             <SelectContent className="max-h-[320px]">
@@ -856,42 +854,33 @@ function ServiceRow({
             </SelectContent>
           </Select>
         )}
-
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
-            aria-label="Service actions"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem asChild>
-            <Link to="/dashboard/treatments" search={{ edit: treat.id, back: "services" }}>
-              <Pencil className="mr-2 h-4 w-4" /> Edit
-            </Link>
-          </DropdownMenuItem>
-          {onMoveTo && (
-            <DropdownMenuItem onSelect={() => onMoveTo()}>
-              <FolderPlus className="mr-2 h-4 w-4" /> Move to category…
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted"
+              aria-label="Service actions"
+            >
+              <MoreVertical className="h-5 w-5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link to="/dashboard/treatments" search={{ edit: treat.id, back: "services" }}>
+                <Pencil className="mr-2 h-4 w-4" /> Edit
+              </Link>
             </DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem disabled={!onMoveUp} onSelect={() => onMoveUp?.()}>
-            <ArrowUp className="mr-2 h-4 w-4" /> Move up
-          </DropdownMenuItem>
-          <DropdownMenuItem disabled={!onMoveDown} onSelect={() => onMoveDown?.()}>
-            <ArrowDown className="mr-2 h-4 w-4" /> Move down
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={onDelete} className="text-destructive focus:text-destructive">
-            <Trash2 className="mr-2 h-4 w-4" /> Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            {onMoveTo && (
+              <DropdownMenuItem onSelect={() => onMoveTo()}>
+                <FolderPlus className="mr-2 h-4 w-4" /> Move to category…
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={onDelete} className="text-destructive focus:text-destructive">
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
