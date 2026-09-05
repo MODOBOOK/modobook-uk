@@ -406,6 +406,22 @@ function comingSoonFor(to: string): ComingSoonKey | null {
             </Link>
           )}
 
+          <Link
+            to="/dashboard/help"
+            className="block rounded-2xl border border-muted-foreground/10 bg-card p-4 shadow-sm transition active:scale-[0.99]"
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary ring-1 ring-black/5">
+                <HelpCircle className="h-6 w-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-base font-semibold leading-tight">Help &amp; FAQ</p>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">Guides &amp; answers for running your clinic</p>
+              </div>
+              <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+            </div>
+          </Link>
+
           <a
             href="https://wa.me/447385790119"
             target="_blank"
