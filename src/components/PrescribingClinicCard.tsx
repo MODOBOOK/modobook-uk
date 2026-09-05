@@ -63,21 +63,21 @@ export function PrescribingClinicCard() {
   const locList = (locations.data ?? []) as { id: string; name: string }[];
 
   return (
-    <Card className="rounded-3xl">
-      <CardContent className="space-y-3 p-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+    <Card className="min-w-0 max-w-full overflow-hidden rounded-2xl sm:rounded-3xl">
+      <CardContent className="min-w-0 space-y-3 p-3 sm:p-4">
+        <div className="flex min-w-0 flex-col gap-3 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
           <div className="min-w-0">
-            <h2 className="flex items-center gap-2 font-semibold">
-              <Stethoscope className="h-4 w-4" /> Prescribing clinic
+            <h2 className="flex min-w-0 items-center gap-2 font-semibold">
+              <Stethoscope className="h-4 w-4 shrink-0" /> <span className="truncate">Prescribing clinic</span>
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
               Dates and times your prescriber is in clinic. These show as their own category on your
               booking page.
             </p>
           </div>
           <Button
             size="sm"
-            className="shrink-0"
+            className="w-full shrink-0 sm:w-auto"
             onClick={() => setEditing("new")}
           >
             <Plus className="mr-1.5 h-4 w-4" /> Add date
@@ -95,19 +95,19 @@ export function PrescribingClinicCard() {
               return (
                 <div
                   key={v.id}
-                  className="flex flex-wrap items-start justify-between gap-2 rounded-md border p-3"
+                  className="grid min-w-0 grid-cols-1 gap-2 rounded-md border p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start"
                 >
                   <div className="min-w-0">
-                    <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
-                      <CalendarDays className="h-4 w-4 opacity-60" />
-                      {fmtDate(v.visit_date)} · {v.start_time.slice(0, 5)}–{v.end_time.slice(0, 5)}
+                    <p className="flex min-w-0 items-center gap-2 text-sm font-medium">
+                      <CalendarDays className="h-4 w-4 shrink-0 opacity-60" />
+                      <span className="truncate">{fmtDate(v.visit_date)} · {v.start_time.slice(0, 5)}–{v.end_time.slice(0, 5)}</span>
                       {v.status === "pending_approval" && (
                         <Badge variant="outline" className="border-amber-400 text-amber-700">
                           Needs approval
                         </Badge>
                       )}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="truncate text-xs text-muted-foreground">
                       {v.prescriber_name}
                       {(v as { price?: number | null }).price != null && (
                         <> · £{Number((v as { price?: number | null }).price).toFixed(2)}</>
@@ -120,7 +120,7 @@ export function PrescribingClinicCard() {
                       )}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-end gap-1 sm:gap-2">
                     <span className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Users className="h-3.5 w-3.5" />
                       {booked}/{v.capacity}
@@ -151,7 +151,7 @@ export function PrescribingClinicCard() {
           </div>
         )}
 
-        <p className="text-xs text-muted-foreground">
+        <p className="break-words text-xs leading-relaxed text-muted-foreground">
           Manage bookings and prescriber confirmations in{" "}
           <Link to="/hub/visits" className="underline">
             Prescriber clinic days
