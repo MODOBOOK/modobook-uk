@@ -43,7 +43,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -162,6 +162,7 @@ function DashboardLayout() {
   const [pendingReviews, setPendingReviews] = useState(0);
   const [comingSoon, setComingSoon] = useState<ComingSoonKey | null>(null);
   const [hubCounts, setHubCounts] = useState<{ total: number; links: number; referrals: number; visits: number }>({ total: 0, links: 0, referrals: 0, visits: 0 });
+  const [addOpen, setAddOpen] = useState(false);
   useEffect(() => {
     let alive = true;
     const load = () => {
@@ -433,17 +434,18 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
             const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
             if ((tab as { cta?: boolean }).cta) {
               return (
-                <Link
+                <button
                   key={tab.to}
-                  to={tab.to}
-                  aria-label="New appointment"
+                  type="button"
+                  aria-label="Create new"
+                  onClick={() => setAddOpen(true)}
                   className="flex min-h-[60px] flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground transition active:scale-[0.97]"
                 >
                   <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md ring-4 ring-primary/15 transition active:scale-95">
                     <tab.icon className="h-5 w-5" />
                   </span>
                   {tab.label}
-                </Link>
+                </button>
               );
             }
             return (
@@ -468,6 +470,56 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
             );
           })}
         </nav>
+
+        <Sheet open={addOpen} onOpenChange={setAddOpen}>
+          <SheetContent side="bottom" className="rounded-t-2xl pb-8 pt-4">
+            <SheetHeader className="mb-4 text-left">
+              <SheetTitle className="text-lg">Create new</SheetTitle>
+            </SheetHeader>
+            <div className="grid grid-cols-2 gap-3">
+              <Link
+                to="/dashboard/new-appointment"
+                onClick={() => setAddOpen(false)}
+                className="flex flex-col items-center justify-center gap-2 rounded-xl border bg-background p-4 text-center transition active:scale-95 hover:bg-muted/50"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/12 text-primary">
+                  <CalendarPlus className="h-5 w-5" />
+                </span>
+                <span className="text-sm font-medium">Appointment</span>
+              </Link>
+              <Link
+                to="/dashboard/services"
+                onClick={() => setAddOpen(false)}
+                className="flex flex-col items-center justify-center gap-2 rounded-xl border bg-background p-4 text-center transition active:scale-95 hover:bg-muted/50"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/12 text-primary">
+                  <Scissors className="h-5 w-5" />
+                </span>
+                <span className="text-sm font-medium">Service</span>
+              </Link>
+              <Link
+                to="/dashboard/packages"
+                onClick={() => setAddOpen(false)}
+                className="flex flex-col items-center justify-center gap-2 rounded-xl border bg-background p-4 text-center transition active:scale-95 hover:bg-muted/50"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/12 text-primary">
+                  <Package className="h-5 w-5" />
+                </span>
+                <span className="text-sm font-medium">Package</span>
+              </Link>
+              <Link
+                to="/dashboard/consultations"
+                onClick={() => setAddOpen(false)}
+                className="flex flex-col items-center justify-center gap-2 rounded-xl border bg-background p-4 text-center transition active:scale-95 hover:bg-muted/50"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/12 text-primary">
+                  <ClipboardList className="h-5 w-5" />
+                </span>
+                <span className="text-sm font-medium">Consultation</span>
+              </Link>
+            </div>
+          </SheetContent>
+        </Sheet>
 
       </div>
       <ComingSoonDialog
