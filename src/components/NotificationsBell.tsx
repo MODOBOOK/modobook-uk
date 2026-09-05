@@ -8,12 +8,12 @@ import { cn } from "@/lib/utils";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import {
-  listNotifications,
+  listNotificationsPage,
   markAllNotificationsRead,
   clearNotification,
   clearAllNotifications,
   markNotificationRead,
-  type NotificationRow,
+  type NotificationPageRow,
 } from "@/lib/notifications.functions";
 import { PushToggle } from "@/components/PushToggle";
 
@@ -26,20 +26,20 @@ function timeAgo(iso: string) {
 }
 
 export function NotificationsBell({ className }: { className?: string }) {
-  const load = useServerFn(listNotifications);
+  const load = useServerFn(listNotificationsPage);
   const markAll = useServerFn(markAllNotificationsRead);
   const markOne = useServerFn(markNotificationRead);
   const clearOne = useServerFn(clearNotification);
   const clearAll = useServerFn(clearAllNotifications);
 
-  const [items, setItems] = useState<NotificationRow[]>([]);
+  const [items, setItems] = useState<NotificationPageRow[]>([]);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
   const refresh = useCallback(async () => {
     try {
-      const r = await load();
+      const r = await load({ data: { limit: 15, offset: 0 } });
       setItems(r.items);
       setProfileId(r.profileId);
     } catch {}
@@ -88,7 +88,7 @@ export function NotificationsBell({ className }: { className?: string }) {
     await clearAll().catch(() => {});
   }
 
-  async function onOpenItem(n: NotificationRow) {
+  async function onOpenItem(n: NotificationPageRow) {
     if (!n.read_at) await markOne({ data: { id: n.id } }).catch(() => {});
     setOpen(false);
   }
@@ -178,7 +178,8 @@ export function NotificationsBell({ className }: { className?: string }) {
                   <li key={n.id} className={cn("cursor-pointer", !n.read_at && "bg-primary/[0.03]")}
                     onClick={() => {
                       onOpenItem(n);
-                      if (n.link) navigate({ to: n.link as string });
+                      const target = n.resolved_link || n.link;
+                      if (target) navigate({ to: target as string });
                     }}
                   >
                     {content}
@@ -188,6 +189,20 @@ export function NotificationsBell({ className }: { className?: string }) {
             </ul>
           </ScrollArea>
         )}
+
+        <div className="border-t px-3 py-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-9 w-full justify-center text-xs"
+            onClick={() => {
+              setOpen(false);
+              navigate({ to: "/dashboard/notifications" });
+            }}
+          >
+            View all notifications
+          </Button>
+        </div>
 
         {items.length > 0 && unread > 0 && (
           <div className="border-t px-3 py-2">

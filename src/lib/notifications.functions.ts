@@ -98,7 +98,7 @@ export const listNotificationsPage = createServerFn({ method: "GET" })
     const limit = Math.min(Math.max(data.limit ?? 30, 1), 100);
     const offset = Math.max(data.offset ?? 0, 0);
     const profileId = await getProfileId(context.supabase, context.userId);
-    if (!profileId) return { items: [] as NotificationPageRow[], hasMore: false, unreadCount: 0 };
+    if (!profileId) return { items: [] as NotificationPageRow[], hasMore: false, unreadCount: 0, profileId: null as string | null };
 
     let q = context.supabase
       .from("notifications")
@@ -152,5 +152,5 @@ export const listNotificationsPage = createServerFn({ method: "GET" })
       .is("cleared_at", null)
       .is("read_at", null);
 
-    return { items, hasMore, unreadCount: count ?? 0 };
+    return { items, hasMore, unreadCount: count ?? 0, profileId };
   });
