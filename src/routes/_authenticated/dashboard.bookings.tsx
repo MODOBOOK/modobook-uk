@@ -434,18 +434,18 @@ function BookingsPage() {
   return (
     <div className="space-y-4 max-w-6xl">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex w-full min-w-0 items-center gap-1 sm:w-auto sm:gap-2">
-          <Button variant="outline" size="icon" className="shrink-0" onClick={navPrev} aria-label="Previous">
-            <ChevronLeft className="h-4 w-4" />
+        <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:gap-2">
+          <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 sm:h-9 sm:w-9" onClick={navPrev} aria-label="Previous">
+            <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
           </Button>
-          <div className="flex min-w-0 flex-1 items-center gap-1 font-semibold text-[15px] sm:min-w-[180px] sm:flex-none sm:text-lg">
+          <div className="flex min-w-0 flex-1 items-center gap-1 font-bold text-base sm:min-w-[180px] sm:flex-none sm:text-lg">
             <CalendarDays className="hidden h-4 w-4 shrink-0 text-muted-foreground sm:block" />
             <span className="truncate">{headerLabel}</span>
           </div>
-          <Button variant="outline" size="icon" className="shrink-0" onClick={navNext} aria-label="Next">
-            <ChevronRight className="h-4 w-4" />
+          <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 sm:h-9 sm:w-9" onClick={navNext} aria-label="Next">
+            <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" />
           </Button>
-          <Button variant="ghost" size="sm" className="shrink-0 px-2" onClick={() => setAnchor(new Date())}>Today</Button>
+          <Button variant="ghost" size="sm" className="h-10 shrink-0 px-3 text-sm font-medium sm:h-9" onClick={() => setAnchor(new Date())}>Today</Button>
         </div>
         <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
 
