@@ -210,11 +210,6 @@ function PatientProfilePage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4 pb-20">
-      <div className="flex items-center justify-between">
-        <Link to="/dashboard/patients" className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="mr-1 h-3.5 w-3.5" />All patients
-        </Link>
-      </div>
 
       {/* Quick actions bar — horizontally scrollable on mobile */}
       <div className="rounded-xl border bg-card shadow-sm lg:sticky lg:top-24 lg:z-10 lg:bg-card/95 lg:backdrop-blur">

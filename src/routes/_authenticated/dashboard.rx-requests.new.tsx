@@ -83,9 +83,6 @@ function NewRxRequest() {
 
   return (
     <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4">
-      <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/dashboard/rx-requests" })}>
-        <ArrowLeft className="h-4 w-4 mr-1" /> Back
-      </Button>
       <h1 className="text-2xl font-bold">New prescription request</h1>
       <form onSubmit={onSubmit} className="space-y-6">
         <Card>

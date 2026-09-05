@@ -180,9 +180,6 @@ function DiscountsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 pb-24 sm:p-6">
-      <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="sm"><Link to="/dashboard/menu"><ArrowLeft className="mr-1 h-4 w-4" />Menu</Link></Button>
-      </div>
       <header>
         <h1 className="text-2xl font-bold sm:text-3xl">Discounts</h1>
         <p className="text-sm text-muted-foreground">Apply discounts directly to the menu, or create checkout codes patients enter at booking.</p>

@@ -22,11 +22,6 @@ function ComingSoonPage() {
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 p-4 sm:p-6">
       <div>
-        <Button variant="ghost" size="sm" asChild className="-ml-2 mb-2 text-muted-foreground">
-          <Link to="/dashboard">
-            <ArrowLeft className="mr-1 h-4 w-4" /> Back to dashboard
-          </Link>
-        </Button>
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />
           <h1 className="font-serif text-2xl sm:text-3xl">Coming soon to MODO</h1>

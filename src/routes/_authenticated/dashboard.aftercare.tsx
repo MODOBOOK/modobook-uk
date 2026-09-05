@@ -86,10 +86,7 @@ function AftercarePage() {
 
   return (
     <div className="mx-auto max-w-3xl p-4 sm:p-6 space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <Link to="/dashboard" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline">
-          <ArrowLeft className="h-4 w-4" /> Dashboard
-        </Link>
+      <div className="flex items-center justify-end gap-3">
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setAiOpen(true)}>
             <Wand2 className="mr-1 h-4 w-4" /> Generate with AI

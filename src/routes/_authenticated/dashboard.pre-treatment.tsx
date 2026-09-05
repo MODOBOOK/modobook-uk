@@ -114,10 +114,7 @@ function PreTreatmentPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-4 sm:p-6 space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <Link to="/dashboard" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline">
-          <ArrowLeft className="h-4 w-4" /> Dashboard
-        </Link>
+      <div className="flex items-center justify-end gap-3">
         <Button onClick={() => openNew("general")}>
           <Plus className="mr-1 h-4 w-4" /> New section
         </Button>

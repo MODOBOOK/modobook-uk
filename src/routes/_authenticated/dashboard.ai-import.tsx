@@ -126,9 +126,6 @@ function AiImportPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 md:p-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/dashboard"><ArrowLeft className="mr-1 size-4" /> Dashboard</Link>
-        </Button>
         <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
           <Sparkles className="size-5 text-primary" /> Import with AI
         </h1>

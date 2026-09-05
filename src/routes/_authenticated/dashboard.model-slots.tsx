@@ -93,9 +93,6 @@ function ModelSlotsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 pb-24 sm:p-6">
-      <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="sm"><Link to="/dashboard/menu"><ArrowLeft className="mr-1 h-4 w-4" />Menu</Link></Button>
-      </div>
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl"><Sparkles className="h-6 w-6 text-fuchsia-600" />Model slots</h1>
