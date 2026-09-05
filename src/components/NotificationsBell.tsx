@@ -100,13 +100,14 @@ export function NotificationsBell({ className }: { className?: string }) {
           type="button"
           aria-label="Notifications"
           className={cn(
-            "relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-background text-foreground hover:bg-muted transition",
+            "relative inline-flex h-10 w-10 items-center justify-center rounded-full border-2 border-primary/30 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition",
+            unread > 0 && "ring-2 ring-primary ring-offset-2 ring-offset-background animate-pulse",
             className,
           )}
         >
-          <Bell className="h-4 w-4" />
+          <Bell className="h-5 w-5" />
           {unread > 0 && (
-            <span className="absolute -right-1 -top-1 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-destructive-foreground animate-pulse">
+            <span className="absolute -right-1 -top-1 flex min-h-[1.25rem] min-w-[1.25rem] items-center justify-center rounded-full border-2 border-background bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground">
               {unread > 99 ? "99+" : unread}
             </span>
           )}
