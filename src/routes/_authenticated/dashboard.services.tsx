@@ -435,6 +435,7 @@ function ServicesPage() {
               index={idx}
               matchTreat={matchTreat}
               picker={picker}
+              forceOpen={q.length > 0}
               onAddSub={(parentId) => setCatDialog({ mode: "create", parentId })}
               onEditCat={(c) => setCatDialog({ mode: "edit", parentId: c.parent_id, cat: c })}
               onDeleteCat={handleDeleteCat}
@@ -466,6 +467,7 @@ function ServicesPage() {
               index={0}
               matchTreat={matchTreat}
               picker={picker}
+              forceOpen={q.length > 0}
               onAddSub={() => {}}
               onEditCat={() => {}}
               onDeleteCat={() => {}}
