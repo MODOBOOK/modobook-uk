@@ -159,6 +159,7 @@ import { Route as ApiPublicHooksMarketingDispatchRouteImport } from './routes/ap
 import { Route as ApiPublicHooksMarketingAutomationsRouteImport } from './routes/api/public/hooks/marketing-automations'
 import { Route as ApiPublicHooksDemoResetRouteImport } from './routes/api/public/hooks/demo-reset'
 import { Route as ApiPublicHooksDailyScheduleDigestRouteImport } from './routes/api/public/hooks/daily-schedule-digest'
+import { Route as ApiPublicHooksComplianceRemindersRouteImport } from './routes/api/public/hooks/compliance-reminders'
 import { Route as ApiPublicHooksBillingReconcileRouteImport } from './routes/api/public/hooks/billing-reconcile'
 import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
 import { Route as ApiPublicBookingReleaseRouteImport } from './routes/api/public/booking/release'
@@ -1017,6 +1018,12 @@ const ApiPublicHooksDailyScheduleDigestRoute =
     path: '/api/public/hooks/daily-schedule-digest',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksComplianceRemindersRoute =
+  ApiPublicHooksComplianceRemindersRouteImport.update({
+    id: '/api/public/hooks/compliance-reminders',
+    path: '/api/public/hooks/compliance-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksBillingReconcileRoute =
   ApiPublicHooksBillingReconcileRouteImport.update({
     id: '/api/public/hooks/billing-reconcile',
@@ -1302,6 +1309,7 @@ export interface FileRoutesByFullPath {
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/billing-reconcile': typeof ApiPublicHooksBillingReconcileRoute
+  '/api/public/hooks/compliance-reminders': typeof ApiPublicHooksComplianceRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
   '/api/public/hooks/demo-reset': typeof ApiPublicHooksDemoResetRoute
   '/api/public/hooks/marketing-automations': typeof ApiPublicHooksMarketingAutomationsRoute
@@ -1465,6 +1473,7 @@ export interface FileRoutesByTo {
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/billing-reconcile': typeof ApiPublicHooksBillingReconcileRoute
+  '/api/public/hooks/compliance-reminders': typeof ApiPublicHooksComplianceRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
   '/api/public/hooks/demo-reset': typeof ApiPublicHooksDemoResetRoute
   '/api/public/hooks/marketing-automations': typeof ApiPublicHooksMarketingAutomationsRoute
@@ -1642,6 +1651,7 @@ export interface FileRoutesById {
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/billing-reconcile': typeof ApiPublicHooksBillingReconcileRoute
+  '/api/public/hooks/compliance-reminders': typeof ApiPublicHooksComplianceRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
   '/api/public/hooks/demo-reset': typeof ApiPublicHooksDemoResetRoute
   '/api/public/hooks/marketing-automations': typeof ApiPublicHooksMarketingAutomationsRoute
@@ -1819,6 +1829,7 @@ export interface FileRouteTypes {
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/billing-reconcile'
+    | '/api/public/hooks/compliance-reminders'
     | '/api/public/hooks/daily-schedule-digest'
     | '/api/public/hooks/demo-reset'
     | '/api/public/hooks/marketing-automations'
@@ -1982,6 +1993,7 @@ export interface FileRouteTypes {
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/billing-reconcile'
+    | '/api/public/hooks/compliance-reminders'
     | '/api/public/hooks/daily-schedule-digest'
     | '/api/public/hooks/demo-reset'
     | '/api/public/hooks/marketing-automations'
@@ -2158,6 +2170,7 @@ export interface FileRouteTypes {
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/billing-reconcile'
+    | '/api/public/hooks/compliance-reminders'
     | '/api/public/hooks/daily-schedule-digest'
     | '/api/public/hooks/demo-reset'
     | '/api/public/hooks/marketing-automations'
@@ -2226,6 +2239,7 @@ export interface RootRouteChildren {
   ApiPublicBookingReleaseRoute: typeof ApiPublicBookingReleaseRoute
   ApiPublicHooksAppointmentRemindersRoute: typeof ApiPublicHooksAppointmentRemindersRoute
   ApiPublicHooksBillingReconcileRoute: typeof ApiPublicHooksBillingReconcileRoute
+  ApiPublicHooksComplianceRemindersRoute: typeof ApiPublicHooksComplianceRemindersRoute
   ApiPublicHooksDailyScheduleDigestRoute: typeof ApiPublicHooksDailyScheduleDigestRoute
   ApiPublicHooksDemoResetRoute: typeof ApiPublicHooksDemoResetRoute
   ApiPublicHooksMarketingAutomationsRoute: typeof ApiPublicHooksMarketingAutomationsRoute
@@ -3296,6 +3310,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksDailyScheduleDigestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/compliance-reminders': {
+      id: '/api/public/hooks/compliance-reminders'
+      path: '/api/public/hooks/compliance-reminders'
+      fullPath: '/api/public/hooks/compliance-reminders'
+      preLoaderRoute: typeof ApiPublicHooksComplianceRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/billing-reconcile': {
       id: '/api/public/hooks/billing-reconcile'
       path: '/api/public/hooks/billing-reconcile'
@@ -3975,6 +3996,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksAppointmentRemindersRoute:
     ApiPublicHooksAppointmentRemindersRoute,
   ApiPublicHooksBillingReconcileRoute: ApiPublicHooksBillingReconcileRoute,
+  ApiPublicHooksComplianceRemindersRoute:
+    ApiPublicHooksComplianceRemindersRoute,
   ApiPublicHooksDailyScheduleDigestRoute:
     ApiPublicHooksDailyScheduleDigestRoute,
   ApiPublicHooksDemoResetRoute: ApiPublicHooksDemoResetRoute,
