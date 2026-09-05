@@ -863,6 +863,13 @@ function ServiceCard({
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
+            <DropdownMenuItem disabled={!onMoveUp} onSelect={() => onMoveUp?.()}>
+              <ArrowUp className="mr-2 h-4 w-4" /> Move up
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={!onMoveDown} onSelect={() => onMoveDown?.()}>
+              <ArrowDown className="mr-2 h-4 w-4" /> Move down
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={onDelete} className="text-destructive focus:text-destructive">
               <Trash2 className="mr-2 h-4 w-4" /> Delete
             </DropdownMenuItem>
