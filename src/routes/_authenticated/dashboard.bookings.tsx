@@ -29,6 +29,7 @@ import {
   Percent,
   Undo2,
   CalendarClock,
+  SlidersHorizontal,
 } from "lucide-react";
 import { RescheduleAppointmentDialog } from "@/components/RescheduleAppointmentDialog";
 import {
@@ -213,6 +214,7 @@ function BookingsPage() {
   const [rotaAnchor, setRotaAnchor] = useState<string | null>(null);
   const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
   const [locationFilter, setLocationFilter] = useState<string>("all");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [anchor, setAnchor] = useState(new Date());
   const [view, setView] = useState<ViewMode>(() =>
@@ -431,107 +433,157 @@ function BookingsPage() {
         })()
       : anchor.toLocaleString(undefined, { month: "long", year: "numeric" });
 
+  const viewSwitcher = (
+    <div className="inline-flex rounded-full bg-muted p-0.5 text-xs sm:text-sm">
+      {([
+        { v: "day" as ViewMode, label: "1" },
+        { v: "3day" as ViewMode, label: "3" },
+        { v: "week" as ViewMode, label: "Week" },
+        { v: "month" as ViewMode, label: "Month" },
+      ]).map(({ v, label }) => (
+        <button
+          key={v}
+          onClick={() => setView(v)}
+          className={`rounded-full px-3 py-1.5 transition active:scale-95 sm:px-3 sm:py-1 ${
+            view === v ? "bg-background shadow-sm font-medium" : "text-muted-foreground"
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+
+  const locationChips = locations.length > 1 && (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        onClick={() => setLocationFilter("all")}
+        className={`rounded-full border px-3.5 py-1.5 text-xs transition active:scale-95 sm:px-3 sm:py-1 ${
+          locationFilter === "all"
+            ? "bg-foreground text-background border-foreground"
+            : "bg-background text-muted-foreground hover:bg-muted"
+        }`}
+      >
+        All locations
+      </button>
+      {locations.map((l) => (
+        <button
+          key={l.id}
+          onClick={() => setLocationFilter(l.id)}
+          className={`rounded-full border px-3.5 py-1.5 text-xs transition active:scale-95 sm:px-3 sm:py-1 ${
+            locationFilter === l.id
+              ? "bg-foreground text-background border-foreground"
+              : "bg-background text-muted-foreground hover:bg-muted"
+          }`}
+        >
+          {l.name}
+        </button>
+      ))}
+    </div>
+  );
+
+  const actionsMenu = (
+    <div className="relative">
+      <Button size="icon" onClick={() => setActionsOpen((v) => !v)} aria-label="Calendar actions">
+        <Plus className="h-5 w-5" />
+      </Button>
+      {actionsOpen && (
+        <>
+          <button className="fixed inset-0 z-30" onClick={() => setActionsOpen(false)} aria-label="Close menu" />
+          <div className="absolute right-0 top-12 z-40 flex w-60 flex-col gap-2">
+            <Link to="/dashboard/new-appointment" onClick={() => setActionsOpen(false)}>
+              <Button className="w-full justify-start gap-2 rounded-full bg-orange-200 text-orange-950 hover:bg-orange-300">
+                <CalendarDays className="h-4 w-4" /> New Appointment
+              </Button>
+            </Link>
+            <Button
+              onClick={() => { setActionsOpen(false); setShowPayLink(true); }}
+              className="w-full justify-start gap-2 rounded-full bg-slate-900 text-white hover:bg-slate-800"
+            >
+              <Link2 className="h-4 w-4" /> Payment Link
+            </Button>
+            <Button
+              onClick={() => { setActionsOpen(false); setShowBlock(true); }}
+              className="w-full justify-start gap-2 rounded-full bg-rose-300 text-rose-950 hover:bg-rose-400"
+            >
+              <Ban className="h-4 w-4" /> Block a Time
+            </Button>
+            <Button
+              onClick={() => { setActionsOpen(false); setShowUnblock(true); }}
+              className="w-full justify-start gap-2 rounded-full bg-emerald-300 text-emerald-950 hover:bg-emerald-400"
+            >
+              <CircleCheck className="h-4 w-4" /> Open up appointments
+            </Button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
   return (
-    <div className="space-y-4 max-w-6xl">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:gap-2">
-          <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 sm:h-9 sm:w-9" onClick={navPrev} aria-label="Previous">
-            <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
+    <div className="space-y-3 sm:space-y-4 max-w-6xl">
+      {/* Mobile: compact bar — nav + filter dropdown + actions */}
+      <div className="flex items-center gap-2 sm:hidden">
+        <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" onClick={navPrev} aria-label="Previous">
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        <div className="flex min-w-0 flex-1 items-center justify-center font-bold text-base">
+          <span className="truncate">{headerLabel}</span>
+        </div>
+        <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" onClick={navNext} aria-label="Next">
+          <ChevronRight className="h-5 w-5" />
+        </Button>
+        <Button
+          variant={filtersOpen || locationFilter !== "all" ? "default" : "outline"}
+          size="icon"
+          className="relative h-10 w-10 shrink-0"
+          onClick={() => setFiltersOpen((v) => !v)}
+          aria-label="Calendar filters"
+        >
+          <SlidersHorizontal className="h-5 w-5" />
+          {locationFilter !== "all" && (
+            <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-background" />
+          )}
+        </Button>
+        {actionsMenu}
+      </div>
+
+      {/* Mobile: expandable filter panel */}
+      {filtersOpen && (
+        <div className="space-y-3 rounded-xl border bg-card p-3 sm:hidden">
+          <div className="flex items-center justify-between gap-2">
+            {viewSwitcher}
+            <Button variant="ghost" size="sm" className="h-9 shrink-0 px-3 text-sm font-medium" onClick={() => { setAnchor(new Date()); setFiltersOpen(false); }}>
+              Today
+            </Button>
+          </div>
+          {locationChips}
+        </div>
+      )}
+
+      {/* Desktop header */}
+      <div className="hidden sm:flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={navPrev} aria-label="Previous">
+            <ChevronLeft className="h-4 w-4" />
           </Button>
-          <div className="flex min-w-0 flex-1 items-center gap-1 font-bold text-base sm:min-w-[180px] sm:flex-none sm:text-lg">
-            <CalendarDays className="hidden h-4 w-4 shrink-0 text-muted-foreground sm:block" />
+          <div className="flex min-w-0 items-center gap-1 font-bold min-w-[180px] text-lg">
+            <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
             <span className="truncate">{headerLabel}</span>
           </div>
-          <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 sm:h-9 sm:w-9" onClick={navNext} aria-label="Next">
-            <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" />
+          <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={navNext} aria-label="Next">
+            <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="sm" className="h-10 shrink-0 px-3 text-sm font-medium sm:h-9" onClick={() => setAnchor(new Date())}>Today</Button>
+          <Button variant="ghost" size="sm" className="h-9 shrink-0 px-3 text-sm font-medium" onClick={() => setAnchor(new Date())}>Today</Button>
         </div>
-        <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
-
-          <div className="inline-flex rounded-full bg-muted p-0.5 text-xs sm:text-sm">
-            {([
-              { v: "day" as ViewMode, label: "1" },
-              { v: "3day" as ViewMode, label: "3" },
-              { v: "week" as ViewMode, label: "Week" },
-              { v: "month" as ViewMode, label: "Month" },
-            ]).map(({ v, label }) => (
-              <button
-                key={v}
-                onClick={() => setView(v)}
-                className={`rounded-full px-3 py-1.5 transition active:scale-95 sm:px-3 sm:py-1 ${
-                  view === v ? "bg-background shadow-sm font-medium" : "text-muted-foreground"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <div className="relative">
-            <Button size="icon" onClick={() => setActionsOpen((v) => !v)} aria-label="Calendar actions">
-              <Plus className="h-5 w-5" />
-            </Button>
-            {actionsOpen && (
-              <>
-                <button className="fixed inset-0 z-30" onClick={() => setActionsOpen(false)} aria-label="Close menu" />
-                <div className="absolute right-0 top-12 z-40 flex w-60 flex-col gap-2">
-                  <Link to="/dashboard/new-appointment" onClick={() => setActionsOpen(false)}>
-                    <Button className="w-full justify-start gap-2 rounded-full bg-orange-200 text-orange-950 hover:bg-orange-300">
-                      <CalendarDays className="h-4 w-4" /> New Appointment
-                    </Button>
-                  </Link>
-                  <Button
-                    onClick={() => { setActionsOpen(false); setShowPayLink(true); }}
-                    className="w-full justify-start gap-2 rounded-full bg-slate-900 text-white hover:bg-slate-800"
-                  >
-                    <Link2 className="h-4 w-4" /> Payment Link
-                  </Button>
-                  <Button
-                    onClick={() => { setActionsOpen(false); setShowBlock(true); }}
-                    className="w-full justify-start gap-2 rounded-full bg-rose-300 text-rose-950 hover:bg-rose-400"
-                  >
-                    <Ban className="h-4 w-4" /> Block a Time
-                  </Button>
-                  <Button
-                    onClick={() => { setActionsOpen(false); setShowUnblock(true); }}
-                    className="w-full justify-start gap-2 rounded-full bg-emerald-300 text-emerald-950 hover:bg-emerald-400"
-                  >
-                    <CircleCheck className="h-4 w-4" /> Open up appointments
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
+        <div className="flex items-center justify-end gap-2">
+          {viewSwitcher}
+          {actionsMenu}
         </div>
       </div>
 
-      {locations.length > 1 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setLocationFilter("all")}
-            className={`rounded-full border px-3.5 py-1.5 text-xs transition active:scale-95 sm:px-3 sm:py-1 ${
-              locationFilter === "all"
-                ? "bg-foreground text-background border-foreground"
-                : "bg-background text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            All locations
-          </button>
-          {locations.map((l) => (
-            <button
-              key={l.id}
-              onClick={() => setLocationFilter(l.id)}
-              className={`rounded-full border px-3.5 py-1.5 text-xs transition active:scale-95 sm:px-3 sm:py-1 ${
-                locationFilter === l.id
-                  ? "bg-foreground text-background border-foreground"
-                  : "bg-background text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {l.name}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Desktop location chips */}
+      <div className="hidden sm:block">{locationChips}</div>
 
       <p className="text-xs text-muted-foreground">
         {loading
