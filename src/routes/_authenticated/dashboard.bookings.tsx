@@ -29,6 +29,7 @@ import {
   Percent,
   Undo2,
   CalendarClock,
+  SlidersHorizontal,
 } from "lucide-react";
 import { RescheduleAppointmentDialog } from "@/components/RescheduleAppointmentDialog";
 import {
