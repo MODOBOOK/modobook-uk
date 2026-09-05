@@ -315,6 +315,46 @@
   [data-radix-popper-content-wrapper] {
     max-width: 100vw;
   }
+
+  /* Comfortable 44px tap targets across the app (app WebView use) */
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="switch"],
+  [role="combobox"],
+  [role="menuitem"],
+  [role="option"],
+  select {
+    min-height: 44px;
+  }
+  /* Icon-only controls keep their shape but gain invisible hit area */
+  button:has(> svg:only-child),
+  [role="button"]:has(> svg:only-child) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea {
+    min-height: 44px;
+  }
+  input[type="checkbox"],
+  input[type="radio"],
+  [role="checkbox"] {
+    min-width: 20px;
+    min-height: 20px;
+  }
+
+  /* Never clip content horizontally */
+  body {
+    overflow-x: hidden;
+  }
+}
+
+/* Dialogs become bottom sheets on phones */
+@media (max-width: 639px) {
+  [data-radix-dialog-content] {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom)) !important;
+  }
 }
 
 html, body {
