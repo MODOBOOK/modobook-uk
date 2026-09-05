@@ -202,7 +202,14 @@ function IncomeReportPage() {
                       <th className="px-3 py-2">Method</th>
                       <th className="px-3 py-2 text-right">Refund</th>
                       <th className="px-3 py-2 text-right">Net</th>
-...
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.rows.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">No bookings in this period.</td>
+                      </tr>
+                    )}
                      {data.rows.map((r) => (
                       <tr key={r.id} className="border-t">
                         <td className="px-3 py-2 whitespace-nowrap">{r.date}</td>
