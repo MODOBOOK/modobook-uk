@@ -915,6 +915,102 @@ function ServiceCard({
 
 
 
+function ReorderCategoriesDialog({
+  open,
+  categories,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  categories: CatNode[];
+  onClose: () => void;
+  onSave: (ids: string[]) => void | Promise<void>;
+}) {
+  const [items, setItems] = useState<CatNode[]>(categories);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (open) setItems(categories);
+  }, [open, categories]);
+
+  function handleDrop(targetId: string) {
+    if (!dragId || dragId === targetId) return;
+    const from = items.findIndex((c) => c.id === dragId);
+    const to = items.findIndex((c) => c.id === targetId);
+    if (from < 0 || to < 0) return;
+    const next = items.slice();
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    setItems(next);
+    setDragId(null);
+    setOverId(null);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-display">Rearrange categories</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          Drag categories into the order you want them on your booking page.
+        </p>
+        <div className="max-h-[50vh] space-y-2 overflow-y-auto py-1">
+          {items.map((c) => (
+            <div
+              key={c.id}
+              draggable
+              onDragStart={() => setDragId(c.id)}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setOverId(c.id);
+              }}
+              onDragLeave={() => setOverId((v) => (v === c.id ? null : v))}
+              onDrop={() => handleDrop(c.id)}
+              onDragEnd={() => {
+                setDragId(null);
+                setOverId(null);
+              }}
+              className={`flex cursor-grab items-center gap-3 rounded-2xl border bg-background p-3 transition-colors active:cursor-grabbing ${
+                overId === c.id && dragId !== c.id ? "border-primary" : ""
+              } ${dragId === c.id ? "opacity-50" : ""}`}
+            >
+              <GripVertical className="h-5 w-5 shrink-0 text-muted-foreground" />
+              {c.icon && <span className="text-lg">{c.icon}</span>}
+              <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                {c.name}
+              </span>
+              <span className="shrink-0 text-xs text-muted-foreground">
+                {c.treatments.length} service{c.treatments.length === 1 ? "" : "s"}
+              </span>
+            </div>
+          ))}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={saving}>
+            Cancel
+          </Button>
+          <Button
+            disabled={saving}
+            onClick={async () => {
+              setSaving(true);
+              try {
+                await onSave(items.map((c) => c.id));
+              } finally {
+                setSaving(false);
+              }
+            }}
+          >
+            {saving ? "Saving…" : "Save order"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function MoveTreatmentDialog({
   treat,
   categories,
