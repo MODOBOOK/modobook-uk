@@ -900,26 +900,105 @@ function SubcategorySection({
   );
 }
 
+function ServiceList({
+  treats,
+  reorderDisabled,
+  onReorder,
+  onDeleteTreat,
+  onMoveTreatTo,
+}: {
+  treats: Treat[];
+  reorderDisabled?: boolean;
+  onReorder: (ids: string[]) => void;
+  onDeleteTreat: (t: Treat) => void;
+  onMoveTreatTo: (t: Treat) => void;
+}) {
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+
+  function handleDrop(targetId: string) {
+    const from = treats.findIndex((t) => t.id === dragId);
+    const to = treats.findIndex((t) => t.id === targetId);
+    setDragId(null);
+    setOverId(null);
+    if (!dragId || dragId === targetId || from < 0 || to < 0) return;
+    const next = treats.slice();
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    onReorder(next.map((t) => t.id));
+  }
+
+  return (
+    <div className="space-y-2">
+      {treats.map((t) => (
+        <ServiceCard
+          key={t.id}
+          treat={t}
+          draggable={!reorderDisabled}
+          dragging={dragId === t.id}
+          dropTarget={overId === t.id && dragId !== t.id}
+          onDragStart={() => setDragId(t.id)}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setOverId(t.id);
+          }}
+          onDragLeave={() => setOverId((v) => (v === t.id ? null : v))}
+          onDrop={() => handleDrop(t.id)}
+          onDragEnd={() => {
+            setDragId(null);
+            setOverId(null);
+          }}
+          onDelete={() => onDeleteTreat(t)}
+          onMoveTo={() => onMoveTreatTo(t)}
+        />
+      ))}
+    </div>
+  );
+}
+
 function ServiceCard({
   treat,
-  picker,
+  draggable,
+  dragging,
+  dropTarget,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd,
   onDelete,
-  onMoveUp,
-  onMoveDown,
   onMoveTo,
-  onChangeCategory,
 }: {
   treat: Treat;
-  picker?: { id: string; label: string; depth: number }[];
+  draggable?: boolean;
+  dragging?: boolean;
+  dropTarget?: boolean;
+  onDragStart?: () => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragLeave?: () => void;
+  onDrop?: () => void;
+  onDragEnd?: () => void;
   onDelete: () => void;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
   onMoveTo?: () => void;
-  onChangeCategory?: (categoryId: string | null) => void | Promise<void>;
 }) {
-  const currentVal = treat.category_id ?? "__none__";
   return (
-    <div className="group flex flex-col gap-2 rounded-xl border bg-background px-2.5 py-2 transition-colors hover:border-primary/30 sm:flex-row sm:items-center">
+    <div
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+      className={`group flex items-center gap-2 rounded-xl border bg-background px-2.5 py-2 transition-colors hover:border-primary/30 ${
+        dropTarget ? "border-primary" : ""
+      } ${dragging ? "opacity-50" : ""}`}
+    >
+      {draggable && (
+        <GripVertical
+          className="h-4 w-4 shrink-0 cursor-grab text-muted-foreground/60 active:cursor-grabbing"
+          aria-label="Drag to reorder"
+        />
+      )}
       <div className="flex min-w-0 flex-1 items-center gap-2.5">
         <span
           className="h-2.5 w-2.5 shrink-0 rounded-full"
@@ -938,63 +1017,33 @@ function ServiceCard({
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-1.5">
-        {onChangeCategory && picker && (
-          <Select
-            value={currentVal}
-            onValueChange={(v) => onChangeCategory(v === "__none__" ? null : v)}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+            aria-label="Service actions"
           >
-            <SelectTrigger className="h-8 w-full text-xs sm:w-[160px]" aria-label="Move to category or subcategory">
-              <SelectValue placeholder="Move to category…" />
-            </SelectTrigger>
-            <SelectContent className="max-h-[320px]">
-              <SelectItem value="__none__">— Uncategorised —</SelectItem>
-              {picker.map((c) => (
-                <SelectItem key={c.id} value={c.id} className="text-xs">
-                  <span style={{ paddingLeft: c.depth * 12 }} className="inline-block">
-                    {c.depth > 0 ? "↳ " : ""}
-                    {c.label}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
-              aria-label="Service actions"
-            >
-              <MoreVertical className="h-4 w-4" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <Link to="/dashboard/treatments" search={{ edit: treat.id, back: "services" }}>
-                <Pencil className="mr-2 h-4 w-4" /> Edit
-              </Link>
+            <MoreVertical className="h-4 w-4" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild>
+            <Link to="/dashboard/treatments" search={{ edit: treat.id, back: "services" }}>
+              <Pencil className="mr-2 h-4 w-4" /> Edit
+            </Link>
+          </DropdownMenuItem>
+          {onMoveTo && (
+            <DropdownMenuItem onSelect={() => onMoveTo()}>
+              <FolderPlus className="mr-2 h-4 w-4" /> Move to category…
             </DropdownMenuItem>
-            {onMoveTo && (
-              <DropdownMenuItem onSelect={() => onMoveTo()}>
-                <FolderPlus className="mr-2 h-4 w-4" /> Move to category…
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem disabled={!onMoveUp} onSelect={() => onMoveUp?.()}>
-              <ArrowUp className="mr-2 h-4 w-4" /> Move up
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={!onMoveDown} onSelect={() => onMoveDown?.()}>
-              <ArrowDown className="mr-2 h-4 w-4" /> Move down
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={onDelete} className="text-destructive focus:text-destructive">
-              <Trash2 className="mr-2 h-4 w-4" /> Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={onDelete} className="text-destructive focus:text-destructive">
+            <Trash2 className="mr-2 h-4 w-4" /> Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
