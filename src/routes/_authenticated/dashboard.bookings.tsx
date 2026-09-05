@@ -434,22 +434,22 @@ function BookingsPage() {
   return (
     <div className="space-y-4 max-w-6xl">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex w-full min-w-0 items-center gap-1 sm:w-auto sm:gap-2">
-          <Button variant="outline" size="icon" className="shrink-0" onClick={navPrev} aria-label="Previous">
-            <ChevronLeft className="h-4 w-4" />
+        <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:gap-2">
+          <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 sm:h-9 sm:w-9" onClick={navPrev} aria-label="Previous">
+            <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
           </Button>
-          <div className="flex min-w-0 flex-1 items-center gap-1 font-semibold text-[15px] sm:min-w-[180px] sm:flex-none sm:text-lg">
+          <div className="flex min-w-0 flex-1 items-center gap-1 font-bold text-base sm:min-w-[180px] sm:flex-none sm:text-lg">
             <CalendarDays className="hidden h-4 w-4 shrink-0 text-muted-foreground sm:block" />
             <span className="truncate">{headerLabel}</span>
           </div>
-          <Button variant="outline" size="icon" className="shrink-0" onClick={navNext} aria-label="Next">
-            <ChevronRight className="h-4 w-4" />
+          <Button variant="outline" size="icon" className="h-10 w-10 shrink-0 sm:h-9 sm:w-9" onClick={navNext} aria-label="Next">
+            <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" />
           </Button>
-          <Button variant="ghost" size="sm" className="shrink-0 px-2" onClick={() => setAnchor(new Date())}>Today</Button>
+          <Button variant="ghost" size="sm" className="h-10 shrink-0 px-3 text-sm font-medium sm:h-9" onClick={() => setAnchor(new Date())}>Today</Button>
         </div>
         <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
 
-          <div className="inline-flex rounded-full bg-muted p-0.5 text-xs">
+          <div className="inline-flex rounded-full bg-muted p-0.5 text-xs sm:text-sm">
             {([
               { v: "day" as ViewMode, label: "1" },
               { v: "3day" as ViewMode, label: "3" },
@@ -459,7 +459,7 @@ function BookingsPage() {
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`rounded-full px-3 py-1 transition ${
+                className={`rounded-full px-3 py-1.5 transition active:scale-95 sm:px-3 sm:py-1 ${
                   view === v ? "bg-background shadow-sm font-medium" : "text-muted-foreground"
                 }`}
               >
@@ -506,10 +506,10 @@ function BookingsPage() {
       </div>
 
       {locations.length > 1 && (
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setLocationFilter("all")}
-            className={`rounded-full border px-3 py-1 text-xs transition ${
+            className={`rounded-full border px-3.5 py-1.5 text-xs transition active:scale-95 sm:px-3 sm:py-1 ${
               locationFilter === "all"
                 ? "bg-foreground text-background border-foreground"
                 : "bg-background text-muted-foreground hover:bg-muted"
@@ -521,7 +521,7 @@ function BookingsPage() {
             <button
               key={l.id}
               onClick={() => setLocationFilter(l.id)}
-              className={`rounded-full border px-3 py-1 text-xs transition ${
+              className={`rounded-full border px-3.5 py-1.5 text-xs transition active:scale-95 sm:px-3 sm:py-1 ${
                 locationFilter === l.id
                   ? "bg-foreground text-background border-foreground"
                   : "bg-background text-muted-foreground hover:bg-muted"
@@ -797,9 +797,9 @@ function MonthView({
 
   return (
     <Card className="overflow-hidden">
-      <div className="grid grid-cols-7 border-b bg-muted/30 text-[11px] uppercase">
+      <div className="grid grid-cols-7 border-b bg-muted/30 text-xs uppercase sm:text-[11px]">
         {weekdayLabels.map((w) => (
-          <div key={w} className="px-2 py-2 text-center text-muted-foreground">{w}</div>
+          <div key={w} className="px-2 py-3 text-center font-medium text-muted-foreground sm:py-2">{w}</div>
         ))}
       </div>
       <div className="grid grid-cols-7">
@@ -832,7 +832,7 @@ function MonthView({
               key={key}
               onClick={() => onPickDay(d)}
               disabled={isPast}
-              className={`relative min-h-[52px] border-b border-r p-1 text-left transition hover:bg-accent/40 disabled:cursor-not-allowed disabled:hover:bg-transparent sm:min-h-[88px] sm:p-1.5 ${
+              className={`relative flex min-h-[72px] flex-col border-b border-r p-1.5 text-left transition active:scale-[0.98] hover:bg-accent/40 disabled:cursor-not-allowed disabled:hover:bg-transparent sm:min-h-[88px] sm:p-1.5 ${
                 !inMonth ? "bg-muted/20 text-muted-foreground" : ""
               } ${unavailable && inMonth ? "bg-muted/50 text-muted-foreground" : ""} ${
                 isPast ? "opacity-60" : ""
@@ -848,30 +848,30 @@ function MonthView({
               title={title}
             >
               <div className="flex items-center justify-between">
-                <span className={`inline-flex h-6 w-6 items-center justify-center rounded-md text-xs font-semibold ${
+                <span className={`inline-flex h-7 w-7 items-center justify-center rounded-md text-sm font-bold sm:h-6 sm:w-6 sm:text-xs ${
                   isToday ? "bg-primary text-primary-foreground" : ""
                 }`}>{d.getDate()}</span>
                 {dayAppts.length > 0 && (
-                  <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary sm:text-[10px]">
                     {dayAppts.length}
                   </span>
                 )}
               </div>
-              <div className="mt-1 hidden space-y-0.5 sm:block">
-                {dayAppts.slice(0, 3).map((a) => {
+              <div className="mt-1.5 flex-1 space-y-1">
+                {dayAppts.slice(0, 2).map((a) => {
                   const color = a.treatments?.color || "#3b82f6";
                   return (
                     <div
                       key={a.id}
-                      className="truncate rounded px-1 py-0.5 text-[10px]"
+                      className="truncate rounded px-1 py-0.5 text-[10px] sm:text-[10px]"
                       style={{ backgroundColor: hexToRgba(color, 0.18), borderLeft: `2px solid ${color}` }}
                     >
                       {a.start_time.slice(0, 5)} {a.patient_name}
                     </div>
                   );
                 })}
-                {dayAppts.length > 3 && (
-                  <div className="text-[10px] text-muted-foreground">+{dayAppts.length - 3} more</div>
+                {dayAppts.length > 2 && (
+                  <div className="text-[10px] font-medium text-muted-foreground sm:text-[10px]">+{dayAppts.length - 2} more</div>
                 )}
               </div>
             </button>
