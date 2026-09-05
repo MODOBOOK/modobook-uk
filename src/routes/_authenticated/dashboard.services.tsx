@@ -672,9 +672,10 @@ function CategoryCard({
               className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
             />
             {node.icon && <span className="text-xl">{node.icon}</span>}
-            <h3 className="font-display min-w-0 flex-1 truncate text-lg font-semibold text-foreground">
+            <FitText className="font-display font-semibold text-foreground" max={18} min={10}>
               {node.name}
-            </h3>
+            </FitText>
+
           </div>
           {node.description && expanded && (
             <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{node.description}</p>
