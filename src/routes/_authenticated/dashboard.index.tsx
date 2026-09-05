@@ -152,7 +152,21 @@ function DashboardIndex() {
                 <p className="mt-1 truncate text-xs italic text-muted-foreground sm:text-sm">{displaySecondary}</p>
               )}
             </div>
-
+          </div>
+          {/* Today snapshot — built into the hero */}
+          <div className="relative mt-5 grid grid-cols-3 gap-2 sm:mt-6 sm:gap-3">
+            <div className="rounded-2xl border border-border/50 bg-background/60 px-3 py-3 text-center backdrop-blur-sm">
+              <div className="font-serif text-xl leading-none sm:text-2xl">{todayBookings}</div>
+              <div className="mt-1.5 text-[9px] font-medium uppercase tracking-[0.15em] text-muted-foreground sm:text-[10px]">Today</div>
+            </div>
+            <div className="rounded-2xl border border-border/50 bg-background/60 px-3 py-3 text-center backdrop-blur-sm">
+              <div className="font-serif text-xl leading-none sm:text-2xl">{weekCount}</div>
+              <div className="mt-1.5 text-[9px] font-medium uppercase tracking-[0.15em] text-muted-foreground sm:text-[10px]">Next 7 days</div>
+            </div>
+            <div className="rounded-2xl border border-border/50 bg-background/60 px-3 py-3 text-center backdrop-blur-sm">
+              <div className="font-serif text-xl leading-none sm:text-2xl">£{salesToday.toFixed(0)}</div>
+              <div className="mt-1.5 text-[9px] font-medium uppercase tracking-[0.15em] text-muted-foreground sm:text-[10px]">Sales today</div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -161,14 +175,13 @@ function DashboardIndex() {
 
       <SetupChecklistCard />
 
-
-      <Card className="border-border/60">
-        <CardContent className="grid grid-cols-3 divide-x divide-border/60 p-0">
-          <Stat label="Today" value={String(todayBookings)} />
-          <Stat label="Cancelled" value={String(todayCancellations)} />
-          <Stat label="Next 7 days" value={String(weekCount)} />
-        </CardContent>
-      </Card>
+      {/* Quick actions */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <QuickAction to="/dashboard/new-appointment" icon={CalendarPlus} label="New booking" />
+        <QuickAction to="/dashboard/availability" icon={CalendarDays} label="Availability" />
+        <QuickAction to="/dashboard/services" icon={Sparkles} label="Services" />
+        <QuickAction to="/dashboard/pre-treatment" icon={Info} label="Pre-treatment" />
+      </div>
 
       {/* Payments (compact) */}
       <Link to="/dashboard/payments" className="block">
