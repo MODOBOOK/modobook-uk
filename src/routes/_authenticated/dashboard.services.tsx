@@ -596,9 +596,8 @@ function ServicesPage() {
   );
 }
 
-function CategoryRow({
+function CategoryCard({
   node,
-  depth,
   siblings,
   index,
   matchTreat,
@@ -614,9 +613,9 @@ function CategoryRow({
   onMoveTreatTo,
   onMoveCatTo,
   onChangeTreatCategory,
+  isUncategorised,
 }: {
   node: CatNode;
-  depth: number;
   siblings: CatNode[];
   index: number;
   matchTreat: (t: Treat) => boolean;
@@ -632,162 +631,173 @@ function CategoryRow({
   onMoveTreatTo: (t: Treat) => void;
   onMoveCatTo: (c: Cat) => void;
   onChangeTreatCategory: (treatId: string, categoryId: string | null) => void | Promise<void>;
+  isUncategorised?: boolean;
 }) {
-
-
-  const [open, setOpen] = useState(false);
   const treatsHere = node.treatments.filter(matchTreat);
-  const totalCount = treatsHere.length + node.children.length;
+  const totalCount = treatsHere.length + node.children.reduce((acc, c) => acc + c.treatments.length, 0);
   const canUp = index > 0;
   const canDown = index < siblings.length - 1;
+  const limited = (node as Cat & { is_limited?: boolean | null }).is_limited;
+  const limitedEnds = (node as Cat & { limited_ends_at?: string | null }).limited_ends_at;
 
   return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center gap-2 px-3 py-3 text-left hover:bg-muted/40"
-        style={{ paddingLeft: 12 + depth * 16 }}
-        aria-expanded={open}
-      >
-        {open ? (
-          <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
-        ) : (
-          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-        )}
-        <span className="flex-1 truncate text-[15px] font-semibold text-[hsl(var(--primary))]">
-          {node.icon ? `${node.icon} ` : ""}
-          {node.name}
-        </span>
-        {node.coming_soon_at && new Date(node.coming_soon_at) > new Date() && (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800">
-            Book from {new Date(node.coming_soon_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
-          </span>
-        )}
-        {(node as { is_limited?: boolean | null }).is_limited && (
-          <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-medium text-rose-800">
-            {(() => {
-              const ends = (node as { limited_ends_at?: string | null }).limited_ends_at;
-              if (!ends) return "Limited";
-              const ms = new Date(ends).getTime() - Date.now();
-              if (ms <= 0) return "Ended";
-              const mins = Math.floor(ms / 60000);
-              const days = Math.floor(mins / 1440);
-              const hours = Math.floor((mins % 1440) / 60);
-              return days > 0 ? `${days}d ${hours}h left` : hours > 0 ? `${hours}h left` : `${mins}m left`;
-            })()}
-          </span>
-        )}
-        {totalCount > 0 && (
-          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-            {totalCount}
-          </span>
-        )}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <span
-              role="button"
-              tabIndex={0}
-              onClick={(e) => e.stopPropagation()}
-              className="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
-              aria-label="Category actions"
-            >
-              <MoreVertical className="h-4 w-4" />
-            </span>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-            <DropdownMenuItem onSelect={() => onAddService(node.id)}>
-              <Plus className="mr-2 h-4 w-4" /> Add service
-            </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => onAddSub(node.id)}>
-              <FolderPlus className="mr-2 h-4 w-4" /> Add subcategory
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => onMoveCatTo(node)}>
-              <FolderPlus className="mr-2 h-4 w-4" /> Move to…
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={!canUp} onSelect={() => onMoveCat(siblings, node.id, -1)}>
-              <ArrowUp className="mr-2 h-4 w-4" /> Move up
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={!canDown} onSelect={() => onMoveCat(siblings, node.id, 1)}>
-              <ArrowDown className="mr-2 h-4 w-4" /> Move down
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-
-            <DropdownMenuItem onSelect={() => onEditCat(node)}>
-              <Pencil className="mr-2 h-4 w-4" /> Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => onDeleteCat(node)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="mr-2 h-4 w-4" /> Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </button>
-
-      {open && (
-        <div className="border-t border-border/60 bg-muted/20">
-          {treatsHere.length === 0 && node.children.length === 0 && (
-            <p
-              className="px-3 py-3 text-xs text-muted-foreground"
-              style={{ paddingLeft: 12 + (depth + 1) * 16 }}
-            >
-              Nothing here yet.
-            </p>
+    <Card className="flex flex-col overflow-hidden rounded-3xl border bg-card shadow-sm transition-shadow hover:shadow-md">
+      <div className="flex items-start justify-between gap-3 border-b bg-muted/20 p-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            {node.icon && <span className="text-xl">{node.icon}</span>}
+            <h3 className="font-display min-w-0 flex-1 truncate text-lg font-semibold text-foreground">
+              {node.name}
+            </h3>
+          </div>
+          {node.description && (
+            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{node.description}</p>
           )}
-
-          <SortableTreatList
-            treats={treatsHere}
-            depth={depth}
-            picker={picker}
-            currentCategoryId={node.id}
-            onDelete={onDeleteTreat}
-            onReorder={onReorderTreatsByIds}
-            onMoveTo={onMoveTreatTo}
-            onChangeCategory={onChangeTreatCategory}
-          />
-
-          {node.children.map((child, ci) => (
-            <CategoryRow
-              key={child.id}
-              node={child}
-              depth={depth + 1}
-              siblings={node.children}
-              index={ci}
-              matchTreat={matchTreat}
-              picker={picker}
-              onAddSub={onAddSub}
-              onEditCat={onEditCat}
-              onDeleteCat={onDeleteCat}
-              onAddService={onAddService}
-              onDeleteTreat={onDeleteTreat}
-              onMoveCat={onMoveCat}
-              onMoveTreat={onMoveTreat}
-              onReorderTreatsByIds={onReorderTreatsByIds}
-              onMoveTreatTo={onMoveTreatTo}
-              onMoveCatTo={onMoveCatTo}
-              onChangeTreatCategory={onChangeTreatCategory}
-            />
-          ))}
-
-
-
-          <div
-            className="flex flex-wrap gap-2 px-3 py-2"
-            style={{ paddingLeft: 12 + (depth + 1) * 16 }}
-          >
-            <Button size="sm" variant="ghost" className="h-7 rounded-full text-xs" onClick={() => onAddService(node.id)}>
-              <Plus className="mr-1 h-3 w-3" /> Service
-            </Button>
-            <Button size="sm" variant="ghost" className="h-7 rounded-full text-xs" onClick={() => onAddSub(node.id)}>
-              <FolderPlus className="mr-1 h-3 w-3" /> Subcategory
-            </Button>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center rounded-full bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground">
+              {treatsHere.length} service{treatsHere.length === 1 ? "" : "s"}
+            </span>
+            {node.coming_soon_at && new Date(node.coming_soon_at) > new Date() && (
+              <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">
+                Book from {new Date(node.coming_soon_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+              </span>
+            )}
+            {limited && (
+              <span className="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-1 text-xs font-medium text-rose-800">
+                {limitedEnds
+                  ? (() => {
+                      const ms = new Date(limitedEnds).getTime() - Date.now();
+                      if (ms <= 0) return "Ended";
+                      const mins = Math.floor(ms / 60000);
+                      const days = Math.floor(mins / 1440);
+                      const hours = Math.floor((mins % 1440) / 60);
+                      return days > 0 ? `${days}d ${hours}h left` : hours > 0 ? `${hours}h left` : `${mins}m left`;
+                    })()
+                  : "Limited"}
+              </span>
+            )}
           </div>
         </div>
+        {!isUncategorised && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted"
+                aria-label="Category actions"
+              >
+                <MoreVertical className="h-5 w-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => onAddService(node.id)}>
+                <Plus className="mr-2 h-4 w-4" /> Add service
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => onAddSub(node.id)}>
+                <FolderPlus className="mr-2 h-4 w-4" /> Add subcategory
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => onMoveCatTo(node)}>
+                <FolderPlus className="mr-2 h-4 w-4" /> Move to…
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={!canUp} onSelect={() => onMoveCat(siblings, node.id, -1)}>
+                <ArrowUp className="mr-2 h-4 w-4" /> Move up
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={!canDown} onSelect={() => onMoveCat(siblings, node.id, 1)}>
+                <ArrowDown className="mr-2 h-4 w-4" /> Move down
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => onEditCat(node)}>
+                <Pencil className="mr-2 h-4 w-4" /> Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => onDeleteCat(node)} className="text-destructive focus:text-destructive">
+                <Trash2 className="mr-2 h-4 w-4" /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+
+      <div className="flex-1 p-3">
+        {treatsHere.length === 0 && node.children.length === 0 && !isUncategorised && (
+          <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
+            <p className="text-sm text-muted-foreground">No services yet.</p>
+            <Button size="sm" variant="outline" className="rounded-full" onClick={() => onAddService(node.id)}>
+              <Plus className="mr-1 h-4 w-4" /> Add service
+            </Button>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          {treatsHere.map((t) => (
+            <ServiceCard
+              key={t.id}
+              treat={t}
+              picker={picker}
+              onDelete={() => onDeleteTreat(t)}
+              onMoveTo={() => onMoveTreatTo(t)}
+              onChangeCategory={(catId: string | null) => onChangeTreatCategory(t.id, catId)}
+            />
+          ))}
+        </div>
+
+        {node.children.length > 0 && (
+          <div className="mt-4 space-y-3">
+            {node.children.map((child, ci) => (
+              <div key={child.id} className="rounded-2xl border bg-muted/20 p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <h4 className="font-display text-sm font-semibold text-foreground">
+                    {child.icon ? `${child.icon} ` : ""}
+                    {child.name}
+                  </h4>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button type="button" className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted">
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={() => onAddService(child.id)}>
+                        <Plus className="mr-2 h-4 w-4" /> Add service
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => onEditCat(child)}>
+                        <Pencil className="mr-2 h-4 w-4" /> Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => onDeleteCat(child)} className="text-destructive focus:text-destructive">
+                        <Trash2 className="mr-2 h-4 w-4" /> Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="space-y-2">
+                  {child.treatments.filter(matchTreat).map((t) => (
+                    <ServiceCard
+                      key={t.id}
+                      treat={t}
+                      picker={picker}
+                      onDelete={() => onDeleteTreat(t)}
+                      onMoveTo={() => onMoveTreatTo(t)}
+                      onChangeCategory={(catId: string | null) => onChangeTreatCategory(t.id, catId)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {!isUncategorised && (
+        <div className="flex gap-2 border-t bg-muted/10 p-3">
+          <Button size="sm" variant="ghost" className="h-10 flex-1 rounded-xl text-sm" onClick={() => onAddService(node.id)}>
+            <Plus className="mr-1 h-4 w-4" /> Service
+          </Button>
+          <Button size="sm" variant="ghost" className="h-10 flex-1 rounded-xl text-sm" onClick={() => onAddSub(node.id)}>
+            <FolderPlus className="mr-1 h-4 w-4" /> Subcategory
+          </Button>
+        </div>
       )}
-    </div>
+    </Card>
   );
 }
 
