@@ -98,6 +98,8 @@
   --sidebar-ring: oklch(0.62 0.075 55);
   --font-serif: "Cormorant Garamond", "Tiempos", Georgia, serif;
   --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-display: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --font-body: "DM Sans", system-ui, -apple-system, sans-serif;
   --shadow-luxe: 0 1px 2px oklch(0.26 0.018 50 / 0.05), 0 24px 48px -20px oklch(0.26 0.018 50 / 0.16);
 }
 
@@ -177,6 +179,15 @@
   font-family: var(--font-serif);
   font-weight: 400;
   letter-spacing: -0.015em;
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+@utility font-body {
+  font-family: var(--font-body);
 }
 
 @utility shadow-luxe {
