@@ -429,26 +429,20 @@ function ServicesPage() {
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {roots.map((node, idx) => (
+          {roots.map((node) => (
             <CategoryCard
               key={node.id}
               node={node}
-              siblings={roots}
-              index={idx}
               matchTreat={matchTreat}
-              picker={picker}
               forceOpen={q.length > 0}
               onAddSub={(parentId) => setCatDialog({ mode: "create", parentId })}
               onEditCat={(c) => setCatDialog({ mode: "edit", parentId: c.parent_id, cat: c })}
               onDeleteCat={handleDeleteCat}
               onAddService={(catId) => setSvcDialog({ defaultCatId: catId })}
               onDeleteTreat={handleDeleteTreat}
-              onMoveCat={moveCat}
-              onMoveTreat={moveTreat}
               onReorderTreatsByIds={reorderTreatsByIds}
               onMoveTreatTo={(t) => setMoveTreatState(t)}
               onMoveCatTo={(c) => setMoveCatState(c)}
-              onChangeTreatCategory={moveTreatToCategory}
             />
           ))}
           {uncategorised.filter(matchTreat).length > 0 && (
@@ -465,22 +459,16 @@ function ServicesPage() {
                 treatments: uncategorised.filter(matchTreat),
               }}
               isUncategorised
-              siblings={[]}
-              index={0}
               matchTreat={matchTreat}
-              picker={picker}
               forceOpen={q.length > 0}
               onAddSub={() => {}}
               onEditCat={() => {}}
               onDeleteCat={() => {}}
               onAddService={() => setSvcDialog({ defaultCatId: null })}
               onDeleteTreat={handleDeleteTreat}
-              onMoveCat={() => {}}
-              onMoveTreat={moveTreat}
               onReorderTreatsByIds={reorderTreatsByIds}
               onMoveTreatTo={(t) => setMoveTreatState(t)}
               onMoveCatTo={() => {}}
-              onChangeTreatCategory={moveTreatToCategory}
             />
           )}
         </div>
