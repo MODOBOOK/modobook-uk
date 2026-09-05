@@ -63,7 +63,7 @@ export function PrescribingClinicCard() {
   const locList = (locations.data ?? []) as { id: string; name: string }[];
 
   return (
-    <Card>
+    <Card className="rounded-3xl">
       <CardContent className="space-y-3 p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
