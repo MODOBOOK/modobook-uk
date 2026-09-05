@@ -429,26 +429,20 @@ function ServicesPage() {
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {roots.map((node, idx) => (
+          {roots.map((node) => (
             <CategoryCard
               key={node.id}
               node={node}
-              siblings={roots}
-              index={idx}
               matchTreat={matchTreat}
-              picker={picker}
               forceOpen={q.length > 0}
               onAddSub={(parentId) => setCatDialog({ mode: "create", parentId })}
               onEditCat={(c) => setCatDialog({ mode: "edit", parentId: c.parent_id, cat: c })}
               onDeleteCat={handleDeleteCat}
               onAddService={(catId) => setSvcDialog({ defaultCatId: catId })}
               onDeleteTreat={handleDeleteTreat}
-              onMoveCat={moveCat}
-              onMoveTreat={moveTreat}
               onReorderTreatsByIds={reorderTreatsByIds}
               onMoveTreatTo={(t) => setMoveTreatState(t)}
               onMoveCatTo={(c) => setMoveCatState(c)}
-              onChangeTreatCategory={moveTreatToCategory}
             />
           ))}
           {uncategorised.filter(matchTreat).length > 0 && (
@@ -465,22 +459,16 @@ function ServicesPage() {
                 treatments: uncategorised.filter(matchTreat),
               }}
               isUncategorised
-              siblings={[]}
-              index={0}
               matchTreat={matchTreat}
-              picker={picker}
               forceOpen={q.length > 0}
               onAddSub={() => {}}
               onEditCat={() => {}}
               onDeleteCat={() => {}}
               onAddService={() => setSvcDialog({ defaultCatId: null })}
               onDeleteTreat={handleDeleteTreat}
-              onMoveCat={() => {}}
-              onMoveTreat={moveTreat}
               onReorderTreatsByIds={reorderTreatsByIds}
               onMoveTreatTo={(t) => setMoveTreatState(t)}
               onMoveCatTo={() => {}}
-              onChangeTreatCategory={moveTreatToCategory}
             />
           )}
         </div>
@@ -614,48 +602,34 @@ function ServicesPage() {
 
 function CategoryCard({
   node,
-  siblings,
-  index,
   matchTreat,
-  picker,
   forceOpen,
   onAddSub,
   onEditCat,
   onDeleteCat,
   onAddService,
   onDeleteTreat,
-  onMoveCat,
-  onMoveTreat,
   onReorderTreatsByIds,
   onMoveTreatTo,
   onMoveCatTo,
-  onChangeTreatCategory,
   isUncategorised,
 }: {
   node: CatNode;
-  siblings: CatNode[];
-  index: number;
   matchTreat: (t: Treat) => boolean;
-  picker: { id: string; label: string; depth: number }[];
   forceOpen?: boolean;
   onAddSub: (parentId: string) => void;
   onEditCat: (c: Cat) => void;
   onDeleteCat: (c: Cat) => void;
   onAddService: (catId: string) => void;
   onDeleteTreat: (t: Treat) => void;
-  onMoveCat: (siblings: Cat[], id: string, dir: -1 | 1) => void;
-  onMoveTreat: (siblings: Treat[], id: string, dir: -1 | 1) => void;
   onReorderTreatsByIds: (ids: string[]) => void;
   onMoveTreatTo: (t: Treat) => void;
   onMoveCatTo: (c: Cat) => void;
-  onChangeTreatCategory: (treatId: string, categoryId: string | null) => void | Promise<void>;
   isUncategorised?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const expanded = forceOpen || open;
   const treatsHere = node.treatments.filter(matchTreat);
-  const canUp = index > 0;
-  const canDown = index < siblings.length - 1;
   const limited = (node as Cat & { is_limited?: boolean | null }).is_limited;
   const limitedEnds = (node as Cat & { limited_ends_at?: string | null }).limited_ends_at;
 
@@ -724,12 +698,6 @@ function CategoryCard({
               <DropdownMenuItem onSelect={() => onMoveCatTo(node)}>
                 <FolderPlus className="mr-2 h-4 w-4" /> Move to…
               </DropdownMenuItem>
-              <DropdownMenuItem disabled={!canUp} onSelect={() => onMoveCat(siblings, node.id, -1)}>
-                <ArrowUp className="mr-2 h-4 w-4" /> Move up
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled={!canDown} onSelect={() => onMoveCat(siblings, node.id, 1)}>
-                <ArrowDown className="mr-2 h-4 w-4" /> Move down
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => onEditCat(node)}>
                 <Pencil className="mr-2 h-4 w-4" /> Edit
@@ -753,20 +721,13 @@ function CategoryCard({
           </div>
         )}
 
-        <div className="space-y-2">
-          {treatsHere.map((t, i) => (
-            <ServiceCard
-              key={t.id}
-              treat={t}
-              picker={picker}
-              onDelete={() => onDeleteTreat(t)}
-              onMoveUp={i > 0 ? () => onMoveTreat(treatsHere, t.id, -1) : undefined}
-              onMoveDown={i < treatsHere.length - 1 ? () => onMoveTreat(treatsHere, t.id, 1) : undefined}
-              onMoveTo={() => onMoveTreatTo(t)}
-              onChangeCategory={(catId: string | null) => onChangeTreatCategory(t.id, catId)}
-            />
-          ))}
-        </div>
+        <ServiceList
+          treats={treatsHere}
+          reorderDisabled={forceOpen}
+          onReorder={onReorderTreatsByIds}
+          onDeleteTreat={onDeleteTreat}
+          onMoveTreatTo={onMoveTreatTo}
+        />
 
         {node.children.length > 0 && (
           <div className="mt-4 space-y-2">
@@ -776,14 +737,12 @@ function CategoryCard({
                 child={child}
                 forceOpen={forceOpen}
                 matchTreat={matchTreat}
-                picker={picker}
                 onAddService={onAddService}
                 onEditCat={onEditCat}
                 onDeleteCat={onDeleteCat}
                 onDeleteTreat={onDeleteTreat}
-                onMoveTreat={onMoveTreat}
+                onReorderTreatsByIds={onReorderTreatsByIds}
                 onMoveTreatTo={onMoveTreatTo}
-                onChangeTreatCategory={onChangeTreatCategory}
               />
             ))}
           </div>
@@ -809,26 +768,22 @@ function SubcategorySection({
   child,
   forceOpen,
   matchTreat,
-  picker,
   onAddService,
   onEditCat,
   onDeleteCat,
   onDeleteTreat,
-  onMoveTreat,
+  onReorderTreatsByIds,
   onMoveTreatTo,
-  onChangeTreatCategory,
 }: {
   child: CatNode;
   forceOpen?: boolean;
   matchTreat: (t: Treat) => boolean;
-  picker: { id: string; label: string; depth: number }[];
   onAddService: (catId: string) => void;
   onEditCat: (c: Cat) => void;
   onDeleteCat: (c: Cat) => void;
   onDeleteTreat: (t: Treat) => void;
-  onMoveTreat: (siblings: Treat[], id: string, dir: -1 | 1) => void;
+  onReorderTreatsByIds: (ids: string[]) => void;
   onMoveTreatTo: (t: Treat) => void;
-  onChangeTreatCategory: (treatId: string, categoryId: string | null) => void | Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
   const expanded = forceOpen || open;
@@ -877,22 +832,17 @@ function SubcategorySection({
         </button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="space-y-2 px-3 pb-3">
+        <div className="px-3 pb-3">
           {treats.length === 0 ? (
             <p className="py-2 text-center text-xs text-muted-foreground">No services yet.</p>
           ) : (
-            treats.map((t, i, arr) => (
-              <ServiceCard
-                key={t.id}
-                treat={t}
-                picker={picker}
-                onDelete={() => onDeleteTreat(t)}
-                onMoveUp={i > 0 ? () => onMoveTreat(arr, t.id, -1) : undefined}
-                onMoveDown={i < arr.length - 1 ? () => onMoveTreat(arr, t.id, 1) : undefined}
-                onMoveTo={() => onMoveTreatTo(t)}
-                onChangeCategory={(catId: string | null) => onChangeTreatCategory(t.id, catId)}
-              />
-            ))
+            <ServiceList
+              treats={treats}
+              reorderDisabled={forceOpen}
+              onReorder={onReorderTreatsByIds}
+              onDeleteTreat={onDeleteTreat}
+              onMoveTreatTo={onMoveTreatTo}
+            />
           )}
         </div>
       </CollapsibleContent>
@@ -900,26 +850,105 @@ function SubcategorySection({
   );
 }
 
+function ServiceList({
+  treats,
+  reorderDisabled,
+  onReorder,
+  onDeleteTreat,
+  onMoveTreatTo,
+}: {
+  treats: Treat[];
+  reorderDisabled?: boolean;
+  onReorder: (ids: string[]) => void;
+  onDeleteTreat: (t: Treat) => void;
+  onMoveTreatTo: (t: Treat) => void;
+}) {
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+
+  function handleDrop(targetId: string) {
+    const from = treats.findIndex((t) => t.id === dragId);
+    const to = treats.findIndex((t) => t.id === targetId);
+    setDragId(null);
+    setOverId(null);
+    if (!dragId || dragId === targetId || from < 0 || to < 0) return;
+    const next = treats.slice();
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    onReorder(next.map((t) => t.id));
+  }
+
+  return (
+    <div className="space-y-2">
+      {treats.map((t) => (
+        <ServiceCard
+          key={t.id}
+          treat={t}
+          draggable={!reorderDisabled}
+          dragging={dragId === t.id}
+          dropTarget={overId === t.id && dragId !== t.id}
+          onDragStart={() => setDragId(t.id)}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setOverId(t.id);
+          }}
+          onDragLeave={() => setOverId((v) => (v === t.id ? null : v))}
+          onDrop={() => handleDrop(t.id)}
+          onDragEnd={() => {
+            setDragId(null);
+            setOverId(null);
+          }}
+          onDelete={() => onDeleteTreat(t)}
+          onMoveTo={() => onMoveTreatTo(t)}
+        />
+      ))}
+    </div>
+  );
+}
+
 function ServiceCard({
   treat,
-  picker,
+  draggable,
+  dragging,
+  dropTarget,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd,
   onDelete,
-  onMoveUp,
-  onMoveDown,
   onMoveTo,
-  onChangeCategory,
 }: {
   treat: Treat;
-  picker?: { id: string; label: string; depth: number }[];
+  draggable?: boolean;
+  dragging?: boolean;
+  dropTarget?: boolean;
+  onDragStart?: () => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragLeave?: () => void;
+  onDrop?: () => void;
+  onDragEnd?: () => void;
   onDelete: () => void;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
   onMoveTo?: () => void;
-  onChangeCategory?: (categoryId: string | null) => void | Promise<void>;
 }) {
-  const currentVal = treat.category_id ?? "__none__";
   return (
-    <div className="group flex flex-col gap-2 rounded-xl border bg-background px-2.5 py-2 transition-colors hover:border-primary/30 sm:flex-row sm:items-center">
+    <div
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+      className={`group flex items-center gap-2 rounded-xl border bg-background px-2.5 py-2 transition-colors hover:border-primary/30 ${
+        dropTarget ? "border-primary" : ""
+      } ${dragging ? "opacity-50" : ""}`}
+    >
+      {draggable && (
+        <GripVertical
+          className="h-4 w-4 shrink-0 cursor-grab text-muted-foreground/60 active:cursor-grabbing"
+          aria-label="Drag to reorder"
+        />
+      )}
       <div className="flex min-w-0 flex-1 items-center gap-2.5">
         <span
           className="h-2.5 w-2.5 shrink-0 rounded-full"
@@ -938,63 +967,33 @@ function ServiceCard({
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-1.5">
-        {onChangeCategory && picker && (
-          <Select
-            value={currentVal}
-            onValueChange={(v) => onChangeCategory(v === "__none__" ? null : v)}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+            aria-label="Service actions"
           >
-            <SelectTrigger className="h-8 w-full text-xs sm:w-[160px]" aria-label="Move to category or subcategory">
-              <SelectValue placeholder="Move to category…" />
-            </SelectTrigger>
-            <SelectContent className="max-h-[320px]">
-              <SelectItem value="__none__">— Uncategorised —</SelectItem>
-              {picker.map((c) => (
-                <SelectItem key={c.id} value={c.id} className="text-xs">
-                  <span style={{ paddingLeft: c.depth * 12 }} className="inline-block">
-                    {c.depth > 0 ? "↳ " : ""}
-                    {c.label}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
-              aria-label="Service actions"
-            >
-              <MoreVertical className="h-4 w-4" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <Link to="/dashboard/treatments" search={{ edit: treat.id, back: "services" }}>
-                <Pencil className="mr-2 h-4 w-4" /> Edit
-              </Link>
+            <MoreVertical className="h-4 w-4" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild>
+            <Link to="/dashboard/treatments" search={{ edit: treat.id, back: "services" }}>
+              <Pencil className="mr-2 h-4 w-4" /> Edit
+            </Link>
+          </DropdownMenuItem>
+          {onMoveTo && (
+            <DropdownMenuItem onSelect={() => onMoveTo()}>
+              <FolderPlus className="mr-2 h-4 w-4" /> Move to category…
             </DropdownMenuItem>
-            {onMoveTo && (
-              <DropdownMenuItem onSelect={() => onMoveTo()}>
-                <FolderPlus className="mr-2 h-4 w-4" /> Move to category…
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem disabled={!onMoveUp} onSelect={() => onMoveUp?.()}>
-              <ArrowUp className="mr-2 h-4 w-4" /> Move up
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={!onMoveDown} onSelect={() => onMoveDown?.()}>
-              <ArrowDown className="mr-2 h-4 w-4" /> Move down
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={onDelete} className="text-destructive focus:text-destructive">
-              <Trash2 className="mr-2 h-4 w-4" /> Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={onDelete} className="text-destructive focus:text-destructive">
+            <Trash2 className="mr-2 h-4 w-4" /> Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
