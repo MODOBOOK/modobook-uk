@@ -61,7 +61,6 @@ export type IncomeReportRow = {
   id: string;
   date: string;
   time: string | null;
-  patient: string;
   treatment: string;
   status: string;
   paymentStatus: string;
