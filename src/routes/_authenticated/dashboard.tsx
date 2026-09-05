@@ -38,6 +38,7 @@ import {
   TrendingUp,
   MessageCircle,
   ShieldCheck,
+  ClipboardCheck,
 
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -96,6 +97,7 @@ const navItems = [
 
   { section: "Clinic owner" as const, label: "Associates", to: "/dashboard/associates", icon: ShieldCheck, flag: "associates_enabled" as const, pilot: true },
   { section: "Clinic owner" as const, label: "Room rental", to: "/dashboard/room-rental", icon: DoorOpen },
+  { section: "Clinic owner" as const, label: "Checks & audits", to: "/dashboard/compliance", icon: ClipboardCheck, pilot: true },
 
 
   { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },

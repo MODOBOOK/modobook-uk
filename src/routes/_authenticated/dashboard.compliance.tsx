@@ -883,9 +883,10 @@ function Page() {
             <Button
               disabled={busy}
               onClick={async () => {
-                const fields = (editCheck.fields ?? []).filter((f: CheckField) => f.label.trim());
+                const tpl = editCheck as Any;
+                const fields = (tpl.fields ?? []).filter((f: CheckField) => f.label.trim());
                 const ok = await run(
-                  () => saveCheck({ data: { ...editCheck, fields } }),
+                  () => saveCheck({ data: { ...tpl, fields } as any }),
                   "Check saved",
                 );
                 if (ok) setEditCheck(null);
@@ -992,9 +993,10 @@ function Page() {
             <Button
               disabled={busy}
               onClick={async () => {
-                const questions = (editAudit.questions ?? []).filter((q: Any) => q.text.trim());
+                const tpl = editAudit as Any;
+                const questions = (tpl.questions ?? []).filter((q: Any) => q.text.trim());
                 const ok = await run(
-                  () => saveAuditTpl({ data: { ...editAudit, questions } }),
+                  () => saveAuditTpl({ data: { ...tpl, questions } as any }),
                   "Audit saved",
                 );
                 if (ok) setEditAudit(null);

@@ -114,6 +114,7 @@ import { Route as AuthenticatedDashboardEmailsRouteImport } from './routes/_auth
 import { Route as AuthenticatedDashboardDiscountsRouteImport } from './routes/_authenticated/dashboard.discounts'
 import { Route as AuthenticatedDashboardDesignStudioRouteImport } from './routes/_authenticated/dashboard.design-studio'
 import { Route as AuthenticatedDashboardConsentFormsRouteImport } from './routes/_authenticated/dashboard.consent-forms'
+import { Route as AuthenticatedDashboardComplianceRouteImport } from './routes/_authenticated/dashboard.compliance'
 import { Route as AuthenticatedDashboardComingSoonRouteImport } from './routes/_authenticated/dashboard.coming-soon'
 import { Route as AuthenticatedDashboardClinicRouteImport } from './routes/_authenticated/dashboard.clinic'
 import { Route as AuthenticatedDashboardCategoriesRouteImport } from './routes/_authenticated/dashboard.categories'
@@ -758,6 +759,12 @@ const AuthenticatedDashboardConsentFormsRoute =
     path: '/consent-forms',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardComplianceRoute =
+  AuthenticatedDashboardComplianceRouteImport.update({
+    id: '/compliance',
+    path: '/compliance',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardComingSoonRoute =
   AuthenticatedDashboardComingSoonRouteImport.update({
     id: '/coming-soon',
@@ -1229,6 +1236,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
   '/dashboard/clinic': typeof AuthenticatedDashboardClinicRoute
   '/dashboard/coming-soon': typeof AuthenticatedDashboardComingSoonRoute
+  '/dashboard/compliance': typeof AuthenticatedDashboardComplianceRoute
   '/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/dashboard/design-studio': typeof AuthenticatedDashboardDesignStudioRoute
   '/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
@@ -1398,6 +1406,7 @@ export interface FileRoutesByTo {
   '/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
   '/dashboard/clinic': typeof AuthenticatedDashboardClinicRoute
   '/dashboard/coming-soon': typeof AuthenticatedDashboardComingSoonRoute
+  '/dashboard/compliance': typeof AuthenticatedDashboardComplianceRoute
   '/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/dashboard/design-studio': typeof AuthenticatedDashboardDesignStudioRoute
   '/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
@@ -1571,6 +1580,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
   '/_authenticated/dashboard/clinic': typeof AuthenticatedDashboardClinicRoute
   '/_authenticated/dashboard/coming-soon': typeof AuthenticatedDashboardComingSoonRoute
+  '/_authenticated/dashboard/compliance': typeof AuthenticatedDashboardComplianceRoute
   '/_authenticated/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/_authenticated/dashboard/design-studio': typeof AuthenticatedDashboardDesignStudioRoute
   '/_authenticated/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
@@ -1749,6 +1759,7 @@ export interface FileRouteTypes {
     | '/dashboard/categories'
     | '/dashboard/clinic'
     | '/dashboard/coming-soon'
+    | '/dashboard/compliance'
     | '/dashboard/consent-forms'
     | '/dashboard/design-studio'
     | '/dashboard/discounts'
@@ -1918,6 +1929,7 @@ export interface FileRouteTypes {
     | '/dashboard/categories'
     | '/dashboard/clinic'
     | '/dashboard/coming-soon'
+    | '/dashboard/compliance'
     | '/dashboard/consent-forms'
     | '/dashboard/design-studio'
     | '/dashboard/discounts'
@@ -2090,6 +2102,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/categories'
     | '/_authenticated/dashboard/clinic'
     | '/_authenticated/dashboard/coming-soon'
+    | '/_authenticated/dashboard/compliance'
     | '/_authenticated/dashboard/consent-forms'
     | '/_authenticated/dashboard/design-studio'
     | '/_authenticated/dashboard/discounts'
@@ -2995,6 +3008,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardConsentFormsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/compliance': {
+      id: '/_authenticated/dashboard/compliance'
+      path: '/compliance'
+      fullPath: '/dashboard/compliance'
+      preLoaderRoute: typeof AuthenticatedDashboardComplianceRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/coming-soon': {
       id: '/_authenticated/dashboard/coming-soon'
       path: '/coming-soon'
@@ -3654,6 +3674,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardCategoriesRoute: typeof AuthenticatedDashboardCategoriesRoute
   AuthenticatedDashboardClinicRoute: typeof AuthenticatedDashboardClinicRoute
   AuthenticatedDashboardComingSoonRoute: typeof AuthenticatedDashboardComingSoonRoute
+  AuthenticatedDashboardComplianceRoute: typeof AuthenticatedDashboardComplianceRoute
   AuthenticatedDashboardConsentFormsRoute: typeof AuthenticatedDashboardConsentFormsRoute
   AuthenticatedDashboardDesignStudioRoute: typeof AuthenticatedDashboardDesignStudioRoute
   AuthenticatedDashboardDiscountsRoute: typeof AuthenticatedDashboardDiscountsRoute
@@ -3716,6 +3737,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardClinicRoute: AuthenticatedDashboardClinicRoute,
     AuthenticatedDashboardComingSoonRoute:
       AuthenticatedDashboardComingSoonRoute,
+    AuthenticatedDashboardComplianceRoute:
+      AuthenticatedDashboardComplianceRoute,
     AuthenticatedDashboardConsentFormsRoute:
       AuthenticatedDashboardConsentFormsRoute,
     AuthenticatedDashboardDesignStudioRoute:
