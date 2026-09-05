@@ -83,12 +83,12 @@ function GiftCardsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-6">
-      <div className="flex items-center justify-between gap-3">
-        <div>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+        <div className="min-w-0">
           <h1 className="flex items-center gap-2 text-2xl font-bold"><Gift className="h-6 w-6" /> Gift cards</h1>
           <p className="text-sm text-muted-foreground">Sell branded gift cards. Buyers pay online; you get paid directly to your Stripe account.</p>
         </div>
-        <Button onClick={() => { setEditing(null); setOpen(true); }}><Plus className="mr-1 h-4 w-4" /> New gift card</Button>
+        <Button className="shrink-0" onClick={() => { setEditing(null); setOpen(true); }}><Plus className="mr-1 h-4 w-4" /> <span className="sm:hidden">New</span><span className="hidden sm:inline">New gift card</span></Button>
       </div>
 
       <Tabs defaultValue="products">

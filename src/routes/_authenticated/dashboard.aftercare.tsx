@@ -86,24 +86,23 @@ function AftercarePage() {
 
   return (
     <div className="mx-auto max-w-3xl p-4 sm:p-6 space-y-4">
-      <div className="flex items-center justify-end gap-3">
-        <div className="flex flex-wrap gap-2">
+      <header className="space-y-3 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-3 sm:space-y-0">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold">Aftercare templates</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Write once, attach to any treatment in <span className="font-medium">Services</span>. Sent automatically after the appointment ends — defaults to 2 hours after.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
           <Button variant="outline" onClick={() => setAiOpen(true)}>
-            <Wand2 className="mr-1 h-4 w-4" /> Generate with AI
+            <Wand2 className="mr-1 h-4 w-4" /> <span className="sm:hidden">AI draft</span><span className="hidden sm:inline">Generate with AI</span>
           </Button>
           <Button
             onClick={() => openEditor({ id: "", name: "", body_html: "", delay_hours: 2 })}
           >
-            <Plus className="mr-1 h-4 w-4" /> New template
+            <Plus className="mr-1 h-4 w-4" /> <span className="sm:hidden">New</span><span className="hidden sm:inline">New template</span>
           </Button>
         </div>
-      </div>
-
-      <header>
-        <h1 className="text-2xl font-semibold">Aftercare templates</h1>
-        <p className="text-sm text-muted-foreground">
-          Write once, attach to any treatment in <span className="font-medium">Services</span>. Sent automatically after the appointment ends — defaults to 2 hours after.
-        </p>
       </header>
 
       {(() => {
