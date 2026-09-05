@@ -114,6 +114,7 @@ import { Route as AuthenticatedDashboardEmailsRouteImport } from './routes/_auth
 import { Route as AuthenticatedDashboardDiscountsRouteImport } from './routes/_authenticated/dashboard.discounts'
 import { Route as AuthenticatedDashboardDesignStudioRouteImport } from './routes/_authenticated/dashboard.design-studio'
 import { Route as AuthenticatedDashboardConsentFormsRouteImport } from './routes/_authenticated/dashboard.consent-forms'
+import { Route as AuthenticatedDashboardComplianceRouteImport } from './routes/_authenticated/dashboard.compliance'
 import { Route as AuthenticatedDashboardComingSoonRouteImport } from './routes/_authenticated/dashboard.coming-soon'
 import { Route as AuthenticatedDashboardClinicRouteImport } from './routes/_authenticated/dashboard.clinic'
 import { Route as AuthenticatedDashboardCategoriesRouteImport } from './routes/_authenticated/dashboard.categories'
@@ -159,6 +160,7 @@ import { Route as ApiPublicHooksMarketingDispatchRouteImport } from './routes/ap
 import { Route as ApiPublicHooksMarketingAutomationsRouteImport } from './routes/api/public/hooks/marketing-automations'
 import { Route as ApiPublicHooksDemoResetRouteImport } from './routes/api/public/hooks/demo-reset'
 import { Route as ApiPublicHooksDailyScheduleDigestRouteImport } from './routes/api/public/hooks/daily-schedule-digest'
+import { Route as ApiPublicHooksComplianceRemindersRouteImport } from './routes/api/public/hooks/compliance-reminders'
 import { Route as ApiPublicHooksBillingReconcileRouteImport } from './routes/api/public/hooks/billing-reconcile'
 import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
 import { Route as ApiPublicBookingReleaseRouteImport } from './routes/api/public/booking/release'
@@ -757,6 +759,12 @@ const AuthenticatedDashboardConsentFormsRoute =
     path: '/consent-forms',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardComplianceRoute =
+  AuthenticatedDashboardComplianceRouteImport.update({
+    id: '/compliance',
+    path: '/compliance',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardComingSoonRoute =
   AuthenticatedDashboardComingSoonRouteImport.update({
     id: '/coming-soon',
@@ -1017,6 +1025,12 @@ const ApiPublicHooksDailyScheduleDigestRoute =
     path: '/api/public/hooks/daily-schedule-digest',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksComplianceRemindersRoute =
+  ApiPublicHooksComplianceRemindersRouteImport.update({
+    id: '/api/public/hooks/compliance-reminders',
+    path: '/api/public/hooks/compliance-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksBillingReconcileRoute =
   ApiPublicHooksBillingReconcileRouteImport.update({
     id: '/api/public/hooks/billing-reconcile',
@@ -1222,6 +1236,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
   '/dashboard/clinic': typeof AuthenticatedDashboardClinicRoute
   '/dashboard/coming-soon': typeof AuthenticatedDashboardComingSoonRoute
+  '/dashboard/compliance': typeof AuthenticatedDashboardComplianceRoute
   '/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/dashboard/design-studio': typeof AuthenticatedDashboardDesignStudioRoute
   '/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
@@ -1302,6 +1317,7 @@ export interface FileRoutesByFullPath {
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/billing-reconcile': typeof ApiPublicHooksBillingReconcileRoute
+  '/api/public/hooks/compliance-reminders': typeof ApiPublicHooksComplianceRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
   '/api/public/hooks/demo-reset': typeof ApiPublicHooksDemoResetRoute
   '/api/public/hooks/marketing-automations': typeof ApiPublicHooksMarketingAutomationsRoute
@@ -1390,6 +1406,7 @@ export interface FileRoutesByTo {
   '/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
   '/dashboard/clinic': typeof AuthenticatedDashboardClinicRoute
   '/dashboard/coming-soon': typeof AuthenticatedDashboardComingSoonRoute
+  '/dashboard/compliance': typeof AuthenticatedDashboardComplianceRoute
   '/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/dashboard/design-studio': typeof AuthenticatedDashboardDesignStudioRoute
   '/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
@@ -1465,6 +1482,7 @@ export interface FileRoutesByTo {
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/billing-reconcile': typeof ApiPublicHooksBillingReconcileRoute
+  '/api/public/hooks/compliance-reminders': typeof ApiPublicHooksComplianceRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
   '/api/public/hooks/demo-reset': typeof ApiPublicHooksDemoResetRoute
   '/api/public/hooks/marketing-automations': typeof ApiPublicHooksMarketingAutomationsRoute
@@ -1562,6 +1580,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
   '/_authenticated/dashboard/clinic': typeof AuthenticatedDashboardClinicRoute
   '/_authenticated/dashboard/coming-soon': typeof AuthenticatedDashboardComingSoonRoute
+  '/_authenticated/dashboard/compliance': typeof AuthenticatedDashboardComplianceRoute
   '/_authenticated/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/_authenticated/dashboard/design-studio': typeof AuthenticatedDashboardDesignStudioRoute
   '/_authenticated/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
@@ -1642,6 +1661,7 @@ export interface FileRoutesById {
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/billing-reconcile': typeof ApiPublicHooksBillingReconcileRoute
+  '/api/public/hooks/compliance-reminders': typeof ApiPublicHooksComplianceRemindersRoute
   '/api/public/hooks/daily-schedule-digest': typeof ApiPublicHooksDailyScheduleDigestRoute
   '/api/public/hooks/demo-reset': typeof ApiPublicHooksDemoResetRoute
   '/api/public/hooks/marketing-automations': typeof ApiPublicHooksMarketingAutomationsRoute
@@ -1739,6 +1759,7 @@ export interface FileRouteTypes {
     | '/dashboard/categories'
     | '/dashboard/clinic'
     | '/dashboard/coming-soon'
+    | '/dashboard/compliance'
     | '/dashboard/consent-forms'
     | '/dashboard/design-studio'
     | '/dashboard/discounts'
@@ -1819,6 +1840,7 @@ export interface FileRouteTypes {
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/billing-reconcile'
+    | '/api/public/hooks/compliance-reminders'
     | '/api/public/hooks/daily-schedule-digest'
     | '/api/public/hooks/demo-reset'
     | '/api/public/hooks/marketing-automations'
@@ -1907,6 +1929,7 @@ export interface FileRouteTypes {
     | '/dashboard/categories'
     | '/dashboard/clinic'
     | '/dashboard/coming-soon'
+    | '/dashboard/compliance'
     | '/dashboard/consent-forms'
     | '/dashboard/design-studio'
     | '/dashboard/discounts'
@@ -1982,6 +2005,7 @@ export interface FileRouteTypes {
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/billing-reconcile'
+    | '/api/public/hooks/compliance-reminders'
     | '/api/public/hooks/daily-schedule-digest'
     | '/api/public/hooks/demo-reset'
     | '/api/public/hooks/marketing-automations'
@@ -2078,6 +2102,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/categories'
     | '/_authenticated/dashboard/clinic'
     | '/_authenticated/dashboard/coming-soon'
+    | '/_authenticated/dashboard/compliance'
     | '/_authenticated/dashboard/consent-forms'
     | '/_authenticated/dashboard/design-studio'
     | '/_authenticated/dashboard/discounts'
@@ -2158,6 +2183,7 @@ export interface FileRouteTypes {
     | '/api/public/booking/release'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/billing-reconcile'
+    | '/api/public/hooks/compliance-reminders'
     | '/api/public/hooks/daily-schedule-digest'
     | '/api/public/hooks/demo-reset'
     | '/api/public/hooks/marketing-automations'
@@ -2226,6 +2252,7 @@ export interface RootRouteChildren {
   ApiPublicBookingReleaseRoute: typeof ApiPublicBookingReleaseRoute
   ApiPublicHooksAppointmentRemindersRoute: typeof ApiPublicHooksAppointmentRemindersRoute
   ApiPublicHooksBillingReconcileRoute: typeof ApiPublicHooksBillingReconcileRoute
+  ApiPublicHooksComplianceRemindersRoute: typeof ApiPublicHooksComplianceRemindersRoute
   ApiPublicHooksDailyScheduleDigestRoute: typeof ApiPublicHooksDailyScheduleDigestRoute
   ApiPublicHooksDemoResetRoute: typeof ApiPublicHooksDemoResetRoute
   ApiPublicHooksMarketingAutomationsRoute: typeof ApiPublicHooksMarketingAutomationsRoute
@@ -2981,6 +3008,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardConsentFormsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/compliance': {
+      id: '/_authenticated/dashboard/compliance'
+      path: '/compliance'
+      fullPath: '/dashboard/compliance'
+      preLoaderRoute: typeof AuthenticatedDashboardComplianceRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/coming-soon': {
       id: '/_authenticated/dashboard/coming-soon'
       path: '/coming-soon'
@@ -3294,6 +3328,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/hooks/daily-schedule-digest'
       fullPath: '/api/public/hooks/daily-schedule-digest'
       preLoaderRoute: typeof ApiPublicHooksDailyScheduleDigestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/compliance-reminders': {
+      id: '/api/public/hooks/compliance-reminders'
+      path: '/api/public/hooks/compliance-reminders'
+      fullPath: '/api/public/hooks/compliance-reminders'
+      preLoaderRoute: typeof ApiPublicHooksComplianceRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/billing-reconcile': {
@@ -3633,6 +3674,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardCategoriesRoute: typeof AuthenticatedDashboardCategoriesRoute
   AuthenticatedDashboardClinicRoute: typeof AuthenticatedDashboardClinicRoute
   AuthenticatedDashboardComingSoonRoute: typeof AuthenticatedDashboardComingSoonRoute
+  AuthenticatedDashboardComplianceRoute: typeof AuthenticatedDashboardComplianceRoute
   AuthenticatedDashboardConsentFormsRoute: typeof AuthenticatedDashboardConsentFormsRoute
   AuthenticatedDashboardDesignStudioRoute: typeof AuthenticatedDashboardDesignStudioRoute
   AuthenticatedDashboardDiscountsRoute: typeof AuthenticatedDashboardDiscountsRoute
@@ -3695,6 +3737,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardClinicRoute: AuthenticatedDashboardClinicRoute,
     AuthenticatedDashboardComingSoonRoute:
       AuthenticatedDashboardComingSoonRoute,
+    AuthenticatedDashboardComplianceRoute:
+      AuthenticatedDashboardComplianceRoute,
     AuthenticatedDashboardConsentFormsRoute:
       AuthenticatedDashboardConsentFormsRoute,
     AuthenticatedDashboardDesignStudioRoute:
@@ -3975,6 +4019,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksAppointmentRemindersRoute:
     ApiPublicHooksAppointmentRemindersRoute,
   ApiPublicHooksBillingReconcileRoute: ApiPublicHooksBillingReconcileRoute,
+  ApiPublicHooksComplianceRemindersRoute:
+    ApiPublicHooksComplianceRemindersRoute,
   ApiPublicHooksDailyScheduleDigestRoute:
     ApiPublicHooksDailyScheduleDigestRoute,
   ApiPublicHooksDemoResetRoute: ApiPublicHooksDemoResetRoute,

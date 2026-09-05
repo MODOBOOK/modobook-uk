@@ -36,6 +36,7 @@ const PRACTITIONER_ROUTES = [
   "/dashboard/aftercare",
   "/dashboard/form-allocation",
   "/dashboard/reviews",
+  "/dashboard/compliance",
   "/dashboard/menu",
   "/dashboard/help",
 ];
@@ -51,6 +52,7 @@ const RECEPTIONIST_ROUTES = [
   "/dashboard/gift-cards",
   "/dashboard/discounts",
   "/dashboard/reviews",
+  "/dashboard/compliance",
   "/dashboard/menu",
   "/dashboard/help",
 ];
