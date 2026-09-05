@@ -114,18 +114,17 @@ function PreTreatmentPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-4 sm:p-6 space-y-4">
-      <div className="flex items-center justify-end gap-3">
-        <Button onClick={() => openNew("general")}>
-          <Plus className="mr-1 h-4 w-4" /> New section
-        </Button>
-      </div>
-
-      <header>
-        <h1 className="text-2xl font-semibold">Pre-treatment information</h1>
-        <p className="text-sm text-muted-foreground">
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold">Pre-treatment information</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
           Tick the rules you want patients to see before they book. Each treatment type has its own
           checklist — add your own bullets, or switch to a written paragraph if you prefer.
-        </p>
+          </p>
+        </div>
+        <Button className="shrink-0" onClick={() => openNew("general")}>
+          <Plus className="mr-1 h-4 w-4" /> <span className="sm:hidden">New</span><span className="hidden sm:inline">New section</span>
+        </Button>
       </header>
 
       {q.isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}

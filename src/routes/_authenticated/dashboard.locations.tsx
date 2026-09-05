@@ -219,17 +219,17 @@ function LocationsPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-semibold">Locations</h1>
           <p className="text-sm text-muted-foreground">
             Manage clinic addresses. Use "Price list" to set a private price sheet per location — great for
             hidden locations you only book by message.
           </p>
         </div>
-        <Button onClick={requestNew}>
+        <Button className="shrink-0" onClick={requestNew}>
           <Plus className="mr-2 h-4 w-4" />
-          Add location
+          <span className="sm:hidden">Add</span><span className="hidden sm:inline">Add location</span>
         </Button>
       </div>
 
