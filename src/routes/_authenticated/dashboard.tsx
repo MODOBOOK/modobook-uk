@@ -136,6 +136,7 @@ const navItems = [
 const mobileTabs = [
   { label: "Home", to: "/dashboard", icon: Home, exact: true },
   { label: "Calendar", to: "/dashboard/bookings", icon: CalendarDays },
+  { label: "New", to: "/dashboard/new-appointment", icon: CalendarPlus, cta: true },
   { label: "Patients", to: "/dashboard/patients", icon: Users },
   { label: "Menu", to: "/dashboard/menu", icon: Menu },
 ];
@@ -379,17 +380,32 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
 
         {/* Mobile bottom tab bar */}
         <nav
-          className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t bg-background/95 backdrop-blur lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-background/95 backdrop-blur lg:hidden"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           {mobileTabs.map((tab) => {
             const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
+            if ((tab as { cta?: boolean }).cta) {
+              return (
+                <Link
+                  key={tab.to}
+                  to={tab.to}
+                  aria-label="New appointment"
+                  className="flex min-h-[60px] flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground transition active:scale-[0.97]"
+                >
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md ring-4 ring-primary/15 transition active:scale-95">
+                    <tab.icon className="h-5 w-5" />
+                  </span>
+                  {tab.label}
+                </Link>
+              );
+            }
             return (
               <Link
                 key={tab.to}
                 to={tab.to}
                 className={cn(
-                  "flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] font-medium transition active:scale-[0.97]",
+                  "flex min-h-[60px] flex-col items-center justify-center gap-1 text-[11px] font-medium transition active:scale-[0.97]",
                   active ? "text-primary" : "text-muted-foreground",
                 )}
               >
