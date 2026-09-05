@@ -377,6 +377,14 @@ function ServicesPage() {
             className="h-14 rounded-2xl pl-12 text-base"
           />
         </div>
+        <Button
+          variant="outline"
+          className="h-14 rounded-2xl px-5 text-base"
+          onClick={() => setReorderOpen(true)}
+          disabled={roots.length < 2}
+        >
+          <ListOrdered className="mr-2 h-5 w-5" /> Rearrange
+        </Button>
         <AddMenu
           hasCategories={picker.length > 0}
           onAddCategory={() => setCatDialog({ mode: "create", parentId: null })}
