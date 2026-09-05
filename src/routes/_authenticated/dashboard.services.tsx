@@ -753,20 +753,13 @@ function CategoryCard({
           </div>
         )}
 
-        <div className="space-y-2">
-          {treatsHere.map((t, i) => (
-            <ServiceCard
-              key={t.id}
-              treat={t}
-              picker={picker}
-              onDelete={() => onDeleteTreat(t)}
-              onMoveUp={i > 0 ? () => onMoveTreat(treatsHere, t.id, -1) : undefined}
-              onMoveDown={i < treatsHere.length - 1 ? () => onMoveTreat(treatsHere, t.id, 1) : undefined}
-              onMoveTo={() => onMoveTreatTo(t)}
-              onChangeCategory={(catId: string | null) => onChangeTreatCategory(t.id, catId)}
-            />
-          ))}
-        </div>
+        <ServiceList
+          treats={treatsHere}
+          reorderDisabled={forceOpen}
+          onReorder={onReorderTreatsByIds}
+          onDeleteTreat={onDeleteTreat}
+          onMoveTreatTo={onMoveTreatTo}
+        />
 
         {node.children.length > 0 && (
           <div className="mt-4 space-y-2">
@@ -877,22 +870,17 @@ function SubcategorySection({
         </button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="space-y-2 px-3 pb-3">
+        <div className="px-3 pb-3">
           {treats.length === 0 ? (
             <p className="py-2 text-center text-xs text-muted-foreground">No services yet.</p>
           ) : (
-            treats.map((t, i, arr) => (
-              <ServiceCard
-                key={t.id}
-                treat={t}
-                picker={picker}
-                onDelete={() => onDeleteTreat(t)}
-                onMoveUp={i > 0 ? () => onMoveTreat(arr, t.id, -1) : undefined}
-                onMoveDown={i < arr.length - 1 ? () => onMoveTreat(arr, t.id, 1) : undefined}
-                onMoveTo={() => onMoveTreatTo(t)}
-                onChangeCategory={(catId: string | null) => onChangeTreatCategory(t.id, catId)}
-              />
-            ))
+            <ServiceList
+              treats={treats}
+              reorderDisabled={forceOpen}
+              onReorder={onReorderTreatsByIds}
+              onDeleteTreat={onDeleteTreat}
+              onMoveTreatTo={onMoveTreatTo}
+            />
           )}
         </div>
       </CollapsibleContent>
