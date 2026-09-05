@@ -742,6 +742,7 @@ function CategoryCard({
         )}
       </div>
 
+      {expanded && (
       <div className="flex-1 p-3">
         {treatsHere.length === 0 && node.children.length === 0 && !isUncategorised && (
           <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
@@ -814,8 +815,9 @@ function CategoryCard({
           </div>
         )}
       </div>
+      )}
 
-      {!isUncategorised && (
+      {expanded && !isUncategorised && (
         <div className="flex gap-2 border-t bg-muted/10 p-3">
           <Button size="sm" variant="ghost" className="h-10 flex-1 rounded-xl text-sm" onClick={() => onAddService(node.id)}>
             <Plus className="mr-1 h-4 w-4" /> Service
