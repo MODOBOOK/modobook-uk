@@ -162,6 +162,8 @@ export const getCardOnFileForAppointment = createServerFn({ method: "GET" })
   .inputValidator((input: { appointmentId: string }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    if (!profileId) return null;
     const { data: appt } = await supabase
       .from("appointments")
       .select("id, practitioner_id, patient_email, patient_phone")
@@ -174,13 +176,13 @@ export const getCardOnFileForAppointment = createServerFn({ method: "GET" })
       patient_phone: string | null;
     } | null;
     if (!a) return null;
-    if (a.practitioner_id !== userId) throw new Error("Not authorised");
+    if (a.practitioner_id !== profileId) return null;
 
     // Match clinic_client by email or phone for this practitioner.
     let query = supabase
       .from("clinic_clients")
       .select("id, full_name, card_brand, card_last4, card_exp_month, card_exp_year, stripe_customer_id, stripe_payment_method_id")
-      .eq("profile_id", userId)
+      .eq("profile_id", profileId)
       .limit(1);
     if (a.patient_email) query = query.eq("email", a.patient_email);
     else if (a.patient_phone) query = query.eq("phone", a.patient_phone);
