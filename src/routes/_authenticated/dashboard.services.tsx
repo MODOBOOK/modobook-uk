@@ -701,7 +701,7 @@ function CategoryCard({
               </span>
             )}
           </div>
-        </div>
+        </button>
         {!isUncategorised && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
