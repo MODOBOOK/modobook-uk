@@ -434,17 +434,18 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
             const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
             if ((tab as { cta?: boolean }).cta) {
               return (
-                <Link
+                <button
                   key={tab.to}
-                  to={tab.to}
-                  aria-label="New appointment"
+                  type="button"
+                  aria-label="Create new"
+                  onClick={() => setAddOpen(true)}
                   className="flex min-h-[60px] flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground transition active:scale-[0.97]"
                 >
                   <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md ring-4 ring-primary/15 transition active:scale-95">
                     <tab.icon className="h-5 w-5" />
                   </span>
                   {tab.label}
-                </Link>
+                </button>
               );
             }
             return (
