@@ -860,7 +860,10 @@ function ServiceCard({
           aria-label="Calendar colour"
         />
         <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2">
-          <p className="font-display text-sm font-semibold leading-tight text-foreground break-words">{treat.name}</p>
+          <FitText className="font-display font-semibold text-foreground" max={14} min={8}>
+            {treat.name}
+          </FitText>
+
           <p className="text-xs font-medium text-primary">
             £{Number(treat.price ?? 0).toFixed(2)}
             <span className="mx-1 text-muted-foreground">·</span>
