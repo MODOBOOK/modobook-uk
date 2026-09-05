@@ -14,20 +14,21 @@ type Ctx = { supabase: any; userId: string; claims?: any };
 
 async function access(context: Ctx) {
   const { resolveClinicAccess } = await import("./clinic-context.server");
-  const a = await resolveClinicAccess(context.supabase, context.userId);
+  const a = await resolveClinicAccess(db, context.userId);
   if (!a.profileId) throw new Error("No clinic found for your account.");
-  return a;
+  return { ...a, profileId: a.profileId as string };
 }
 
 async function actorName(context: Ctx, profileId: string) {
-  const { data: staff } = await context.supabase
+  const db = db as any;
+  const { data: staff } = await db
     .from("staff_members")
     .select("name")
     .eq("user_id", context.userId)
     .eq("profile_id", profileId)
     .maybeSingle();
   if (staff?.name) return staff.name as string;
-  const { data: p } = await context.supabase
+  const { data: p } = await db
     .from("profiles")
     .select("full_name, clinic_name")
     .eq("id", profileId)
@@ -45,8 +46,8 @@ function nextDue(frequency: string, from: string) {
 export const getCompliance = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const db = context.supabase as any;
     const a = await access(context as Ctx);
-    const db = context.supabase;
     const [checks, audits, records, auditRuns, actions] = await Promise.all([
       db.from("compliance_check_templates").select("*").eq("profile_id", a.profileId).order("sort_order").order("name"),
       db.from("compliance_audit_templates").select("*").eq("profile_id", a.profileId).order("name"),
@@ -88,17 +89,18 @@ export const seedComplianceDefaults = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { checkKeys?: string[]; auditKeys?: string[] }) => i)
   .handler(async ({ data, context }) => {
+    const db = context.supabase as any;
     const a = await access(context as Ctx);
     const today = todayIso();
 
     const wantChecks = CHECK_PRESETS.filter((p) => !data.checkKeys || data.checkKeys.includes(p.key));
     const wantAudits = AUDIT_PRESETS.filter((p) => !data.auditKeys || data.auditKeys.includes(p.key));
 
-    const { data: existingChecks } = await context.supabase
+    const { data: existingChecks } = await db
       .from("compliance_check_templates")
       .select("name")
       .eq("profile_id", a.profileId);
-    const { data: existingAudits } = await context.supabase
+    const { data: existingAudits } = await db
       .from("compliance_audit_templates")
       .select("name")
       .eq("profile_id", a.profileId);
@@ -130,11 +132,11 @@ export const seedComplianceDefaults = createServerFn({ method: "POST" })
       }));
 
     if (checkRows.length) {
-      const { error } = await context.supabase.from("compliance_check_templates").insert(checkRows);
+      const { error } = await db.from("compliance_check_templates").insert(checkRows);
       if (error) throw error;
     }
     if (auditRows.length) {
-      const { error } = await context.supabase.from("compliance_audit_templates").insert(auditRows);
+      const { error } = await db.from("compliance_audit_templates").insert(auditRows);
       if (error) throw error;
     }
     return { checks: checkRows.length, audits: auditRows.length };
@@ -159,6 +161,7 @@ export const saveCheckTemplate = createServerFn({ method: "POST" })
     }) => i,
   )
   .handler(async ({ data, context }) => {
+    const db = context.supabase as any;
     const a = await access(context as Ctx);
     if (!data.name?.trim()) throw new Error("Give the check a name.");
     const row = {
@@ -174,8 +177,8 @@ export const saveCheckTemplate = createServerFn({ method: "POST" })
       active: data.active ?? true,
     };
     const q = data.id
-      ? context.supabase.from("compliance_check_templates").update(row).eq("id", data.id).eq("profile_id", a.profileId)
-      : context.supabase.from("compliance_check_templates").insert(row);
+      ? db.from("compliance_check_templates").update(row).eq("id", data.id).eq("profile_id", a.profileId)
+      : db.from("compliance_check_templates").insert(row);
     const { data: saved, error } = await q.select("*").single();
     if (error) throw error;
     return saved;
@@ -185,8 +188,9 @@ export const deleteCheckTemplate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { id: string }) => i)
   .handler(async ({ data, context }) => {
+    const db = context.supabase as any;
     const a = await access(context as Ctx);
-    const { error } = await context.supabase
+    const { error } = await db
       .from("compliance_check_templates")
       .delete()
       .eq("id", data.id)
@@ -210,8 +214,9 @@ export const recordCheck = createServerFn({ method: "POST" })
     }) => i,
   )
   .handler(async ({ data, context }) => {
+    const db = context.supabase as any;
     const a = await access(context as Ctx);
-    const { data: tpl, error: tErr } = await context.supabase
+    const { data: tpl, error: tErr } = await db
       .from("compliance_check_templates")
       .select("*")
       .eq("id", data.template_id)
@@ -223,7 +228,7 @@ export const recordCheck = createServerFn({ method: "POST" })
     const performedOn = data.performed_on || todayIso();
     const name = await actorName(context as Ctx, a.profileId!);
 
-    const { data: record, error } = await context.supabase
+    const { data: record, error } = await db
       .from("compliance_check_records")
       .insert({
         profile_id: a.profileId,
@@ -241,14 +246,14 @@ export const recordCheck = createServerFn({ method: "POST" })
       .single();
     if (error) throw error;
 
-    await context.supabase
+    await db
       .from("compliance_check_templates")
       .update({ next_due_on: nextDue(tpl.frequency, performedOn) })
       .eq("id", tpl.id)
       .eq("profile_id", a.profileId);
 
     if (data.action?.description?.trim()) {
-      await context.supabase.from("compliance_actions").insert({
+      await db.from("compliance_actions").insert({
         profile_id: a.profileId,
         check_record_id: record.id,
         description: data.action.description.trim(),
@@ -278,6 +283,7 @@ export const saveAuditTemplate = createServerFn({ method: "POST" })
     }) => i,
   )
   .handler(async ({ data, context }) => {
+    const db = context.supabase as any;
     const a = await access(context as Ctx);
     if (!data.name?.trim()) throw new Error("Give the audit a name.");
     const row = {
@@ -293,8 +299,8 @@ export const saveAuditTemplate = createServerFn({ method: "POST" })
       active: data.active ?? true,
     };
     const q = data.id
-      ? context.supabase.from("compliance_audit_templates").update(row).eq("id", data.id).eq("profile_id", a.profileId)
-      : context.supabase.from("compliance_audit_templates").insert(row);
+      ? db.from("compliance_audit_templates").update(row).eq("id", data.id).eq("profile_id", a.profileId)
+      : db.from("compliance_audit_templates").insert(row);
     const { data: saved, error } = await q.select("*").single();
     if (error) throw error;
     return saved;
@@ -304,8 +310,9 @@ export const deleteAuditTemplate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { id: string }) => i)
   .handler(async ({ data, context }) => {
+    const db = context.supabase as any;
     const a = await access(context as Ctx);
-    const { error } = await context.supabase
+    const { error } = await db
       .from("compliance_audit_templates")
       .delete()
       .eq("id", data.id)
@@ -344,6 +351,7 @@ export const saveAudit = createServerFn({ method: "POST" })
     }) => i,
   )
   .handler(async ({ data, context }) => {
+    const db = context.supabase as any;
     const a = await access(context as Ctx);
     const name = await actorName(context as Ctx, a.profileId!);
     const conductedOn = data.conducted_on || todayIso();
@@ -361,14 +369,14 @@ export const saveAudit = createServerFn({ method: "POST" })
       status: data.complete ? "completed" : "in_progress",
     };
     const q = data.id
-      ? context.supabase.from("compliance_audits").update(row).eq("id", data.id).eq("profile_id", a.profileId)
-      : context.supabase.from("compliance_audits").insert(row);
+      ? db.from("compliance_audits").update(row).eq("id", data.id).eq("profile_id", a.profileId)
+      : db.from("compliance_audits").insert(row);
     const { data: saved, error } = await q.select("*").single();
     if (error) throw error;
 
     for (const act of data.actions ?? []) {
       if (!act.description?.trim()) continue;
-      await context.supabase.from("compliance_actions").insert({
+      await db.from("compliance_actions").insert({
         profile_id: a.profileId,
         audit_id: saved.id,
         description: act.description.trim(),
@@ -378,13 +386,13 @@ export const saveAudit = createServerFn({ method: "POST" })
     }
 
     if (data.complete && data.template_id) {
-      const { data: tpl } = await context.supabase
+      const { data: tpl } = await db
         .from("compliance_audit_templates")
         .select("frequency")
         .eq("id", data.template_id)
         .maybeSingle();
       if (tpl) {
-        await context.supabase
+        await db
           .from("compliance_audit_templates")
           .update({ next_due_on: nextDue(tpl.frequency, conductedOn) })
           .eq("id", data.template_id)
@@ -398,12 +406,13 @@ export const signOffAudit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { id: string }) => i)
   .handler(async ({ data, context }) => {
+    const db = context.supabase as any;
     const a = await access(context as Ctx);
     if (!a.isOwner && a.role !== "admin") {
       throw new Error("Only the clinic owner can sign an audit off.");
     }
     const name = await actorName(context as Ctx, a.profileId!);
-    const { data: saved, error } = await context.supabase
+    const { data: saved, error } = await db
       .from("compliance_audits")
       .update({
         status: "signed_off",
@@ -423,8 +432,9 @@ export const deleteAudit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { id: string }) => i)
   .handler(async ({ data, context }) => {
+    const db = context.supabase as any;
     const a = await access(context as Ctx);
-    const { error } = await context.supabase
+    const { error } = await db
       .from("compliance_audits")
       .delete()
       .eq("id", data.id)
@@ -448,6 +458,7 @@ export const saveAction = createServerFn({ method: "POST" })
     }) => i,
   )
   .handler(async ({ data, context }) => {
+    const db = context.supabase as any;
     const a = await access(context as Ctx);
     if (!data.description?.trim()) throw new Error("Describe the action.");
     const row: Record<string, unknown> = {
@@ -460,8 +471,8 @@ export const saveAction = createServerFn({ method: "POST" })
       completed_at: data.status === "done" ? new Date().toISOString() : null,
     };
     const q = data.id
-      ? context.supabase.from("compliance_actions").update(row).eq("id", data.id).eq("profile_id", a.profileId)
-      : context.supabase.from("compliance_actions").insert(row);
+      ? db.from("compliance_actions").update(row).eq("id", data.id).eq("profile_id", a.profileId)
+      : db.from("compliance_actions").insert(row);
     const { data: saved, error } = await q.select("*").single();
     if (error) throw error;
     return saved;
@@ -471,8 +482,9 @@ export const deleteAction = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { id: string }) => i)
   .handler(async ({ data, context }) => {
+    const db = context.supabase as any;
     const a = await access(context as Ctx);
-    const { error } = await context.supabase
+    const { error } = await db
       .from("compliance_actions")
       .delete()
       .eq("id", data.id)
