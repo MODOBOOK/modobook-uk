@@ -67,6 +67,9 @@ import {
   ArrowUp,
   ArrowDown,
   MoreVertical,
+  ChevronDown,
+  GripVertical,
+  ListOrdered,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -249,6 +252,7 @@ function ServicesPage() {
   const [svcDialog, setSvcDialog] = useState<{ defaultCatId: string | null } | null>(null);
   const [moveTreatState, setMoveTreatState] = useState<Treat | null>(null);
   const [moveCatState, setMoveCatState] = useState<Cat | null>(null);
+  const [reorderOpen, setReorderOpen] = useState(false);
 
 
 
@@ -320,6 +324,16 @@ function ServicesPage() {
     }
   }
 
+  async function reorderCatsByIds(ids: string[]) {
+    try {
+      await reorderCats({ data: { ids } });
+      toast.success("Category order saved");
+      cats.refetch();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
   async function moveTreatToCategory(treatId: string, categoryId: string | null) {
     try {
       await patchTreat({ data: { id: treatId, category_id: categoryId } });
@@ -363,6 +377,14 @@ function ServicesPage() {
             className="h-14 rounded-2xl pl-12 text-base"
           />
         </div>
+        <Button
+          variant="outline"
+          className="h-14 rounded-2xl px-5 text-base"
+          onClick={() => setReorderOpen(true)}
+          disabled={roots.length < 2}
+        >
+          <ListOrdered className="mr-2 h-5 w-5" /> Rearrange
+        </Button>
         <AddMenu
           hasCategories={picker.length > 0}
           onAddCategory={() => setCatDialog({ mode: "create", parentId: null })}
@@ -413,6 +435,7 @@ function ServicesPage() {
               index={idx}
               matchTreat={matchTreat}
               picker={picker}
+              forceOpen={q.length > 0}
               onAddSub={(parentId) => setCatDialog({ mode: "create", parentId })}
               onEditCat={(c) => setCatDialog({ mode: "edit", parentId: c.parent_id, cat: c })}
               onDeleteCat={handleDeleteCat}
@@ -444,6 +467,7 @@ function ServicesPage() {
               index={0}
               matchTreat={matchTreat}
               picker={picker}
+              forceOpen={q.length > 0}
               onAddSub={() => {}}
               onEditCat={() => {}}
               onDeleteCat={() => {}}
@@ -474,6 +498,15 @@ function ServicesPage() {
         allCategories={(cats.data ?? []) as Cat[]}
         onClose={() => setMoveCatState(null)}
         onConfirm={(parentId) => moveCatState && moveCatToParent(moveCatState.id, parentId)}
+      />
+      <ReorderCategoriesDialog
+        open={reorderOpen}
+        categories={roots}
+        onClose={() => setReorderOpen(false)}
+        onSave={async (ids) => {
+          await reorderCatsByIds(ids);
+          setReorderOpen(false);
+        }}
       />
 
 
@@ -583,6 +616,7 @@ function CategoryCard({
   index,
   matchTreat,
   picker,
+  forceOpen,
   onAddSub,
   onEditCat,
   onDeleteCat,
@@ -601,6 +635,7 @@ function CategoryCard({
   index: number;
   matchTreat: (t: Treat) => boolean;
   picker: { id: string; label: string; depth: number }[];
+  forceOpen?: boolean;
   onAddSub: (parentId: string) => void;
   onEditCat: (c: Cat) => void;
   onDeleteCat: (c: Cat) => void;
@@ -614,6 +649,8 @@ function CategoryCard({
   onChangeTreatCategory: (treatId: string, categoryId: string | null) => void | Promise<void>;
   isUncategorised?: boolean;
 }) {
+  const [open, setOpen] = useState(false);
+  const expanded = forceOpen || open;
   const treatsHere = node.treatments.filter(matchTreat);
   const totalCount = treatsHere.length + node.children.reduce((acc, c) => acc + c.treatments.length, 0);
   const canUp = index > 0;
@@ -624,14 +661,22 @@ function CategoryCard({
   return (
     <Card className="flex flex-col overflow-hidden rounded-3xl border bg-card shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-start justify-between gap-3 border-b bg-muted/20 p-4">
-        <div className="min-w-0 flex-1">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="min-w-0 flex-1 text-left"
+          aria-expanded={expanded}
+        >
           <div className="flex items-center gap-2">
+            <ChevronDown
+              className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
+            />
             {node.icon && <span className="text-xl">{node.icon}</span>}
             <h3 className="font-display min-w-0 flex-1 truncate text-lg font-semibold text-foreground">
               {node.name}
             </h3>
           </div>
-          {node.description && (
+          {node.description && expanded && (
             <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{node.description}</p>
           )}
           <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -658,7 +703,7 @@ function CategoryCard({
               </span>
             )}
           </div>
-        </div>
+        </button>
         {!isUncategorised && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -699,6 +744,7 @@ function CategoryCard({
         )}
       </div>
 
+      {expanded && (
       <div className="flex-1 p-3">
         {treatsHere.length === 0 && node.children.length === 0 && !isUncategorised && (
           <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
@@ -771,8 +817,9 @@ function CategoryCard({
           </div>
         )}
       </div>
+      )}
 
-      {!isUncategorised && (
+      {expanded && !isUncategorised && (
         <div className="flex gap-2 border-t bg-muted/10 p-3">
           <Button size="sm" variant="ghost" className="h-10 flex-1 rounded-xl text-sm" onClick={() => onAddService(node.id)}>
             <Plus className="mr-1 h-4 w-4" /> Service
@@ -805,29 +852,29 @@ function ServiceCard({
 }) {
   const currentVal = treat.category_id ?? "__none__";
   return (
-    <div className="group flex flex-col gap-3 rounded-2xl border bg-background p-3 transition-colors hover:border-primary/30 sm:flex-row sm:items-center">
-      <div className="flex min-w-0 flex-1 items-center gap-3">
+    <div className="group flex flex-col gap-2 rounded-xl border bg-background px-2.5 py-2 transition-colors hover:border-primary/30 sm:flex-row sm:items-center">
+      <div className="flex min-w-0 flex-1 items-center gap-2.5">
         <span
-          className="h-3 w-3 shrink-0 rounded-full"
+          className="h-2.5 w-2.5 shrink-0 rounded-full"
           style={{ backgroundColor: treat.color || "hsl(var(--muted-foreground))" }}
           aria-label="Calendar colour"
         />
-        <div className="min-w-0 flex-1">
-          <p className="font-display text-base font-semibold leading-tight text-foreground break-words">{treat.name}</p>
-          <p className="mt-0.5 text-sm font-medium text-primary">
+        <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2">
+          <p className="font-display text-sm font-semibold leading-tight text-foreground break-words">{treat.name}</p>
+          <p className="text-xs font-medium text-primary">
             £{Number(treat.price ?? 0).toFixed(2)}
-            <span className="mx-1.5 text-muted-foreground">·</span>
+            <span className="mx-1 text-muted-foreground">·</span>
             <span className="text-muted-foreground">{treat.duration} min</span>
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         {onChangeCategory && picker && (
           <Select
             value={currentVal}
             onValueChange={(v) => onChangeCategory(v === "__none__" ? null : v)}
           >
-            <SelectTrigger className="h-10 w-full text-xs sm:w-[200px]" aria-label="Move to category or subcategory">
+            <SelectTrigger className="h-8 w-full text-xs sm:w-[160px]" aria-label="Move to category or subcategory">
               <SelectValue placeholder="Move to category…" />
             </SelectTrigger>
             <SelectContent className="max-h-[320px]">
@@ -847,10 +894,10 @@ function ServiceCard({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
               aria-label="Service actions"
             >
-              <MoreVertical className="h-5 w-5" />
+              <MoreVertical className="h-4 w-4" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -883,6 +930,102 @@ function ServiceCard({
 }
 
 
+
+function ReorderCategoriesDialog({
+  open,
+  categories,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  categories: CatNode[];
+  onClose: () => void;
+  onSave: (ids: string[]) => void | Promise<void>;
+}) {
+  const [items, setItems] = useState<CatNode[]>(categories);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (open) setItems(categories);
+  }, [open, categories]);
+
+  function handleDrop(targetId: string) {
+    if (!dragId || dragId === targetId) return;
+    const from = items.findIndex((c) => c.id === dragId);
+    const to = items.findIndex((c) => c.id === targetId);
+    if (from < 0 || to < 0) return;
+    const next = items.slice();
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    setItems(next);
+    setDragId(null);
+    setOverId(null);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-display">Rearrange categories</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">
+          Drag categories into the order you want them on your booking page.
+        </p>
+        <div className="max-h-[50vh] space-y-2 overflow-y-auto py-1">
+          {items.map((c) => (
+            <div
+              key={c.id}
+              draggable
+              onDragStart={() => setDragId(c.id)}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setOverId(c.id);
+              }}
+              onDragLeave={() => setOverId((v) => (v === c.id ? null : v))}
+              onDrop={() => handleDrop(c.id)}
+              onDragEnd={() => {
+                setDragId(null);
+                setOverId(null);
+              }}
+              className={`flex cursor-grab items-center gap-3 rounded-2xl border bg-background p-3 transition-colors active:cursor-grabbing ${
+                overId === c.id && dragId !== c.id ? "border-primary" : ""
+              } ${dragId === c.id ? "opacity-50" : ""}`}
+            >
+              <GripVertical className="h-5 w-5 shrink-0 text-muted-foreground" />
+              {c.icon && <span className="text-lg">{c.icon}</span>}
+              <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                {c.name}
+              </span>
+              <span className="shrink-0 text-xs text-muted-foreground">
+                {c.treatments.length} service{c.treatments.length === 1 ? "" : "s"}
+              </span>
+            </div>
+          ))}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={saving}>
+            Cancel
+          </Button>
+          <Button
+            disabled={saving}
+            onClick={async () => {
+              setSaving(true);
+              try {
+                await onSave(items.map((c) => c.id));
+              } finally {
+                setSaving(false);
+              }
+            }}
+          >
+            {saving ? "Saving…" : "Save order"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function MoveTreatmentDialog({
   treat,
