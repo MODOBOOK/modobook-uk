@@ -2590,6 +2590,323 @@ export type Database = {
         }
         Relationships: []
       }
+      compliance_actions: {
+        Row: {
+          audit_id: string | null
+          check_record_id: string | null
+          completed_at: string | null
+          created_at: string
+          description: string
+          due_on: string | null
+          id: string
+          owner_name: string | null
+          profile_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          audit_id?: string | null
+          check_record_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description: string
+          due_on?: string | null
+          id?: string
+          owner_name?: string | null
+          profile_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          audit_id?: string | null
+          check_record_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string
+          due_on?: string | null
+          id?: string
+          owner_name?: string | null
+          profile_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_actions_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_actions_check_record_id_fkey"
+            columns: ["check_record_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_check_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_actions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_audit_templates: {
+        Row: {
+          active: boolean
+          category: string | null
+          created_at: string
+          description: string | null
+          frequency: string
+          id: string
+          name: string
+          next_due_on: string | null
+          profile_id: string
+          questions: Json
+          remind_email: boolean
+          remind_in_app: boolean
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          id?: string
+          name: string
+          next_due_on?: string | null
+          profile_id: string
+          questions?: Json
+          remind_email?: boolean
+          remind_in_app?: boolean
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          id?: string
+          name?: string
+          next_due_on?: string | null
+          profile_id?: string
+          questions?: Json
+          remind_email?: boolean
+          remind_in_app?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_audit_templates_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_audits: {
+        Row: {
+          answers: Json
+          conducted_by_name: string | null
+          conducted_by_user_id: string | null
+          conducted_on: string
+          created_at: string
+          id: string
+          name: string
+          profile_id: string
+          questions: Json
+          score_percent: number | null
+          signed_off_at: string | null
+          signed_off_by_name: string | null
+          signed_off_by_user_id: string | null
+          status: string
+          summary: string | null
+          template_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          answers?: Json
+          conducted_by_name?: string | null
+          conducted_by_user_id?: string | null
+          conducted_on?: string
+          created_at?: string
+          id?: string
+          name: string
+          profile_id: string
+          questions?: Json
+          score_percent?: number | null
+          signed_off_at?: string | null
+          signed_off_by_name?: string | null
+          signed_off_by_user_id?: string | null
+          status?: string
+          summary?: string | null
+          template_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answers?: Json
+          conducted_by_name?: string | null
+          conducted_by_user_id?: string | null
+          conducted_on?: string
+          created_at?: string
+          id?: string
+          name?: string
+          profile_id?: string
+          questions?: Json
+          score_percent?: number | null
+          signed_off_at?: string | null
+          signed_off_by_name?: string | null
+          signed_off_by_user_id?: string | null
+          status?: string
+          summary?: string | null
+          template_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_audits_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_audits_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_audit_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_check_records: {
+        Row: {
+          created_at: string
+          due_on: string | null
+          id: string
+          issue_flagged: boolean
+          notes: string | null
+          performed_by_name: string | null
+          performed_by_user_id: string | null
+          performed_on: string
+          profile_id: string
+          template_id: string | null
+          template_name: string
+          updated_at: string
+          values: Json
+        }
+        Insert: {
+          created_at?: string
+          due_on?: string | null
+          id?: string
+          issue_flagged?: boolean
+          notes?: string | null
+          performed_by_name?: string | null
+          performed_by_user_id?: string | null
+          performed_on?: string
+          profile_id: string
+          template_id?: string | null
+          template_name: string
+          updated_at?: string
+          values?: Json
+        }
+        Update: {
+          created_at?: string
+          due_on?: string | null
+          id?: string
+          issue_flagged?: boolean
+          notes?: string | null
+          performed_by_name?: string | null
+          performed_by_user_id?: string | null
+          performed_on?: string
+          profile_id?: string
+          template_id?: string | null
+          template_name?: string
+          updated_at?: string
+          values?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_check_records_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_check_records_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_check_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_check_templates: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          fields: Json
+          frequency: string
+          id: string
+          kind: string
+          name: string
+          next_due_on: string | null
+          profile_id: string
+          remind_email: boolean
+          remind_in_app: boolean
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          fields?: Json
+          frequency?: string
+          id?: string
+          kind?: string
+          name: string
+          next_due_on?: string | null
+          profile_id: string
+          remind_email?: boolean
+          remind_in_app?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          fields?: Json
+          frequency?: string
+          id?: string
+          kind?: string
+          name?: string
+          next_due_on?: string | null
+          profile_id?: string
+          remind_email?: boolean
+          remind_in_app?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_check_templates_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       concern_areas: {
         Row: {
           created_at: string
