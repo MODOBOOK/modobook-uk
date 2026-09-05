@@ -181,6 +181,15 @@
   letter-spacing: -0.015em;
 }
 
+@utility font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+@utility font-body {
+  font-family: var(--font-body);
+}
+
 @utility shadow-luxe {
   box-shadow: var(--shadow-luxe);
 }
