@@ -653,7 +653,6 @@ function CategoryCard({
   const [open, setOpen] = useState(false);
   const expanded = forceOpen || open;
   const treatsHere = node.treatments.filter(matchTreat);
-  const totalCount = treatsHere.length + node.children.reduce((acc, c) => acc + c.treatments.length, 0);
   const canUp = index > 0;
   const canDown = index < siblings.length - 1;
   const limited = (node as Cat & { is_limited?: boolean | null }).is_limited;
@@ -661,37 +660,33 @@ function CategoryCard({
 
   return (
     <Card className="flex flex-col overflow-hidden rounded-3xl border bg-card shadow-sm transition-shadow hover:shadow-md">
-      <div className="flex items-start justify-between gap-3 border-b bg-muted/20 p-4">
+      <div className="flex items-start justify-between gap-2 border-b bg-muted/20 p-3">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           className="min-w-0 flex-1 text-left"
           aria-expanded={expanded}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <ChevronDown
-              className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
+              className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
             />
-            {node.icon && <span className="text-xl">{node.icon}</span>}
-            <FitText className="font-display font-semibold text-foreground" max={18} min={10}>
+            {node.icon && <span className="text-lg">{node.icon}</span>}
+            <FitText className="font-display font-semibold text-foreground" max={16} min={10}>
               {node.name}
             </FitText>
-
           </div>
           {node.description && expanded && (
-            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{node.description}</p>
+            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{node.description}</p>
           )}
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center rounded-full bg-background px-2.5 py-1 text-xs font-medium text-muted-foreground">
-              {treatsHere.length} service{treatsHere.length === 1 ? "" : "s"}
-            </span>
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             {node.coming_soon_at && new Date(node.coming_soon_at) > new Date() && (
-              <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800">
+              <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800">
                 Book from {new Date(node.coming_soon_at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
               </span>
             )}
             {limited && (
-              <span className="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-1 text-xs font-medium text-rose-800">
+              <span className="inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-medium text-rose-800">
                 {limitedEnds
                   ? (() => {
                       const ms = new Date(limitedEnds).getTime() - Date.now();
@@ -711,10 +706,10 @@ function CategoryCard({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-muted"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
                 aria-label="Category actions"
               >
-                <MoreVertical className="h-5 w-5" />
+                <MoreVertical className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
