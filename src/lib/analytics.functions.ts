@@ -99,36 +99,22 @@ export const getIncomeReport = createServerFn({ method: "GET" })
     const { data: appts, error } = await supabase
       .from("appointments")
       .select(
-        "id, patient_name, scheduled_date, start_time, status, payment_status, payment_method, checkout_method, total_amount, amount_paid_cents, amount_refunded_cents, checkout_discount_cents, discount_amount, treatment_name_snapshot, treatments(name)",
-      )
-      .eq("profile_id", profileId)
-      .gte("scheduled_date", data.from)
-      .lte("scheduled_date", data.to)
-      .order("scheduled_date", { ascending: true })
-      .range(0, 9999);
-    if (error) throw error;
-
-    const rows: IncomeReportRow[] = [];
-    const methodMap = new Map<string, { amount: number; count: number }>();
-    const treatMap = new Map<string, { amount: number; count: number }>();
-    const monthMap = new Map<string, { amount: number; count: number }>();
-    let gross = 0, discounts = 0, refunds = 0, net = 0, outstanding = 0;
-
+        "id, scheduled_date, start_time, status, payment_status, payment_method, checkout_method, total_amount, amount_paid_cents, amount_refunded_cents, checkout_discount_cents, discount_amount, treatment_name_snapshot, treatments(name)",
+...
     for (const a of (appts ?? []) as any[]) {
       if (a.status === "cancelled" && !(a.amount_paid_cents > 0)) continue;
-      const paid = (a.amount_paid_cents ?? 0) / 100;
       const refund = (a.amount_refunded_cents ?? 0) / 100;
       const discount = ((a.checkout_discount_cents ?? 0) / 100) + Number(a.discount_amount ?? 0);
-      const total = Number(a.total_amount ?? 0);
-      const rowNet = paid - refund;
+      // Assume every booking is collected in full — nothing outstanding
+      const total = Number(a.total_amount ?? 0) || (a.amount_paid_cents ?? 0) / 100;
+      const rowNet = total - refund;
       const treatment = a.treatments?.name ?? a.treatment_name_snapshot ?? "Treatment";
       const method = a.checkout_method ?? a.payment_method ?? "unrecorded";
 
-      gross += paid;
+      gross += total;
       refunds += refund;
       discounts += discount;
       net += rowNet;
-      if (total > paid) outstanding += total - paid;
 
       const m = methodMap.get(method) ?? { amount: 0, count: 0 };
       m.amount += rowNet; m.count += 1; methodMap.set(method, m);
@@ -142,12 +128,11 @@ export const getIncomeReport = createServerFn({ method: "GET" })
         id: a.id,
         date: a.scheduled_date,
         time: a.start_time ?? null,
-        patient: a.patient_name ?? "—",
         treatment,
         status: a.status ?? "",
         paymentStatus: a.payment_status ?? "",
         method,
-        gross: paid,
+        gross: total,
         discount,
         refunded: refund,
         net: rowNet,
