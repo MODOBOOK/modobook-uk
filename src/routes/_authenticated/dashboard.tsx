@@ -307,7 +307,7 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
           style={{ paddingTop: "env(safe-area-inset-top)" }}
         >
           <div className="flex items-center gap-2 px-4 py-3">
-            <BackButton />
+            <BackButton className="text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground" />
             <div className="min-w-0 flex-1">
               <div className="text-[10px] uppercase tracking-[0.22em] text-primary-foreground/70">
                 {displayName || "My Clinic"}
