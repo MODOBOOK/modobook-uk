@@ -82,10 +82,12 @@ function CampaignsPage() {
           <StatCard label="Opted in" value={stats.optedIn} sub={`of ${stats.totalPatients} patients`} />
           <StatCard label="Campaigns (30d)" value={stats.campaignsLast30Days} />
           <StatCard label="Emails sent (30d)" value={stats.totalSentLast30Days} />
-          <div className="rounded-xl border border-dashed border-border p-4 flex flex-col justify-center">
-            <p className="text-xs text-muted-foreground mb-2">Marketing consent</p>
-            <p className="text-xs">Only patients who opted in receive marketing. Ask when they book, or toggle from a patient&rsquo;s profile.</p>
+          <div className="rounded-xl border border-dashed border-border p-4 flex flex-col justify-center gap-2">
+            <p className="text-xs text-muted-foreground">Marketing consent</p>
+            <p className="text-xs">Only patients who opted in receive marketing.</p>
+            <BulkOptInDialog onDone={() => overview().then(setStats).catch(() => {})} />
           </div>
+
         </div>
       )}
 
