@@ -25,7 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { ArrowLeft, Sparkles, FileText, Image as ImageIcon, Loader2, Wand2, CheckCircle2, Star, MessageSquareQuote, Trash2 } from "lucide-react";
+import { Sparkles, FileText, Image as ImageIcon, Loader2, Wand2, CheckCircle2, Star, MessageSquareQuote, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/ai-import")({
   component: AiImportPage,
@@ -126,9 +126,6 @@ function AiImportPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 md:p-6">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/dashboard"><ArrowLeft className="mr-1 size-4" /> Dashboard</Link>
-        </Button>
         <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
           <Sparkles className="size-5 text-primary" /> Import with AI
         </h1>

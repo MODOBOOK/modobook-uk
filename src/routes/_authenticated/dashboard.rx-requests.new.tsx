@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { listLinkedPartners, createRxRequest } from "@/lib/rx-requests.functions";
-import { ArrowLeft, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/rx-requests/new")({
@@ -83,9 +83,6 @@ function NewRxRequest() {
 
   return (
     <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4">
-      <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/dashboard/rx-requests" })}>
-        <ArrowLeft className="h-4 w-4 mr-1" /> Back
-      </Button>
       <h1 className="text-2xl font-bold">New prescription request</h1>
       <form onSubmit={onSubmit} className="space-y-6">
         <Card>

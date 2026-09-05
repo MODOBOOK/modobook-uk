@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyModelSlots, upsertModelSlot, deleteModelSlot } from "@/lib/discounts.functions";
@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Sparkles, ArrowLeft, Calendar } from "lucide-react";
+import { Plus, Pencil, Trash2, Sparkles, Calendar } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard/model-slots")({
   ssr: false,
@@ -93,9 +93,6 @@ function ModelSlotsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 pb-24 sm:p-6">
-      <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="sm"><Link to="/dashboard/menu"><ArrowLeft className="mr-1 h-4 w-4" />Menu</Link></Button>
-      </div>
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl"><Sparkles className="h-6 w-6 text-fuchsia-600" />Model slots</h1>

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -17,7 +17,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Tag, Percent, ArrowLeft, ChevronDown, Check, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Tag, Percent, ChevronDown, Check, Search } from "lucide-react";
 
 type Category = { id: string; name: string };
 
@@ -180,9 +180,6 @@ function DiscountsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 pb-24 sm:p-6">
-      <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="sm"><Link to="/dashboard/menu"><ArrowLeft className="mr-1 h-4 w-4" />Menu</Link></Button>
-      </div>
       <header>
         <h1 className="text-2xl font-bold sm:text-3xl">Discounts</h1>
         <p className="text-sm text-muted-foreground">Apply discounts directly to the menu, or create checkout codes patients enter at booking.</p>

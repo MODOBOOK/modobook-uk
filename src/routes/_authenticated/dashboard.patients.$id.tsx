@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getClient } from "@/lib/clients.functions";
 import {
-  ArrowLeft, Activity, Camera, Pill, FileText, AlertTriangle, Loader2, Receipt,
+  Activity, Camera, Pill, FileText, AlertTriangle, Loader2, Receipt,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -38,11 +38,6 @@ function PatientRecordShell() {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4 pb-16">
-      <div>
-        <Link to="/dashboard/patients" className="inline-flex items-center text-xs text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="mr-1 h-3.5 w-3.5" />All patients
-        </Link>
-      </div>
 
       {/* Sticky patient header */}
       <div className="sticky top-0 z-20 -mx-2 rounded-none border-b bg-card/95 px-2 shadow-sm backdrop-blur sm:mx-0 sm:rounded-xl sm:border sm:px-0">

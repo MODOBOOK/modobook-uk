@@ -218,9 +218,6 @@ export function ConsultationWizard() {
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <Link to="/dashboard/consultations" className="mb-1 inline-flex items-center text-xs text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="mr-1 h-3 w-3" />All consultations
-          </Link>
           <h1 className="truncate text-xl font-bold sm:text-2xl">{c.patient_name}</h1>
           <p className="truncate text-xs text-muted-foreground">
             {c.patient_email || "no email"} {c.patient_phone ? `· ${c.patient_phone}` : ""}

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { pilotFeaturesEnabled } from "@/lib/feature-flags";
 import { FaceMapView } from "@/components/consultation/FaceMapView";
 import { useState } from "react";
@@ -34,7 +34,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
-  ArrowLeft,
   AlertTriangle,
   CalendarDays,
   Download,
@@ -101,11 +100,6 @@ function AssociateDetailPage() {
   return (
     <div className="space-y-6">
       <div>
-        <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2">
-          <Link to="/dashboard/associates">
-            <ArrowLeft className="mr-2 h-4 w-4" /> All associates
-          </Link>
-        </Button>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <h1 className="font-serif text-2xl sm:text-3xl">{name}</h1>

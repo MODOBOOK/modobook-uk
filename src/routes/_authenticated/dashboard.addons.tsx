@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -19,7 +19,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Sparkles, ArrowLeft, Loader2, Tag } from "lucide-react";
+import { Plus, Pencil, Trash2, Sparkles, Loader2, Tag } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/addons")({
@@ -109,10 +109,7 @@ function AddonsPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 pb-12">
-      <header className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to="/dashboard"><ArrowLeft className="h-5 w-5" /></Link>
-        </Button>
+      <header className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h1 className="truncate text-2xl font-bold">Add-ons</h1>
           <p className="text-xs text-muted-foreground">Extras offered with treatments — tick to assign, set a discount per link.</p>

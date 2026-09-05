@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  ChevronLeft,
+  
   CalendarDays,
   PoundSterling,
   Users,
@@ -213,19 +213,8 @@ function AnalyticsPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6 overflow-x-hidden">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" asChild className="shrink-0 rounded-full">
-            <Link to="/dashboard">
-              <ChevronLeft className="size-5" />
-            </Link>
-          </Button>
-          <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">Insights</p>
-            <h1 className="font-serif text-2xl sm:text-3xl">Analytics</h1>
-          </div>
-        </div>
+      {/* Header — back + title live in the top bar */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
         <Button variant="outline" asChild className="gap-2 sm:order-2">
           <Link to="/dashboard/income-report">
             <PoundSterling className="size-4" /> Income report

@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Download, Loader2 } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { getIncomeReport } from "@/lib/analytics.functions";
 import { generateIncomeReportPdf } from "@/lib/income-report-pdf";
 import { toast } from "sonner";
@@ -76,18 +76,8 @@ function IncomeReportPage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 overflow-x-hidden">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="icon" asChild className="shrink-0 rounded-full">
-            <Link to="/dashboard/analytics">
-              <ChevronLeft className="size-5" />
-            </Link>
-          </Button>
-          <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted-foreground">Insights</p>
-            <h1 className="font-serif text-2xl sm:text-3xl">Income report</h1>
-          </div>
-        </div>
+      {/* Back + title live in the top bar */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
         <Button onClick={download} disabled={!data || loading} className="gap-2">
           <Download className="size-4" /> Download PDF
         </Button>

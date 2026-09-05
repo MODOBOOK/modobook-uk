@@ -1,11 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyTrainingBookings, updateBookingStatus } from "@/lib/training.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2, Mail, Phone } from "lucide-react";
+import { Loader2, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -55,12 +55,7 @@ function TrainingBookings() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 md:p-6">
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <Link to="/dashboard/training">
-            <Button variant="ghost" size="sm"><ArrowLeft className="mr-2 h-4 w-4" /> Back to courses</Button>
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold">Training bookings</h1>
-        </div>
+        <h1 className="text-2xl font-bold">Training bookings</h1>
       </div>
 
       {q.isLoading ? (

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Plus, Pencil, Trash2, Eye, EyeOff, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, X } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/pre-treatment")({
@@ -114,10 +114,7 @@ function PreTreatmentPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-4 sm:p-6 space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <Link to="/dashboard" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline">
-          <ArrowLeft className="h-4 w-4" /> Dashboard
-        </Link>
+      <div className="flex items-center justify-end gap-3">
         <Button onClick={() => openNew("general")}>
           <Plus className="mr-1 h-4 w-4" /> New section
         </Button>
