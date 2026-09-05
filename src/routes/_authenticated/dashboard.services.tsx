@@ -67,6 +67,9 @@ import {
   ArrowUp,
   ArrowDown,
   MoreVertical,
+  ChevronDown,
+  GripVertical,
+  ListOrdered,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -249,6 +252,7 @@ function ServicesPage() {
   const [svcDialog, setSvcDialog] = useState<{ defaultCatId: string | null } | null>(null);
   const [moveTreatState, setMoveTreatState] = useState<Treat | null>(null);
   const [moveCatState, setMoveCatState] = useState<Cat | null>(null);
+  const [reorderOpen, setReorderOpen] = useState(false);
 
 
 
