@@ -396,7 +396,7 @@ function ServicesPage() {
       </div>
 
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2">
         <FavouritesCard treatments={(treats.data ?? []) as Treat[]} />
         <PrescribingClinicCard />
       </div>
@@ -2034,21 +2034,21 @@ function FavouritesCard({ treatments }: { treatments: Treat[] }) {
   const defaultTitle = `${(p.full_name || p.clinic_name) ?? "Our"}'s Favourite Treatments`;
 
   return (
-    <Card className="rounded-3xl">
-      <CardContent className="space-y-4 p-4 sm:p-5">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+    <Card className="min-w-0 max-w-full overflow-hidden rounded-2xl sm:rounded-3xl">
+      <CardContent className="min-w-0 space-y-3 p-3 sm:space-y-4 sm:p-5">
+        <div className="flex min-w-0 flex-col gap-3 sm:grid sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
           <div className="flex min-w-0 items-start gap-2.5 sm:gap-3">
             <div className="shrink-0 rounded-xl bg-amber-100 p-2 text-amber-600">
               <Star className="h-4 w-4 fill-amber-500 stroke-amber-600 sm:h-5 sm:w-5" />
             </div>
             <div className="min-w-0">
               <h2 className="truncate text-sm font-semibold sm:text-base">Favourite / Most popular</h2>
-              <p className="text-[11px] leading-tight text-muted-foreground sm:text-xs">
+              <p className="line-clamp-2 text-[11px] leading-snug text-muted-foreground sm:text-xs">
                 Featured on your booking page as <em>“{customTitle.trim() || defaultTitle}”</em>.
               </p>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
             <Label htmlFor="fav-enabled" className="text-[10px] sm:text-xs">Show</Label>
             <Switch id="fav-enabled" checked={enabled} onCheckedChange={(v) => save({ favourites_enabled: v })} />
           </div>
@@ -2075,14 +2075,14 @@ function FavouritesCard({ treatments }: { treatments: Treat[] }) {
             No favourites picked yet.
           </p>
         ) : (
-          <ul className="divide-y rounded-lg border">
+          <ul className="min-w-0 divide-y overflow-hidden rounded-lg border">
             {selected.map((t, idx) => (
-              <li key={t.id} className="flex flex-col gap-1.5 p-2.5 sm:flex-row sm:items-center sm:gap-2">
+              <li key={t.id} className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 p-2.5">
                 <div className="flex min-w-0 items-center justify-between gap-2 sm:flex-1">
                   <span className="truncate text-sm font-medium">{t.name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">£{Number(t.price ?? 0).toFixed(2)}</span>
                 </div>
-                <div className="flex shrink-0 items-center justify-end gap-1">
+                <div className="flex shrink-0 items-center justify-end gap-0.5">
                   <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => move(idx, -1)} disabled={idx === 0}>
                     <ArrowUp className="h-3.5 w-3.5" />
                   </Button>
@@ -2092,7 +2092,7 @@ function FavouritesCard({ treatments }: { treatments: Treat[] }) {
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-7 w-7 text-destructive"
+                    className="hidden h-7 w-7 text-destructive sm:inline-flex"
                     onClick={() => save({ favourite_treatment_ids: ids.filter((x) => x !== t.id) })}
                   >
                     <X className="h-3.5 w-3.5" />
