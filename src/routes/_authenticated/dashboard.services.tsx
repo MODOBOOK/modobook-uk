@@ -978,7 +978,7 @@ function SortableServiceItem({
         <GripVertical className="h-4 w-4" />
       </button>
       <div className="flex-1">
-        <ServiceRow
+        <ServiceCard
           treat={treat}
           picker={picker}
           onDelete={onDelete}
