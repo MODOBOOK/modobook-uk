@@ -185,7 +185,7 @@ function Page() {
     <div className="space-y-6 p-4 md:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-serif text-2xl">Checks &amp; audits</h1>
+          <h1 className="font-serif text-2xl">Clinic Compliance</h1>
           <p className="text-sm text-muted-foreground">
             Run your regular clinic checks, score your audits and keep a dated record of everything.
           </p>
