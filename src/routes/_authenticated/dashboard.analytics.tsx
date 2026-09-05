@@ -226,6 +226,11 @@ function AnalyticsPage() {
             <h1 className="font-serif text-2xl sm:text-3xl">Analytics</h1>
           </div>
         </div>
+        <Button variant="outline" asChild className="gap-2 sm:order-2">
+          <Link to="/dashboard/income-report">
+            <PoundSterling className="size-4" /> Income report
+          </Link>
+        </Button>
         <Tabs value={range} className="-mx-1 w-full overflow-x-auto sm:mx-0 sm:w-auto" onValueChange={(v) => setRange(v as Range)}>
           <TabsList className="w-max rounded-full bg-muted/60">
             <TabsTrigger value="7d" className="rounded-full text-xs">7 days</TabsTrigger>
