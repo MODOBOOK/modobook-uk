@@ -653,7 +653,6 @@ function CategoryCard({
   const [open, setOpen] = useState(false);
   const expanded = forceOpen || open;
   const treatsHere = node.treatments.filter(matchTreat);
-  const totalCount = treatsHere.length + node.children.reduce((acc, c) => acc + c.treatments.length, 0);
   const canUp = index > 0;
   const canDown = index < siblings.length - 1;
   const limited = (node as Cat & { is_limited?: boolean | null }).is_limited;
