@@ -753,12 +753,14 @@ function CategoryCard({
                   </DropdownMenu>
                 </div>
                 <div className="space-y-2">
-                  {child.treatments.filter(matchTreat).map((t) => (
+                  {child.treatments.filter(matchTreat).map((t, i, arr) => (
                     <ServiceCard
                       key={t.id}
                       treat={t}
                       picker={picker}
                       onDelete={() => onDeleteTreat(t)}
+                      onMoveUp={i > 0 ? () => onMoveTreat(arr, t.id, -1) : undefined}
+                      onMoveDown={i < arr.length - 1 ? () => onMoveTreat(arr, t.id, 1) : undefined}
                       onMoveTo={() => onMoveTreatTo(t)}
                       onChangeCategory={(catId: string | null) => onChangeTreatCategory(t.id, catId)}
                     />
