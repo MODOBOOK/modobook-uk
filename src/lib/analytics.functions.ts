@@ -100,7 +100,19 @@ export const getIncomeReport = createServerFn({ method: "GET" })
       .from("appointments")
       .select(
         "id, scheduled_date, start_time, status, payment_status, payment_method, checkout_method, total_amount, amount_paid_cents, amount_refunded_cents, checkout_discount_cents, discount_amount, treatment_name_snapshot, treatments(name)",
-...
+      )
+      .eq("profile_id", profileId)
+      .gte("scheduled_date", data.from)
+      .lte("scheduled_date", data.to)
+      .order("scheduled_date", { ascending: true })
+      .range(0, 9999);
+    if (error) throw error;
+
+    const rows: IncomeReportRow[] = [];
+    const methodMap = new Map<string, { amount: number; count: number }>();
+    const treatMap = new Map<string, { amount: number; count: number }>();
+    const monthMap = new Map<string, { amount: number; count: number }>();
+    let gross = 0, discounts = 0, refunds = 0, net = 0;
     for (const a of (appts ?? []) as any[]) {
       if (a.status === "cancelled" && !(a.amount_paid_cents > 0)) continue;
       const refund = (a.amount_refunded_cents ?? 0) / 100;
