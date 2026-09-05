@@ -34,7 +34,7 @@ import {
   Mail,
   Gift,
   GraduationCap,
-  ExternalLink,
+  
   TrendingUp,
   MessageCircle,
   ShieldCheck,
