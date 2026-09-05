@@ -438,6 +438,39 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
   );
 }
 
+function mobilePageTitle(pathname: string): string {
+  const p = pathname.replace(/\/+$/, "") || "/dashboard";
+  const map: [RegExp, string][] = [
+    [/^\/dashboard$/, "Home"],
+    [/^\/dashboard\/bookings/, "Calendar"],
+    [/^\/dashboard\/new-appointment/, "New booking"],
+    [/^\/dashboard\/patients/, "Patients"],
+    [/^\/dashboard\/menu/, "Menu"],
+    [/^\/dashboard\/settings/, "Settings"],
+    [/^\/dashboard\/notifications/, "Notifications"],
+    [/^\/dashboard\/consultations/, "Consultation"],
+    [/^\/dashboard\/treatments/, "Treatments"],
+    [/^\/dashboard\/packages/, "Packages"],
+    [/^\/dashboard\/compliance/, "Clinic Compliance"],
+    [/^\/dashboard\/staff/, "Staff"],
+    [/^\/dashboard\/locations/, "Locations"],
+    [/^\/dashboard\/schedule/, "Schedule"],
+    [/^\/dashboard\/billing/, "Plan & billing"],
+    [/^\/dashboard\/marketing/, "Marketing"],
+    [/^\/dashboard\/reviews/, "Reviews"],
+    [/^\/dashboard\/gift-cards/, "Gift cards"],
+    [/^\/dashboard\/training/, "Training"],
+    [/^\/dashboard\/room-rental/, "Room rental"],
+    [/^\/dashboard\/associates/, "Associates"],
+    [/^\/dashboard\/partner-referrals/, "Refer a friend"],
+    [/^\/dashboard\/forms/, "Forms"],
+    [/^\/dashboard\/payments/, "Payments"],
+  ];
+  for (const [re, title] of map) if (re.test(p)) return title;
+  const last = p.split("/").pop() ?? "Dashboard";
+  return last.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function BackButton() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   if (pathname === "/dashboard" || pathname === "/dashboard/") return null;
