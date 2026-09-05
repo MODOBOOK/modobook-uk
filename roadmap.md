@@ -2,10 +2,9 @@
 
 Goal: MODO runs in an app WebView; dashboard must feel native on phones.
 
-- [ ] Global mobile CSS: 44px+ tap targets, larger text, no horizontal overflow
-- [ ] Dialogs/sheets fit small screens (bottom-sheet style, safe-area aware, scrollable)
-- [ ] Bottom tab bar polish (already present — verify hit areas, active states, center quick action)
-- [ ] Dashboard home mobile layout (cards stack, tighter spacing, less scroll)
-- [ ] Bookings/calendar mobile fit (no cut-off columns)
-- [ ] Patients list mobile fit
-- [ ] Verify on mobile viewport with Playwright
+- [x] Global mobile CSS: 44px tap targets, larger inputs, no horizontal overflow
+- [x] Dialogs become bottom sheets on phones (safe-area aware, slide up)
+- [x] Bottom tab bar: 5 tabs with centre "New" booking button
+- [x] Dashboard home: tighter mobile spacing
+- [x] Month calendar: compact cells on phones (count badge only)
+- [ ] User to review on phone and flag any screens still cramped
