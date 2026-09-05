@@ -7,11 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fetchActiveTerms, recordTermsAcceptance } from "@/lib/platform-terms";
 import { captureReferralFromUrl, getStoredReferral, storeReferral } from "@/lib/referral-capture";
@@ -105,21 +103,6 @@ function AuthPage() {
     setForgotOpen(false);
   }
 
-  async function handleOAuth(provider: "google" | "apple") {
-    setLoading(true);
-    const callbackUrl = new URL("/auth", window.location.origin);
-    if (next) callbackUrl.searchParams.set("next", next);
-    if (prefillEmail) callbackUrl.searchParams.set("email", prefillEmail);
-    const redirectUri = callbackUrl.toString();
-    const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: redirectUri });
-    setLoading(false);
-    if (result.error) {
-      toast.error(result.error.message || `${provider === "apple" ? "Apple" : "Google"} sign in failed`);
-      return;
-    }
-    if (result.redirected) return;
-    router.navigate(postAuthTo());
-  }
 
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
@@ -267,16 +250,6 @@ function AuthPage() {
 
 
 
-            <Separator />
-
-            <Button variant="outline" className="w-full" onClick={() => handleOAuth("google")} disabled={loading}>
-              Continue with Google
-            </Button>
-
-            <Button variant="outline" className="w-full bg-black text-white hover:bg-black/90 hover:text-white" onClick={() => handleOAuth("apple")} disabled={loading}>
-              <svg className="mr-2 h-4 w-4" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zM256.6 84.5c26.9-31.9 24.5-61 23.7-71.5-23.8 1.4-51.4 16.2-67.1 34.4-17.3 19.5-27.5 43.6-25.3 70.9 25.7 2 49.1-11.2 68.7-33.8z"/></svg>
-              Continue with Apple
-            </Button>
 
             <p className="text-center text-xs text-muted-foreground">
               By continuing you agree to our{" "}
