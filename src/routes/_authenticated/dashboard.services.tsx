@@ -158,6 +158,83 @@ function flattenForPicker(roots: CatNode[]): { id: string; label: string; depth:
   return out;
 }
 
+function AddMenu({
+  hasCategories,
+  onAddCategory,
+  onAddService,
+  onAddLimited,
+}: {
+  hasCategories: boolean;
+  onAddCategory: () => void;
+  onAddService: () => void;
+  onAddLimited: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [open]);
+  return (
+    <div ref={ref} className="relative shrink-0">
+      <Button
+        className="h-14 w-full gap-2 rounded-2xl bg-primary px-6 text-base font-semibold text-primary-foreground hover:bg-primary/90 sm:w-auto"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <Plus className="h-5 w-5" /> Add new
+      </Button>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-2xl border bg-card p-1.5 shadow-luxe">
+          <button
+            type="button"
+            onClick={() => {
+              onAddCategory();
+              setOpen(false);
+            }}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium hover:bg-muted/50"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <FolderPlus className="h-5 w-5" />
+            </span>
+            Category
+          </button>
+          <button
+            type="button"
+            disabled={!hasCategories}
+            onClick={() => {
+              onAddService();
+              setOpen(false);
+            }}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium hover:bg-muted/50 disabled:opacity-50"
+            title={hasCategories ? "" : "Create a category first"}
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Plus className="h-5 w-5" />
+            </span>
+            Service
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onAddLimited();
+              setOpen(false);
+            }}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium text-rose-700 hover:bg-rose-50"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-100 text-rose-600">
+              <Star className="h-5 w-5" />
+            </span>
+            Limited-time category
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ServicesPage() {
   const fetchCats = useServerFn(getMyCategories);
   const fetchTreats = useServerFn(getMyTreatments);
