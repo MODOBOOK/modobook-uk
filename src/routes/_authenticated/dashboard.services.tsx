@@ -614,6 +614,7 @@ function CategoryCard({
   index,
   matchTreat,
   picker,
+  forceOpen,
   onAddSub,
   onEditCat,
   onDeleteCat,
@@ -632,6 +633,7 @@ function CategoryCard({
   index: number;
   matchTreat: (t: Treat) => boolean;
   picker: { id: string; label: string; depth: number }[];
+  forceOpen?: boolean;
   onAddSub: (parentId: string) => void;
   onEditCat: (c: Cat) => void;
   onDeleteCat: (c: Cat) => void;
@@ -645,6 +647,8 @@ function CategoryCard({
   onChangeTreatCategory: (treatId: string, categoryId: string | null) => void | Promise<void>;
   isUncategorised?: boolean;
 }) {
+  const [open, setOpen] = useState(false);
+  const expanded = forceOpen || open;
   const treatsHere = node.treatments.filter(matchTreat);
   const totalCount = treatsHere.length + node.children.reduce((acc, c) => acc + c.treatments.length, 0);
   const canUp = index > 0;
@@ -655,14 +659,22 @@ function CategoryCard({
   return (
     <Card className="flex flex-col overflow-hidden rounded-3xl border bg-card shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-start justify-between gap-3 border-b bg-muted/20 p-4">
-        <div className="min-w-0 flex-1">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="min-w-0 flex-1 text-left"
+          aria-expanded={expanded}
+        >
           <div className="flex items-center gap-2">
+            <ChevronDown
+              className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
+            />
             {node.icon && <span className="text-xl">{node.icon}</span>}
             <h3 className="font-display min-w-0 flex-1 truncate text-lg font-semibold text-foreground">
               {node.name}
             </h3>
           </div>
-          {node.description && (
+          {node.description && expanded && (
             <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{node.description}</p>
           )}
           <div className="mt-2 flex flex-wrap items-center gap-2">
