@@ -832,7 +832,7 @@ function MonthView({
               key={key}
               onClick={() => onPickDay(d)}
               disabled={isPast}
-              className={`relative min-h-[88px] border-b border-r p-1.5 text-left transition hover:bg-accent/40 disabled:cursor-not-allowed disabled:hover:bg-transparent ${
+              className={`relative min-h-[52px] border-b border-r p-1 text-left transition hover:bg-accent/40 disabled:cursor-not-allowed disabled:hover:bg-transparent sm:min-h-[88px] sm:p-1.5 ${
                 !inMonth ? "bg-muted/20 text-muted-foreground" : ""
               } ${unavailable && inMonth ? "bg-muted/50 text-muted-foreground" : ""} ${
                 isPast ? "opacity-60" : ""
@@ -857,7 +857,7 @@ function MonthView({
                   </span>
                 )}
               </div>
-              <div className="mt-1 space-y-0.5">
+              <div className="mt-1 hidden space-y-0.5 sm:block">
                 {dayAppts.slice(0, 3).map((a) => {
                   const color = a.treatments?.color || "#3b82f6";
                   return (

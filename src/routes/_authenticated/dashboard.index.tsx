@@ -123,7 +123,7 @@ function DashboardIndex() {
   }, [upcoming]);
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="mx-auto max-w-4xl space-y-5 sm:space-y-8">
       {/* Hero */}
       <Card className="overflow-hidden border-border/60 shadow-luxe">
         <CardContent className="relative p-5 sm:p-8">
