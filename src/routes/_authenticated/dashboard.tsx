@@ -44,6 +44,14 @@ import {
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useDashboardThemeStyle } from "@/hooks/use-dashboard-theme";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { countPendingReviews } from "@/lib/patient.functions";
@@ -316,21 +324,53 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
                 {mobilePageTitle(pathname)}
               </div>
             </div>
-            <div className="flex items-center gap-1 [&_button]:text-primary-foreground">
-              <NotificationsBell />
-              <Link to="/dashboard/settings" aria-label="Your account" className="ml-1 shrink-0">
-                {profile.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt=""
-                    className="h-9 w-9 rounded-full object-cover ring-2 ring-primary-foreground/40"
-                  />
-                ) : (
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/20 text-sm font-semibold">
-                    {(displayName || "M").charAt(0).toUpperCase()}
+            <div className="flex items-center gap-1.5 [&_button]:text-primary-foreground">
+              <Link
+                to="/hub"
+                aria-label="Prescriber Hub"
+                className="relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15 text-primary-foreground active:bg-primary-foreground/25"
+              >
+                <Stethoscope className="h-5 w-5" />
+                {hubCounts.total > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 inline-flex min-w-[1.1rem] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground ring-2 ring-primary">
+                    {hubCounts.total > 99 ? "99+" : hubCounts.total}
                   </span>
                 )}
               </Link>
+              <div className="rounded-full bg-primary-foreground/15 [&_button]:h-11 [&_button]:w-11 [&_svg]:h-5 [&_svg]:w-5">
+                <NotificationsBell />
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button aria-label="More pages" className="ml-0.5 shrink-0 rounded-full ring-2 ring-primary-foreground/40">
+                    {profile.avatar_url ? (
+                      <img
+                        src={profile.avatar_url}
+                        alt=""
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-foreground/20 text-sm font-semibold">
+                        {(displayName || "M").charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="truncate">{displayName || "My Clinic"}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild><Link to="/dashboard/settings">Settings</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link to="/dashboard/billing">Plan &amp; billing</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link to="/dashboard/payments">Payments</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link to="/dashboard/marketing">Marketing</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild><Link to="/dashboard/reviews">Reviews</Link></DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a href={`/m/${profile.slug}`} target="_blank" rel="noreferrer">Preview booking page</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => void signOut()}>Sign out</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
