@@ -214,6 +214,7 @@ function BookingsPage() {
   const [rotaAnchor, setRotaAnchor] = useState<string | null>(null);
   const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
   const [locationFilter, setLocationFilter] = useState<string>("all");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [anchor, setAnchor] = useState(new Date());
   const [view, setView] = useState<ViewMode>(() =>
