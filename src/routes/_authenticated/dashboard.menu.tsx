@@ -209,7 +209,6 @@ function comingSoonFor(to: string): ComingSoonKey | null {
     <div className="mx-auto max-w-2xl space-y-6 px-1">
       <div className="pt-2 text-center">
         <h1 className="text-3xl font-extrabold tracking-tight">My Clinic</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{profile.clinic_name || "Manage your clinic"}</p>
       </div>
 
       <div className="relative">
