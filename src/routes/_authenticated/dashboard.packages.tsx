@@ -285,8 +285,8 @@ function PackagesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-bold">Packages</h1>
           <p className="text-sm text-muted-foreground">Bundle multiple treatments or sessions and sell them as one bookable package.</p>
         </div>
@@ -294,7 +294,7 @@ function PackagesPage() {
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" />New package</Button>
+            <Button onClick={openCreate} className="w-full shrink-0 sm:w-auto"><Plus className="mr-2 h-4 w-4" />New package</Button>
           </DialogTrigger>
           <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{editing ? "Edit package" : "New package"}</DialogTitle></DialogHeader>
