@@ -597,7 +597,105 @@ export const setClientMarketingOptIn = createServerFn({ method: 'POST' })
     return { ok: true }
   })
 
+// ---------- Bulk opt-in (soft opt-in / legitimate interest, UK PECR + GDPR) ----------
+// Only existing customers (patients who have actually booked) with a usable
+// email address are eligible. Never touches anyone who has unsubscribed or is
+// suppressed, and never touches anyone already opted in.
+async function collectBulkOptInCandidates(supabase: any, ownerId: string) {
+  const { data: clients, error } = await supabase.from('clinic_clients')
+    .select('id, email, marketing_opt_in')
+    .eq('profile_id', ownerId).eq('archived', false).eq('is_demo', false)
+    .limit(5000)
+  if (error) throw new Error(error.message)
+  const rows = (clients || []) as Array<{ id: string; email: string | null; marketing_opt_in: boolean }>
+
+  const alreadyOptedIn = rows.filter((r) => r.marketing_opt_in).length
+  const pending = rows.filter((r) => !r.marketing_opt_in)
+  const noEmail = pending.filter((r) => !r.email || !r.email.includes('@')).length
+  const withEmail = pending.filter((r) => !!r.email && r.email.includes('@'))
+
+  // Existing customer relationship: must have at least one appointment.
+  const ids = withEmail.map((r) => r.id)
+  const bookedIds = new Set<string>()
+  for (let i = 0; i < ids.length; i += 500) {
+    const chunk = ids.slice(i, i + 500)
+    if (!chunk.length) continue
+    const { data: appts } = await supabase.from('appointments').select('client_id').in('client_id', chunk).limit(20000)
+    for (const a of (appts || []) as any[]) if (a.client_id) bookedIds.add(a.client_id as string)
+  }
+  const customers = withEmail.filter((r) => bookedIds.has(r.id))
+  const noAppointment = withEmail.length - customers.length
+
+  // Exclude suppressed / previously unsubscribed emails.
+  const emails = Array.from(new Set(customers.map((r) => (r.email || '').toLowerCase())))
+  const suppressedSet = new Set<string>()
+  for (let i = 0; i < emails.length; i += 500) {
+    const chunk = emails.slice(i, i + 500)
+    if (!chunk.length) continue
+    const { data: sup } = await supabase.from('suppressed_emails').select('email').in('email', chunk)
+    for (const s of (sup || []) as any[]) suppressedSet.add(String(s.email).toLowerCase())
+  }
+  const eligible = customers.filter((r) => !suppressedSet.has((r.email || '').toLowerCase()))
+  const suppressed = customers.length - eligible.length
+
+  return {
+    totalActive: rows.length,
+    alreadyOptedIn,
+    eligible: eligible.map((r) => r.id),
+    skippedNoEmail: noEmail,
+    skippedNoAppointment: noAppointment,
+    skippedUnsubscribed: suppressed,
+  }
+}
+
+export const previewBulkMarketingOptIn = createServerFn({ method: 'GET' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const ownerId = await getOwnerProfileId(context.supabase, context.userId)
+    const res = await collectBulkOptInCandidates(context.supabase, ownerId)
+    return { ...res, eligible: res.eligible.length }
+  })
+
+export const bulkMarketingOptIn = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => z.object({
+    confirmText: z.string(),
+    acknowledgements: z.object({
+      existingCustomers: z.boolean(),
+      similarServices: z.boolean(),
+      optOutOffered: z.boolean(),
+      responsible: z.boolean(),
+    }),
+  }).parse(raw))
+  .handler(async ({ data, context }) => {
+    const a = data.acknowledgements
+    if (!a.existingCustomers || !a.similarServices || !a.optOutOffered || !a.responsible) {
+      throw new Error('You must confirm every compliance statement before opting patients in.')
+    }
+    if (data.confirmText.trim().toUpperCase() !== 'OPT IN') {
+      throw new Error('Type OPT IN to confirm.')
+    }
+    const ownerId = await getOwnerProfileId(context.supabase, context.userId)
+    const { eligible } = await collectBulkOptInCandidates(context.supabase, ownerId)
+    if (!eligible.length) return { ok: true, updated: 0 }
+
+    const nowIso = new Date().toISOString()
+    let updated = 0
+    for (let i = 0; i < eligible.length; i += 200) {
+      const chunk = eligible.slice(i, i + 200)
+      const { error } = await context.supabase.from('clinic_clients').update({
+        marketing_opt_in: true,
+        marketing_opt_in_at: nowIso,
+        marketing_opt_in_source: 'practitioner_bulk_soft_optin',
+      }).in('id', chunk).eq('profile_id', ownerId).eq('marketing_opt_in', false)
+      if (error) throw new Error(error.message)
+      updated += chunk.length
+    }
+    return { ok: true, updated }
+  })
+
 // Cron entry called by the public dispatch route
+
 export async function processScheduledCampaigns() {
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
   const nowIso = new Date().toISOString()
