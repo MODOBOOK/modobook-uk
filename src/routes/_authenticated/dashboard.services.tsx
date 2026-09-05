@@ -1821,7 +1821,7 @@ function FavouritesCard({ treatments }: { treatments: Treat[] }) {
   const defaultTitle = `${(p.full_name || p.clinic_name) ?? "Our"}'s Favourite Treatments`;
 
   return (
-    <Card>
+    <Card className="rounded-3xl">
       <CardContent className="space-y-4 p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
