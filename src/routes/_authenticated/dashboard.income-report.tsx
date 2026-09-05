@@ -183,8 +183,28 @@ function IncomeReportPage() {
               <CardTitle className="text-base">Transactions</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[520px] text-sm">
+              {data.rows.length === 0 && (
+                <p className="px-3 py-6 text-center text-sm text-muted-foreground">No bookings in this period.</p>
+              )}
+              {/* Mobile: stacked cards */}
+              <div className="divide-y md:hidden">
+                {data.rows.map((r) => (
+                  <div key={r.id} className="space-y-1 px-4 py-3 text-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-medium leading-snug">{r.treatment}</span>
+                      <span className="shrink-0 font-semibold">{money(r.net)}</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                      <span>{r.date}</span>
+                      <span className="capitalize">{r.method.replace(/_/g, " ")}</span>
+                      {r.refunded ? <span>Refund {money(r.refunded)}</span> : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Desktop: table */}
+              <div className="hidden overflow-x-auto md:block">
+                <table className="w-full text-sm">
                   <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2">Date</th>
@@ -195,11 +215,6 @@ function IncomeReportPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.rows.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">No bookings in this period.</td>
-                      </tr>
-                    )}
                      {data.rows.map((r) => (
                       <tr key={r.id} className="border-t">
                         <td className="px-3 py-2 whitespace-nowrap">{r.date}</td>
