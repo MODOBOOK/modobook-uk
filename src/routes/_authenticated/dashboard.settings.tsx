@@ -38,6 +38,13 @@ function SettingsPage() {
     // payments
     payment_card_full_enabled: profile.payment_card_full_enabled !== false,
     payment_deposit_enabled: !!profile.payment_deposit_enabled,
+    deposit_type: (((profile as { deposit_type?: string | null }).deposit_type ?? "fixed") === "percent" ? "percent" : "fixed") as "fixed" | "percent",
+    deposit_pounds: ((profile.deposit_amount_cents as number | null) ?? 0) > 0
+      ? String(((profile.deposit_amount_cents as number) ?? 0) / 100)
+      : "",
+    deposit_percent: Number((profile as { deposit_percent?: number | null }).deposit_percent ?? 0) > 0
+      ? String((profile as { deposit_percent?: number | null }).deposit_percent)
+      : "",
     payment_klarna_enabled: !!profile.payment_klarna_enabled,
     payment_clearpay_enabled: !!profile.payment_clearpay_enabled,
     payment_pass_fees_to_customer: !!profile.payment_pass_fees_to_customer,
@@ -105,6 +112,9 @@ const [saving, setSaving] = useState(false);
           ...s,
           // Deposit is always required when deposits are enabled — no separate toggle.
           require_deposit_to_confirm: s.payment_deposit_enabled,
+          deposit_type: s.deposit_type,
+          deposit_amount_cents: s.deposit_type === "fixed" && s.deposit_pounds ? Math.round(Number(s.deposit_pounds) * 100) : 0,
+          deposit_percent: s.deposit_type === "percent" && s.deposit_percent ? Math.max(0, Math.min(100, Number(s.deposit_percent))) : 0,
         },
       });
       toast.success("Settings saved");
@@ -195,6 +205,58 @@ const [saving, setSaving] = useState(false);
             checked={s.payment_deposit_enabled}
             onChange={(v) => set("payment_deposit_enabled", v)}
           />
+          {s.payment_deposit_enabled && (
+            <div className="rounded-xl border p-3 space-y-3">
+              <div>
+                <Label>Deposit type</Label>
+                <div className="mt-1 inline-flex rounded-lg border p-1">
+                  <button
+                    type="button"
+                    onClick={() => set("deposit_type", "fixed")}
+                    className={`rounded-md px-3 py-1 text-sm ${s.deposit_type === "fixed" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                  >
+                    Fixed (£)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => set("deposit_type", "percent")}
+                    className={`rounded-md px-3 py-1 text-sm ${s.deposit_type === "percent" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                  >
+                    Percent (%)
+                  </button>
+                </div>
+              </div>
+              {s.deposit_type === "fixed" ? (
+                <div>
+                  <Label>Deposit amount (£)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={s.deposit_pounds}
+                    onChange={(e) => set("deposit_pounds", e.target.value)}
+                    placeholder="e.g. 30"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <Label>Deposit percent (%)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={s.deposit_percent}
+                    onChange={(e) => set("deposit_percent", e.target.value)}
+                    placeholder="e.g. 20"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Calculated from each treatment's price. A per-treatment fixed deposit still overrides this.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
           <ToggleRow
             label="Klarna"
             hint="Pay in 3 / pay later via Klarna. Same platform fee as every other method."
