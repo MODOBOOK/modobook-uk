@@ -26,7 +26,12 @@ async function getProfile(supabase: any, userId: string) {
 }
 
 const planSchema = z.object({
-  id: z.string().uuid().optional(),
+  id: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => (v ? v : undefined))
+    .refine((v) => !v || /^[0-9a-f-]{36}$/i.test(v), "Invalid uuid"),
   name: z.string().min(2).max(120),
   description: z.string().max(2000).nullish(),
   priceCents: z.number().int().min(100),
