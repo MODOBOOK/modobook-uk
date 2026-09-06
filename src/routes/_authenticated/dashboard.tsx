@@ -317,7 +317,7 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
               WhatsApp support
             </a>
           </Button>
-          <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={signOut}>
+          <Button variant="ghost" className="cl-rail-link w-full justify-start" onClick={signOut}>
             <LogOut className="mr-2 h-4 w-4" />
             Sign out
           </Button>
