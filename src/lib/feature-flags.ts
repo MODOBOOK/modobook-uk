@@ -104,7 +104,9 @@ export function whatsappMessagingEnabled(slug?: string | null) {
 export const WHATSAPP_REMINDER_ONLY_SLUGS: string[] = [];
 
 export function whatsappReminderOnly(slug?: string | null) {
-  return isFeatureLive(WHATSAPP_REMINDER_ONLY_SLUGS, slug);
+  // Explicit allowlist: an empty list means nobody is restricted.
+  if (!slug) return false;
+  return WHATSAPP_REMINDER_ONLY_SLUGS.includes(slug.toLowerCase());
 }
 
 

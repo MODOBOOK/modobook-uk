@@ -1,4 +1,4 @@
-import { createFileRoute, useSearch } from '@tanstack/react-router'
+import { createFileRoute, redirect, useSearch } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { useServerFn } from '@tanstack/react-start'
 import {
@@ -14,10 +14,15 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Loader2, MessageSquare, Users2, CreditCard, AlertTriangle, ChevronDown, Search } from 'lucide-react'
 import { toast } from 'sonner'
+import { smsMarketingEnabled } from '@/lib/feature-flags'
 
 type Patient = { id: string; name: string; phone: string }
 
 export const Route = createFileRoute('/_authenticated/dashboard/marketing/sms')({
+  beforeLoad: ({ context }) => {
+    const slug = (context as { profile?: { slug?: string | null } }).profile?.slug
+    if (!smsMarketingEnabled(slug)) throw redirect({ to: '/dashboard/coming-soon' })
+  },
   component: SmsBlastPage,
   validateSearch: (s: Record<string, unknown>) => ({
     blast: typeof s.blast === 'string' ? s.blast : undefined,

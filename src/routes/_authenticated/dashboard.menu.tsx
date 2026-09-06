@@ -1,4 +1,4 @@
-import { membershipsEnabled, pilotFeaturesEnabled, practitionerReferralsEnabled } from "@/lib/feature-flags";
+import { membershipsEnabled, pilotFeaturesEnabled, practitionerReferralsEnabled, smsMarketingEnabled } from "@/lib/feature-flags";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -198,6 +198,7 @@ function comingSoonFor(to: string): ComingSoonKey | null {
   }
 
   const memberships = membershipsEnabled(profile.slug);
+  const smsMarketing = smsMarketingEnabled(profile.slug);
 
   const visible = useMemo(() => {
     return groups.map((g) => ({
@@ -206,6 +207,7 @@ function comingSoonFor(to: string): ComingSoonKey | null {
         .filter((i) => canAccessRoute(clinicRole, i.to))
         .filter((i) => (i.to === "/dashboard/compliance" ? pilot : true))
         .filter((i) => (i.to === "/dashboard/memberships" ? memberships : true))
+        .filter((i) => (i.to === "/dashboard/marketing/sms" ? smsMarketing : true))
         .filter((i) =>
           i.to === "/dashboard/associates"
             ? pilot
@@ -214,7 +216,7 @@ function comingSoonFor(to: string): ComingSoonKey | null {
             : true,
         ),
     })).filter((g) => g.items.length > 0);
-  }, [profile.associates_enabled, pilot, clinicRole, memberships]);
+  }, [profile.associates_enabled, pilot, clinicRole, memberships, smsMarketing]);
 
   const searchResults = useMemo(() => {
     if (!query.trim()) return null;
