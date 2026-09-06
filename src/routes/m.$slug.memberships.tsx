@@ -25,6 +25,8 @@ export const Route = createFileRoute("/m/$slug/memberships")({
   component: MembershipsPublicPage,
 });
 
+type IncludedTreatment = { treatment_id: string; quantity: number; name: string; price_cents: number | null };
+
 type PublicPlan = {
   id: string;
   name: string;
@@ -36,6 +38,7 @@ type PublicPlan = {
   discount_percent: number | null;
   perks: string | null;
   included_treatments: Array<{ treatment_id: string; quantity: number }> | unknown;
+  includedTreatmentDetails?: IncludedTreatment[];
 };
 
 const gbp = (cents: number) => `£${(cents / 100).toFixed(2)}`;
