@@ -20,6 +20,7 @@ type ConfiguredOptions = {
   depositEnabled: boolean;
   cashEnabled: boolean;
   cashOnlyBalance: boolean;
+  allowPayInClinic: boolean;
   cardCaptureEnabled: boolean;
   cardCapturePolicy: string | null;
   depositCents: number;
@@ -117,14 +118,18 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
 
 
 
+  // "Pay in full in cash" is governed by the clinic's own "Allow pay in
+  // clinic" toggle — independent of deposits.
+  const cashFullAvailable = !!configured && (opts as ConfiguredOptions).allowPayInClinic !== false;
   // "Pay deposit now, rest in cash" is available whenever the clinic takes
-  // deposits, allows pay-in-clinic and the deposit is smaller than the total.
+  // deposits, accepts cash at the clinic (either toggle) and the deposit is
+  // smaller than the total.
   const cashDepositAvailable = !!configured
     && !depositWaived
     && !!(opts as ConfiguredOptions).depositEnabled
     && effectiveDepositCents >= 100
     && effectiveDepositCents < treatmentTotalCents
-    && !!(opts as ConfiguredOptions).cashEnabled;
+    && (cashFullAvailable || !!(opts as ConfiguredOptions).cashOnlyBalance);
 
   // Methods depend on the selected mode: deposits are always card-only
   // (Klarna/Clearpay can't save a reusable card on file). Full payments allow
@@ -190,14 +195,18 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     if (value.mode === "deposit" && !depositWaived && o.requireDepositToConfirm && o.depositEnabled && availableMethods.includes("card")) {
       return { mode: "deposit" as const, method: "card" as const };
     }
-    const mode = value.mode === "cash_deposit"
+    let mode = value.mode === "cash_deposit"
       ? (cashDepositAvailable ? ("cash_deposit" as const) : ((availableModes.includes("cash") ? "cash" : availableModes[0]) ?? "full"))
       : availableModes.includes(value.mode) ? value.mode : (availableModes[0] ?? "full");
+    // Cash-in-full only when the clinic allows it; otherwise the only cash
+    // path is "deposit now + cash balance".
+    if (mode === "cash" && !cashFullAvailable && cashDepositAvailable) mode = "cash_deposit";
+    if (mode === "cash_deposit" && !cashDepositAvailable) mode = cashFullAvailable ? "cash" : (availableModes[0] ?? "full");
     const method = availableMethods.includes(value.method) ? value.method : (availableMethods[0] ?? "card");
     // When deposit equals the full price, treat it as a full payment.
     const normalizedMode = mode === "deposit" && effectiveDepositCents === treatmentTotalCents ? "full" : mode;
     return { mode: normalizedMode, method, policyAgreed: value.policyAgreed === true };
-  }, [value, opts, availableModes, availableMethods, depositWaived, effectiveDepositCents, treatmentTotalCents, cashDepositAvailable]);
+  }, [value, opts, availableModes, availableMethods, depositWaived, effectiveDepositCents, treatmentTotalCents, cashDepositAvailable, cashFullAvailable]);
 
 
   if (!configured || availableModes.length === 0) return null;
@@ -244,6 +253,9 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   };
 
   const selectMode = (mode: BookingMode) => {
+    // If the clinic only offers "deposit + cash balance" (no cash-in-full),
+    // the cash button selects that directly.
+    if (mode === "cash" && !cashFullAvailable && cashDepositAvailable) mode = "cash_deposit";
     const method = (mode === "deposit" && o.requireDepositToConfirm && availableMethods.includes("card")) || mode === "cash_deposit"
       ? "card"
       : availableMethods[0] ?? "card";
@@ -332,14 +344,16 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
               >
                 <div className="text-sm font-semibold">Pay in cash at your appointment</div>
                 <div className="text-xs opacity-75">
-                  {cashDepositAvailable
+                  {cashDepositAvailable && cashFullAvailable
                     ? "Choose below: secure with a deposit now, or pay the full amount in cash on the day."
-                    : `Nothing to pay now — please bring £${totalAmount.toFixed(2)} in cash on the day.`}
+                    : cashDepositAvailable
+                      ? `Pay ${formatGBP(effectiveDepositCents)} deposit now by card — the rest in cash on the day.`
+                      : `Nothing to pay now — please bring £${totalAmount.toFixed(2)} in cash on the day.`}
                 </div>
               </button>
             )}
           </div>
-          {(chosen?.mode === "cash" || chosen?.mode === "cash_deposit") && cashDepositAvailable && (
+          {(chosen?.mode === "cash" || chosen?.mode === "cash_deposit") && cashDepositAvailable && cashFullAvailable && (
             <div className="mt-2 space-y-2">
               {([
                 {
