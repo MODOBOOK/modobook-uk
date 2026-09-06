@@ -103,6 +103,7 @@ import { Route as AuthenticatedDashboardPackagesRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardNewAppointmentRouteImport } from './routes/_authenticated/dashboard.new-appointment'
 import { Route as AuthenticatedDashboardModelSlotsRouteImport } from './routes/_authenticated/dashboard.model-slots'
 import { Route as AuthenticatedDashboardMenuRouteImport } from './routes/_authenticated/dashboard.menu'
+import { Route as AuthenticatedDashboardMembershipsRouteImport } from './routes/_authenticated/dashboard.memberships'
 import { Route as AuthenticatedDashboardMedicalFormsRouteImport } from './routes/_authenticated/dashboard.medical-forms'
 import { Route as AuthenticatedDashboardMarketingRouteImport } from './routes/_authenticated/dashboard.marketing'
 import { Route as AuthenticatedDashboardLocationsRouteImport } from './routes/_authenticated/dashboard.locations'
@@ -696,6 +697,12 @@ const AuthenticatedDashboardMenuRoute =
     path: '/menu',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardMembershipsRoute =
+  AuthenticatedDashboardMembershipsRouteImport.update({
+    id: '/memberships',
+    path: '/memberships',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardMedicalFormsRoute =
   AuthenticatedDashboardMedicalFormsRouteImport.update({
     id: '/medical-forms',
@@ -1270,6 +1277,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/marketing': typeof AuthenticatedDashboardMarketingRouteWithChildren
   '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
+  '/dashboard/memberships': typeof AuthenticatedDashboardMembershipsRoute
   '/dashboard/menu': typeof AuthenticatedDashboardMenuRoute
   '/dashboard/model-slots': typeof AuthenticatedDashboardModelSlotsRoute
   '/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
@@ -1442,6 +1450,7 @@ export interface FileRoutesByTo {
   '/dashboard/invoices': typeof AuthenticatedDashboardInvoicesRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
+  '/dashboard/memberships': typeof AuthenticatedDashboardMembershipsRoute
   '/dashboard/menu': typeof AuthenticatedDashboardMenuRoute
   '/dashboard/model-slots': typeof AuthenticatedDashboardModelSlotsRoute
   '/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
@@ -1620,6 +1629,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/_authenticated/dashboard/marketing': typeof AuthenticatedDashboardMarketingRouteWithChildren
   '/_authenticated/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
+  '/_authenticated/dashboard/memberships': typeof AuthenticatedDashboardMembershipsRoute
   '/_authenticated/dashboard/menu': typeof AuthenticatedDashboardMenuRoute
   '/_authenticated/dashboard/model-slots': typeof AuthenticatedDashboardModelSlotsRoute
   '/_authenticated/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
@@ -1802,6 +1812,7 @@ export interface FileRouteTypes {
     | '/dashboard/locations'
     | '/dashboard/marketing'
     | '/dashboard/medical-forms'
+    | '/dashboard/memberships'
     | '/dashboard/menu'
     | '/dashboard/model-slots'
     | '/dashboard/new-appointment'
@@ -1974,6 +1985,7 @@ export interface FileRouteTypes {
     | '/dashboard/invoices'
     | '/dashboard/locations'
     | '/dashboard/medical-forms'
+    | '/dashboard/memberships'
     | '/dashboard/menu'
     | '/dashboard/model-slots'
     | '/dashboard/new-appointment'
@@ -2151,6 +2163,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/locations'
     | '/_authenticated/dashboard/marketing'
     | '/_authenticated/dashboard/medical-forms'
+    | '/_authenticated/dashboard/memberships'
     | '/_authenticated/dashboard/menu'
     | '/_authenticated/dashboard/model-slots'
     | '/_authenticated/dashboard/new-appointment'
@@ -2970,6 +2983,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardMenuRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/memberships': {
+      id: '/_authenticated/dashboard/memberships'
+      path: '/memberships'
+      fullPath: '/dashboard/memberships'
+      preLoaderRoute: typeof AuthenticatedDashboardMembershipsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/medical-forms': {
       id: '/_authenticated/dashboard/medical-forms'
       path: '/medical-forms'
@@ -3750,6 +3770,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardLocationsRoute: typeof AuthenticatedDashboardLocationsRoute
   AuthenticatedDashboardMarketingRoute: typeof AuthenticatedDashboardMarketingRouteWithChildren
   AuthenticatedDashboardMedicalFormsRoute: typeof AuthenticatedDashboardMedicalFormsRoute
+  AuthenticatedDashboardMembershipsRoute: typeof AuthenticatedDashboardMembershipsRoute
   AuthenticatedDashboardMenuRoute: typeof AuthenticatedDashboardMenuRoute
   AuthenticatedDashboardModelSlotsRoute: typeof AuthenticatedDashboardModelSlotsRoute
   AuthenticatedDashboardNewAppointmentRoute: typeof AuthenticatedDashboardNewAppointmentRoute
@@ -3822,6 +3843,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardMarketingRouteWithChildren,
     AuthenticatedDashboardMedicalFormsRoute:
       AuthenticatedDashboardMedicalFormsRoute,
+    AuthenticatedDashboardMembershipsRoute:
+      AuthenticatedDashboardMembershipsRoute,
     AuthenticatedDashboardMenuRoute: AuthenticatedDashboardMenuRoute,
     AuthenticatedDashboardModelSlotsRoute:
       AuthenticatedDashboardModelSlotsRoute,

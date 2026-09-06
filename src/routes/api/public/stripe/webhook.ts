@@ -120,6 +120,50 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
               const session = event.data.object as Stripe.Checkout.Session;
               const metadata = session.metadata ?? {};
 
+              // Membership signup: the patient subscribed to a clinic's plan.
+              // Upsert the membership row and attach the subscription id — the
+              // first credit lands via invoice.paid below.
+              if (session.mode === "subscription" && metadata.kind === "membership") {
+                const subscriptionId = typeof session.subscription === "string"
+                  ? session.subscription
+                  : session.subscription?.id ?? null;
+                const customerId = typeof session.customer === "string"
+                  ? session.customer
+                  : session.customer?.id ?? null;
+                if (metadata.plan_id && metadata.profile_id && metadata.patient_user_id) {
+                  const details = (session as { customer_details?: { email?: string | null; name?: string | null } | null })
+                    .customer_details;
+                  const patch = {
+                    patient_email: details?.email ?? null,
+                    patient_name: details?.name ?? null,
+                    status: "active",
+                    stripe_subscription_id: subscriptionId,
+                    stripe_customer_id: customerId,
+                    updated_at: new Date().toISOString(),
+                  };
+                  const { data: existingRow } = await supabaseAdmin
+                    .from("patient_memberships")
+                    .select("id")
+                    .eq("plan_id", metadata.plan_id)
+                    .eq("patient_user_id", metadata.patient_user_id)
+                    .maybeSingle();
+                  if (existingRow) {
+                    await supabaseAdmin
+                      .from("patient_memberships")
+                      .update(patch as never)
+                      .eq("id", (existingRow as { id: string }).id);
+                  } else {
+                    await supabaseAdmin.from("patient_memberships").insert({
+                      plan_id: metadata.plan_id,
+                      profile_id: metadata.profile_id,
+                      patient_user_id: metadata.patient_user_id,
+                      ...patch,
+                    } as never);
+                  }
+                }
+                break;
+              }
+
               // Card capture: no money moves. The patient saved a card against
               // the clinic's Stripe account, so store it on the appointment and
               // confirm the booking.
@@ -729,6 +773,30 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
             case "customer.subscription.updated":
             case "customer.subscription.deleted": {
               const s = event.data.object as Stripe.Subscription;
+              // Patient membership subscriptions live on the connected account.
+              if (s.metadata?.kind === "membership") {
+                const status =
+                  event.type === "customer.subscription.deleted"
+                    ? "cancelled"
+                    : s.pause_collection
+                      ? "paused"
+                      : s.status === "active" || s.status === "trialing"
+                        ? "active"
+                        : s.status === "past_due" || s.status === "unpaid"
+                          ? "past_due"
+                          : "cancelled";
+                await supabaseAdmin
+                  .from("patient_memberships")
+                  .update({
+                    status,
+                    current_period_end: (s as any).current_period_end
+                      ? new Date((s as any).current_period_end * 1000).toISOString()
+                      : null,
+                    updated_at: new Date().toISOString(),
+                  } as never)
+                  .eq("stripe_subscription_id", s.id);
+                break;
+              }
               const isPlatform = (s.metadata?.kind === "platform_subscription") ||
                 !connectedAccountId; // platform-level events have no connect account
               if (!isPlatform) break;
@@ -769,9 +837,61 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
             case "invoice.voided":
             case "invoice.marked_uncollectible": {
               const inv = event.data.object as Stripe.Invoice;
-              // Only mirror platform (MODO) subscription invoices — skip
-              // connected-account invoices for practitioners' own patients.
-              if (connectedAccountId) break;
+              // Membership invoices land on the practitioner's connected
+              // account. Credit the patient's savings pot on each paid
+              // invoice; mark past_due on failure. Idempotent on invoice id.
+              if (connectedAccountId) {
+                const subRef = (inv as unknown as { subscription?: string | { id?: string } | null }).subscription;
+                const subId = typeof subRef === "string" ? subRef : subRef?.id ?? null;
+                if (!subId) break;
+                const { data: membership } = await supabaseAdmin
+                  .from("patient_memberships")
+                  .select("id, profile_id, patient_user_id, membership_plans(credit_cents)")
+                  .eq("stripe_subscription_id", subId)
+                  .maybeSingle();
+                const mm = membership as {
+                  id: string; profile_id: string; patient_user_id: string;
+                  membership_plans?: { credit_cents: number } | null;
+                } | null;
+                if (!mm) break; // not a membership subscription — ignore
+                if (event.type === "invoice.payment_failed") {
+                  await supabaseAdmin
+                    .from("patient_memberships")
+                    .update({ status: "past_due", updated_at: new Date().toISOString() } as never)
+                    .eq("id", mm.id);
+                  break;
+                }
+                if (event.type === "invoice.paid" || event.type === "invoice.payment_succeeded") {
+                  const creditCents = Number(mm.membership_plans?.credit_cents ?? 0);
+                  await supabaseAdmin
+                    .from("patient_memberships")
+                    .update({ status: "active", updated_at: new Date().toISOString() } as never)
+                    .eq("id", mm.id);
+                  if (creditCents > 0) {
+                    // ref_id is uuid so can't hold a Stripe invoice id — the
+                    // invoice id goes in the note and acts as the dedupe key.
+                    const { data: dup } = await supabaseAdmin
+                      .from("patient_credit_ledger")
+                      .select("id")
+                      .eq("ref_type", "membership_invoice")
+                      .eq("ref_id", mm.id)
+                      .eq("note", `Membership top-up ${inv.id}`)
+                      .limit(1);
+                    if (!(dup ?? []).length) {
+                      await supabaseAdmin.from("patient_credit_ledger").insert({
+                        patient_user_id: mm.patient_user_id,
+                        clinic_profile_id: mm.profile_id,
+                        delta_pennies: creditCents,
+                        reason: "membership_credit",
+                        ref_type: "membership_invoice",
+                        ref_id: mm.id,
+                        note: `Membership top-up ${inv.id}`,
+                      } as never);
+                    }
+                  }
+                }
+                break;
+              }
               const customerId = typeof inv.customer === "string" ? inv.customer : inv.customer?.id;
               if (!customerId) break;
 

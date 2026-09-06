@@ -339,6 +339,92 @@ export async function createCheckoutSession(params: {
   });
 }
 
+// Create (or return the existing) recurring Price for a membership plan on
+// the practitioner's connected account.
+export async function ensureMembershipPrice(params: {
+  accountId: string;
+  planId: string;
+  name: string;
+  amountCents: number;
+  interval: "month" | "year";
+  currency?: string;
+}): Promise<string> {
+  const stripe = getStripe();
+  // Reuse an active price with the same amount/interval for this plan.
+  const existing = await stripe.prices.list(
+    { lookup_keys: [`membership_${params.planId}`], active: true, limit: 1 },
+    { stripeAccount: params.accountId },
+  );
+  const found = existing.data[0];
+  if (
+    found &&
+    found.unit_amount === Math.round(params.amountCents) &&
+    found.recurring?.interval === params.interval
+  ) {
+    return found.id;
+  }
+  const price = await stripe.prices.create(
+    {
+      currency: (params.currency ?? "gbp").toLowerCase(),
+      unit_amount: Math.round(params.amountCents),
+      recurring: { interval: params.interval },
+      lookup_key: `membership_${params.planId}`,
+      nickname: params.name.slice(0, 200),
+      product_data: { name: params.name.slice(0, 200) },
+      metadata: { kind: "membership", plan_id: params.planId },
+    },
+    { stripeAccount: params.accountId },
+  );
+  return price.id;
+}
+
+// Hosted Checkout in subscription mode for a patient joining a membership
+// plan on the practitioner's connected account.
+export async function createMembershipCheckoutSession(params: {
+  accountId: string;
+  priceId: string;
+  successUrl: string;
+  cancelUrl: string;
+  customerEmail?: string;
+  metadata: Record<string, string>;
+}) {
+  const stripe = getStripe();
+  return stripe.checkout.sessions.create(
+    {
+      mode: "subscription",
+      payment_method_types: ["card"],
+      line_items: [{ price: params.priceId, quantity: 1 }],
+      success_url: params.successUrl,
+      cancel_url: params.cancelUrl,
+      customer_email: params.customerEmail,
+      metadata: params.metadata,
+      subscription_data: { metadata: params.metadata },
+    },
+    { stripeAccount: params.accountId },
+  );
+}
+
+export async function cancelConnectedSubscription(accountId: string, subscriptionId: string) {
+  return getStripe().subscriptions.cancel(subscriptionId, {}, { stripeAccount: accountId });
+}
+
+export async function pauseConnectedSubscription(accountId: string, subscriptionId: string) {
+  // pause_collection 'void' stops invoicing without cancelling the mandate.
+  return getStripe().subscriptions.update(
+    subscriptionId,
+    { pause_collection: { behavior: "void" } },
+    { stripeAccount: accountId },
+  );
+}
+
+export async function resumeConnectedSubscription(accountId: string, subscriptionId: string) {
+  return getStripe().subscriptions.update(
+    subscriptionId,
+    { pause_collection: "" as never },
+    { stripeAccount: accountId },
+  );
+}
+
 // Create a PaymentIntent for the save-card-on-file flow.
 // We render an embedded Stripe Elements form on our own page so we can hide
 // Apple Pay, Google Pay and Link (which Stripe hosted Checkout re-adds even
