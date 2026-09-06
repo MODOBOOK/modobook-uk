@@ -7288,6 +7288,8 @@ export type Database = {
           invoice_vat_number: string | null
           is_demo: boolean
           late_cancel_mode: string
+          membership_hero_subtitle: string | null
+          membership_hero_title: string | null
           model_slots_position: string
           new_booking_email_to: string | null
           no_refund_policy_enabled: boolean
@@ -7428,6 +7430,8 @@ export type Database = {
           invoice_vat_number?: string | null
           is_demo?: boolean
           late_cancel_mode?: string
+          membership_hero_subtitle?: string | null
+          membership_hero_title?: string | null
           model_slots_position?: string
           new_booking_email_to?: string | null
           no_refund_policy_enabled?: boolean
@@ -7568,6 +7572,8 @@ export type Database = {
           invoice_vat_number?: string | null
           is_demo?: boolean
           late_cancel_mode?: string
+          membership_hero_subtitle?: string | null
+          membership_hero_title?: string | null
           model_slots_position?: string
           new_booking_email_to?: string | null
           no_refund_policy_enabled?: boolean
