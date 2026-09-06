@@ -578,3 +578,136 @@ export const redeemMembershipCredit = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true, applied };
   });
+
+// ============= Practitioner: invite patients to a plan =============
+
+/** Clinic patients (with an email address) a plan can be offered to. */
+export const listMembershipInviteCandidates = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profile = await getProfile(context.supabase, context.userId);
+    if (!profile || !membershipsEnabled(profile.slug)) return [];
+    const { data, error } = await context.supabase
+      .from("clinic_clients")
+      .select("id, full_name, email, archived, is_blocked")
+      .eq("profile_id", profile.id)
+      .eq("archived", false)
+      .eq("is_blocked", false)
+      .not("email", "is", null)
+      .order("full_name", { ascending: true })
+      .limit(2000);
+    if (error) throw error;
+    const seen = new Set<string>();
+    const out: Array<{ id: string; name: string; email: string }> = [];
+    for (const c of (data ?? []) as any[]) {
+      const email = String(c.email ?? "").trim().toLowerCase();
+      if (!email || !email.includes("@") || seen.has(email)) continue;
+      seen.add(email);
+      out.push({ id: c.id as string, name: (c.full_name as string) || email, email });
+    }
+    return out;
+  });
+
+const inviteSchema = z.object({
+  planId: z.string().uuid(),
+  clientIds: z.array(z.string().uuid()).default([]),
+  extraEmails: z.array(z.string().email()).default([]),
+  message: z.string().max(500).nullish(),
+});
+
+/** Allocate a membership to patients — emails each of them a sign-up link. */
+export const inviteToMembershipPlan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => inviteSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const profile = await getProfile(context.supabase, context.userId);
+    if (!profile) throw new Error("Profile not found");
+    if (!membershipsEnabled(profile.slug)) throw new Error(NOT_LIVE);
+
+    const { data: planRow } = await context.supabase
+      .from("membership_plans")
+      .select("*")
+      .eq("id", data.planId)
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+    const plan = planRow as {
+      id: string; name: string; price_cents: number; interval: "month" | "year";
+      credit_cents: number; discount_percent: number | null; perks: string | null;
+      included_treatments: Array<{ treatment_id: string; quantity: number }> | null;
+      active: boolean;
+    } | null;
+    if (!plan) throw new Error("Plan not found");
+    if (!plan.active) throw new Error("Make this plan visible before inviting patients to it.");
+
+    // Resolve recipients
+    const recipients = new Map<string, string>(); // email -> name
+    if (data.clientIds.length) {
+      const { data: clients } = await context.supabase
+        .from("clinic_clients")
+        .select("id, full_name, email")
+        .eq("profile_id", profile.id)
+        .in("id", data.clientIds);
+      for (const c of (clients ?? []) as any[]) {
+        const email = String(c.email ?? "").trim().toLowerCase();
+        if (email.includes("@")) recipients.set(email, (c.full_name as string) || "there");
+      }
+    }
+    for (const e of data.extraEmails) {
+      const email = e.trim().toLowerCase();
+      if (email && !recipients.has(email)) recipients.set(email, "there");
+    }
+    if (recipients.size === 0) throw new Error("Pick at least one patient or add an email address.");
+
+    // Treatment names for the email
+    const included = (plan.included_treatments ?? []) as Array<{ treatment_id: string; quantity: number }>;
+    let includedTreatments: Array<{ name: string; quantity: number }> = [];
+    if (included.length) {
+      const { data: treatments } = await context.supabase
+        .from("treatments")
+        .select("id, name")
+        .in("id", included.map((t) => t.treatment_id));
+      const byId = new Map((treatments ?? []).map((t: any) => [t.id as string, t.name as string]));
+      includedTreatments = included
+        .map((t) => ({ name: byId.get(t.treatment_id) ?? "Treatment", quantity: t.quantity }))
+        .filter((t) => !!t.name);
+    }
+
+    const { getPractitionerBranding, tryEnqueueAppEmail } = await import("./email/send.server");
+    const branding = await getPractitionerBranding(profile.id);
+    const clinicName = profile.clinic_name || branding.clinicName || profile.full_name || "Your clinic";
+    const gbp = (c: number) => `£${(c / 100).toFixed(2)}`;
+    const joinUrl = `https://modobook.uk/m/${profile.slug ?? ""}/memberships?plan=${plan.id}`;
+    const perks = (plan.perks ?? "")
+      .split("\n")
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    let sent = 0;
+    const failed: string[] = [];
+    for (const [email, name] of recipients) {
+      const res = await tryEnqueueAppEmail({
+        templateName: "membership-invite",
+        recipientEmail: email,
+        messageId: `membership-invite-${plan.id}-${email}-${Date.now()}`,
+        templateData: {
+          profileId: profile.id,
+          recipientName: name,
+          clinicName,
+          planName: plan.name,
+          priceText: gbp(plan.price_cents),
+          intervalLabel: plan.interval === "year" ? "year" : "month",
+          creditText: plan.credit_cents > 0 ? gbp(plan.credit_cents) : null,
+          discountPercent: plan.discount_percent,
+          perks,
+          includedTreatments,
+          personalMessage: data.message || null,
+          joinUrl,
+          logoUrl: branding.logoUrl,
+          brandColor: branding.brandColor,
+        },
+      });
+      if (res.ok) sent += 1;
+      else failed.push(email);
+    }
+    return { sent, failed };
+  });
