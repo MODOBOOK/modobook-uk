@@ -345,7 +345,7 @@ function BillingPage() {
                   <Link to="/dashboard/locations" className="underline underline-offset-2">
                     {usedLocations} location{usedLocations === 1 ? "" : "s"} on your account
                   </Link>
-                  {minLocations > 0 ? ` — ${minLocations} charged` : " — all included"}
+                  {minLocations > 0 ? ` — ${minLocations} charged` : FREE_EXTRA_LOCATIONS ? " — extra locations free for now" : " — all included"}
                 </p>
                 {minLocations > 0 && (
                   <p className="mt-1 text-[11px] text-muted-foreground">
