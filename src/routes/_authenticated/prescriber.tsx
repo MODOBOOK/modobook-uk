@@ -171,14 +171,19 @@ function PrescriberLayout() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between gap-2 border-b px-3 lg:h-20 lg:px-10">
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Prescriber Hub</div>
-            <div className="font-serif text-lg lg:text-2xl">{name}</div>
+        <header className="flex h-14 items-center justify-between gap-2 border-b px-4 lg:px-10">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground lg:hidden">
+              <Stethoscope className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="truncate font-serif text-base lg:text-xl">{name}</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Prescriber Hub</div>
+            </div>
           </div>
           {hasClinic && (
             <Link to="/dashboard" className="lg:hidden">
-              <Button variant="outline" size="sm">Clinic</Button>
+              <Button variant="outline" size="sm" className="shrink-0">Clinic</Button>
             </Link>
           )}
         </header>
