@@ -10,8 +10,11 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, MessageSquare, Users2, CreditCard, AlertTriangle } from 'lucide-react'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Loader2, MessageSquare, Users2, CreditCard, AlertTriangle, ChevronDown, Search } from 'lucide-react'
 import { toast } from 'sonner'
+
+type Patient = { id: string; name: string; phone: string }
 
 export const Route = createFileRoute('/_authenticated/dashboard/marketing/sms')({
   component: SmsBlastPage,
