@@ -266,13 +266,13 @@ function BookingsPage() {
     }
   }, [loading, view]);
 
-  // In 3-day view we render a long horizontal strip (3 columns wide on screen)
-  // so you can keep scrolling sideways through following days.
+  // Day and 3-day views render a long horizontal strip so you can keep
+  // scrolling sideways through following days.
   const STRIP_DAYS = 21;
-  const isStrip = view === "3day";
+  const isStrip = view === "3day" || view === "day";
 
   const days = useMemo(() => {
-    if (view === "day") return [anchor];
+    if (view === "day") return Array.from({ length: STRIP_DAYS }, (_, i) => addDays(anchor, i));
     if (view === "3day") return Array.from({ length: STRIP_DAYS }, (_, i) => addDays(anchor, i));
     if (view === "week") {
       const start = startOfWeek(anchor);
@@ -281,8 +281,12 @@ function BookingsPage() {
     return [];
   }, [anchor, view]);
 
-  // 3-day strip: fixed column width so exactly 3 fit on screen, rest scrolls sideways.
-  const stripColWidth = isMobile
+  // 3-day strip: 3 columns per screen. Day strip: 1 column per screen.
+  const stripColWidth = view === "day"
+    ? isMobile
+      ? "calc(100vw - var(--gutter) - 2.5rem)"
+      : "calc(100vw - var(--gutter) - 22rem)"
+    : isMobile
     ? "calc((100vw - var(--gutter) - 2.5rem) / 3)"
     : "calc((100vw - var(--gutter) - 22rem) / 3)";
   const gridCols = isStrip
@@ -414,7 +418,7 @@ function BookingsPage() {
   const todayStr = ymd(now);
   const totalHeight = (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT;
   // Month-style views just show the month (dates were inaccurate for the
-  // scrollable 3-day strip). Day view keeps the full single date.
+  // scrollable day / 3-day strip).
   const monthRangeLabel = (from: Date, to: Date) => {
     const sameMonth = from.getMonth() === to.getMonth() && from.getFullYear() === to.getFullYear();
     if (sameMonth) return from.toLocaleDateString(undefined, { month: "long", year: "numeric" });
@@ -422,9 +426,7 @@ function BookingsPage() {
     return `${from.toLocaleDateString(undefined, { month: "short", ...(sameYear ? {} : { year: "numeric" as const }) })} – ${to.toLocaleDateString(undefined, { month: "short", year: "numeric" })}`;
   };
   const headerLabel =
-    view === "day"
-      ? anchor.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })
-      : view === "3day"
+    view === "day" || view === "3day"
       ? monthRangeLabel(anchor, addDays(anchor, STRIP_DAYS - 1))
       : view === "week"
       ? monthRangeLabel(startOfWeek(anchor), addDays(startOfWeek(anchor), 6))
@@ -615,7 +617,7 @@ function BookingsPage() {
                 minWidth: isStrip
                   ? "max-content"
                   : isMobile
-                  ? `calc(var(--gutter) + ${days.length * (view === "day" ? 0 : 112)}px)`
+                  ? `calc(var(--gutter) + ${days.length * 112}px)`
                   : undefined,
               }}
             >
