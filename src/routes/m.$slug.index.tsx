@@ -3157,7 +3157,8 @@ function TreatmentRow({
   const padding = size === "lg" ? "p-4 sm:p-5" : size === "md" ? "p-4" : "p-3.5";
   const nameSize = size === "lg" ? "text-lg sm:text-xl" : size === "md" ? "text-base sm:text-lg" : "text-[15px] sm:text-base";
   const priceSize = size === "lg" ? "text-lg" : size === "md" ? "text-base" : "text-[15px]";
-  const checkSize = size === "lg" ? "h-6 w-6" : "h-5 w-5";
+  const checkSize = size === "lg" ? "h-5 w-5" : "h-4 w-4";
+  const tickSize = size === "lg" ? "h-3 w-3" : "h-2.5 w-2.5";
   const thumbSize = size === "lg" ? "h-16 w-16 sm:h-20 sm:w-20" : "h-14 w-14 sm:h-16 sm:w-16";
 
   return (
@@ -3175,14 +3176,16 @@ function TreatmentRow({
         disabled={capInfo?.full}
         aria-pressed={selected}
         aria-label={capInfo?.full ? "Fully booked" : selected ? "Deselect" : "Select"}
-        className={`mt-0.5 flex flex-shrink-0 items-center justify-center rounded-full border-2 transition ${checkSize} ${capInfo?.full ? "cursor-not-allowed opacity-40" : ""}`}
-        style={
-          selected
+        className={`mt-0.5 flex min-h-0 flex-shrink-0 self-start items-center justify-center rounded-full border transition ${checkSize} ${capInfo?.full ? "cursor-not-allowed opacity-40" : ""}`}
+        style={{
+          minHeight: 0,
+          minWidth: 0,
+          ...(selected
             ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
-            : { borderColor: `${brand}66` }
-        }
+            : { borderColor: `${brand}66` }),
+        }}
       >
-        {selected && <Check className="h-3 w-3" />}
+        {selected && <Check className={tickSize} />}
       </button>
 
       <button type="button" onClick={() => setExpanded((v) => !v)} className="min-w-0 flex-1 text-left">
