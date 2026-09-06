@@ -102,7 +102,7 @@ function PrescriberLayout() {
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-6">
           {nav.map((item) => {
-            const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+            const active = pathname.startsWith(item.to);
             const count = badges[item.key] ?? 0;
             return (
               <Link
@@ -110,6 +110,32 @@ function PrescriberLayout() {
                 to={item.to}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all",
+                  active
+                    ? "bg-primary text-primary-foreground shadow-luxe"
+                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
+                )}
+              >
+                <item.icon className="h-4 w-4 opacity-80" />
+                <span className="flex-1 tracking-wide">{item.label}</span>
+                {count > 0 && (
+                  <span className={cn(
+                    "ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
+                    active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary text-primary-foreground",
+                  )}>{count}</span>
+                )}
+              </Link>
+            );
+          })}
+          <div className="px-3 pb-1 pt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">More</div>
+          {moreNav.map((item) => {
+            const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+            const count = badges[item.key] ?? 0;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
                   active
                     ? "bg-primary text-primary-foreground shadow-luxe"
                     : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
