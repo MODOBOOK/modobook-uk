@@ -376,6 +376,9 @@ function PatientProfilePage() {
       {/* Card on file (for no-show / late cancel charges) */}
       <CardOnFileSection client={client} onReload={reload} />
 
+      {/* Account credit */}
+      <PatientCreditCard clientId={id} />
+
       {/* Loyalty points */}
       <LoyaltyPointsCard clientId={id} />
 
