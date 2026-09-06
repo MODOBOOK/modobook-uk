@@ -88,7 +88,6 @@ import { Route as AuthenticatedDashboardTrainingRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardStaffRouteImport } from './routes/_authenticated/dashboard.staff'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard.settings'
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
-import { Route as AuthenticatedDashboardRxRequestsRouteImport } from './routes/_authenticated/dashboard.rx-requests'
 import { Route as AuthenticatedDashboardRoomRentalRouteImport } from './routes/_authenticated/dashboard.room-rental'
 import { Route as AuthenticatedDashboardRewardsRouteImport } from './routes/_authenticated/dashboard.rewards'
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
@@ -140,6 +139,7 @@ import { Route as AuthenticatedAdminCompetitionRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
 import { Route as MSlugTrainingIndexRouteImport } from './routes/m.$slug.training.index'
 import { Route as AuthenticatedDashboardTrainingIndexRouteImport } from './routes/_authenticated/dashboard.training.index'
+import { Route as AuthenticatedDashboardRxRequestsIndexRouteImport } from './routes/_authenticated/dashboard.rx-requests.index'
 import { Route as AuthenticatedDashboardPatientsIndexRouteImport } from './routes/_authenticated/dashboard.patients.index'
 import { Route as AuthenticatedDashboardNotificationsIndexRouteImport } from './routes/_authenticated/dashboard.notifications.index'
 import { Route as AuthenticatedDashboardMarketingIndexRouteImport } from './routes/_authenticated/dashboard.marketing.index'
@@ -608,12 +608,6 @@ const AuthenticatedDashboardServicesRoute =
     path: '/services',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const AuthenticatedDashboardRxRequestsRoute =
-  AuthenticatedDashboardRxRequestsRouteImport.update({
-    id: '/rx-requests',
-    path: '/rx-requests',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
 const AuthenticatedDashboardRoomRentalRoute =
   AuthenticatedDashboardRoomRentalRouteImport.update({
     id: '/room-rental',
@@ -918,6 +912,12 @@ const AuthenticatedDashboardTrainingIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDashboardTrainingRoute,
   } as any)
+const AuthenticatedDashboardRxRequestsIndexRoute =
+  AuthenticatedDashboardRxRequestsIndexRouteImport.update({
+    id: '/rx-requests/',
+    path: '/rx-requests/',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardPatientsIndexRoute =
   AuthenticatedDashboardPatientsIndexRouteImport.update({
     id: '/',
@@ -1103,9 +1103,9 @@ const AuthenticatedDashboardTrainingBookingsRoute =
   } as any)
 const AuthenticatedDashboardRxRequestsNewRoute =
   AuthenticatedDashboardRxRequestsNewRouteImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => AuthenticatedDashboardRxRequestsRoute,
+    id: '/rx-requests/new',
+    path: '/rx-requests/new',
+    getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardPatientsIdRoute =
   AuthenticatedDashboardPatientsIdRouteImport.update({
@@ -1307,7 +1307,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
   '/dashboard/room-rental': typeof AuthenticatedDashboardRoomRentalRoute
-  '/dashboard/rx-requests': typeof AuthenticatedDashboardRxRequestsRouteWithChildren
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
@@ -1389,6 +1388,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/marketing/': typeof AuthenticatedDashboardMarketingIndexRoute
   '/dashboard/notifications/': typeof AuthenticatedDashboardNotificationsIndexRoute
   '/dashboard/patients/': typeof AuthenticatedDashboardPatientsIndexRoute
+  '/dashboard/rx-requests/': typeof AuthenticatedDashboardRxRequestsIndexRoute
   '/dashboard/training/': typeof AuthenticatedDashboardTrainingIndexRoute
   '/m/$slug/training/': typeof MSlugTrainingIndexRoute
   '/dashboard/marketing/campaigns/$id': typeof AuthenticatedDashboardMarketingCampaignsIdRoute
@@ -1481,7 +1481,6 @@ export interface FileRoutesByTo {
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
   '/dashboard/room-rental': typeof AuthenticatedDashboardRoomRentalRoute
-  '/dashboard/rx-requests': typeof AuthenticatedDashboardRxRequestsRouteWithChildren
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
@@ -1560,6 +1559,7 @@ export interface FileRoutesByTo {
   '/dashboard/marketing': typeof AuthenticatedDashboardMarketingIndexRoute
   '/dashboard/notifications': typeof AuthenticatedDashboardNotificationsIndexRoute
   '/dashboard/patients': typeof AuthenticatedDashboardPatientsIndexRoute
+  '/dashboard/rx-requests': typeof AuthenticatedDashboardRxRequestsIndexRoute
   '/dashboard/training': typeof AuthenticatedDashboardTrainingIndexRoute
   '/m/$slug/training': typeof MSlugTrainingIndexRoute
   '/dashboard/marketing/campaigns/$id': typeof AuthenticatedDashboardMarketingCampaignsIdRoute
@@ -1663,7 +1663,6 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/_authenticated/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
   '/_authenticated/dashboard/room-rental': typeof AuthenticatedDashboardRoomRentalRoute
-  '/_authenticated/dashboard/rx-requests': typeof AuthenticatedDashboardRxRequestsRouteWithChildren
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
@@ -1745,6 +1744,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/marketing/': typeof AuthenticatedDashboardMarketingIndexRoute
   '/_authenticated/dashboard/notifications/': typeof AuthenticatedDashboardNotificationsIndexRoute
   '/_authenticated/dashboard/patients/': typeof AuthenticatedDashboardPatientsIndexRoute
+  '/_authenticated/dashboard/rx-requests/': typeof AuthenticatedDashboardRxRequestsIndexRoute
   '/_authenticated/dashboard/training/': typeof AuthenticatedDashboardTrainingIndexRoute
   '/m/$slug/training/': typeof MSlugTrainingIndexRoute
   '/_authenticated/dashboard/marketing/campaigns/$id': typeof AuthenticatedDashboardMarketingCampaignsIdRoute
@@ -1848,7 +1848,6 @@ export interface FileRouteTypes {
     | '/dashboard/reviews'
     | '/dashboard/rewards'
     | '/dashboard/room-rental'
-    | '/dashboard/rx-requests'
     | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/staff'
@@ -1930,6 +1929,7 @@ export interface FileRouteTypes {
     | '/dashboard/marketing/'
     | '/dashboard/notifications/'
     | '/dashboard/patients/'
+    | '/dashboard/rx-requests/'
     | '/dashboard/training/'
     | '/m/$slug/training/'
     | '/dashboard/marketing/campaigns/$id'
@@ -2022,7 +2022,6 @@ export interface FileRouteTypes {
     | '/dashboard/reviews'
     | '/dashboard/rewards'
     | '/dashboard/room-rental'
-    | '/dashboard/rx-requests'
     | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/staff'
@@ -2101,6 +2100,7 @@ export interface FileRouteTypes {
     | '/dashboard/marketing'
     | '/dashboard/notifications'
     | '/dashboard/patients'
+    | '/dashboard/rx-requests'
     | '/dashboard/training'
     | '/m/$slug/training'
     | '/dashboard/marketing/campaigns/$id'
@@ -2203,7 +2203,6 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/reviews'
     | '/_authenticated/dashboard/rewards'
     | '/_authenticated/dashboard/room-rental'
-    | '/_authenticated/dashboard/rx-requests'
     | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/staff'
@@ -2285,6 +2284,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/marketing/'
     | '/_authenticated/dashboard/notifications/'
     | '/_authenticated/dashboard/patients/'
+    | '/_authenticated/dashboard/rx-requests/'
     | '/_authenticated/dashboard/training/'
     | '/m/$slug/training/'
     | '/_authenticated/dashboard/marketing/campaigns/$id'
@@ -2903,13 +2903,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardServicesRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
-    '/_authenticated/dashboard/rx-requests': {
-      id: '/_authenticated/dashboard/rx-requests'
-      path: '/rx-requests'
-      fullPath: '/dashboard/rx-requests'
-      preLoaderRoute: typeof AuthenticatedDashboardRxRequestsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
     '/_authenticated/dashboard/room-rental': {
       id: '/_authenticated/dashboard/room-rental'
       path: '/room-rental'
@@ -3267,6 +3260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardTrainingIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardTrainingRoute
     }
+    '/_authenticated/dashboard/rx-requests/': {
+      id: '/_authenticated/dashboard/rx-requests/'
+      path: '/rx-requests'
+      fullPath: '/dashboard/rx-requests/'
+      preLoaderRoute: typeof AuthenticatedDashboardRxRequestsIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/patients/': {
       id: '/_authenticated/dashboard/patients/'
       path: '/'
@@ -3493,10 +3493,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/dashboard/rx-requests/new': {
       id: '/_authenticated/dashboard/rx-requests/new'
-      path: '/new'
+      path: '/rx-requests/new'
       fullPath: '/dashboard/rx-requests/new'
       preLoaderRoute: typeof AuthenticatedDashboardRxRequestsNewRouteImport
-      parentRoute: typeof AuthenticatedDashboardRxRequestsRoute
+      parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/patients/$id': {
       id: '/_authenticated/dashboard/patients/$id'
@@ -3748,21 +3748,6 @@ const AuthenticatedDashboardPatientsRouteWithChildren =
     AuthenticatedDashboardPatientsRouteChildren,
   )
 
-interface AuthenticatedDashboardRxRequestsRouteChildren {
-  AuthenticatedDashboardRxRequestsNewRoute: typeof AuthenticatedDashboardRxRequestsNewRoute
-}
-
-const AuthenticatedDashboardRxRequestsRouteChildren: AuthenticatedDashboardRxRequestsRouteChildren =
-  {
-    AuthenticatedDashboardRxRequestsNewRoute:
-      AuthenticatedDashboardRxRequestsNewRoute,
-  }
-
-const AuthenticatedDashboardRxRequestsRouteWithChildren =
-  AuthenticatedDashboardRxRequestsRoute._addFileChildren(
-    AuthenticatedDashboardRxRequestsRouteChildren,
-  )
-
 interface AuthenticatedDashboardTrainingRouteChildren {
   AuthenticatedDashboardTrainingBookingsRoute: typeof AuthenticatedDashboardTrainingBookingsRoute
   AuthenticatedDashboardTrainingIndexRoute: typeof AuthenticatedDashboardTrainingIndexRoute
@@ -3826,7 +3811,6 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
   AuthenticatedDashboardRewardsRoute: typeof AuthenticatedDashboardRewardsRoute
   AuthenticatedDashboardRoomRentalRoute: typeof AuthenticatedDashboardRoomRentalRoute
-  AuthenticatedDashboardRxRequestsRoute: typeof AuthenticatedDashboardRxRequestsRouteWithChildren
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
   AuthenticatedDashboardStaffRoute: typeof AuthenticatedDashboardStaffRoute
@@ -3838,9 +3822,11 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardConsultationsIdRoute: typeof AuthenticatedDashboardConsultationsIdRoute
   AuthenticatedDashboardNotificationsEmailRoute: typeof AuthenticatedDashboardNotificationsEmailRoute
   AuthenticatedDashboardNotificationsSmsRoute: typeof AuthenticatedDashboardNotificationsSmsRoute
+  AuthenticatedDashboardRxRequestsNewRoute: typeof AuthenticatedDashboardRxRequestsNewRoute
   AuthenticatedDashboardAssociatesIndexRoute: typeof AuthenticatedDashboardAssociatesIndexRoute
   AuthenticatedDashboardConsultationsIndexRoute: typeof AuthenticatedDashboardConsultationsIndexRoute
   AuthenticatedDashboardNotificationsIndexRoute: typeof AuthenticatedDashboardNotificationsIndexRoute
+  AuthenticatedDashboardRxRequestsIndexRoute: typeof AuthenticatedDashboardRxRequestsIndexRoute
 }
 
 const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
@@ -3909,8 +3895,6 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardRewardsRoute: AuthenticatedDashboardRewardsRoute,
     AuthenticatedDashboardRoomRentalRoute:
       AuthenticatedDashboardRoomRentalRoute,
-    AuthenticatedDashboardRxRequestsRoute:
-      AuthenticatedDashboardRxRequestsRouteWithChildren,
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
     AuthenticatedDashboardStaffRoute: AuthenticatedDashboardStaffRoute,
@@ -3928,12 +3912,16 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardNotificationsEmailRoute,
     AuthenticatedDashboardNotificationsSmsRoute:
       AuthenticatedDashboardNotificationsSmsRoute,
+    AuthenticatedDashboardRxRequestsNewRoute:
+      AuthenticatedDashboardRxRequestsNewRoute,
     AuthenticatedDashboardAssociatesIndexRoute:
       AuthenticatedDashboardAssociatesIndexRoute,
     AuthenticatedDashboardConsultationsIndexRoute:
       AuthenticatedDashboardConsultationsIndexRoute,
     AuthenticatedDashboardNotificationsIndexRoute:
       AuthenticatedDashboardNotificationsIndexRoute,
+    AuthenticatedDashboardRxRequestsIndexRoute:
+      AuthenticatedDashboardRxRequestsIndexRoute,
   }
 
 const AuthenticatedDashboardRouteWithChildren =
