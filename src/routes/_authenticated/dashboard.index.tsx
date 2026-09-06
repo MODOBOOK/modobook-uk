@@ -76,7 +76,7 @@ function DashboardIndex() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const { todays, upcoming, todayBookings, todayCancellations, weekCount, monthBookings, salesToday, salesWeek, salesMonth, thisMonthName, nextMonthName, nextMonthBookings, nextMonthSales } = useMemo(() => {
+  const { todays, upcoming, todayBookings, todayCancellations, weekCount, monthBookings, salesToday, salesWeek, salesMonth, thisMonthName, nextMonthName, nextMonthBookings, nextMonthSales, cancelledThisWeek } = useMemo(() => {
     const todays = appts.filter((a) => a.scheduled_date === today);
     const upcoming = appts
       .filter((a) => a.scheduled_date >= today && a.status !== "cancelled")
@@ -110,7 +110,17 @@ function DashboardIndex() {
     const monthBookings = appts.filter((a) => inRange(a, startOfMonth, endOfMonth)).length;
     const nextMonthBookings = appts.filter((a) => inRange(a, nextStartOfMonth, nextEndOfMonth)).length;
     const nextMonthSales = appts.filter((a) => inRange(a, nextStartOfMonth, nextEndOfMonth)).reduce((s, a) => s + amt(a), 0);
-    return { todays, upcoming, todayBookings, todayCancellations, weekCount, monthBookings, salesToday, salesWeek, salesMonth, thisMonthName, nextMonthName, nextMonthBookings, nextMonthSales };
+    // Cancelled this calendar week (Monday–Sunday)
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+    const mondayIso = monday.toISOString().slice(0, 10);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    const sundayIso = sunday.toISOString().slice(0, 10);
+    const cancelledThisWeek = appts.filter(
+      (a) => a.status === "cancelled" && a.scheduled_date >= mondayIso && a.scheduled_date <= sundayIso,
+    ).length;
+    return { todays, upcoming, todayBookings, todayCancellations, weekCount, monthBookings, salesToday, salesWeek, salesMonth, thisMonthName, nextMonthName, nextMonthBookings, nextMonthSales, cancelledThisWeek };
   }, [appts, today]);
 
   const grouped = useMemo(() => {
@@ -164,8 +174,8 @@ function DashboardIndex() {
               <div className="mt-1.5 text-[9px] font-medium uppercase tracking-[0.15em] text-muted-foreground sm:text-[10px]">Next 7 days</div>
             </div>
             <div className="rounded-2xl border border-border/50 bg-background/60 px-3 py-3 text-center backdrop-blur-sm">
-              <div className="font-serif text-xl leading-none sm:text-2xl">£{salesToday.toFixed(0)}</div>
-              <div className="mt-1.5 text-[9px] font-medium uppercase tracking-[0.15em] text-muted-foreground sm:text-[10px]">Sales today</div>
+              <div className="font-serif text-xl leading-none sm:text-2xl">{cancelledThisWeek}</div>
+              <div className="mt-1.5 text-[9px] font-medium uppercase tracking-[0.15em] text-muted-foreground sm:text-[10px]">Cancelled this week</div>
             </div>
           </div>
         </CardContent>
