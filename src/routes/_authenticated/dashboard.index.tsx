@@ -250,24 +250,8 @@ function DashboardIndex() {
         </Link>
       </section>
 
-      {/* Prescriber Hub — central, always visible */}
-      <Link to="/hub" className="block">
-        <Card className="border-2 border-primary/50 bg-gradient-to-br from-primary/10 via-background to-background transition hover:border-primary hover:shadow-luxe">
-          <CardContent className="flex items-center gap-4 p-5 sm:p-6">
-            <div className="grid size-14 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
-              <Stethoscope className="size-7" />
-            </div>
-            <div className="flex-1">
-              <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-primary">Prescriber Hub</p>
-              <h3 className="font-serif text-lg sm:text-xl">Connect with a prescriber</h3>
-              <p className="text-sm text-muted-foreground">
-                Flag services that need prescriber sign-off, manage referrals, and share patient records securely with the medics you work with.
-              </p>
-            </div>
-            <ChevronRight className="hidden size-5 text-muted-foreground sm:block" />
-          </CardContent>
-        </Card>
-      </Link>
+
+
 
 
 
