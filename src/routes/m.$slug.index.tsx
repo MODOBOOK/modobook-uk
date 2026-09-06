@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getPublicClinic } from "@/lib/public-clinic.functions";
 import { listPublicCourses } from "@/lib/training-public.functions";
 import { listPublicGiftCards } from "@/lib/gift-cards.functions";
+import { listPublicMembershipPlans } from "@/lib/memberships.functions";
 import { PLATFORM_FEE_DESCRIPTION } from "@/lib/platform-fee";
 import { listPublicClinicVisits, listPublicStaleClinicTreatments } from "@/lib/clinic-visits.functions";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,6 +39,7 @@ import {
   CalendarDays,
   ArrowRight,
   Timer,
+  Crown,
 } from "lucide-react";
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -54,7 +56,7 @@ import { toast } from "sonner";
 import { SafeHtml } from "@/components/SafeHtml";
 import { PackageBuilderCard, type PublicBuilder } from "@/components/PackageBuilderCard";
 import { CourseGroupRow } from "@/components/CourseGroupRow";
-import { packageBuilderEnabled, linkButtonEnabled, treatmentLeafletsEnabled, coursePickerEnabled } from "@/lib/feature-flags";
+import { packageBuilderEnabled, linkButtonEnabled, treatmentLeafletsEnabled, coursePickerEnabled, membershipsEnabled } from "@/lib/feature-flags";
 import { getLeafletSignedUrl } from "@/lib/leaflets.functions";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { formatPrice, BADGE_LABEL, badgeClasses, treatmentPricing, type TreatmentBadge } from "@/lib/price-display";
@@ -337,6 +339,20 @@ function BookPage() {
   }>;
   const hasGiftCards = giftCards.length > 0;
 
+  const fetchMembershipPlans = useServerFn(listPublicMembershipPlans);
+  const membershipPlansQuery = useQuery({
+    queryKey: ["public-membership-plans-promo", slug],
+    queryFn: () => fetchMembershipPlans({ data: { slug } }),
+    staleTime: 60_000,
+  });
+  const membershipPlans = (membershipPlansQuery.data?.plans ?? []) as Array<{
+    id: string; name: string; price_cents: number; interval: "month" | "year"; credit_cents: number;
+  }>;
+  const hasMembershipPlans = membershipsEnabled(slug) && membershipPlans.length > 0;
+  const lowestMembershipPrice = hasMembershipPlans
+    ? Math.min(...membershipPlans.map((p) => p.price_cents))
+    : null;
+
   const fetchClinicVisits = useServerFn(listPublicClinicVisits);
   const clinicVisitsQuery = useQuery({
     queryKey: ["public-clinic-visits", slug],
@@ -506,6 +522,35 @@ function BookPage() {
       </span>
       <ExternalLink className="h-5 w-5 shrink-0" style={{ color: brand }} />
     </a>
+  ) : null;
+
+  const membershipPromoNode = hasMembershipPlans ? (
+    <Link
+      to="/m/$slug/memberships"
+      params={{ slug }}
+      className="group flex items-center justify-between gap-4 rounded-2xl border px-5 py-4 shadow-sm transition hover:shadow-md"
+      style={{ borderColor: `${brand}26`, backgroundColor: `${brand}0d`, color: textColor }}
+    >
+      <span className="flex min-w-0 items-center gap-3">
+        <span
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+          style={{ backgroundColor: `${brand}18`, color: brand }}
+        >
+          <Crown className="h-5 w-5" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-base font-semibold" style={{ color: brand }}>
+            Memberships
+          </span>
+          <span className="mt-0.5 block truncate text-sm opacity-70">
+            {lowestMembershipPrice
+              ? `From £${(lowestMembershipPrice / 100).toFixed(2)}/month — build treatment credit`
+              : "Join a plan and build treatment credit"}
+          </span>
+        </span>
+      </span>
+      <ArrowRight className="h-5 w-5 shrink-0 transition-transform group-hover:translate-x-0.5" style={{ color: brand }} />
+    </Link>
   ) : null;
 
   // "Coming soon" locations are visible but cannot be booked yet.
@@ -1315,6 +1360,10 @@ function BookPage() {
         </section>
       )}
 
+      {/* Mobile membership promo */}
+      {isMobile && membershipPromoNode && (
+        <section className="mx-auto mt-4 max-w-3xl px-4">{membershipPromoNode}</section>
+      )}
 
       {/* Model slots now render inside the Treatments tab after the user presses "I know what I want". */}
 
@@ -1394,6 +1443,11 @@ function BookPage() {
             />
           </div>
         </section>
+      )}
+
+      {/* Desktop membership promo */}
+      {membershipPromoNode && (
+        <section className="mx-auto mt-6 hidden max-w-3xl px-4 sm:block">{membershipPromoNode}</section>
       )}
 
       {/* Booking & cancellation policy */}
