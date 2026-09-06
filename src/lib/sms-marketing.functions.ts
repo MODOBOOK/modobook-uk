@@ -87,6 +87,11 @@ export const startSmsBlastCheckout = createServerFn({ method: 'POST' })
   )
   .handler(async ({ data, context }) => {
     const profileId = await getOwnerProfileId(context.supabase, context.userId)
+    const { smsMarketingEnabled } = await import('./feature-flags')
+    const { data: prof } = await context.supabase.from('profiles').select('slug').eq('id', profileId).maybeSingle()
+    if (!smsMarketingEnabled((prof as { slug?: string | null } | null)?.slug)) {
+      throw new Error('SMS marketing is coming soon for your account.')
+    }
     const body = data.body.trim()
     const { segments } = countSms(body)
     if (segments < 1) throw new Error('Write your message first')
