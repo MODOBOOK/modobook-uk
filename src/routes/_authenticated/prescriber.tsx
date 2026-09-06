@@ -225,25 +225,29 @@ function PrescriberLayout() {
                 <SheetTitle className="font-serif text-lg">More</SheetTitle>
               </SheetHeader>
               <div className="mt-4 grid grid-cols-3 gap-2">
-                {nav
-                  .filter((t) => !(mobilePrimaryKeys as readonly string[]).includes(t.key))
-                  .map((tab) => {
-                    const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
-                    return (
-                      <Link
-                        key={tab.to}
-                        to={tab.to}
-                        onClick={() => setMoreOpen(false)}
-                        className={cn(
-                          "flex flex-col items-center justify-center gap-2 rounded-xl border p-4 text-xs font-medium transition",
-                          active ? "border-primary bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted",
-                        )}
-                      >
-                        <tab.icon className="h-5 w-5" />
-                        <span className="text-center">{tab.label}</span>
-                      </Link>
-                    );
-                  })}
+                {moreNav.map((tab) => {
+                  const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
+                  const count = badges[tab.key] ?? 0;
+                  return (
+                    <Link
+                      key={tab.to}
+                      to={tab.to}
+                      onClick={() => setMoreOpen(false)}
+                      className={cn(
+                        "relative flex flex-col items-center justify-center gap-2 rounded-xl border p-4 text-xs font-medium transition",
+                        active ? "border-primary bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted",
+                      )}
+                    >
+                      <tab.icon className="h-5 w-5" />
+                      <span className="text-center">{tab.label}</span>
+                      {count > 0 && (
+                        <span className="absolute right-2 top-2 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                          {count}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
                 {hasClinic && (
                   <Link
                     to="/dashboard"
