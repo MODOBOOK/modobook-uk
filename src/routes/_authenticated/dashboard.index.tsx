@@ -5,14 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  CalendarDays,
   ExternalLink,
   Copy,
-  CalendarPlus,
   FileText,
   ChevronRight,
-  Sparkles,
-  Info,
   Stethoscope,
   Wallet,
 } from "lucide-react";
@@ -184,14 +180,6 @@ function DashboardIndex() {
       <WhatsNewBanner slug={profile.slug} />
 
       <SetupChecklistCard />
-
-      {/* Quick actions */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <QuickAction to="/dashboard/new-appointment" icon={CalendarPlus} label="New booking" />
-        <QuickAction to="/dashboard/availability" icon={CalendarDays} label="Availability" />
-        <QuickAction to="/dashboard/services" icon={Sparkles} label="Services" />
-        <QuickAction to="/dashboard/pre-treatment" icon={Info} label="Pre-treatment" />
-      </div>
 
       {/* Payments (compact) */}
       <Link to="/dashboard/payments" className="block">
@@ -399,26 +387,4 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function QuickAction({
-  to,
-  icon: Icon,
-  label,
-}: {
-  to: string;
-  icon: React.ElementType;
-  label: string;
-}) {
-  return (
-    <Link
-      to={to}
-      className="group flex flex-col items-center gap-3 rounded-2xl border border-border/60 bg-card p-5 text-center transition hover:border-accent hover:shadow-luxe active:scale-[0.98]"
-    >
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground transition group-hover:bg-accent group-hover:text-accent-foreground">
-        <Icon className="h-5 w-5" />
-      </div>
-      <span className="text-xs font-medium tracking-wide">{label}</span>
-      <ChevronRight className="hidden" />
-    </Link>
-  );
-}
 
