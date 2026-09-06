@@ -92,6 +92,7 @@ export async function assertSeatAvailable(
   if (sub?.comped) return;
 
   const isLoc = kind === "location";
+  if (isLoc && FREE_EXTRA_LOCATIONS) return; // promo: extra locations free for now
   const freeExtras = Math.max(0, Number((isLoc ? sub?.free_locations : sub?.free_practitioners) ?? 0));
   if (current < 1 + freeExtras) return; // admin-granted comped seats
 
@@ -557,7 +558,7 @@ export const getSeatSummary = createServerFn({ method: "GET" })
 
     // Chargeable seats are derived from what actually exists on the account —
     // this is what the plan price is collated from, not a manual selection.
-    const billableLocs = Math.max(0, usedLocs - 1 - freeLocs);
+    const billableLocs = FREE_EXTRA_LOCATIONS ? 0 : Math.max(0, usedLocs - 1 - freeLocs);
     const billablePracs = Math.max(0, usedPracs - 1 - freePracs);
 
     // Associates: the service itself is a flat monthly add-on that covers the

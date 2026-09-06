@@ -67,7 +67,7 @@ export async function syncSubscriptionSeats(supabase: any, profileId: string) {
     : 0;
 
   const wanted: Array<{ price: string; quantity: number }> = [{ price: base.stripe_price_id, quantity: 1 }];
-  if (extraLocations > 0 && locAddon?.stripe_price_id)
+  if (!FREE_EXTRA_LOCATIONS && extraLocations > 0 && locAddon?.stripe_price_id)
     wanted.push({ price: locAddon.stripe_price_id, quantity: extraLocations });
   if (extraPractitioners > 0 && pracAddon?.stripe_price_id)
     wanted.push({ price: pracAddon.stripe_price_id, quantity: extraPractitioners });
