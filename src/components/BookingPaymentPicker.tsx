@@ -288,7 +288,6 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
               <button
                 type="button"
                 onClick={() => selectMode("deposit")}
-                disabled={forceDepositCard}
                 className="text-left rounded-xl border-2 px-3 py-2.5 transition"
                 style={optionStyle(chosen?.mode === "deposit")}
               >
