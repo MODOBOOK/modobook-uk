@@ -150,6 +150,17 @@ const mobileTabs = [
   { label: "Menu", to: "/dashboard/menu", icon: Menu },
 ];
 
+// While working inside the prescribing area, the bottom bar stays in that
+// context instead of throwing the user back into the clinic dashboard.
+const prescribingTabs = [
+  { label: "Requests", to: "/dashboard/rx-requests", icon: MessageCircle, exact: true },
+  { label: "Prescribing", to: "/hub/prescribing", icon: Stethoscope },
+  { label: "New", to: "/dashboard/rx-requests/new", icon: CalendarPlus, cta: true },
+  { label: "Hub", to: "/hub", icon: ShieldCheck, exact: true },
+  { label: "Clinic", to: "/dashboard", icon: Home, exact: true },
+];
+
+
 function DashboardLayout() {
   const { profile, isPrescriber } = Route.useRouteContext();
   const { primary: displayName } = resolveDisplayNames(profile as { clinic_name?: string | null; full_name?: string | null; display_name_mode?: string | null });
