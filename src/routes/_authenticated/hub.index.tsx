@@ -83,7 +83,7 @@ function HubIndex() {
   const upcoming = visits
     .filter((v) => v.status !== "cancelled" && v.visit_date >= new Date().toISOString().slice(0, 10))
     .sort((a, b) => (a.visit_date + a.start_time).localeCompare(b.visit_date + b.start_time));
-  const awaitingConfirm = upcoming.filter((v) => !v.confirmed_by_prescriber && v.status !== "pending_approval").length;
+  
   const pendingRefs = refs.filter((r) => r.status === "pending").length;
 
   const choosePractitioner = () => {
