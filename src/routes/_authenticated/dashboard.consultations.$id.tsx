@@ -575,7 +575,18 @@ function Step5({ consultationId, consent, patientName, onChange, onLinked }: any
       </div>
 
       <SignaturePad value={consent?.signature ?? null} signedAt={consent?.signed_at} signerName={consent?.signer_name ?? patientName} onChange={(sig, name) => onChange({ ...consent, body, signature: sig, signed_at: sig ? new Date().toISOString() : null, signer_name: name })} />
+
+      <div className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-muted-foreground">
+          Saves the signed consent to the patient's profile now — no need to finish the consultation.
+        </p>
+        <Button size="sm" className="w-full sm:w-auto" onClick={saveToProfile} disabled={savingConsent}>
+          {savingConsent ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Check className="mr-1.5 h-3.5 w-3.5" />}
+          Save to patient profile
+        </Button>
+      </div>
     </div>
+
   );
 }
 
