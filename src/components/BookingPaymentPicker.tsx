@@ -117,6 +117,15 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
 
 
 
+  // "Pay deposit now, rest in cash" is available whenever the clinic takes
+  // deposits, allows pay-in-clinic and the deposit is smaller than the total.
+  const cashDepositAvailable = !!configured
+    && !depositWaived
+    && !!(opts as ConfiguredOptions).depositEnabled
+    && effectiveDepositCents >= 100
+    && effectiveDepositCents < treatmentTotalCents
+    && !!(opts as ConfiguredOptions).cashEnabled;
+
   // Methods depend on the selected mode: deposits are always card-only
   // (Klarna/Clearpay can't save a reusable card on file). Full payments allow
   // any method the clinic has enabled.
@@ -124,7 +133,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     if (!configured) return [] as Array<"card" | "klarna" | "clearpay">;
     const o = opts as ConfiguredOptions;
     const mode = value?.mode ?? availableModes[0];
-    if (mode === "deposit" || mode === "card_capture") {
+    if (mode === "deposit" || mode === "cash_deposit" || mode === "card_capture") {
       return o.cardEnabled ? (["card"] as Array<"card" | "klarna" | "clearpay">) : [];
     }
     const arr: Array<"card" | "klarna" | "clearpay"> = [];
