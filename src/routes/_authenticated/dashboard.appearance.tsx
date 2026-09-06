@@ -147,9 +147,11 @@ function AppearancePage() {
             </>
           )}
 
-          <Button onClick={handleSave} disabled={saving} className="w-full sm:ml-auto sm:w-auto">
-            {saving ? "Saving…" : "Save appearance"}
-          </Button>
+          <div className="flex justify-end">
+            <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
+              {saving ? "Saving…" : "Save appearance"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
