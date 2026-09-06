@@ -18,6 +18,7 @@ import {
   Pill,
   ArrowRight,
   ChevronRight,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
@@ -120,6 +121,12 @@ function HubIndex() {
       desc: "Route a patient for POM sign-off with full history.",
       disabled: prescribers.length === 0,
       disabledHint: "Connect a prescriber first",
+    },
+    {
+      to: "/dashboard/find-prescriber",
+      icon: Search,
+      title: "Find a prescriber",
+      desc: "Search prescribers near you and send a connection request.",
     },
     {
       to: "/hub/connections",

@@ -29,12 +29,15 @@ export const Route = createFileRoute("/_authenticated/hub")({
 // workspace. Dual-role users (practitioner + approved prescriber) keep full
 // access to both the Hub and the /prescriber workspace and switch via the
 // header links below.
-const PRESCRIBER_ONLY_REDIRECTS: Record<string, string> = {
+// Being an APPROVED prescriber overrides the clinic view: those users always
+// land in the prescriber workspace for anything that has a prescriber-side
+// equivalent. Clinic-only settings (prescribing rules, connected prescribers,
+// verification) stay here and are linked from the prescriber workspace.
+const PRESCRIBER_REDIRECTS: Record<string, string> = {
   "/hub/visits": "/prescriber/visits",
-  "/hub/prescribing": "/prescriber",
   "/hub/referrals": "/prescriber",
   "/hub/invoices": "/prescriber/invoices",
-  "/hub": "/prescriber",
+  "/hub": "/prescriber/dashboard",
 };
 
 // The Hub is the PRACTITIONER-side prescribing surface. Prescriber-only
@@ -66,14 +69,15 @@ function HubLayout() {
   const ctxQ = useQuery({ queryKey: ["hub-context"], queryFn: () => fetchCtx() });
   const isPractitioner = ctxQ.data?.isPractitioner ?? false;
   const isPrescriber = ctxQ.data?.isPrescriber ?? false;
-  // Only prescriber-ONLY users (no clinic) get redirected away from practitioner Hub pages.
   const prescriberOnly = isPrescriber && !isPractitioner;
+  // Approved prescribers (with or without a clinic) work from /prescriber.
+  const routeToPrescriber = ctxQ.data?.prescriber?.status === "approved";
 
   useEffect(() => {
-    if (!prescriberOnly) return;
-    const target = PRESCRIBER_ONLY_REDIRECTS[pathname];
+    if (!routeToPrescriber) return;
+    const target = PRESCRIBER_REDIRECTS[pathname];
     if (target) navigate({ to: target, replace: true });
-  }, [prescriberOnly, pathname, navigate]);
+  }, [routeToPrescriber, pathname, navigate]);
 
   const visitsQ = useQuery({
     queryKey: ["hub-nav-visits"],

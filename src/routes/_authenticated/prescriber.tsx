@@ -48,6 +48,12 @@ const moreNav: NavItem[] = [
   { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" },
 ];
 
+// Clinic-side prescribing settings — only shown to users who also run a clinic.
+const clinicNav: NavItem[] = [
+  { to: "/hub/prescribing", label: "Clinic prescribing rules", icon: Pill, key: "clinic-rules" },
+  { to: "/hub/connections", label: "My clinic's prescribers", icon: Network, key: "clinic-connections" },
+];
+
 
 
 
@@ -151,6 +157,22 @@ function PrescriberLayout() {
               </Link>
             );
           })}
+          {hasClinic && (
+            <>
+              <div className="px-3 pb-1 pt-5 text-[10px] font-semibold uppercase tracking-[0.2em] opacity-50">My clinic</div>
+              {clinicNav.map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  data-active={pathname.startsWith(item.to)}
+                  className="rx-rail-link flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all"
+                >
+                  <item.icon className="h-4 w-4 opacity-80" />
+                  <span className="flex-1 tracking-wide">{item.label}</span>
+                </Link>
+              ))}
+            </>
+          )}
           {hasClinic && (
             <Link
               to="/dashboard"
@@ -256,6 +278,20 @@ function PrescriberLayout() {
                     </Link>
                   );
                 })}
+                {hasClinic && clinicNav.map((tab) => (
+                  <Link
+                    key={tab.to}
+                    to={tab.to}
+                    onClick={() => setMoreOpen(false)}
+                    className={cn(
+                      "flex flex-col items-center justify-center gap-2 rounded-xl border p-4 text-xs font-medium transition",
+                      pathname.startsWith(tab.to) ? "border-primary bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted",
+                    )}
+                  >
+                    <tab.icon className="h-5 w-5" />
+                    <span className="text-center">{tab.label}</span>
+                  </Link>
+                ))}
                 {hasClinic && (
                   <Link
                     to="/dashboard"
