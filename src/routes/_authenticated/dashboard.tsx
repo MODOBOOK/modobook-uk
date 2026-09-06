@@ -459,7 +459,7 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
         {inPrescribing ? (
           <PrescriberBottomNav
             tabs={prescribingTabs}
-            moreItems={[{ to: "/dashboard", label: "Clinic dashboard", icon: Home }]}
+            moreItems={[{ to: "/dashboard", label: "Clinic dashboard", icon: Home, exact: true }]}
           />
         ) : (
         <nav

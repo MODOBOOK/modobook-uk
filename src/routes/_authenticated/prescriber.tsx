@@ -233,7 +233,7 @@ function PrescriberLayout() {
               count: badges[t.key] ?? 0,
             })),
             ...(hasClinic ? clinicNav.map((t) => ({ to: t.to, label: t.label, icon: t.icon })) : []),
-            ...(hasClinic ? [{ to: "/dashboard", label: "Clinic dashboard", icon: Building2 }] : []),
+            ...(hasClinic ? [{ to: "/dashboard", label: "Clinic dashboard", icon: Building2, exact: true }] : []),
           ]}
           moreFooter={
             <Button

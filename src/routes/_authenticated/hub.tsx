@@ -1,4 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
+// NOTE: bottom bar is the shared PrescriberBottomNav — identical on /hub/*, /prescriber/*, /dashboard/rx-requests/*.
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect } from "react";
@@ -209,7 +210,7 @@ function HubLayout() {
               icon: t.icon,
               count: badges[t.key] ?? 0,
             })),
-            { to: "/dashboard", label: "Clinic dashboard", icon: ArrowLeft },
+            { to: "/dashboard", label: "Clinic dashboard", icon: ArrowLeft, exact: true },
           ]}
         />
       </div>
