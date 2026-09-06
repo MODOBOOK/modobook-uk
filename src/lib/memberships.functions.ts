@@ -283,12 +283,10 @@ export const listPublicMembershipPlans = createServerFn({ method: "GET" })
         },
       },
     });
-    const { data: profile } = await pub
-      .from("profiles")
-      .select("id, clinic_name, full_name")
-      .eq("slug", data.slug)
+    const { data: profile, error: profileError } = await pub
+      .rpc("get_public_profile_by_slug", { p_slug: data.slug.toLowerCase() })
       .maybeSingle();
-    if (!profile) return { clinicName: null as string | null, plans: [] as never[] };
+    if (profileError || !profile) return { clinicName: null as string | null, plans: [] as never[] };
     const { data: plans } = await pub
       .from("membership_plans")
       .select("id, name, description, price_cents, interval, credit_cents, spend_mode, discount_percent, perks, included_treatments")
