@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import { Mail, Users, LayoutTemplate, BarChart3, Zap } from 'lucide-react'
+import { Mail, Users, LayoutTemplate, BarChart3, Zap, MessageSquare } from 'lucide-react'
 
 export const Route = createFileRoute('/_authenticated/dashboard/marketing')({
   component: MarketingLayout,
@@ -8,11 +8,13 @@ export const Route = createFileRoute('/_authenticated/dashboard/marketing')({
 
 const tabs = [
   { to: '/dashboard/marketing', label: 'Campaigns', icon: Mail, exact: true },
+  { to: '/dashboard/marketing/sms', label: 'SMS blast', icon: MessageSquare },
   { to: '/dashboard/marketing/automations', label: 'Automations', icon: Zap },
   { to: '/dashboard/marketing/segments', label: 'Segments', icon: Users },
   { to: '/dashboard/marketing/templates', label: 'Templates', icon: LayoutTemplate },
   { to: '/dashboard/marketing/analytics', label: 'Analytics', icon: BarChart3 },
 ]
+
 
 
 function MarketingLayout() {
