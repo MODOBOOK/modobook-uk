@@ -178,9 +178,12 @@ function NewAppointmentPage() {
     setPatientEmail(c.email ?? "");
     setPatientPhone(c.phone ?? "");
     setPatientDob(c.dob ?? "");
-    if (c.address) {
-      setAddrLine1(c.address);
-    }
+    // Some legacy records stored the whole address as a JSON blob in a single
+    // field — unpack it rather than dumping raw JSON into "Address line 1".
+    const parsed = parseStoredAddress(c.address);
+    setAddrLine1(c.address_line1 ? unwrapAddressField(c.address_line1) : parsed.line1);
+    setAddrCity(c.city ? unwrapAddressField(c.city) : parsed.city);
+    setAddrPostcode(c.postcode ? unwrapAddressField(c.postcode) : parsed.postcode);
     setClientPickerOpen(false);
   }
 
