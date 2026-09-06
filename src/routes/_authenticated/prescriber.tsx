@@ -61,7 +61,6 @@ function PrescriberLayout() {
   const { hubCtx, hasClinic } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const name = hubCtx.prescriber?.full_name ?? hubCtx.displayName ?? "Prescriber";
-  const [moreOpen, setMoreOpen] = useState(false);
 
   const fetchRefs = useServerFn(listMyReferrals);
   const fetchVisits = useServerFn(listMyPrescriberVisits);
