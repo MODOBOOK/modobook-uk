@@ -18,6 +18,7 @@ import { template as giftCardDelivery } from './gift-card-delivery'
 import { template as newBookingPractitioner } from './new-booking-practitioner'
 import { template as complianceReminder } from './compliance-reminder'
 import { template as membershipInvite } from './membership-invite'
+import { template as membershipTerms } from './membership-terms'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -32,6 +33,7 @@ export interface TemplateEntry {
  * Template registry — maps template names to their React Email components.
  */
 export const TEMPLATES: Record<string, TemplateEntry> = {
+  'membership-terms': membershipTerms,
   'booking-confirmation': bookingConfirmation,
   'booking-cancellation': bookingCancellation,
   'appointment-reminder': appointmentReminder,
