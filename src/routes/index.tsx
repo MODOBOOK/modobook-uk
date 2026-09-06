@@ -265,17 +265,6 @@ function LandingPage() {
                 Prescriber hub
               </h4>
             </div>
-
-            <div className="tile col-span-2 flex items-center gap-4 lg:col-span-4">
-              <div className="flex -space-x-3">
-                <span className="h-8 w-8 rounded-full border-2 border-[color:var(--paper)] bg-[color:var(--accent)]" />
-                <span className="h-8 w-8 rounded-full border-2 border-[color:var(--paper)] bg-[color:var(--ink-soft)]" />
-                <span className="h-8 w-8 rounded-full border-2 border-[color:var(--paper)] bg-[color:var(--ink)]" />
-              </div>
-              <p className="text-xs font-medium text-[color:var(--ink)]">
-                Trusted by UK aesthetics clinics — 0% booking fees, UK/EU data residency.
-              </p>
-            </div>
           </div>
         </section>
 
