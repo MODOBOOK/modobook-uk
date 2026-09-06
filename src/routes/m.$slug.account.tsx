@@ -512,6 +512,9 @@ function Account() {
         onSaved={() => { setEditOpen(false); loadAll(); }}
       />
 
+      {/* Account credit */}
+      <MyCreditHero slug={slug} brand={brand} />
+
       {/* Rewards hero — always at the top so it's forefront */}
       <RewardsHero slug={slug} brand={brand} />
 
