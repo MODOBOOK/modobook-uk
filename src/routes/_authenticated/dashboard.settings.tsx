@@ -197,8 +197,17 @@ const [saving, setSaving] = useState(false);
             label="Full card payment"
             hint="Standard Stripe card checkout."
             checked={s.payment_card_full_enabled}
-            onChange={(v) => set("payment_card_full_enabled", v)}
+            onChange={(v) =>
+              // "Cash only for remaining balance" hides pay-in-full, so the two
+              // settings can never be on at the same time.
+              setS((p) => ({
+                ...p,
+                payment_card_full_enabled: v,
+                cash_only_balance: v ? false : p.cash_only_balance,
+              }))
+            }
           />
+
           <ToggleRow
             label="Deposits"
             hint="Take a deposit at booking, pay rest at the clinic."
