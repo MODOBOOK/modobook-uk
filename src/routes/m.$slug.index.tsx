@@ -1445,6 +1445,11 @@ function BookPage() {
         </section>
       )}
 
+      {/* Desktop membership promo */}
+      {membershipPromoNode && (
+        <section className="mx-auto mt-6 hidden max-w-3xl px-4 sm:block">{membershipPromoNode}</section>
+      )}
+
       {/* Booking & cancellation policy */}
       {(() => {
         const isPercent = (profile.deposit_type ?? "fixed") === "percent";
