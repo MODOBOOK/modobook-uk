@@ -35,18 +35,19 @@ const nav: (NavItem & { shortLabel: string })[] = [
   { to: "/prescriber/dashboard", label: "Home", shortLabel: "Home", icon: LayoutDashboard, key: "dashboard" },
   { to: "/prescriber/requests", label: "Requests", shortLabel: "Requests", icon: MessageSquareText, key: "requests" },
   { to: "/prescriber/library", label: "Prescriptions", shortLabel: "Rx", icon: Pill, key: "library" },
-  { to: "/prescriber/connections", label: "Practitioners", shortLabel: "Team", icon: Network, key: "connections" },
+  { to: "/prescriber/directory", label: "Discovery", shortLabel: "Discovery", icon: Compass, key: "directory" },
 ];
 
 // Secondary items — desktop sidebar section & mobile More sheet.
 const moreNav: NavItem[] = [
+  { to: "/prescriber/connections", label: "Practitioners", icon: Network, key: "connections" },
   { to: "/prescriber", label: "Referrals", icon: Inbox, exact: true, key: "referrals" },
   { to: "/prescriber/visits", label: "Clinic visits", icon: CalendarDays, key: "visits" },
-  { to: "/prescriber/directory", label: "Discovery", icon: Compass, key: "directory" },
   { to: "/prescriber/directions", label: "Directions", icon: ClipboardList, key: "directions" },
   { to: "/prescriber/invoices", label: "Invoices", icon: FileText, key: "invoices" },
   { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" },
 ];
+
 
 
 
