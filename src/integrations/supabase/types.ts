@@ -4295,6 +4295,7 @@ export type Database = {
           id: string
           included_treatments: Json
           interval: string
+          min_commitment_months: number
           name: string
           perks: string | null
           price_cents: number
@@ -4303,6 +4304,7 @@ export type Database = {
           stripe_price_id: string | null
           terms_checkboxes: Json
           terms_text: string | null
+          treatment_frequency_months: number
           updated_at: string
         }
         Insert: {
@@ -4315,6 +4317,7 @@ export type Database = {
           id?: string
           included_treatments?: Json
           interval?: string
+          min_commitment_months?: number
           name: string
           perks?: string | null
           price_cents: number
@@ -4323,6 +4326,7 @@ export type Database = {
           stripe_price_id?: string | null
           terms_checkboxes?: Json
           terms_text?: string | null
+          treatment_frequency_months?: number
           updated_at?: string
         }
         Update: {
@@ -4335,6 +4339,7 @@ export type Database = {
           id?: string
           included_treatments?: Json
           interval?: string
+          min_commitment_months?: number
           name?: string
           perks?: string | null
           price_cents?: number
@@ -4343,6 +4348,7 @@ export type Database = {
           stripe_price_id?: string | null
           terms_checkboxes?: Json
           terms_text?: string | null
+          treatment_frequency_months?: number
           updated_at?: string
         }
         Relationships: [
