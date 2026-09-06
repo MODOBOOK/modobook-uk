@@ -78,6 +78,7 @@ const groups: Group[] = [
       { label: "Business & Profile", description: "Clinic name, contact details & socials", to: "/dashboard/clinic", icon: Store, ...T.espresso },
       { label: "About page", description: "Your story shown to patients", to: "/dashboard/about", icon: FileText, ...T.sand },
       { label: "Branding", description: "Colours, fonts, logo & favicon", to: "/dashboard/branding", icon: Palette, ...T.sand },
+      { label: "Workspace appearance", description: "Colours & fonts for your own dashboard only", to: "/dashboard/appearance", icon: Palette, ...T.ivory },
       { label: "Welcome & policies", description: "Intro heading, welcome message, deposits, cancellation, T&Cs", to: "/dashboard/policies", icon: Shield, ...T.mocha },
       { label: "Locations", description: "Manage your clinic addresses", to: "/dashboard/locations", icon: MapPin, ...T.cream },
       { label: "Booking profiles", description: "Photos, titles & locations for treating staff", to: "/dashboard/practitioners", icon: Users, ...T.taupe },

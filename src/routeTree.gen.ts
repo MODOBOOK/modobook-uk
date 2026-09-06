@@ -127,6 +127,7 @@ import { Route as AuthenticatedDashboardBookingFlowRouteImport } from './routes/
 import { Route as AuthenticatedDashboardBioRouteImport } from './routes/_authenticated/dashboard.bio'
 import { Route as AuthenticatedDashboardBillingRouteImport } from './routes/_authenticated/dashboard.billing'
 import { Route as AuthenticatedDashboardAvailabilityRouteImport } from './routes/_authenticated/dashboard.availability'
+import { Route as AuthenticatedDashboardAppearanceRouteImport } from './routes/_authenticated/dashboard.appearance'
 import { Route as AuthenticatedDashboardAnalyticsRouteImport } from './routes/_authenticated/dashboard.analytics'
 import { Route as AuthenticatedDashboardAiImportRouteImport } from './routes/_authenticated/dashboard.ai-import'
 import { Route as AuthenticatedDashboardAftercareRouteImport } from './routes/_authenticated/dashboard.aftercare'
@@ -841,6 +842,12 @@ const AuthenticatedDashboardAvailabilityRoute =
     path: '/availability',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardAppearanceRoute =
+  AuthenticatedDashboardAppearanceRouteImport.update({
+    id: '/appearance',
+    path: '/appearance',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardAnalyticsRoute =
   AuthenticatedDashboardAnalyticsRouteImport.update({
     id: '/analytics',
@@ -1261,6 +1268,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
   '/dashboard/ai-import': typeof AuthenticatedDashboardAiImportRoute
   '/dashboard/analytics': typeof AuthenticatedDashboardAnalyticsRoute
+  '/dashboard/appearance': typeof AuthenticatedDashboardAppearanceRoute
   '/dashboard/availability': typeof AuthenticatedDashboardAvailabilityRoute
   '/dashboard/billing': typeof AuthenticatedDashboardBillingRoute
   '/dashboard/bio': typeof AuthenticatedDashboardBioRoute
@@ -1436,6 +1444,7 @@ export interface FileRoutesByTo {
   '/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
   '/dashboard/ai-import': typeof AuthenticatedDashboardAiImportRoute
   '/dashboard/analytics': typeof AuthenticatedDashboardAnalyticsRoute
+  '/dashboard/appearance': typeof AuthenticatedDashboardAppearanceRoute
   '/dashboard/availability': typeof AuthenticatedDashboardAvailabilityRoute
   '/dashboard/billing': typeof AuthenticatedDashboardBillingRoute
   '/dashboard/bio': typeof AuthenticatedDashboardBioRoute
@@ -1615,6 +1624,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/aftercare': typeof AuthenticatedDashboardAftercareRoute
   '/_authenticated/dashboard/ai-import': typeof AuthenticatedDashboardAiImportRoute
   '/_authenticated/dashboard/analytics': typeof AuthenticatedDashboardAnalyticsRoute
+  '/_authenticated/dashboard/appearance': typeof AuthenticatedDashboardAppearanceRoute
   '/_authenticated/dashboard/availability': typeof AuthenticatedDashboardAvailabilityRoute
   '/_authenticated/dashboard/billing': typeof AuthenticatedDashboardBillingRoute
   '/_authenticated/dashboard/bio': typeof AuthenticatedDashboardBioRoute
@@ -1799,6 +1809,7 @@ export interface FileRouteTypes {
     | '/dashboard/aftercare'
     | '/dashboard/ai-import'
     | '/dashboard/analytics'
+    | '/dashboard/appearance'
     | '/dashboard/availability'
     | '/dashboard/billing'
     | '/dashboard/bio'
@@ -1974,6 +1985,7 @@ export interface FileRouteTypes {
     | '/dashboard/aftercare'
     | '/dashboard/ai-import'
     | '/dashboard/analytics'
+    | '/dashboard/appearance'
     | '/dashboard/availability'
     | '/dashboard/billing'
     | '/dashboard/bio'
@@ -2152,6 +2164,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/aftercare'
     | '/_authenticated/dashboard/ai-import'
     | '/_authenticated/dashboard/analytics'
+    | '/_authenticated/dashboard/appearance'
     | '/_authenticated/dashboard/availability'
     | '/_authenticated/dashboard/billing'
     | '/_authenticated/dashboard/bio'
@@ -3163,6 +3176,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardAvailabilityRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/appearance': {
+      id: '/_authenticated/dashboard/appearance'
+      path: '/appearance'
+      fullPath: '/dashboard/appearance'
+      preLoaderRoute: typeof AuthenticatedDashboardAppearanceRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/analytics': {
       id: '/_authenticated/dashboard/analytics'
       path: '/analytics'
@@ -3767,6 +3787,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardAftercareRoute: typeof AuthenticatedDashboardAftercareRoute
   AuthenticatedDashboardAiImportRoute: typeof AuthenticatedDashboardAiImportRoute
   AuthenticatedDashboardAnalyticsRoute: typeof AuthenticatedDashboardAnalyticsRoute
+  AuthenticatedDashboardAppearanceRoute: typeof AuthenticatedDashboardAppearanceRoute
   AuthenticatedDashboardAvailabilityRoute: typeof AuthenticatedDashboardAvailabilityRoute
   AuthenticatedDashboardBillingRoute: typeof AuthenticatedDashboardBillingRoute
   AuthenticatedDashboardBioRoute: typeof AuthenticatedDashboardBioRoute
@@ -3829,6 +3850,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardAftercareRoute: AuthenticatedDashboardAftercareRoute,
     AuthenticatedDashboardAiImportRoute: AuthenticatedDashboardAiImportRoute,
     AuthenticatedDashboardAnalyticsRoute: AuthenticatedDashboardAnalyticsRoute,
+    AuthenticatedDashboardAppearanceRoute:
+      AuthenticatedDashboardAppearanceRoute,
     AuthenticatedDashboardAvailabilityRoute:
       AuthenticatedDashboardAvailabilityRoute,
     AuthenticatedDashboardBillingRoute: AuthenticatedDashboardBillingRoute,
