@@ -147,13 +147,13 @@ export function CourseGroupRow({
         }}
       >
         <span
-          className={`mt-0.5 flex shrink-0 items-center justify-center rounded-full border-2 ${checkSize}`}
+          className={`mt-0.5 flex shrink-0 items-center justify-center rounded-full border ${checkSize}`}
           style={chosen.length
             ? { backgroundColor: brand, borderColor: brand, color: "white" }
             : { borderColor: `${brand}66` }}
           aria-hidden="true"
         >
-          {chosen.length > 0 && <Check className="h-3 w-3" />}
+          {chosen.length > 0 && <Check className={tickSize} />}
         </span>
 
         <div className="min-w-0 flex-1">
