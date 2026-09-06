@@ -271,11 +271,11 @@ const [saving, setSaving] = useState(false);
           />
           <div className="rounded-md border p-3 space-y-3">
             <div>
-              <div className="text-sm font-medium">{PLATFORM_FEE_LABEL} — who pays?</div>
+              <div className="text-sm font-medium">Stripe platform fee — who pays?</div>
               <p className="text-xs text-muted-foreground">
-                A fixed {PLATFORM_FEE_DESCRIPTION} on every online payment — card, Klarna and Clearpay
+                A fixed {PLATFORM_FEE_DESCRIPTION} Stripe fee on every online payment — card, Klarna and Clearpay
                 are all charged exactly the same. Cash / pay-in-clinic bookings and card-on-file
-                captures never carry a fee.
+                captures never carry a Stripe fee.
               </p>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
