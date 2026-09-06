@@ -188,30 +188,28 @@ function PrescriberLayout() {
         </main>
 
         <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
-          {nav
-            .filter((t) => (mobilePrimaryKeys as readonly string[]).includes(t.key))
-            .map((tab) => {
-              const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
-              const count = badges[tab.key] ?? 0;
-              return (
-                <Link
-                  key={tab.to}
-                  to={tab.to}
-                  className={cn(
-                    "relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition",
-                    active ? "text-primary" : "text-muted-foreground",
-                  )}
-                >
-                  <tab.icon className="h-5 w-5" />
-                  <span className="truncate">{tab.shortLabel}</span>
-                  {count > 0 && (
-                    <span className="absolute right-4 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
-                      {count}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
+          {nav.map((tab) => {
+            const active = pathname.startsWith(tab.to);
+            const count = badges[tab.key] ?? 0;
+            return (
+              <Link
+                key={tab.to}
+                to={tab.to}
+                className={cn(
+                  "relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition",
+                  active ? "text-primary" : "text-muted-foreground",
+                )}
+              >
+                <tab.icon className="h-5 w-5" />
+                <span className="truncate">{tab.shortLabel}</span>
+                {count > 0 && (
+                  <span className="absolute right-4 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                    {count}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
           <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
             <SheetTrigger asChild>
               <button
