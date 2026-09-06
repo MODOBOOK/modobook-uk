@@ -152,6 +152,21 @@ function Row({
                   })}
                 </SelectContent>
               </Select>
+              {prescriberId && (() => {
+                const sel = prescribers.find((p) => p.user_id === prescriberId);
+                if (!sel) return null;
+                const fees = [
+                  sel.fee_per_prescription_pence != null ? `£${(sel.fee_per_prescription_pence / 100).toFixed(0)} per prescription` : null,
+                  sel.fee_per_consult_pence != null ? `£${(sel.fee_per_consult_pence / 100).toFixed(0)} per consult` : null,
+                ].filter(Boolean);
+                if (!fees.length && !sel.fee_notes) return null;
+                return (
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    {fees.join(" · ")}
+                    {sel.fee_notes ? `${fees.length ? " — " : ""}${sel.fee_notes}` : ""}
+                  </p>
+                );
+              })()}
             </div>
 
             <div>
