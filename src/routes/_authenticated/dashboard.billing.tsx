@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Minus, Plus, MapPin, Users, FileText, ExternalLink } from "lucide-react";
 import { captureReferralFromUrl, clearStoredReferral } from "@/lib/referral-capture";
+import { FREE_EXTRA_LOCATIONS } from "@/lib/free-locations";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard/billing")({
@@ -173,7 +174,7 @@ function BillingPage() {
   const freePracs = Math.max(0, sub?.free_practitioners ?? 0);
   const usedLocations = state.usage?.locations ?? 0;
   const usedPractitioners = state.usage?.practitioners ?? 0;
-  const minLocations = Math.max(0, usedLocations - 1 - freeLocs);
+  const minLocations = FREE_EXTRA_LOCATIONS ? 0 : Math.max(0, usedLocations - 1 - freeLocs);
   const minPractitioners = Math.max(0, usedPractitioners - 1 - freePracs);
   const nextBilling = sub?.current_period_end
     ? new Date(sub.current_period_end as string).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
@@ -329,7 +330,11 @@ function BillingPage() {
             {locAddon && (
               <div className="rounded-lg border p-3">
                 <div className="font-medium text-sm">Extra locations</div>
-                <div className="text-xs text-muted-foreground">{money(locAddon.amount_cents, locAddon.currency)}/{locAddon.interval} each</div>
+                {FREE_EXTRA_LOCATIONS ? (
+                  <div className="text-xs"><span className="font-medium text-emerald-700">Free for a limited time</span> <span className="text-muted-foreground line-through">{money(locAddon.amount_cents, locAddon.currency)}/{locAddon.interval} each</span></div>
+                ) : (
+                  <div className="text-xs text-muted-foreground">{money(locAddon.amount_cents, locAddon.currency)}/{locAddon.interval} each</div>
+                )}
                 <div className="mt-2 flex items-center gap-2">
                   <Button size="icon" variant="outline" disabled={extraLocations <= minLocations} onClick={() => bump(setExtraLocations, Math.max(minLocations, extraLocations - 1))}><Minus className="h-4 w-4" /></Button>
                   <span className="w-8 text-center">{extraLocations}</span>
@@ -340,7 +345,7 @@ function BillingPage() {
                   <Link to="/dashboard/locations" className="underline underline-offset-2">
                     {usedLocations} location{usedLocations === 1 ? "" : "s"} on your account
                   </Link>
-                  {minLocations > 0 ? ` — ${minLocations} charged` : " — all included"}
+                  {minLocations > 0 ? ` — ${minLocations} charged` : FREE_EXTRA_LOCATIONS ? " — extra locations free for now" : " — all included"}
                 </p>
                 {minLocations > 0 && (
                   <p className="mt-1 text-[11px] text-muted-foreground">

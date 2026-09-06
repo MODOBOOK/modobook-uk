@@ -9,6 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AlertTriangle } from "lucide-react";
+import { FREE_EXTRA_LOCATIONS } from "@/lib/free-locations";
 
 const money = (cents: number, currency = "gbp") =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: currency.toUpperCase() }).format((cents ?? 0) / 100);
@@ -53,6 +54,7 @@ export function seatChargeCents(seats: SeatSummary | null, kind: SeatKind) {
     const seatCents = a.used + 1 > covered ? a.addonCents : 0;
     return moduleCents + seatCents;
   }
+  if (kind === "location" && FREE_EXTRA_LOCATIONS) return 0; // promo: extra locations free
   const s = kind === "location" ? seats.locations : seats.practitioners;
   return s.used + 1 > 1 + s.freeExtras ? s.addonCents : 0;
 }

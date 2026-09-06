@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { associateBillingEnabled } from "@/lib/feature-flags";
+import { FREE_EXTRA_LOCATIONS } from "@/lib/free-locations";
 
 /**
  * Practitioner-facing billing server functions. Everything is scoped to the
@@ -92,6 +93,7 @@ export async function assertSeatAvailable(
   if (sub?.comped) return;
 
   const isLoc = kind === "location";
+  if (isLoc && FREE_EXTRA_LOCATIONS) return; // promo: extra locations free for now
   const freeExtras = Math.max(0, Number((isLoc ? sub?.free_locations : sub?.free_practitioners) ?? 0));
   if (current < 1 + freeExtras) return; // admin-granted comped seats
 
@@ -357,7 +359,7 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
     const line_items: Array<{ price: string; quantity: number }> = [
       { price: base.stripe_price_id, quantity: 1 },
     ];
-    if ((data.extraLocations ?? 0) > 0 && locAddon?.stripe_price_id) {
+    if (!FREE_EXTRA_LOCATIONS && (data.extraLocations ?? 0) > 0 && locAddon?.stripe_price_id) {
       line_items.push({ price: locAddon.stripe_price_id, quantity: data.extraLocations! });
     }
     if ((data.extraPractitioners ?? 0) > 0 && pracAddon?.stripe_price_id) {
@@ -557,7 +559,7 @@ export const getSeatSummary = createServerFn({ method: "GET" })
 
     // Chargeable seats are derived from what actually exists on the account —
     // this is what the plan price is collated from, not a manual selection.
-    const billableLocs = Math.max(0, usedLocs - 1 - freeLocs);
+    const billableLocs = FREE_EXTRA_LOCATIONS ? 0 : Math.max(0, usedLocs - 1 - freeLocs);
     const billablePracs = Math.max(0, usedPracs - 1 - freePracs);
 
     // Associates: the service itself is a flat monthly add-on that covers the
@@ -754,7 +756,7 @@ export const updateMySubscriptionItems = createServerFn({ method: "POST" })
     const wanted: Array<{ price: string; quantity: number }> = [
       { price: base.stripe_price_id, quantity: 1 },
     ];
-    if (data.extraLocations > 0 && locAddon?.stripe_price_id)
+    if (!FREE_EXTRA_LOCATIONS && data.extraLocations > 0 && locAddon?.stripe_price_id)
       wanted.push({ price: locAddon.stripe_price_id, quantity: data.extraLocations });
     if (data.extraPractitioners > 0 && pracAddon?.stripe_price_id)
       wanted.push({ price: pracAddon.stripe_price_id, quantity: data.extraPractitioners });
