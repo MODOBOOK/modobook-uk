@@ -465,9 +465,7 @@ export const previewMembershipCredit = createServerFn({ method: "POST" })
   .inputValidator((input: { slug: string; treatmentIds: string[]; totalCents: number }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    if (!membershipsEnabled(data.slug)) {
-      return { applicableCents: 0, balanceCents: 0, mode: null as string | null };
-    }
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
@@ -518,8 +516,11 @@ export const previewMembershipCredit = createServerFn({ method: "POST" })
     if (mode === "manual") {
       return { applicableCents: 0, balanceCents: balance, mode };
     }
-    const applicableCents = mode ? Math.min(balance, Math.max(0, Math.round(data.totalCents))) : 0;
+    // No membership plan rules — plain clinic credit can be spent on anything.
+    if (!mode) mode = "any";
+    const applicableCents = Math.min(balance, Math.max(0, Math.round(data.totalCents)));
     return { applicableCents, balanceCents: balance, mode };
+
   });
 
 // Deduct credit after a booking is confirmed. Idempotent on appointment id.
@@ -530,7 +531,7 @@ export const redeemMembershipCredit = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    if (!membershipsEnabled(data.slug)) return { ok: true, applied: 0 };
+    
     const amount = Math.round(data.amountCents);
     if (amount <= 0) return { ok: true, applied: 0 };
 

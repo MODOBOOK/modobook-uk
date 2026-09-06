@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Loader2, Calendar as CalendarIcon, Clock, MapPin, FileText, StickyNote,
   ClipboardCheck, Receipt, ShieldCheck, ExternalLink, Sparkles, HeartPulse,
-  Mail, Phone, AlertTriangle, ChevronDown, Gift, Copy, Share2, Coins, ArrowRight,
+  Mail, Phone, AlertTriangle, ChevronDown, Gift, Copy, Share2, Coins, ArrowRight, Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 import { describeCancellationRules, type CancellationRule } from "@/lib/policy";
@@ -20,6 +20,7 @@ import { SafeHtml } from "@/components/SafeHtml";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyRewardsForClinic } from "@/lib/rewards.functions";
+import { getMyClinicCredit } from "@/lib/patient-credit.functions";
 import { autoRefundCancelledAppointment } from "@/lib/refunds.functions";
 
 
@@ -511,6 +512,9 @@ function Account() {
         initial={myClient}
         onSaved={() => { setEditOpen(false); loadAll(); }}
       />
+
+      {/* Account credit */}
+      <MyCreditHero slug={slug} brand={brand} />
 
       {/* Rewards hero — always at the top so it's forefront */}
       <RewardsHero slug={slug} brand={brand} />
@@ -1522,3 +1526,43 @@ function RewardsTabContent({ slug, brand }: { slug: string; brand: string }) {
   );
 }
 
+
+function MyCreditHero({ slug, brand }: { slug: string; brand: string }) {
+  const fetchCredit = useServerFn(getMyClinicCredit);
+  const q = useQuery({
+    queryKey: ["portal-credit", slug],
+    queryFn: () => fetchCredit({ data: { slug } }),
+    staleTime: 30_000,
+  });
+  const balance = q.data?.balanceCents ?? 0;
+  if (balance <= 0) return null;
+
+  return (
+    <section className="mt-4">
+      <div
+        className="overflow-hidden rounded-2xl border shadow-sm"
+        style={{ background: `linear-gradient(135deg, ${brand}18, ${brand}05)`, borderColor: `${brand}30` }}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-4 p-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl" style={{ background: `${brand}20`, color: brand }}>
+              <Wallet className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: brand }}>Your credit</div>
+              <div className="mt-0.5 text-2xl font-semibold">{fmtRewardsGBP(balance)}</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Use this towards your next booking — it's applied at checkout.
+              </div>
+            </div>
+          </div>
+          <Link to="/m/$slug" params={{ slug }}>
+            <Button size="sm" style={{ background: brand, color: "white" }}>
+              Book with credit <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}

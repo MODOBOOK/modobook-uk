@@ -42,6 +42,7 @@ import { SendFormDialog } from "@/components/patient/SendFormDialog";
 import { ClientFormsList } from "@/components/patient/ClientFormsList";
 import { ConsultationDocCard } from "@/components/patient/ConsultationDocCard";
 import { LoyaltyPointsCard } from "@/components/patient/LoyaltyPointsCard";
+import { PatientCreditCard } from "@/components/patient/PatientCreditCard";
 
 
 import { logCommunication, sendPatientEmail } from "@/lib/patient-hub.functions";
@@ -375,6 +376,9 @@ function PatientProfilePage() {
 
       {/* Card on file (for no-show / late cancel charges) */}
       <CardOnFileSection client={client} onReload={reload} />
+
+      {/* Account credit */}
+      <PatientCreditCard clientId={id} />
 
       {/* Loyalty points */}
       <LoyaltyPointsCard clientId={id} />
