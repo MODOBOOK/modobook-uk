@@ -182,7 +182,7 @@ export const getPrescriberHome = createServerFn({ method: "GET" })
         })),
       },
       stats: {
-        scriptsSignedThisMonth: signedThisMonth.length ?? 0,
+        scriptsSignedThisMonth: signedThisMonthCount ?? 0,
         activeCases: allRefs.filter((r) => r.status === "accepted").length,
       },
       signoffs: (signoffs ?? []).map((e) => ({
