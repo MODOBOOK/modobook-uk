@@ -171,8 +171,7 @@ export const seedComplianceDefaults = createServerFn({ method: "POST" })
     return await seedPresets(db, a.profileId, data.checkKeys, data.auditKeys);
   });
 
-    return { checks: checkRows.length, audits: auditRows.length };
-  });
+
 
 // ---- Check templates ------------------------------------------------------
 
