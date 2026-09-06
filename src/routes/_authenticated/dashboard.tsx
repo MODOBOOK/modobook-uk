@@ -46,6 +46,7 @@ import {
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { PrescriberBottomNav } from "@/components/prescriber/PrescriberBottomNav";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -153,13 +154,14 @@ const mobileTabs = [
 ];
 
 // While working inside the prescribing area, the bottom bar stays in that
-// context instead of throwing the user back into the clinic dashboard.
+// context instead of throwing the user back into the clinic dashboard. It is
+// the SAME shared Prescriber Hub bar used on /hub/* and /prescriber/* so the
+// navigation never changes between prescribing pages.
 const prescribingTabs = [
   { label: "Requests", to: "/dashboard/rx-requests", icon: MessageCircle, exact: true },
   { label: "Prescribing", to: "/hub/prescribing", icon: Stethoscope },
-  { label: "New", to: "/dashboard/rx-requests/new", icon: CalendarPlus, cta: true },
+  { label: "New", to: "/dashboard/rx-requests/new", icon: CalendarPlus },
   { label: "Hub", to: "/hub", icon: ShieldCheck, exact: true },
-  { label: "Clinic", to: "/dashboard", icon: Home, exact: true },
 ];
 
 
@@ -170,7 +172,7 @@ function DashboardLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isConsultationDetail = /^\/dashboard\/consultations\/[^/]+/.test(pathname);
   const inPrescribing = pathname.startsWith("/dashboard/rx-requests");
-  const bottomTabs = inPrescribing ? prescribingTabs : mobileTabs;
+  const bottomTabs = mobileTabs;
 
   // Prescribing screens are part of the Prescriber Hub — always the clean
   // clinical palette, never the clinic's brand colours.
@@ -453,7 +455,13 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
         </main>
 
 
-        {/* Mobile bottom tab bar */}
+        {/* Mobile bottom tab bar — prescribing pages share the Prescriber Hub bar */}
+        {inPrescribing ? (
+          <PrescriberBottomNav
+            tabs={prescribingTabs}
+            moreItems={[{ to: "/dashboard", label: "Clinic dashboard", icon: Home, exact: true }]}
+          />
+        ) : (
         <nav
           className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-background/95 backdrop-blur lg:hidden"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -461,20 +469,6 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
           {bottomTabs.map((tab) => {
             const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
             if ((tab as { cta?: boolean }).cta) {
-              if (inPrescribing) {
-                return (
-                  <Link
-                    key={tab.to}
-                    to={tab.to}
-                    className="flex min-h-[60px] flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground transition active:scale-[0.97]"
-                  >
-                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md ring-4 ring-primary/15 transition active:scale-95">
-                      <tab.icon className="h-5 w-5" />
-                    </span>
-                    {tab.label}
-                  </Link>
-                );
-              }
               return (
                 <button
                   key={tab.to}
@@ -513,6 +507,7 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
             );
           })}
         </nav>
+        )}
 
         <Sheet open={addOpen} onOpenChange={setAddOpen}>
           <SheetContent side="bottom" className="rounded-t-2xl pb-8 pt-4">

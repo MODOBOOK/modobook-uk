@@ -1,17 +1,16 @@
 import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { PrescriberBottomNav } from "@/components/prescriber/PrescriberBottomNav";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut, Inbox, Network, ShieldCheck, Stethoscope, Building2, CalendarDays, Pill, LayoutDashboard, ClipboardList, MoreHorizontal, FileText, MessageSquareText, Compass } from "lucide-react";
+import { LogOut, Inbox, Network, ShieldCheck, Stethoscope, Building2, CalendarDays, Pill, LayoutDashboard, ClipboardList, FileText, MessageSquareText, Compass } from "lucide-react";
 import { getHubContext } from "@/lib/hub.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { listMyReferrals } from "@/lib/prescriber.functions";
 import { listConnectRequests } from "@/lib/prescriber-directory.functions";
 import { listMyPrescriberVisits } from "@/lib/clinic-visits.functions";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/prescriber")({
   ssr: false,
@@ -62,7 +61,6 @@ function PrescriberLayout() {
   const { hubCtx, hasClinic } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const name = hubCtx.prescriber?.full_name ?? hubCtx.displayName ?? "Prescriber";
-  const [moreOpen, setMoreOpen] = useState(false);
 
   const fetchRefs = useServerFn(listMyReferrals);
   const fetchVisits = useServerFn(listMyPrescriberVisits);
@@ -219,121 +217,34 @@ function PrescriberLayout() {
           </div>
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
-          <div className="grid grid-cols-5">
-            {nav.map((tab) => {
-              const active = pathname.startsWith(tab.to);
-              const count = badges[tab.key] ?? 0;
-              return (
-                <Link
-                  key={tab.to}
-                  to={tab.to}
-                  className={cn(
-                    "relative flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-medium transition",
-                    active ? "text-primary" : "text-muted-foreground",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "flex h-8 w-12 items-center justify-center rounded-full transition",
-                      active && "bg-primary/12",
-                    )}
-                  >
-                    <tab.icon className="h-5 w-5" />
-                  </span>
-                  <span className="max-w-full truncate px-1">{tab.shortLabel}</span>
-                  {count > 0 && (
-                    <span className="absolute right-3 top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
-                      {count}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-            <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-              <SheetTrigger asChild>
-                <button
-                  type="button"
-                  className="relative flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-medium text-muted-foreground transition"
-                >
-                  <span className="flex h-8 w-12 items-center justify-center rounded-full">
-                    <MoreHorizontal className="h-5 w-5" />
-                  </span>
-                  <span>More</span>
-                </button>
-              </SheetTrigger>
-            <SheetContent side="bottom" className="rx-theme rounded-t-3xl border-t bg-background px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
-              <SheetHeader className="pt-1">
-                <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-muted-foreground/25" />
-                <SheetTitle className="text-left font-serif text-xl">More</SheetTitle>
-              </SheetHeader>
-              <div className="mt-4 grid grid-cols-3 gap-2.5">
-                {moreNav.map((tab) => {
-                  const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
-                  const count = badges[tab.key] ?? 0;
-                  return (
-                    <Link
-                      key={tab.to}
-                      to={tab.to}
-                      onClick={() => setMoreOpen(false)}
-                      className={cn(
-                        "relative flex flex-col items-center justify-center gap-2.5 rounded-2xl border p-4 text-[11px] font-semibold transition active:scale-[0.97]",
-                        active
-                          ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                          : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-secondary",
-                      )}
-                    >
-                      <tab.icon className={cn("h-5 w-5", active ? "text-primary-foreground" : "text-accent")} />
-                      <span className="text-center leading-tight">{tab.label}</span>
-                      {count > 0 && (
-                        <span className={cn(
-                          "absolute right-2 top-2 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold",
-                          active ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground",
-                        )}>
-                          {count}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
-                {hasClinic && clinicNav.map((tab) => (
-                  <Link
-                    key={tab.to}
-                    to={tab.to}
-                    onClick={() => setMoreOpen(false)}
-                    className={cn(
-                      "flex flex-col items-center justify-center gap-2.5 rounded-2xl border p-4 text-[11px] font-semibold transition active:scale-[0.97]",
-                      pathname.startsWith(tab.to)
-                        ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                        : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-secondary",
-                    )}
-                  >
-                    <tab.icon className={cn("h-5 w-5", pathname.startsWith(tab.to) ? "text-primary-foreground" : "text-accent")} />
-                    <span className="text-center leading-tight">{tab.label}</span>
-                  </Link>
-                ))}
-                {hasClinic && (
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setMoreOpen(false)}
-                    className="flex flex-col items-center justify-center gap-2.5 rounded-2xl border border-dashed border-border p-4 text-[11px] font-semibold text-muted-foreground transition hover:bg-secondary active:scale-[0.97]"
-                  >
-                    <Building2 className="h-5 w-5" />
-                    <span className="text-center leading-tight">Clinic dashboard</span>
-                  </Link>
-                )}
-              </div>
-              <Button
-                variant="ghost"
-                className="mt-4 w-full justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
-                onClick={() => { setMoreOpen(false); void signOut(); }}
-              >
-                <LogOut className="mr-2 h-4 w-4" /> Sign out
-              </Button>
-              </SheetContent>
-            </Sheet>
-          </div>
-        </nav>
+        <PrescriberBottomNav
+          tabs={nav.map((t) => ({
+            to: t.to,
+            label: t.shortLabel,
+            icon: t.icon,
+            count: badges[t.key] ?? 0,
+          }))}
+          moreItems={[
+            ...moreNav.map((t) => ({
+              to: t.to,
+              label: t.label,
+              icon: t.icon,
+              exact: t.exact,
+              count: badges[t.key] ?? 0,
+            })),
+            ...(hasClinic ? clinicNav.map((t) => ({ to: t.to, label: t.label, icon: t.icon })) : []),
+            ...(hasClinic ? [{ to: "/dashboard", label: "Clinic dashboard", icon: Building2, exact: true }] : []),
+          ]}
+          moreFooter={
+            <Button
+              variant="ghost"
+              className="mt-4 w-full justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
+              onClick={() => void signOut()}
+            >
+              <LogOut className="mr-2 h-4 w-4" /> Sign out
+            </Button>
+          }
+        />
       </div>
     </div>
   );

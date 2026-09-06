@@ -1,9 +1,10 @@
 import { createFileRoute, Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
+// NOTE: bottom bar is the shared PrescriberBottomNav — identical on /hub/*, /prescriber/*, /dashboard/rx-requests/*.
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { PrescriberBottomNav } from "@/components/prescriber/PrescriberBottomNav";
 import {
   ArrowLeft,
   LayoutDashboard,
@@ -13,7 +14,6 @@ import {
   ShieldCheck,
   Pill,
   Stethoscope,
-  MoreHorizontal,
 } from "lucide-react";
 import { getHubContext } from "@/lib/hub.functions";
 import { listMyClinicVisits } from "@/lib/clinic-visits.functions";
@@ -64,7 +64,6 @@ function HubLayout() {
   const fetchCtx = useServerFn(getHubContext);
   const fetchVisits = useServerFn(listMyClinicVisits);
   const fetchRefs = useServerFn(listSentReferrals);
-  const [moreOpen, setMoreOpen] = useState(false);
 
   const ctxQ = useQuery({ queryKey: ["hub-context"], queryFn: () => fetchCtx() });
   const isPractitioner = ctxQ.data?.isPractitioner ?? false;
@@ -102,7 +101,6 @@ function HubLayout() {
     referrals: pendingRefs,
   };
 
-  const moreCount = moreNav.reduce((n, i) => n + (badges[i.key] ?? 0), 0);
   const name = ctxQ.data?.displayName ?? "Prescriber Hub";
   const activeLabel = nav.find((n) => (n.exact ? pathname === n.to : pathname.startsWith(n.to)))?.label ?? "Overview";
 
@@ -197,92 +195,24 @@ function HubLayout() {
           </div>
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
-          <div className="grid grid-cols-5">
-            {primaryNav.map((tab) => {
-              const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
-              const count = badges[tab.key] ?? 0;
-              return (
-                <Link
-                  key={tab.to}
-                  to={tab.to}
-                  className={cn(
-                    "relative flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-medium transition",
-                    active ? "text-primary" : "text-muted-foreground",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "flex h-8 w-12 items-center justify-center rounded-full transition",
-                      active && "bg-primary/12",
-                    )}
-                  >
-                    <tab.icon className="h-5 w-5" />
-                  </span>
-                  <span className="max-w-full truncate px-1">{tab.label}</span>
-                  {count > 0 && (
-                    <span className="absolute right-3 top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
-                      {count}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-            <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-              <SheetTrigger asChild>
-                <button
-                  type="button"
-                  className="relative flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-medium text-muted-foreground"
-                >
-                  <span className="flex h-8 w-12 items-center justify-center rounded-full">
-                    <MoreHorizontal className="h-5 w-5" />
-                  </span>
-                  <span>More</span>
-                  {moreCount > 0 && (
-                    <span className="absolute right-3 top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
-                      {moreCount}
-                    </span>
-                  )}
-                </button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="rounded-t-3xl pb-8">
-                <SheetHeader className="text-left">
-                  <SheetTitle>More</SheetTitle>
-                </SheetHeader>
-                <div className="mt-3 space-y-1">
-                  {moreNav.map((item) => {
-                    const count = badges[item.key] ?? 0;
-                    return (
-                      <Link
-                        key={item.to}
-                        to={item.to}
-                        onClick={() => setMoreOpen(false)}
-                        className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card px-4 py-3 text-sm font-medium"
-                      >
-                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                          <item.icon className="h-4 w-4" />
-                        </span>
-                        <span className="flex-1">{item.label}</span>
-                        {count > 0 && (
-                          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
-                            {count}
-                          </span>
-                        )}
-                      </Link>
-                    );
-                  })}
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setMoreOpen(false)}
-                    className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm text-muted-foreground"
-                  >
-                    <ArrowLeft className="h-4 w-4" /> Back to dashboard
-                  </Link>
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-        </nav>
+        <PrescriberBottomNav
+          tabs={primaryNav.map((t) => ({
+            to: t.to,
+            label: t.label,
+            icon: t.icon,
+            exact: t.exact,
+            count: badges[t.key] ?? 0,
+          }))}
+          moreItems={[
+            ...moreNav.map((t) => ({
+              to: t.to,
+              label: t.label,
+              icon: t.icon,
+              count: badges[t.key] ?? 0,
+            })),
+            { to: "/dashboard", label: "Clinic dashboard", icon: ArrowLeft, exact: true },
+          ]}
+        />
       </div>
     </div>
   );
