@@ -105,10 +105,14 @@ export function getDashboardPalette(key: string | null | undefined) {
 export function resolveDashboardTheme(
   theme: Record<string, unknown> | null | undefined,
 ): Record<string, unknown> | null {
-  if (!theme) return null;
-  if (theme["dashboard_follow_brand"] !== false) return theme;
+  if (!theme) {
+    // No saved theme — use the general MODO Clinical palette.
+    return { ...DEFAULT_DASHBOARD_PALETTE.colors };
+  }
+  // Brand colours only apply when the practitioner has explicitly opted in.
+  if (theme["dashboard_follow_brand"] === true) return theme;
 
-  const palette = getDashboardPalette(theme["dashboard_palette"] as string) ?? DASHBOARD_PALETTES[0];
+  const palette = getDashboardPalette(theme["dashboard_palette"] as string) ?? DEFAULT_DASHBOARD_PALETTE;
   const heading = (theme["dashboard_heading_font"] as string) || null;
   const body = (theme["dashboard_body_font"] as string) || null;
   return {

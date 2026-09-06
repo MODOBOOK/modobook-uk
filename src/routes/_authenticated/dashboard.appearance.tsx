@@ -27,8 +27,8 @@ function AppearancePage() {
   const save = useServerFn(upsertMyTheme);
   const qc = useQueryClient();
 
-  const [follow, setFollow] = useState(true);
-  const [palette, setPalette] = useState<string>("warm-sand");
+  const [follow, setFollow] = useState(false);
+  const [palette, setPalette] = useState<string>("modo-clinical");
   const [heading, setHeading] = useState<string>("Plus Jakarta Sans");
   const [body, setBody] = useState<string>("Plus Jakarta Sans");
   const [saving, setSaving] = useState(false);
