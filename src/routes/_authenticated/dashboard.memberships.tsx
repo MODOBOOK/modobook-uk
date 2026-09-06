@@ -386,7 +386,7 @@ function MembershipsPage() {
               maxLength={500}
             />
             <p className="text-xs text-muted-foreground">
-              Leave blank to use the default intro. {clinicName} will be inserted automatically.
+              Leave blank to use the default intro.
             </p>
           </div>
         </CardContent>
