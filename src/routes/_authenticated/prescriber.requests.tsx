@@ -53,7 +53,7 @@ function PrescriberRequests() {
   const d = dashQ.data;
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold">Prescription requests</h1>
         <p className="text-muted-foreground">Review, decide and chat — all logged for governance.</p>
