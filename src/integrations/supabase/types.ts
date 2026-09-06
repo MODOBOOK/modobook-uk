@@ -2659,6 +2659,7 @@ export type Database = {
           active: boolean
           category: string | null
           created_at: string
+          custom_interval_days: number | null
           description: string | null
           frequency: string
           id: string
@@ -2666,14 +2667,17 @@ export type Database = {
           next_due_on: string | null
           profile_id: string
           questions: Json
+          remind_days_before: number
           remind_email: boolean
           remind_in_app: boolean
+          remind_when_overdue: boolean
           updated_at: string
         }
         Insert: {
           active?: boolean
           category?: string | null
           created_at?: string
+          custom_interval_days?: number | null
           description?: string | null
           frequency?: string
           id?: string
@@ -2681,14 +2685,17 @@ export type Database = {
           next_due_on?: string | null
           profile_id: string
           questions?: Json
+          remind_days_before?: number
           remind_email?: boolean
           remind_in_app?: boolean
+          remind_when_overdue?: boolean
           updated_at?: string
         }
         Update: {
           active?: boolean
           category?: string | null
           created_at?: string
+          custom_interval_days?: number | null
           description?: string | null
           frequency?: string
           id?: string
@@ -2696,8 +2703,10 @@ export type Database = {
           next_due_on?: string | null
           profile_id?: string
           questions?: Json
+          remind_days_before?: number
           remind_email?: boolean
           remind_in_app?: boolean
+          remind_when_overdue?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -2852,6 +2861,7 @@ export type Database = {
         Row: {
           active: boolean
           created_at: string
+          custom_interval_days: number | null
           description: string | null
           fields: Json
           frequency: string
@@ -2860,14 +2870,17 @@ export type Database = {
           name: string
           next_due_on: string | null
           profile_id: string
+          remind_days_before: number
           remind_email: boolean
           remind_in_app: boolean
+          remind_when_overdue: boolean
           sort_order: number
           updated_at: string
         }
         Insert: {
           active?: boolean
           created_at?: string
+          custom_interval_days?: number | null
           description?: string | null
           fields?: Json
           frequency?: string
@@ -2876,14 +2889,17 @@ export type Database = {
           name: string
           next_due_on?: string | null
           profile_id: string
+          remind_days_before?: number
           remind_email?: boolean
           remind_in_app?: boolean
+          remind_when_overdue?: boolean
           sort_order?: number
           updated_at?: string
         }
         Update: {
           active?: boolean
           created_at?: string
+          custom_interval_days?: number | null
           description?: string | null
           fields?: Json
           frequency?: string
@@ -2892,8 +2908,10 @@ export type Database = {
           name?: string
           next_due_on?: string | null
           profile_id?: string
+          remind_days_before?: number
           remind_email?: boolean
           remind_in_app?: boolean
+          remind_when_overdue?: boolean
           sort_order?: number
           updated_at?: string
         }
