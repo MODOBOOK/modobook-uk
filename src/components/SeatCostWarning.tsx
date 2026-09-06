@@ -9,6 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AlertTriangle } from "lucide-react";
+import { FREE_EXTRA_LOCATIONS } from "@/lib/free-locations";
 
 const money = (cents: number, currency = "gbp") =>
   new Intl.NumberFormat("en-GB", { style: "currency", currency: currency.toUpperCase() }).format((cents ?? 0) / 100);

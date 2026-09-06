@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { associateBillingEnabled } from "@/lib/feature-flags";
+import { FREE_EXTRA_LOCATIONS } from "@/lib/free-locations";
 
 /**
  * Practitioner-facing billing server functions. Everything is scoped to the

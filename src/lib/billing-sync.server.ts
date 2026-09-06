@@ -1,4 +1,5 @@
 import { associateBillingEnabled } from "@/lib/feature-flags";
+import { FREE_EXTRA_LOCATIONS } from "@/lib/free-locations";
 
 /**
  * Keeps a live Stripe subscription in step with what actually exists on the
