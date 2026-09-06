@@ -328,13 +328,57 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
                 type="button"
                 onClick={() => selectMode("cash")}
                 className="text-left rounded-xl border-2 px-3 py-2.5 transition sm:col-span-2"
-                style={optionStyle(chosen?.mode === "cash")}
+                style={optionStyle(chosen?.mode === "cash" || chosen?.mode === "cash_deposit")}
               >
                 <div className="text-sm font-semibold">Pay in cash at your appointment</div>
-                <div className="text-xs opacity-75">Nothing to pay now — please bring £{totalAmount.toFixed(2)} in cash on the day.</div>
+                <div className="text-xs opacity-75">
+                  {cashDepositAvailable
+                    ? "Choose below: secure with a deposit now, or pay the full amount in cash on the day."
+                    : `Nothing to pay now — please bring £${totalAmount.toFixed(2)} in cash on the day.`}
+                </div>
               </button>
             )}
           </div>
+          {(chosen?.mode === "cash" || chosen?.mode === "cash_deposit") && cashDepositAvailable && (
+            <div className="mt-2 space-y-2">
+              {([
+                {
+                  mode: "cash_deposit" as const,
+                  title: `Pay ${formatGBP(effectiveDepositCents)} deposit now`,
+                  sub: `Card payment today — remaining ${formatGBP(treatmentTotalCents - effectiveDepositCents)} in cash on the day.`,
+                },
+                {
+                  mode: "cash" as const,
+                  title: "Pay in full in cash",
+                  sub: `Nothing to pay now — please bring ${formatGBP(treatmentTotalCents)} in cash on the day.`,
+                },
+              ]).map((opt) => {
+                const selected = chosen?.mode === opt.mode;
+                return (
+                  <button
+                    key={opt.mode}
+                    type="button"
+                    onClick={() => selectMode(opt.mode)}
+                    className="w-full text-left rounded-xl border-2 px-3 py-2.5 transition flex items-start gap-2.5"
+                    style={optionStyle(selected)}
+                  >
+                    <span
+                      className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2"
+                      style={accent ? { borderColor: accent } : {}}
+                    >
+                      {selected && (
+                        <span className="h-2 w-2 rounded-full" style={accent ? { background: accent } : { background: "currentColor" }} />
+                      )}
+                    </span>
+                    <span>
+                      <span className="block text-sm font-semibold">{opt.title}</span>
+                      <span className="block text-xs opacity-75">{opt.sub}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
