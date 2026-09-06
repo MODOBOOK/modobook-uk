@@ -1,7 +1,7 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useParams, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn, useSearch } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import {
   listPublicMembershipPlans,
   getMyMembershipForClinic,
