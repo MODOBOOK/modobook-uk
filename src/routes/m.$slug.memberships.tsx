@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Crown, Wallet, CheckCircle2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { membershipsEnabled } from "@/lib/feature-flags";
@@ -39,6 +41,8 @@ type PublicPlan = {
   perks: string | null;
   included_treatments: Array<{ treatment_id: string; quantity: number }> | unknown;
   includedTreatmentDetails?: IncludedTreatment[];
+  terms_text?: string | null;
+  terms_checkboxes?: Array<{ label: string; required?: boolean }> | null;
 };
 
 const gbp = (cents: number) => `£${(cents / 100).toFixed(2)}`;
@@ -68,6 +72,8 @@ function MembershipsPublicInner({ slug }: { slug: string }) {
   const search = useSearch({ strict: false }) as { joined?: string };
   const [sessionUser, setSessionUser] = useState<string | null>(null);
   const [joiningId, setJoiningId] = useState<string | null>(null);
+  const [termsPlan, setTermsPlan] = useState<PublicPlan | null>(null);
+  const [ticked, setTicked] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSessionUser(data.session?.user.id ?? null));
@@ -113,14 +119,25 @@ function MembershipsPublicInner({ slug }: { slug: string }) {
     return set;
   }, [mine]);
 
-  async function handleJoin(planId: string) {
+  function handleJoin(planId: string) {
     if (!sessionUser) {
       window.location.href = `/m/${slug}/auth?next=${encodeURIComponent(`/m/${slug}/memberships`)}`;
       return;
     }
+    const plan = plans.find((p) => p.id === planId) ?? null;
+    const boxes = plan?.terms_checkboxes ?? [];
+    if (plan && (plan.terms_text?.trim() || boxes.length)) {
+      setTicked({});
+      setTermsPlan(plan);
+      return;
+    }
+    void startCheckout(planId, []);
+  }
+
+  async function startCheckout(planId: string, acceptedCheckboxes: string[]) {
     setJoiningId(planId);
     try {
-      const res = await subscribe({ data: { slug, planId } });
+      const res = await subscribe({ data: { slug, planId, acceptedCheckboxes } });
       if (res.url) window.location.href = res.url;
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not start checkout");
