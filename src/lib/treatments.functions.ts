@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { courseGroupLabel } from "./course-group-label";
+
 
 async function __activeProfileId(supabase: any, userId: string) {
   const { activeProfileId } = await import("./clinic-context.server");
@@ -353,8 +355,13 @@ export const renameCourseGroup = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profileId = await __activeProfileId(context.supabase, context.userId);
     const oldGroup = data.oldGroup.trim();
-    const newGroup = data.newGroup.trim();
-    if (!oldGroup || !newGroup) throw new Error("Enter a service name");
+    const newLabel = courseGroupLabel(data.newGroup).trim();
+    if (!oldGroup || !newLabel) throw new Error("Enter a service name");
+    const oldLabel = courseGroupLabel(oldGroup);
+    // Preserve any hidden uniqueness marker so renamed courses never merge
+    // with another identically named course on the same profile.
+    const marker = oldGroup.slice(oldLabel.length);
+    const newGroup = `${newLabel}${marker}`;
     if (oldGroup === newGroup) return { updated: 0 };
 
     const { data: rows, error: fetchErr } = await context.supabase
@@ -364,13 +371,18 @@ export const renameCourseGroup = createServerFn({ method: "POST" })
       .or(`course_group.eq.${oldGroup},course_groups.cs.{${oldGroup}}`);
     if (fetchErr) throw fetchErr;
 
-    const prefixRe = new RegExp(`^${escapeRegExp(oldGroup)}\\s*[—-]\\s*`, "i");
+    const prefixRe = new RegExp(`^${escapeRegExp(oldLabel)}\\s*[—-]\\s*`, "i");
     let updated = 0;
     for (const row of rows ?? []) {
       const savedLabel = (row.course_option_label ?? "").trim();
-      const remainder = savedLabel || row.name.replace(prefixRe, "").trim();
-      const label = remainder && remainder !== row.name ? remainder : null;
-      const newName = label ? `${newGroup} — ${label}` : newGroup;
+      const stripped = row.name.replace(prefixRe, "").trim();
+      const sessions = row.session_count && row.session_count > 1
+        ? `${row.session_count} sessions`
+        : null;
+      const remainder =
+        savedLabel || (stripped && stripped !== row.name ? stripped : sessions);
+      const label = remainder || null;
+      const newName = label ? `${newLabel} — ${label}` : newLabel;
       const { error } = await context.supabase
         .from("treatments")
         .update({
@@ -378,6 +390,7 @@ export const renameCourseGroup = createServerFn({ method: "POST" })
           course_group: newGroup,
           course_groups: [newGroup],
         })
+
         .eq("id", row.id)
         .eq("profile_id", profileId);
       if (error) throw error;
