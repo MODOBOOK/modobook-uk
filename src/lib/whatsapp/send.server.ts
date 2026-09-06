@@ -24,6 +24,7 @@ export type WhatsAppKind =
   | 'rebook-reminder'
   | 'topup-reminder'
   | 'review-request'
+  | 'marketing'
   | 'test'
 
 // Per-message-type control now lives in profiles.sms_channels (text / email /
@@ -160,13 +161,13 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
     if (!to) return { ok: false, skipped: 'no-phone' }
 
     // Pilot allowlist: clinics outside it can never send (even test messages)
-    if (input.profileId && !(await clinicSmsAllowed(input.profileId))) {
+    if (input.kind !== 'marketing' && input.profileId && !(await clinicSmsAllowed(input.profileId))) {
       return { ok: false, skipped: 'clinic-not-enabled' }
     }
 
     // Reminder-only clinics (e.g. NA Aesthetics): block every text type
     // except appointment reminders until the full SMS rollout.
-    if (input.profileId && input.kind !== 'appointment-reminder') {
+    if (input.profileId && input.kind !== 'appointment-reminder' && input.kind !== 'marketing') {
       const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
       const { data: prof } = await supabaseAdmin
         .from('profiles')
@@ -180,7 +181,7 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
     }
 
     // Per-clinic master switch + per-message-type switch
-    if (!input.force) {
+    if (!input.force && input.kind !== 'marketing') {
       const cfg = await getClinicWhatsAppSettings(input.profileId)
       if (!cfg || !cfg.enabled) return { ok: false, skipped: 'clinic-disabled' }
     }
@@ -194,7 +195,7 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
         '@/lib/whatsapp/templates'
       )
       const key = input.kind as never
-      if (input.kind !== 'test') {
+      if (input.kind !== 'test' && input.kind !== 'marketing') {
         const channel = channelFor(
           (cfg?.settings.sms_channels as Record<string, unknown>) ?? null,
           key,
@@ -285,7 +286,9 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
       // (GatewayAPI status 0x1904 "Message filtered by content"), so strip
       // everything back to plain GSM-friendly text for the SMS route.
       const { stripSmsUnsafe, allowsAddress } = await import('@/lib/whatsapp/templates')
-      const smsBody = stripSmsUnsafe(body, { keepAddress: allowsAddress(input.kind) })
+      // Marketing blasts are paid for up front and written by the clinic, so
+      // their links/addresses stay intact; automated texts stay stripped.
+      const smsBody = (input.kind === 'marketing' ? body : stripSmsUnsafe(body, { keepAddress: allowsAddress(input.kind) }))
         .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}]/gu, '')
         .replace(/[“”]/g, '"')
         .replace(/[‘’]/g, "'")
