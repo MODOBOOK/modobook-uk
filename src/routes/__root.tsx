@@ -15,9 +15,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/CookieConsent";
 
-// One-time safety reset after the August patient-portal identity incident.
-// A genuine sign-in updates last_sign_in_at, so users are only asked once.
-const GLOBAL_SESSION_RESET_AT = Date.parse("2026-08-25T11:18:00Z");
 
 function NotFoundComponent() {
   return (
