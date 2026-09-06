@@ -122,6 +122,12 @@ function HubIndex() {
       disabledHint: "Connect a prescriber first",
     },
     {
+      to: "/dashboard/find-prescriber",
+      icon: Search,
+      title: "Find a prescriber",
+      desc: "Search prescribers near you and send a connection request.",
+    },
+    {
       to: "/hub/connections",
       icon: Network,
       title: "Manage prescribers",
