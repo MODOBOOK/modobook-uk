@@ -107,8 +107,8 @@ function HubLayout() {
   const activeLabel = nav.find((n) => (n.exact ? pathname === n.to : pathname.startsWith(n.to)))?.label ?? "Overview";
 
   return (
-    <div className="flex min-h-screen bg-muted/30">
-      <aside className="hidden w-64 shrink-0 flex-col border-r bg-sidebar lg:flex">
+    <div className="rx-theme flex min-h-screen bg-background text-foreground">
+      <aside className="rx-rail hidden w-64 shrink-0 flex-col border-r lg:flex">
         <div className="flex h-20 items-center gap-3 px-5">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
             <Stethoscope className="h-5 w-5" />
@@ -126,12 +126,8 @@ function HubLayout() {
               <Link
                 key={item.to}
                 to={item.to}
-                className={cn(
-                  "flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all",
-                  active
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-primary/5 hover:text-foreground",
-                )}
+                data-active={active}
+                className="rx-rail-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all"
               >
                 <item.icon className="h-4 w-4 opacity-90" />
                 <span className="flex-1">{item.label === "Rx" ? "Rx requests" : item.label}</span>
@@ -139,7 +135,9 @@ function HubLayout() {
                   <span
                     className={cn(
                       "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
-                      active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary text-primary-foreground",
+                      active
+                        ? "bg-[var(--sidebar-primary-foreground)]/20 text-[var(--sidebar-primary-foreground)]"
+                        : "bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)]",
                     )}
                   >
                     {count}
@@ -150,7 +148,7 @@ function HubLayout() {
           })}
           <Link
             to="/dashboard"
-            className="mt-4 flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm text-muted-foreground transition hover:bg-primary/5 hover:text-foreground"
+            className="rx-rail-link mt-4 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to dashboard</span>

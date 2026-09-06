@@ -172,7 +172,9 @@ function DashboardLayout() {
   const inPrescribing = pathname.startsWith("/dashboard/rx-requests");
   const bottomTabs = inPrescribing ? prescribingTabs : mobileTabs;
 
-  const themeStyle = useDashboardThemeStyle();
+  // Prescribing screens are part of the Prescriber Hub — always the clean
+  // clinical palette, never the clinic's brand colours.
+  const themeStyle = useDashboardThemeStyle(!inPrescribing);
   const fetchPending = useServerFn(countPendingReviews);
   const fetchHub = useServerFn(getHubNotifications);
   const [pendingReviews, setPendingReviews] = useState(0);
@@ -197,7 +199,7 @@ function DashboardLayout() {
   }
 
   return (
-    <div className="clinic-shell flex min-h-screen bg-background" style={themeStyle}>
+    <div className={inPrescribing ? "rx-theme flex min-h-screen bg-background text-foreground" : "clinic-shell flex min-h-screen bg-background"} style={inPrescribing ? undefined : themeStyle}>
       {/* Desktop / iPad sidebar */}
       {/* Desktop / iPad sidebar — hidden on consultation detail for a focused, full-width workspace */}
       {!isConsultationDetail && (
