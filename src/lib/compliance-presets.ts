@@ -26,7 +26,8 @@ export type Frequency =
   | "quarterly"
   | "biannual"
   | "annual"
-  | "adhoc";
+  | "adhoc"
+  | "custom";
 
 export const FREQUENCIES: { value: Frequency; label: string; days: number }[] = [
   { value: "daily", label: "Every day", days: 1 },
@@ -36,7 +37,9 @@ export const FREQUENCIES: { value: Frequency; label: string; days: number }[] = 
   { value: "quarterly", label: "Every 3 months", days: 91 },
   { value: "biannual", label: "Every 6 months", days: 182 },
   { value: "annual", label: "Every year", days: 365 },
+  { value: "custom", label: "Custom — choose the days", days: 0 },
   { value: "adhoc", label: "No set schedule", days: 0 },
+
 ];
 
 export function frequencyDays(f: string | null | undefined) {
