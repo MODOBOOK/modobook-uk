@@ -222,7 +222,7 @@ function HubIndex() {
       )}
 
       {/* Hero: hub code */}
-      <div className="overflow-hidden rounded-3xl bg-primary p-5 text-primary-foreground shadow-lg sm:p-7">
+      <div className="overflow-hidden rounded-2xl bg-primary p-5 text-primary-foreground shadow-lg sm:p-7">
         <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.2em] opacity-80">
           <ShieldCheck className="h-3.5 w-3.5" /> Your hub code
         </div>
@@ -258,11 +258,42 @@ function HubIndex() {
         )}
       </div>
 
+      {/* Action-needed board */}
+      <div className="grid gap-3 md:grid-cols-2">
+        <ActionCard
+          tone="red"
+          icon={<Send className="h-5 w-5" />}
+          title="Referrals waiting for a response"
+          items={pendingRefItems.map((r) => ({
+            id: r.id,
+            title: r.patient_name ?? "Patient",
+            subtitle: `${r.treatment_name} · ${r.prescriber_name}`,
+            href: "/hub/referrals",
+          }))}
+          empty="No referrals waiting."
+          viewAll={{ href: "/hub/referrals", label: "Open referrals" }}
+        />
+        <ActionCard
+          tone="amber"
+          icon={<CalendarDays className="h-5 w-5" />}
+          title="Clinic days awaiting confirmation"
+          items={awaitingVisits.map((v) => ({
+            id: v.id,
+            title: `${formatDate(v.visit_date)} · ${v.start_time.slice(0, 5)}–${v.end_time.slice(0, 5)}`,
+            subtitle: v.prescriber_name + (v.location_name ? ` · ${v.location_name}` : ""),
+            href: "/hub/visits",
+          }))}
+          empty="No clinic days waiting."
+          viewAll={{ href: "/hub/visits", label: "Open clinic days" }}
+        />
+      </div>
+
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
-        <Stat label="Prescribers" value={prescribers.length} to="/hub/connections" />
-        <Stat label="Clinic days" value={upcoming.length} accent={awaitingConfirm > 0} to="/hub/visits" />
-        <Stat label="Referrals" value={pendingRefs} accent={pendingRefs > 0} to="/hub/referrals" />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile icon={<Network className="h-4 w-4" />} label="Prescribers" value={prescribers.length} href="/hub/connections" />
+        <StatTile icon={<CalendarDays className="h-4 w-4" />} label="Clinic days" value={upcoming.length} href="/hub/visits" />
+        <StatTile icon={<Send className="h-4 w-4" />} label="Referrals" value={pendingRefs} href="/hub/referrals" />
+        <StatTile icon={<Pill className="h-4 w-4" />} label="Rules" value="Manage" href="/hub/prescribing" />
       </div>
 
       {/* Quick actions */}
