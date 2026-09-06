@@ -168,54 +168,9 @@ export const seedComplianceDefaults = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const db = context.supabase as any;
     const a = await access(context as Ctx);
-    const today = todayIso();
+    return await seedPresets(db, a.profileId, data.checkKeys, data.auditKeys);
+  });
 
-    const wantChecks = CHECK_PRESETS.filter((p) => !data.checkKeys || data.checkKeys.includes(p.key));
-    const wantAudits = AUDIT_PRESETS.filter((p) => !data.auditKeys || data.auditKeys.includes(p.key));
-
-    const { data: existingChecks } = await db
-      .from("compliance_check_templates")
-      .select("name")
-      .eq("profile_id", a.profileId);
-    const { data: existingAudits } = await db
-      .from("compliance_audit_templates")
-      .select("name")
-      .eq("profile_id", a.profileId);
-    const haveCheck = new Set((existingChecks ?? []).map((r: any) => r.name));
-    const haveAudit = new Set((existingAudits ?? []).map((r: any) => r.name));
-
-    const checkRows = wantChecks
-      .filter((p) => !haveCheck.has(p.name))
-      .map((p, i) => ({
-        profile_id: a.profileId,
-        name: p.name,
-        kind: p.kind,
-        description: p.description,
-        frequency: p.frequency,
-        fields: p.fields,
-        next_due_on: today,
-        sort_order: i,
-      }));
-    const auditRows = wantAudits
-      .filter((p) => !haveAudit.has(p.name))
-      .map((p) => ({
-        profile_id: a.profileId,
-        name: p.name,
-        description: p.description,
-        category: p.category,
-        questions: p.questions,
-        frequency: p.frequency,
-        next_due_on: nextDue(p.frequency, today) ?? today,
-      }));
-
-    if (checkRows.length) {
-      const { error } = await db.from("compliance_check_templates").insert(checkRows);
-      if (error) throw error;
-    }
-    if (auditRows.length) {
-      const { error } = await db.from("compliance_audit_templates").insert(auditRows);
-      if (error) throw error;
-    }
     return { checks: checkRows.length, audits: auditRows.length };
   });
 
