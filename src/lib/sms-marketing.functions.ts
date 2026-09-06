@@ -209,3 +209,34 @@ export const cancelSmsBlast = createServerFn({ method: 'POST' })
     if (error) throw new Error(error.message)
     return { ok: true }
   })
+
+/** Free test: send the composed blast text to the practitioner's own phone only. */
+export const sendSmsBlastTest = createServerFn({ method: 'POST' })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) =>
+    z.object({ body: z.string().min(1).max(1600) }).parse(raw),
+  )
+  .handler(async ({ data, context }) => {
+    const profileId = await getOwnerProfileId(context.supabase, context.userId)
+    const { data: prof } = await context.supabase
+      .from('profiles')
+      .select('phone, clinic_name')
+      .eq('id', profileId)
+      .maybeSingle()
+    const phone = normalisePhone((prof as { phone?: string } | null)?.phone)
+    if (!phone) throw new Error('Add a phone number to your clinic settings to send a test text.')
+    const { sendWhatsApp } = await import('@/lib/whatsapp/send.server')
+    const firstName =
+      ((prof as { clinic_name?: string } | null)?.clinic_name ?? 'there').split(' ')[0] ?? 'there'
+    const body = data.body.replaceAll('{{name}}', firstName)
+    const result = await sendWhatsApp({
+      profileId,
+      kind: 'marketing',
+      toPhone: phone,
+      messageKey: `sms-blast-test-${profileId}-${Date.now()}`,
+      body,
+      force: true,
+    })
+    if (!result.ok) throw new Error(result.error ?? result.skipped ?? 'Test text failed to send')
+    return { ok: true, phone }
+  })
