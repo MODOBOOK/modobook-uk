@@ -446,3 +446,64 @@
 html, body {
   overscroll-behavior-y: none;
 }
+
+/* ---------------------------------------------------------------
+ * Prescriber Hub theme — cool clinical slate + medical teal.
+ * Deliberately different from the warm practitioner workspace so
+ * a dual-role user always knows which workspace they are in.
+ * -------------------------------------------------------------- */
+.rx-theme {
+  --background: oklch(0.972 0.006 240);
+  --foreground: oklch(0.24 0.03 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.24 0.03 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.24 0.03 250);
+  --primary: oklch(0.44 0.075 220);
+  --primary-foreground: oklch(0.98 0.005 220);
+  --secondary: oklch(0.93 0.014 230);
+  --secondary-foreground: oklch(0.30 0.04 245);
+  --muted: oklch(0.94 0.010 235);
+  --muted-foreground: oklch(0.52 0.025 245);
+  --accent: oklch(0.66 0.105 195);
+  --accent-foreground: oklch(0.20 0.03 240);
+  --border: oklch(0.89 0.012 235);
+  --input: oklch(0.91 0.012 235);
+  --ring: oklch(0.66 0.105 195);
+  --sidebar: oklch(0.27 0.035 248);
+  --sidebar-foreground: oklch(0.93 0.012 230);
+  --sidebar-primary: oklch(0.66 0.105 195);
+  --sidebar-primary-foreground: oklch(0.18 0.03 245);
+  --sidebar-accent: oklch(0.33 0.038 248);
+  --sidebar-accent-foreground: oklch(0.96 0.008 230);
+  --sidebar-border: oklch(0.36 0.035 248);
+  --sidebar-ring: oklch(0.66 0.105 195);
+  --shadow-luxe: 0 1px 2px oklch(0.24 0.03 250 / 0.06), 0 18px 40px -22px oklch(0.24 0.03 250 / 0.28);
+  font-family: var(--font-body);
+}
+
+.rx-theme .font-serif,
+.rx-theme h1,
+.rx-theme h2,
+.rx-theme h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+}
+
+/* Dark sidebar rail keeps its own foreground colours */
+.rx-theme .rx-rail {
+  background: var(--sidebar);
+  color: var(--sidebar-foreground);
+  border-color: var(--sidebar-border);
+}
+.rx-theme .rx-rail-link {
+  color: color-mix(in oklab, var(--sidebar-foreground) 72%, transparent);
+}
+.rx-theme .rx-rail-link:hover {
+  background: var(--sidebar-accent);
+  color: var(--sidebar-accent-foreground);
+}
+.rx-theme .rx-rail-link[data-active="true"] {
+  background: var(--sidebar-primary);
+  color: var(--sidebar-primary-foreground);
+}
