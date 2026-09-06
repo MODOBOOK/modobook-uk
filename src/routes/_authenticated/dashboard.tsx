@@ -454,7 +454,13 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
         </main>
 
 
-        {/* Mobile bottom tab bar */}
+        {/* Mobile bottom tab bar — prescribing pages share the Prescriber Hub bar */}
+        {inPrescribing ? (
+          <PrescriberBottomNav
+            tabs={prescribingTabs}
+            moreItems={[{ to: "/dashboard", label: "Clinic dashboard", icon: Home }]}
+          />
+        ) : (
         <nav
           className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-background/95 backdrop-blur lg:hidden"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -462,20 +468,6 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
           {bottomTabs.map((tab) => {
             const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
             if ((tab as { cta?: boolean }).cta) {
-              if (inPrescribing) {
-                return (
-                  <Link
-                    key={tab.to}
-                    to={tab.to}
-                    className="flex min-h-[60px] flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground transition active:scale-[0.97]"
-                  >
-                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md ring-4 ring-primary/15 transition active:scale-95">
-                      <tab.icon className="h-5 w-5" />
-                    </span>
-                    {tab.label}
-                  </Link>
-                );
-              }
               return (
                 <button
                   key={tab.to}
