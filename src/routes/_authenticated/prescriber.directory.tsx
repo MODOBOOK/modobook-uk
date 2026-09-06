@@ -125,7 +125,7 @@ function DirectoryPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="space-y-5">
       <div>
         <h2 className="font-serif text-2xl sm:text-3xl">Discovery</h2>
         <p className="text-sm text-muted-foreground">

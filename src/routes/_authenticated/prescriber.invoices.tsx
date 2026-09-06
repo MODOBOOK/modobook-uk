@@ -108,7 +108,7 @@ function PrescriberInvoicesPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-5">
       <div>
         <h1 className="font-serif text-2xl">Invoices</h1>
         <p className="text-sm text-muted-foreground">

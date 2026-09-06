@@ -147,7 +147,7 @@ function HubIndex() {
   const attentionCount = pendingRefItems.length + awaitingVisits.length;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-5">
       <Dialog open={showChooser} onOpenChange={(open) => { if (open) setShowChooser(true); }}>
 
         <DialogContent className="sm:max-w-lg" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
