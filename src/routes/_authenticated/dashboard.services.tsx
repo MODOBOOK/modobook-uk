@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   getMyCategories,
   createCategory,
@@ -33,7 +33,7 @@ import { PrescribingClinicCard } from "@/components/PrescribingClinicCard";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { Star, X, Check, ChevronsUpDown, MapPin } from "lucide-react";
+import { Star, X, Check, ChevronsUpDown, MapPin, ChevronDown } from "lucide-react";
 
 
 
@@ -1494,9 +1494,11 @@ function ServiceDialog({
   type LocOverride = { available: boolean; price: string; duration: string };
   const [locOverrides, setLocOverrides] = useState<Record<string, LocOverride>>({});
   const [saving, setSaving] = useState(false);
+  const [section, setSection] = useState<string>("basics");
 
   useMemo(() => {
     if (open) {
+      setSection("basics");
       setName("");
       setDuration(30);
       setPrice(0);
@@ -1533,130 +1535,187 @@ function ServiceDialog({
     );
   }
 
+  const depEnabled = !!(profile.data as { payment_deposit_enabled?: boolean } | undefined)?.payment_deposit_enabled;
+  const depDefault = (((profile.data as { deposit_amount_cents?: number } | undefined)?.deposit_amount_cents ?? 0) / 100).toFixed(2);
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Add service</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          {/* Quick toggle rows at the top */}
-          <div className="grid grid-cols-2 gap-2 rounded-lg border bg-muted/30 p-2">
-            <label className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs">
-              <span className="font-medium">Visible to patients</span>
+      <DialogContent className="flex h-dvh w-full max-w-full flex-col gap-0 overflow-hidden rounded-none p-0 sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-xl">
+        <div className="border-b px-4 py-3">
+          <DialogHeader className="space-y-0 p-0">
+            <DialogTitle className="text-lg">New service</DialogTitle>
+          </DialogHeader>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Only the basics are needed — everything else can be added later.
+          </p>
+        </div>
+
+        <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+          <SvcSection
+            title="The basics"
+            hint={name.trim() || "Name, category, price and duration"}
+            open={section === "basics"}
+            onToggle={() => setSection(section === "basics" ? "" : "basics")}
+          >
+            <label className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5">
+              <span className="text-sm font-medium">Visible to patients</span>
               <Switch checked={active} onCheckedChange={setActive} />
             </label>
-            <label className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs">
-              <span className="font-medium">Auto-send medical forms</span>
-              <Switch checked={autoSendForms} onCheckedChange={setAutoSendForms} />
-            </label>
-            <label className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs">
-              <span className="font-medium">Auto-send aftercare</span>
-              <Switch checked={autoSendAftercare} onCheckedChange={setAutoSendAftercare} />
-            </label>
-            <label className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs">
-              <span className="font-medium">Show was/now price</span>
-              <Switch checked={discountShowWasNow} onCheckedChange={setDiscountShowWasNow} />
-            </label>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="s-name">Service name</Label>
-            <Input
-              id="s-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="What service are you offering?"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Assign to category</Label>
-            <Select value={categoryId} onValueChange={setCategoryId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose a category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">Uncategorised</SelectItem>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {"\u00A0\u00A0".repeat(c.depth) + c.label.split(" › ").slice(-1)[0]}
-                  </SelectItem>
+            <div className="space-y-1.5">
+              <Label htmlFor="s-name">Service name</Label>
+              <Input
+                id="s-name"
+                className="h-11"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="What service are you offering?"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Assign to category</Label>
+              <Select value={categoryId} onValueChange={setCategoryId}>
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="Choose a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Uncategorised</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {"  ".repeat(c.depth) + c.label.split(" › ").slice(-1)[0]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="s-desc">Description</Label>
+              <Textarea
+                id="s-desc"
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe the service in as much detail as you'd like"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="s-dur">Duration (min)</Label>
+                <Input
+                  id="s-dur"
+                  className="h-11"
+                  type="number"
+                  value={duration}
+                  onChange={(e) => setDuration(Number(e.target.value))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="s-price">Price (£)</Label>
+                <Input
+                  id="s-price"
+                  className="h-11"
+                  type="number"
+                  value={price}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Calendar colour</Label>
+              <div className="flex flex-wrap gap-2">
+                {PRESET_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setColor(c)}
+                    className={`h-8 w-8 rounded-full border-2 transition ${color === c ? "ring-2 ring-offset-2 ring-foreground border-white" : "border-white/60"}`}
+                    style={{ backgroundColor: c }}
+                    aria-label={`Pick ${c}`}
+                  />
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="s-desc">Service description</Label>
-            <Textarea
-              id="s-desc"
-              rows={10}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe the service in as much detail as you'd like"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="s-dur">Duration (min)</Label>
-              <Input
-                id="s-dur"
-                type="number"
-                value={duration}
-                onChange={(e) => setDuration(Number(e.target.value))}
+              </div>
+              <p className="text-[11px] text-muted-foreground">Appointments for this service appear in this colour on your calendar.</p>
+            </div>
+          </SvcSection>
+
+          <SvcSection
+            title="Pricing & display"
+            hint="Price style, badge, discount and picture"
+            open={section === "pricing"}
+            onToggle={() => setSection(section === "pricing" ? "" : "pricing")}
+          >
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Price display</Label>
+                <Select value={priceMode} onValueChange={(v) => setPriceMode(v as typeof priceMode)}>
+                  <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fixed">Fixed price</SelectItem>
+                    <SelectItem value="from">From £…</SelectItem>
+                    <SelectItem value="poa">POA (price on application)</SelectItem>
+                    <SelectItem value="free">Free</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Highlight badge</Label>
+                <Select value={badge} onValueChange={(v) => setBadge(v as typeof badge)}>
+                  <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No badge</SelectItem>
+                    <SelectItem value="recommended">Recommended</SelectItem>
+                    <SelectItem value="popular">Most popular</SelectItem>
+                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="bestseller">Bestseller</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2 rounded-lg border p-3">
+              <Label className="m-0 text-sm font-semibold">Discount (optional)</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">% off</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    placeholder="e.g. 15"
+                    value={discountPercent}
+                    onChange={(e) => setDiscountPercent(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Label</Label>
+                  <Input
+                    placeholder="e.g. Spring offer"
+                    value={discountLabel}
+                    onChange={(e) => setDiscountLabel(e.target.value)}
+                  />
+                </div>
+              </div>
+              <label className="flex items-center justify-between gap-3 pt-1">
+                <span className="text-sm font-medium">Show was/now price</span>
+                <Switch checked={discountShowWasNow} onCheckedChange={setDiscountShowWasNow} />
+              </label>
+            </div>
+            {profileId && (
+              <ImageUploader
+                label="Service picture (optional)"
+                value={pictureUrl}
+                onChange={setPictureUrl}
+                profileId={profileId}
+                folder="treatments"
+                previewClass="mt-2 h-24 w-full object-cover rounded-md"
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="s-price">Price (£)</Label>
-              <Input
-                id="s-price"
-                type="number"
-                value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
-              />
-            </div>
-          </div>
+            )}
+          </SvcSection>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Price display</Label>
-              <Select value={priceMode} onValueChange={(v) => setPriceMode(v as typeof priceMode)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fixed">Fixed price</SelectItem>
-                  <SelectItem value="from">From £…</SelectItem>
-                  <SelectItem value="poa">POA (price on application)</SelectItem>
-                  <SelectItem value="free">Free</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Highlight badge</Label>
-              <Select value={badge} onValueChange={(v) => setBadge(v as typeof badge)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No badge</SelectItem>
-                  <SelectItem value="recommended">Recommended</SelectItem>
-                  <SelectItem value="popular">Most popular</SelectItem>
-                  <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="bestseller">Bestseller</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {profileId && (
-            <ImageUploader
-              label="Service picture (optional)"
-              value={pictureUrl}
-              onChange={setPictureUrl}
-              profileId={profileId}
-              folder="treatments"
-              previewClass="mt-2 h-24 w-full object-cover rounded-md"
-            />
-          )}
-
-          <div className="rounded-lg border bg-muted/30 p-3 space-y-3">
-            <div className="text-sm font-semibold">Sessions &amp; payment</div>
+          <SvcSection
+            title="Sessions & payment"
+            hint="Courses, spacing, split payment, deposit"
+            open={section === "sessions"}
+            onToggle={() => setSection(section === "sessions" ? "" : "sessions")}
+          >
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="s-sess">Sessions included</Label>
@@ -1669,68 +1728,39 @@ function ServiceDialog({
                 />
                 <p className="text-[11px] text-muted-foreground">Shown to patients e.g. "3 sessions included".</p>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="s-rebook">Rebook reminder — days after</Label>
-                <Input
-                  id="s-rebook"
-                  type="number"
-                  min={0}
-                  placeholder="e.g. 90"
-                  value={rebookDays}
-                  onChange={(e) => setRebookDays(e.target.value)}
-                />
-                <p className="text-[11px] text-muted-foreground">"Time to rebook" email sent this many days after their appointment.</p>
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="s-topup">Top-up reminder — days after (optional)</Label>
-              <Input
-                id="s-topup"
-                type="number"
-                min={0}
-                placeholder="e.g. 30"
-                value={topupDays}
-                onChange={(e) => setTopupDays(e.target.value)}
-              />
-              <p className="text-[11px] text-muted-foreground">Shorter reminder before a full rebook (e.g. filler top-up). Leave blank to skip.</p>
-            </div>
-            <div className={`space-y-1.5 ${sessionCount > 1 ? "" : "opacity-60"}`}>
-              <Label htmlFor="s-int">How far apart should sessions be?</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="s-int"
-                  type="number"
-                  min={1}
-                  placeholder={intervalUnit === "weeks" ? "e.g. 2" : "e.g. 14"}
-                  value={intervalDays}
-                  onChange={(e) => setIntervalDays(e.target.value)}
-                  className="flex-1"
-                  disabled={sessionCount < 2}
-                />
-                <div className="inline-flex rounded-md border bg-background p-0.5">
-                  <button
-                    type="button"
-                    onClick={() => setIntervalUnit("days")}
+              <div className={`space-y-1.5 ${sessionCount > 1 ? "" : "opacity-60"}`}>
+                <Label htmlFor="s-int">Sessions spaced by</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="s-int"
+                    type="number"
+                    min={1}
+                    placeholder={intervalUnit === "weeks" ? "e.g. 2" : "e.g. 14"}
+                    value={intervalDays}
+                    onChange={(e) => setIntervalDays(e.target.value)}
+                    className="flex-1"
                     disabled={sessionCount < 2}
-                    className={`px-3 py-1 text-xs rounded ${intervalUnit === "days" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-                  >
-                    Days
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIntervalUnit("weeks")}
-                    disabled={sessionCount < 2}
-                    className={`px-3 py-1 text-xs rounded ${intervalUnit === "weeks" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-                  >
-                    Weeks
-                  </button>
+                  />
+                  <div className="inline-flex rounded-md border bg-background p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setIntervalUnit("days")}
+                      disabled={sessionCount < 2}
+                      className={`px-2.5 py-1 text-xs rounded ${intervalUnit === "days" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                    >
+                      Days
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIntervalUnit("weeks")}
+                      disabled={sessionCount < 2}
+                      className={`px-2.5 py-1 text-xs rounded ${intervalUnit === "weeks" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                    >
+                      Wks
+                    </button>
+                  </div>
                 </div>
               </div>
-              <p className="text-[11px] text-muted-foreground">
-                {sessionCount > 1
-                  ? "Recommended spacing between each session — shown to patients."
-                  : "Set Sessions included above to 2+ to enable. Spacing is shown to patients."}
-              </p>
             </div>
             {sessionCount > 1 && (
               <label className="flex items-start gap-2 text-sm">
@@ -1748,8 +1778,8 @@ function ServiceDialog({
                 </span>
               </label>
             )}
-            {(profile.data as { payment_deposit_enabled?: boolean } | undefined)?.payment_deposit_enabled && (
-              <div className="pt-2 border-t space-y-1.5">
+            {depEnabled && (
+              <div className="space-y-1.5 border-t pt-3">
                 <Label htmlFor="s-dep">Deposit override (£) <span className="text-[11px] font-normal text-muted-foreground">— optional, leave blank to use default</span></Label>
                 <Input
                   id="s-dep"
@@ -1757,59 +1787,66 @@ function ServiceDialog({
                   min={0}
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
-                  placeholder={`Default £${(((profile.data as { deposit_amount_cents?: number } | undefined)?.deposit_amount_cents ?? 0) / 100).toFixed(2)}`}
+                  placeholder={`Default £${depDefault}`}
                 />
                 <p className="text-[11px] text-muted-foreground">
                   Payment methods (full / deposit / Klarna / Clearpay / pay in clinic) are managed in <a href="/dashboard/settings" className="underline">Booking settings</a>. Klarna &amp; Clearpay always charge the full amount at booking.
                 </p>
               </div>
             )}
-          </div>
+          </SvcSection>
 
-          <div className="rounded-lg border p-3 space-y-2">
-            <Label className="m-0 text-sm font-semibold">Consent forms to send on booking</Label>
-            <ConsentPicker
-              all={consentList}
-              selected={consentIds}
-              onToggle={toggleConsent}
-            />
-          </div>
-
-
-          <div className="rounded-lg border p-3 space-y-3">
-            <Label className="m-0 text-sm font-semibold">Discount (optional)</Label>
+          <SvcSection
+            title="Reminders & forms"
+            hint="Rebook emails, consent forms and aftercare"
+            open={section === "forms"}
+            onToggle={() => setSection(section === "forms" ? "" : "forms")}
+          >
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">% off</Label>
+                <Label htmlFor="s-rebook">Rebook reminder — days after</Label>
                 <Input
+                  id="s-rebook"
                   type="number"
                   min={0}
-                  max={100}
-                  placeholder="e.g. 15"
-                  value={discountPercent}
-                  onChange={(e) => setDiscountPercent(e.target.value)}
+                  placeholder="e.g. 90"
+                  value={rebookDays}
+                  onChange={(e) => setRebookDays(e.target.value)}
                 />
+                <p className="text-[11px] text-muted-foreground">"Time to rebook" email sent this many days after their appointment.</p>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Label</Label>
+                <Label htmlFor="s-topup">Top-up reminder — days after</Label>
                 <Input
-                  placeholder="e.g. Spring offer"
-                  value={discountLabel}
-                  onChange={(e) => setDiscountLabel(e.target.value)}
+                  id="s-topup"
+                  type="number"
+                  min={0}
+                  placeholder="e.g. 30"
+                  value={topupDays}
+                  onChange={(e) => setTopupDays(e.target.value)}
                 />
+                <p className="text-[11px] text-muted-foreground">Shorter reminder before a full rebook. Leave blank to skip.</p>
               </div>
             </div>
-          </div>
-
-          <div className="rounded-lg border p-3 space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <Label className="m-0 text-sm font-semibold">Aftercare</Label>
-              <Link to="/dashboard/aftercare" className="text-xs underline text-muted-foreground">
-                Manage templates
-              </Link>
+            <label className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5">
+              <span className="text-sm font-medium">Auto-send medical forms</span>
+              <Switch checked={autoSendForms} onCheckedChange={setAutoSendForms} />
+            </label>
+            <div className="space-y-2">
+              <Label className="m-0 text-sm font-semibold">Consent forms to send on booking</Label>
+              <ConsentPicker
+                all={consentList}
+                selected={consentIds}
+                onToggle={toggleConsent}
+              />
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Attach aftercare templates</Label>
+            <div className="space-y-2 border-t pt-3">
+              <div className="flex items-center justify-between gap-2">
+                <Label className="m-0 text-sm font-semibold">Aftercare</Label>
+                <Link to="/dashboard/aftercare" className="text-xs underline text-muted-foreground">
+                  Manage templates
+                </Link>
+              </div>
               {aftercareList.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
                   No templates yet. Create reusable aftercare messages on the Aftercare page.
@@ -1825,37 +1862,42 @@ function ServiceDialog({
                   }
                 />
               )}
-            </div>
-            <details>
-              <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
-                Custom one-off aftercare for this service (optional)
-              </summary>
-              <div className="mt-2 space-y-2">
-                <Textarea
-                  rows={3}
-                  value={aftercareHtml}
-                  onChange={(e) => setAftercareHtml(e.target.value)}
-                  placeholder="Overrides templates for this service only."
-                />
-                <div className="space-y-1.5 max-w-[180px]">
-                  <Label className="text-xs text-muted-foreground">Send after (hours)</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={aftercareDelay}
-                    onChange={(e) => setAftercareDelay(Math.max(0, Number(e.target.value) || 0))}
+              <label className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5">
+                <span className="text-sm font-medium">Auto-send aftercare</span>
+                <Switch checked={autoSendAftercare} onCheckedChange={setAutoSendAftercare} />
+              </label>
+              <details>
+                <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
+                  Custom one-off aftercare for this service (optional)
+                </summary>
+                <div className="mt-2 space-y-2">
+                  <Textarea
+                    rows={3}
+                    value={aftercareHtml}
+                    onChange={(e) => setAftercareHtml(e.target.value)}
+                    placeholder="Overrides templates for this service only."
                   />
+                  <div className="space-y-1.5 max-w-[180px]">
+                    <Label className="text-xs text-muted-foreground">Send after (hours)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={aftercareDelay}
+                      onChange={(e) => setAftercareDelay(Math.max(0, Number(e.target.value) || 0))}
+                    />
+                  </div>
                 </div>
-              </div>
-            </details>
-          </div>
+              </details>
+            </div>
+          </SvcSection>
 
           {locationList.length > 0 && (
-            <div className="rounded-lg border p-3 space-y-3">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <Label className="m-0 text-sm font-semibold">Locations & pricing</Label>
-              </div>
+            <SvcSection
+              title="Locations & pricing"
+              hint="Per-location availability and prices"
+              open={section === "locations"}
+              onToggle={() => setSection(section === "locations" ? "" : "locations")}
+            >
               <p className="text-xs text-muted-foreground">
                 Tick locations where this service is offered. Leave price/duration blank to use the defaults above.
               </p>
@@ -1866,18 +1908,18 @@ function ServiceDialog({
                     setLocOverrides((prev) => ({ ...prev, [loc.id]: { ...ov, ...patch } }));
                   return (
                     <div key={loc.id} className="flex flex-wrap items-center gap-2 rounded-md border p-2">
-                      <label className="flex items-center gap-2 text-sm flex-1 min-w-[140px]">
+                      <label className="flex min-w-0 flex-1 items-center gap-2 text-sm">
                         <input
                           type="checkbox"
                           checked={ov.available}
                           onChange={(e) => update({ available: e.target.checked })}
                         />
-                        <span className="font-medium">{loc.name}</span>
+                        <span className="truncate font-medium">{loc.name}</span>
                       </label>
                       <div className="flex items-center gap-1">
                         <span className="text-xs text-muted-foreground">£</span>
                         <Input
-                          className="w-20 h-8"
+                          className="h-9 w-20"
                           type="number"
                           min={0}
                           placeholder={String(price)}
@@ -1888,7 +1930,7 @@ function ServiceDialog({
                       </div>
                       <div className="flex items-center gap-1">
                         <Input
-                          className="w-20 h-8"
+                          className="h-9 w-20"
                           type="number"
                           min={0}
                           placeholder={String(duration)}
@@ -1902,77 +1944,96 @@ function ServiceDialog({
                   );
                 })}
               </div>
-            </div>
+            </SvcSection>
           )}
+        </div>
 
-
-          <div className="space-y-1.5">
-            <Label>Calendar colour</Label>
-            <div className="flex flex-wrap gap-2">
-              {PRESET_COLORS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setColor(c)}
-                  className={`h-8 w-8 rounded-full border-2 transition ${color === c ? "ring-2 ring-offset-2 ring-foreground border-white" : "border-white/60"}`}
-                  style={{ backgroundColor: c }}
-                  aria-label={`Pick ${c}`}
-                />
-              ))}
-            </div>
-            <p className="text-[11px] text-muted-foreground">Appointments for this service appear in this colour on your calendar.</p>
+        <div className="border-t bg-background px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          <div className="flex gap-2">
+            <Button variant="outline" className="h-11 flex-1" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              className="h-11 flex-[2]"
+              disabled={!name.trim() || saving}
+              onClick={async () => {
+                setSaving(true);
+                await onSubmit({
+                  name: name.trim(),
+                  duration,
+                  price,
+                  description: description.trim() || undefined,
+                  category_id: categoryId === "__none__" ? null : categoryId,
+                  session_count: sessionCount,
+                  allow_split_payment: sessionCount > 1 ? allowSplit : false,
+                  rebook_reminder_days: rebookDays.trim() ? Number(rebookDays) : null,
+                  topup_reminder_days: topupDays.trim() ? Number(topupDays) : null,
+                  session_interval_days: sessionCount > 1 && intervalDays.trim() ? Number(intervalDays) * (intervalUnit === "weeks" ? 7 : 1) : null,
+                  color,
+                  active,
+                  picture_url: pictureUrl ?? undefined,
+                  payment_mode: depEnabled ? "deposit" : "full",
+                  deposit_amount: depositAmount.trim() ? Number(depositAmount) : undefined,
+                  consent_ids: consentIds,
+                  aftercare_template_ids: aftercareIds,
+                  auto_send_medical_forms: autoSendForms,
+                  aftercare_html: aftercareHtml.trim() || null,
+                  aftercare_delay_hours: aftercareDelay,
+                  auto_send_aftercare: autoSendAftercare,
+                  discount_percent: discountPercent.trim() ? Number(discountPercent) : null,
+                  discount_label: discountLabel.trim() || null,
+                  discount_show_was_now: discountShowWasNow,
+                  price_mode: priceMode,
+                  badge: badge === "none" ? null : badge,
+                  location_overrides: Object.entries(locOverrides).map(([location_id, ov]) => ({
+                    location_id,
+                    available: ov.available,
+                    price_cents: ov.price.trim() ? Math.round(Number(ov.price) * 100) : null,
+                    duration_minutes: ov.duration.trim() ? Number(ov.duration) : null,
+                  })),
+                });
+                setSaving(false);
+              }}
+            >
+              {saving ? "Saving…" : "Create service"}
+            </Button>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            disabled={!name.trim() || saving}
-            onClick={async () => {
-              setSaving(true);
-              await onSubmit({
-                name: name.trim(),
-                duration,
-                price,
-                description: description.trim() || undefined,
-                category_id: categoryId === "__none__" ? null : categoryId,
-                session_count: sessionCount,
-                allow_split_payment: sessionCount > 1 ? allowSplit : false,
-                rebook_reminder_days: rebookDays.trim() ? Number(rebookDays) : null,
-                topup_reminder_days: topupDays.trim() ? Number(topupDays) : null,
-                session_interval_days: sessionCount > 1 && intervalDays.trim() ? Number(intervalDays) * (intervalUnit === "weeks" ? 7 : 1) : null,
-                color,
-                active,
-                picture_url: pictureUrl ?? undefined,
-                payment_mode: (profile.data as { payment_deposit_enabled?: boolean } | undefined)?.payment_deposit_enabled ? "deposit" : "full",
-                deposit_amount: depositAmount.trim() ? Number(depositAmount) : undefined,
-                consent_ids: consentIds,
-                aftercare_template_ids: aftercareIds,
-                auto_send_medical_forms: autoSendForms,
-                aftercare_html: aftercareHtml.trim() || null,
-                aftercare_delay_hours: aftercareDelay,
-                auto_send_aftercare: autoSendAftercare,
-                discount_percent: discountPercent.trim() ? Number(discountPercent) : null,
-                discount_label: discountLabel.trim() || null,
-                discount_show_was_now: discountShowWasNow,
-                price_mode: priceMode,
-                badge: badge === "none" ? null : badge,
-                location_overrides: Object.entries(locOverrides).map(([location_id, ov]) => ({
-                  location_id,
-                  available: ov.available,
-                  price_cents: ov.price.trim() ? Math.round(Number(ov.price) * 100) : null,
-                  duration_minutes: ov.duration.trim() ? Number(ov.duration) : null,
-                })),
-              });
-              setSaving(false);
-            }}
-          >
-            {saving ? "Saving…" : "Save"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function SvcSection({
+  title,
+  hint,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string;
+  hint: string;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <div className="overflow-hidden rounded-xl border bg-card">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left active:bg-muted/50"
+      >
+        <div className="min-w-0">
+          <div className="text-sm font-semibold">{title}</div>
+          <div className="truncate text-xs text-muted-foreground">{hint}</div>
+        </div>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open && <div className="space-y-3 border-t px-4 py-3">{children}</div>}
+    </div>
   );
 }
 
