@@ -62,6 +62,7 @@ import { Route as MSlugRoomrentalRouteImport } from './routes/m.$slug.roomrental
 import { Route as MSlugRewardsRouteImport } from './routes/m.$slug.rewards'
 import { Route as MSlugReviewsRouteImport } from './routes/m.$slug.reviews'
 import { Route as MSlugPayRouteImport } from './routes/m.$slug.pay'
+import { Route as MSlugMembershipsRouteImport } from './routes/m.$slug.memberships'
 import { Route as MSlugGiftCardsRouteImport } from './routes/m.$slug.gift-cards'
 import { Route as MSlugBookMultiRouteImport } from './routes/m.$slug.book-multi'
 import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
@@ -103,6 +104,7 @@ import { Route as AuthenticatedDashboardPackagesRouteImport } from './routes/_au
 import { Route as AuthenticatedDashboardNewAppointmentRouteImport } from './routes/_authenticated/dashboard.new-appointment'
 import { Route as AuthenticatedDashboardModelSlotsRouteImport } from './routes/_authenticated/dashboard.model-slots'
 import { Route as AuthenticatedDashboardMenuRouteImport } from './routes/_authenticated/dashboard.menu'
+import { Route as AuthenticatedDashboardMembershipsRouteImport } from './routes/_authenticated/dashboard.memberships'
 import { Route as AuthenticatedDashboardMedicalFormsRouteImport } from './routes/_authenticated/dashboard.medical-forms'
 import { Route as AuthenticatedDashboardMarketingRouteImport } from './routes/_authenticated/dashboard.marketing'
 import { Route as AuthenticatedDashboardLocationsRouteImport } from './routes/_authenticated/dashboard.locations'
@@ -457,6 +459,11 @@ const MSlugPayRoute = MSlugPayRouteImport.update({
   path: '/pay',
   getParentRoute: () => MSlugRoute,
 } as any)
+const MSlugMembershipsRoute = MSlugMembershipsRouteImport.update({
+  id: '/memberships',
+  path: '/memberships',
+  getParentRoute: () => MSlugRoute,
+} as any)
 const MSlugGiftCardsRoute = MSlugGiftCardsRouteImport.update({
   id: '/gift-cards',
   path: '/gift-cards',
@@ -694,6 +701,12 @@ const AuthenticatedDashboardMenuRoute =
   AuthenticatedDashboardMenuRouteImport.update({
     id: '/menu',
     path: '/menu',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardMembershipsRoute =
+  AuthenticatedDashboardMembershipsRouteImport.update({
+    id: '/memberships',
+    path: '/memberships',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardMedicalFormsRoute =
@@ -1270,6 +1283,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/marketing': typeof AuthenticatedDashboardMarketingRouteWithChildren
   '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
+  '/dashboard/memberships': typeof AuthenticatedDashboardMembershipsRoute
   '/dashboard/menu': typeof AuthenticatedDashboardMenuRoute
   '/dashboard/model-slots': typeof AuthenticatedDashboardModelSlotsRoute
   '/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
@@ -1311,6 +1325,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug/auth': typeof MSlugAuthRoute
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
   '/m/$slug/gift-cards': typeof MSlugGiftCardsRoute
+  '/m/$slug/memberships': typeof MSlugMembershipsRoute
   '/m/$slug/pay': typeof MSlugPayRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/m/$slug/rewards': typeof MSlugRewardsRoute
@@ -1442,6 +1457,7 @@ export interface FileRoutesByTo {
   '/dashboard/invoices': typeof AuthenticatedDashboardInvoicesRoute
   '/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
+  '/dashboard/memberships': typeof AuthenticatedDashboardMembershipsRoute
   '/dashboard/menu': typeof AuthenticatedDashboardMenuRoute
   '/dashboard/model-slots': typeof AuthenticatedDashboardModelSlotsRoute
   '/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
@@ -1481,6 +1497,7 @@ export interface FileRoutesByTo {
   '/m/$slug/auth': typeof MSlugAuthRoute
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
   '/m/$slug/gift-cards': typeof MSlugGiftCardsRoute
+  '/m/$slug/memberships': typeof MSlugMembershipsRoute
   '/m/$slug/pay': typeof MSlugPayRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/m/$slug/rewards': typeof MSlugRewardsRoute
@@ -1620,6 +1637,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/locations': typeof AuthenticatedDashboardLocationsRoute
   '/_authenticated/dashboard/marketing': typeof AuthenticatedDashboardMarketingRouteWithChildren
   '/_authenticated/dashboard/medical-forms': typeof AuthenticatedDashboardMedicalFormsRoute
+  '/_authenticated/dashboard/memberships': typeof AuthenticatedDashboardMembershipsRoute
   '/_authenticated/dashboard/menu': typeof AuthenticatedDashboardMenuRoute
   '/_authenticated/dashboard/model-slots': typeof AuthenticatedDashboardModelSlotsRoute
   '/_authenticated/dashboard/new-appointment': typeof AuthenticatedDashboardNewAppointmentRoute
@@ -1661,6 +1679,7 @@ export interface FileRoutesById {
   '/m/$slug/auth': typeof MSlugAuthRoute
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
   '/m/$slug/gift-cards': typeof MSlugGiftCardsRoute
+  '/m/$slug/memberships': typeof MSlugMembershipsRoute
   '/m/$slug/pay': typeof MSlugPayRoute
   '/m/$slug/reviews': typeof MSlugReviewsRoute
   '/m/$slug/rewards': typeof MSlugRewardsRoute
@@ -1802,6 +1821,7 @@ export interface FileRouteTypes {
     | '/dashboard/locations'
     | '/dashboard/marketing'
     | '/dashboard/medical-forms'
+    | '/dashboard/memberships'
     | '/dashboard/menu'
     | '/dashboard/model-slots'
     | '/dashboard/new-appointment'
@@ -1843,6 +1863,7 @@ export interface FileRouteTypes {
     | '/m/$slug/auth'
     | '/m/$slug/book-multi'
     | '/m/$slug/gift-cards'
+    | '/m/$slug/memberships'
     | '/m/$slug/pay'
     | '/m/$slug/reviews'
     | '/m/$slug/rewards'
@@ -1974,6 +1995,7 @@ export interface FileRouteTypes {
     | '/dashboard/invoices'
     | '/dashboard/locations'
     | '/dashboard/medical-forms'
+    | '/dashboard/memberships'
     | '/dashboard/menu'
     | '/dashboard/model-slots'
     | '/dashboard/new-appointment'
@@ -2013,6 +2035,7 @@ export interface FileRouteTypes {
     | '/m/$slug/auth'
     | '/m/$slug/book-multi'
     | '/m/$slug/gift-cards'
+    | '/m/$slug/memberships'
     | '/m/$slug/pay'
     | '/m/$slug/reviews'
     | '/m/$slug/rewards'
@@ -2151,6 +2174,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/locations'
     | '/_authenticated/dashboard/marketing'
     | '/_authenticated/dashboard/medical-forms'
+    | '/_authenticated/dashboard/memberships'
     | '/_authenticated/dashboard/menu'
     | '/_authenticated/dashboard/model-slots'
     | '/_authenticated/dashboard/new-appointment'
@@ -2192,6 +2216,7 @@ export interface FileRouteTypes {
     | '/m/$slug/auth'
     | '/m/$slug/book-multi'
     | '/m/$slug/gift-cards'
+    | '/m/$slug/memberships'
     | '/m/$slug/pay'
     | '/m/$slug/reviews'
     | '/m/$slug/rewards'
@@ -2683,6 +2708,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MSlugPayRouteImport
       parentRoute: typeof MSlugRoute
     }
+    '/m/$slug/memberships': {
+      id: '/m/$slug/memberships'
+      path: '/memberships'
+      fullPath: '/m/$slug/memberships'
+      preLoaderRoute: typeof MSlugMembershipsRouteImport
+      parentRoute: typeof MSlugRoute
+    }
     '/m/$slug/gift-cards': {
       id: '/m/$slug/gift-cards'
       path: '/gift-cards'
@@ -2968,6 +3000,13 @@ declare module '@tanstack/react-router' {
       path: '/menu'
       fullPath: '/dashboard/menu'
       preLoaderRoute: typeof AuthenticatedDashboardMenuRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/memberships': {
+      id: '/_authenticated/dashboard/memberships'
+      path: '/memberships'
+      fullPath: '/dashboard/memberships'
+      preLoaderRoute: typeof AuthenticatedDashboardMembershipsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/medical-forms': {
@@ -3750,6 +3789,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardLocationsRoute: typeof AuthenticatedDashboardLocationsRoute
   AuthenticatedDashboardMarketingRoute: typeof AuthenticatedDashboardMarketingRouteWithChildren
   AuthenticatedDashboardMedicalFormsRoute: typeof AuthenticatedDashboardMedicalFormsRoute
+  AuthenticatedDashboardMembershipsRoute: typeof AuthenticatedDashboardMembershipsRoute
   AuthenticatedDashboardMenuRoute: typeof AuthenticatedDashboardMenuRoute
   AuthenticatedDashboardModelSlotsRoute: typeof AuthenticatedDashboardModelSlotsRoute
   AuthenticatedDashboardNewAppointmentRoute: typeof AuthenticatedDashboardNewAppointmentRoute
@@ -3822,6 +3862,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardMarketingRouteWithChildren,
     AuthenticatedDashboardMedicalFormsRoute:
       AuthenticatedDashboardMedicalFormsRoute,
+    AuthenticatedDashboardMembershipsRoute:
+      AuthenticatedDashboardMembershipsRoute,
     AuthenticatedDashboardMenuRoute: AuthenticatedDashboardMenuRoute,
     AuthenticatedDashboardModelSlotsRoute:
       AuthenticatedDashboardModelSlotsRoute,
@@ -4026,6 +4068,7 @@ interface MSlugRouteChildren {
   MSlugAuthRoute: typeof MSlugAuthRoute
   MSlugBookMultiRoute: typeof MSlugBookMultiRoute
   MSlugGiftCardsRoute: typeof MSlugGiftCardsRoute
+  MSlugMembershipsRoute: typeof MSlugMembershipsRoute
   MSlugPayRoute: typeof MSlugPayRoute
   MSlugReviewsRoute: typeof MSlugReviewsRoute
   MSlugRewardsRoute: typeof MSlugRewardsRoute
@@ -4042,6 +4085,7 @@ const MSlugRouteChildren: MSlugRouteChildren = {
   MSlugAuthRoute: MSlugAuthRoute,
   MSlugBookMultiRoute: MSlugBookMultiRoute,
   MSlugGiftCardsRoute: MSlugGiftCardsRoute,
+  MSlugMembershipsRoute: MSlugMembershipsRoute,
   MSlugPayRoute: MSlugPayRoute,
   MSlugReviewsRoute: MSlugReviewsRoute,
   MSlugRewardsRoute: MSlugRewardsRoute,

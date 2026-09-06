@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getBookingContext, getDayAvailability, getMonthAvailability, requestBooking, type PaymentChoice } from "@/lib/public-booking.functions";
 import { redeemGiftCardCode } from "@/lib/gift-cards.functions";
+import { previewMembershipCredit, redeemMembershipCredit } from "@/lib/memberships.functions";
 import { ruleAppliesOnDate } from "@/lib/rota";
 
 import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
@@ -186,6 +187,7 @@ function BookTreatmentPage() {
   const [splitAgreed, setSplitAgreed] = useState(false);
   const [discount, setDiscount] = useState<AppliedDiscount | null>(null);
   const [paymentChoice, setPaymentChoice] = useState<PaymentChoice | null>(null);
+  const [useCredit, setUseCredit] = useState(false);
 
 
 
@@ -235,6 +237,21 @@ function BookTreatmentPage() {
   const linkReferral = useServerFn(linkReferralToAppointment);
   const redeemGc = useServerFn(redeemGiftCardCode);
   const consumePts = useServerFn(consumePointsRedemption);
+  const previewCreditFn = useServerFn(previewMembershipCredit);
+  const redeemCreditFn = useServerFn(redeemMembershipCredit);
+
+  // Membership savings-pot credit available to the signed-in patient here.
+  const creditQ = useQuery({
+    queryKey: ["membership-credit", slug, treatment?.id, price],
+    queryFn: () =>
+      previewCreditFn({
+        data: { slug, treatmentIds: [treatment.id], totalCents: Math.round(price * 100) },
+      }),
+    enabled: !!patientUserId && !!treatment?.id,
+    staleTime: 30_000,
+  });
+  const creditPreview = creditQ.data;
+  const creditAvailable = (creditPreview?.applicableCents ?? 0) > 0;
 
 
 
@@ -443,6 +460,13 @@ function BookTreatmentPage() {
       const picked = availableAddons.filter((a) => addonPicks.has(a.id));
       effectivePrice += picked.reduce((sum, a) => sum + addonNet(a), 0);
 
+      // Membership savings-pot credit (signed-in patients with a pot).
+      let creditOff = 0;
+      if (useCredit && creditAvailable) {
+        creditOff = Math.min(creditPreview!.applicableCents / 100, effectivePrice);
+        effectivePrice = Math.max(0, effectivePrice - creditOff);
+      }
+
       const res = await reqFn({
         data: {
           profileId: ctx.profileId,
@@ -523,6 +547,12 @@ function BookTreatmentPage() {
       try {
         if (discount?.isPointsRedemption && discount.pointsToUse && discount.pointsToUse > 0 && res.id) {
           await consumePts({ data: { slug, code: discount.code, appointmentId: res.id, pointsToUse: discount.pointsToUse } });
+        }
+      } catch { /* non-fatal */ }
+      // Deduct membership savings-pot credit (idempotent per appointment).
+      try {
+        if (creditOff > 0 && res.id) {
+          await redeemCreditFn({ data: { slug, appointmentId: res.id, amountCents: Math.round(creditOff * 100) } });
         }
       } catch { /* non-fatal */ }
 
@@ -1069,6 +1099,22 @@ function BookTreatmentPage() {
                 value={discount}
                 onChange={setDiscount}
               />
+            </div>
+          )}
+          {showPrices && patientUserId && creditAvailable && (
+            <div className="sm:col-span-2">
+              <label className="flex cursor-pointer items-center gap-2 rounded-md border bg-muted/40 p-3 text-sm">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={useCredit}
+                  onChange={(e) => setUseCredit(e.target.checked)}
+                />
+                <span>
+                  Use my membership credit — pot balance £{((creditPreview?.balanceCents ?? 0) / 100).toFixed(2)}
+                  {" "}(−£{(Math.min(creditPreview!.applicableCents, Math.round(price * 100)) / 100).toFixed(2)} on this booking)
+                </span>
+              </label>
             </div>
           )}
           <div className="sm:col-span-2">

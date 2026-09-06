@@ -32,6 +32,7 @@ import {
   Mail,
   Megaphone,
   Gift,
+  Crown,
   GraduationCap,
   MessageCircle,
 } from "lucide-react";
@@ -104,6 +105,7 @@ const groups: Group[] = [
       { label: "Packages", description: "Bundle treatments for patients", to: "/dashboard/packages", icon: Package, ...T.espresso },
       { label: "Discounts", description: "Menu discounts & promo codes", to: "/dashboard/discounts", icon: Percent, ...T.sand },
       { label: "Gift cards", description: "Sell branded gift cards — value, treatment or package", to: "/dashboard/gift-cards", icon: Gift, ...T.cream },
+      { label: "Memberships", description: "Recurring patient plans, savings pots & member perks", to: "/dashboard/memberships", icon: Crown, ...T.ivory },
       { label: "Model slots", description: "Discounted dates & times", to: "/dashboard/model-slots", icon: Sparkles, ...T.mocha },
       { label: "Medical forms", description: "Pre-treatment questionnaires", to: "/dashboard/medical-forms", icon: FileText, ...T.cream },
       { label: "Consent forms", description: "Templates sent at booking", to: "/dashboard/consent-forms", icon: FileSignature, ...T.ivory },

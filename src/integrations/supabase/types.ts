@@ -4272,6 +4272,71 @@ export type Database = {
           },
         ]
       }
+      membership_plans: {
+        Row: {
+          active: boolean
+          created_at: string
+          credit_cents: number
+          description: string | null
+          discount_percent: number | null
+          eligible_treatment_ids: string[] | null
+          id: string
+          included_treatments: Json
+          interval: string
+          name: string
+          perks: string | null
+          price_cents: number
+          profile_id: string
+          spend_mode: string
+          stripe_price_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          credit_cents?: number
+          description?: string | null
+          discount_percent?: number | null
+          eligible_treatment_ids?: string[] | null
+          id?: string
+          included_treatments?: Json
+          interval?: string
+          name: string
+          perks?: string | null
+          price_cents: number
+          profile_id: string
+          spend_mode?: string
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          credit_cents?: number
+          description?: string | null
+          discount_percent?: number | null
+          eligible_treatment_ids?: string[] | null
+          id?: string
+          included_treatments?: Json
+          interval?: string
+          name?: string
+          perks?: string | null
+          price_cents?: number
+          profile_id?: string
+          spend_mode?: string
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_plans_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       model_slots: {
         Row: {
           active: boolean
@@ -5030,6 +5095,76 @@ export type Database = {
           },
           {
             foreignKeyName: "patient_invoices_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_memberships: {
+        Row: {
+          clinic_client_id: string | null
+          created_at: string
+          current_period_end: string | null
+          id: string
+          patient_email: string | null
+          patient_name: string | null
+          patient_user_id: string | null
+          plan_id: string
+          profile_id: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          clinic_client_id?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          patient_email?: string | null
+          patient_name?: string | null
+          patient_user_id?: string | null
+          plan_id: string
+          profile_id: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          clinic_client_id?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          patient_email?: string | null
+          patient_name?: string | null
+          patient_user_id?: string | null
+          plan_id?: string
+          profile_id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_memberships_clinic_client_id_fkey"
+            columns: ["clinic_client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_memberships_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "membership_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_memberships_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
