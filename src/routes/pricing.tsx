@@ -13,7 +13,7 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "MODO is £39.99/month — £29.99/month for founding clinics on our launch list. Add team members from £9.99 and additional locations from £4.99.",
+          "MODO is £39.99/month — £29.99/month for founding clinics on our launch list. Add team members from £9.99, and extra locations are free for a limited time.",
       },
       { property: "og:title", content: "MODO Pricing" },
       {
