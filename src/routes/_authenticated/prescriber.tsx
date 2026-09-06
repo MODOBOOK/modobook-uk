@@ -250,11 +250,12 @@ function PrescriberLayout() {
                 <span>More</span>
               </button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="rounded-t-2xl pb-[env(safe-area-inset-bottom)]">
-              <SheetHeader>
-                <SheetTitle className="font-serif text-lg">More</SheetTitle>
+            <SheetContent side="bottom" className="rx-theme rounded-t-3xl border-t bg-background px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+              <SheetHeader className="pt-1">
+                <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-muted-foreground/25" />
+                <SheetTitle className="text-left font-serif text-xl">More</SheetTitle>
               </SheetHeader>
-              <div className="mt-4 grid grid-cols-3 gap-2">
+              <div className="mt-4 grid grid-cols-3 gap-2.5">
                 {moreNav.map((tab) => {
                   const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
                   const count = badges[tab.key] ?? 0;
@@ -264,14 +265,19 @@ function PrescriberLayout() {
                       to={tab.to}
                       onClick={() => setMoreOpen(false)}
                       className={cn(
-                        "relative flex flex-col items-center justify-center gap-2 rounded-xl border p-4 text-xs font-medium transition",
-                        active ? "border-primary bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted",
+                        "relative flex flex-col items-center justify-center gap-2.5 rounded-2xl border p-4 text-[11px] font-semibold transition active:scale-[0.97]",
+                        active
+                          ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                          : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-secondary",
                       )}
                     >
-                      <tab.icon className="h-5 w-5" />
-                      <span className="text-center">{tab.label}</span>
+                      <tab.icon className={cn("h-5 w-5", active ? "text-primary-foreground" : "text-accent")} />
+                      <span className="text-center leading-tight">{tab.label}</span>
                       {count > 0 && (
-                        <span className="absolute right-2 top-2 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                        <span className={cn(
+                          "absolute right-2 top-2 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold",
+                          active ? "bg-primary-foreground text-primary" : "bg-primary text-primary-foreground",
+                        )}>
                           {count}
                         </span>
                       )}
@@ -284,28 +290,30 @@ function PrescriberLayout() {
                     to={tab.to}
                     onClick={() => setMoreOpen(false)}
                     className={cn(
-                      "flex flex-col items-center justify-center gap-2 rounded-xl border p-4 text-xs font-medium transition",
-                      pathname.startsWith(tab.to) ? "border-primary bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted",
+                      "flex flex-col items-center justify-center gap-2.5 rounded-2xl border p-4 text-[11px] font-semibold transition active:scale-[0.97]",
+                      pathname.startsWith(tab.to)
+                        ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                        : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-secondary",
                     )}
                   >
-                    <tab.icon className="h-5 w-5" />
-                    <span className="text-center">{tab.label}</span>
+                    <tab.icon className={cn("h-5 w-5", pathname.startsWith(tab.to) ? "text-primary-foreground" : "text-accent")} />
+                    <span className="text-center leading-tight">{tab.label}</span>
                   </Link>
                 ))}
                 {hasClinic && (
                   <Link
                     to="/dashboard"
                     onClick={() => setMoreOpen(false)}
-                    className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed p-4 text-xs font-medium text-muted-foreground hover:bg-muted"
+                    className="flex flex-col items-center justify-center gap-2.5 rounded-2xl border border-dashed border-border p-4 text-[11px] font-semibold text-muted-foreground transition hover:bg-secondary active:scale-[0.97]"
                   >
                     <Building2 className="h-5 w-5" />
-                    <span className="text-center">Clinic dashboard</span>
+                    <span className="text-center leading-tight">Clinic dashboard</span>
                   </Link>
                 )}
               </div>
               <Button
                 variant="ghost"
-                className="mt-4 w-full justify-center text-muted-foreground"
+                className="mt-4 w-full justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground"
                 onClick={() => { setMoreOpen(false); void signOut(); }}
               >
                 <LogOut className="mr-2 h-4 w-4" /> Sign out
