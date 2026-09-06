@@ -219,12 +219,12 @@ function LandingPage() {
         {/* BENTO — capability tiles */}
         <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16">
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            <div className="tile tile-accent col-span-2 row-span-2 flex min-h-[220px] flex-col justify-between lg:min-h-0">
+            <div className="tile tile-accent col-span-2 row-span-2 flex min-h-[160px] flex-col justify-between lg:min-h-0">
               <span className="tile-icon">
                 <ClipboardList className="h-5 w-5" />
               </span>
-              <div className="mt-6">
-                <h3 className="font-display text-2xl font-extrabold leading-tight sm:text-3xl">Clinical safety first</h3>
+              <div className="mt-4">
+                <h3 className="font-display text-xl font-bold leading-tight sm:text-2xl">Clinical safety first</h3>
                 <p className="mt-2 text-sm leading-snug text-[color:var(--paper)]/85">
                   Compliant medical records, screening and automated consent — built into every
                   booking rather than bolted on afterwards.
@@ -232,36 +232,36 @@ function LandingPage() {
               </div>
             </div>
 
-            <div className="tile flex aspect-square flex-col justify-between">
+            <div className="tile tile-compact flex items-center gap-3">
               <span className="tile-icon">
-                <Calendar className="h-5 w-5" />
+                <Calendar className="h-4 w-4" />
               </span>
-              <h4 className="font-display text-base font-extrabold leading-tight text-[color:var(--ink)] sm:text-lg">
+              <h4 className="font-display text-sm font-bold leading-tight text-[color:var(--ink)]">
                 Smart bookings
               </h4>
             </div>
 
-            <div className="tile tile-ink flex aspect-square flex-col justify-between">
+            <div className="tile tile-compact tile-ink flex items-center gap-3">
               <span className="tile-icon">
-                <CreditCard className="h-5 w-5" />
+                <CreditCard className="h-4 w-4" />
               </span>
-              <h4 className="font-display text-base font-extrabold leading-tight sm:text-lg">Payments</h4>
+              <h4 className="font-display text-sm font-bold leading-tight">Payments</h4>
             </div>
 
-            <div className="tile flex aspect-square flex-col justify-between">
+            <div className="tile tile-compact flex items-center gap-3">
               <span className="tile-icon">
-                <Camera className="h-5 w-5" />
+                <Camera className="h-4 w-4" />
               </span>
-              <h4 className="font-display text-base font-extrabold leading-tight text-[color:var(--ink)] sm:text-lg">
+              <h4 className="font-display text-sm font-bold leading-tight text-[color:var(--ink)]">
                 Face mapping
               </h4>
             </div>
 
-            <div className="tile tile-soft flex aspect-square flex-col justify-between">
+            <div className="tile tile-compact tile-soft flex items-center gap-3">
               <span className="tile-icon">
-                <Network className="h-5 w-5" />
+                <Network className="h-4 w-4" />
               </span>
-              <h4 className="font-display text-base font-extrabold leading-tight text-[color:var(--ink)] sm:text-lg">
+              <h4 className="font-display text-sm font-bold leading-tight text-[color:var(--ink)]">
                 Prescriber hub
               </h4>
             </div>
