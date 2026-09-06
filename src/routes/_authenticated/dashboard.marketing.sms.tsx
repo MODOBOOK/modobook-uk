@@ -49,12 +49,15 @@ function SmsBlastPage() {
   const confirmFn = useServerFn(confirmSmsBlast)
   const cancelFn = useServerFn(cancelSmsBlast)
 
-  const [audience, setAudience] = useState<{ count: number; pricePence: number; minTexts: number } | null>(null)
+  const [audience, setAudience] = useState<{ count: number; patients: Patient[]; pricePence: number; minTexts: number } | null>(null)
   const [blasts, setBlasts] = useState<Blast[]>([])
   const [name, setName] = useState('')
   const [body, setBody] = useState('')
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [excluded, setExcluded] = useState<Set<string>>(new Set())
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [pickerQuery, setPickerQuery] = useState('')
 
   async function refresh() {
     const [a, l] = await Promise.all([audienceFn(), listFn()])
