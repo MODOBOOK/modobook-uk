@@ -291,7 +291,6 @@ function ModoLayout() {
               <TabLink slug={slug} to="/m/$slug/about" label="About" />
               <RewardsTabLink slug={slug} />
               <MembershipsTabLink slug={slug} />
-              <TabLink slug={slug} to="/m/$slug/reviews" label="Reviews" />
               <Link to="/m/$slug/account" params={{ slug }} aria-label="My account">
                 {/* Styled from the header's own text colour (currentColor) so the
                     account control stays visible on any practitioner palette. */}
