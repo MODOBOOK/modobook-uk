@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
@@ -30,19 +30,6 @@ function PoliciesPage() {
   const [introHeading, setIntroHeading] = useState<string>(typeof savedAboutPage.intro_heading === "string" ? savedAboutPage.intro_heading : "");
   const [introExpandable, setIntroExpandable] = useState<boolean>(Boolean(savedAboutPage.intro_expandable));
   const [welcome, setWelcome] = useState<string>((profile.welcome_intro_html as string | null) ?? "");
-  const [depositType, setDepositType] = useState<"fixed" | "percent">(
-    ((profile as { deposit_type?: string | null }).deposit_type as "fixed" | "percent" | null) === "percent" ? "percent" : "fixed",
-  );
-  const [depositPounds, setDepositPounds] = useState<string>(
-    ((profile.deposit_amount_cents as number | null) ?? 0) > 0
-      ? String(((profile.deposit_amount_cents as number) ?? 0) / 100)
-      : "",
-  );
-  const [depositPercent, setDepositPercent] = useState<string>(
-    Number((profile as { deposit_percent?: number | null }).deposit_percent ?? 0) > 0
-      ? String((profile as { deposit_percent?: number | null }).deposit_percent)
-      : "",
-  );
   const [depositText, setDepositText] = useState<string>((profile.deposit_policy_text as string | null) ?? "");
   const [rules, setRules] = useState<Rule[]>(
     (Array.isArray(profile.cancellation_rules) ? (profile.cancellation_rules as Rule[]) : []) ?? [],
@@ -64,9 +51,6 @@ function PoliciesPage() {
             intro_expandable: introExpandable,
             show_intro: true,
           },
-          deposit_amount_cents: depositType === "fixed" && depositPounds ? Math.round(Number(depositPounds) * 100) : 0,
-          deposit_type: depositType,
-          deposit_percent: depositType === "percent" && depositPercent ? Math.max(0, Math.min(100, Number(depositPercent))) : 0,
           deposit_policy_text: depositText,
           cancellation_rules: rules
             .filter((r) => Number.isFinite(r.hours_before) && Number.isFinite(r.fee_percent))
@@ -120,54 +104,15 @@ function PoliciesPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Deposit</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Deposit policy text</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          <div>
-            <Label>Deposit type</Label>
-            <div className="mt-1 inline-flex rounded-lg border p-1">
-              <button
-                type="button"
-                onClick={() => setDepositType("fixed")}
-                className={`rounded-md px-3 py-1 text-sm ${depositType === "fixed" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-              >
-                Fixed (£)
-              </button>
-              <button
-                type="button"
-                onClick={() => setDepositType("percent")}
-                className={`rounded-md px-3 py-1 text-sm ${depositType === "percent" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-              >
-                Percent (%)
-              </button>
-            </div>
-          </div>
-          {depositType === "fixed" ? (
-            <div>
-              <Label>Deposit amount (£)</Label>
-              <Input
-                type="number"
-                min="0"
-                step="1"
-                value={depositPounds}
-                onChange={(e) => setDepositPounds(e.target.value)}
-                placeholder="e.g. 30"
-              />
-            </div>
-          ) : (
-            <div>
-              <Label>Deposit percent (%)</Label>
-              <Input
-                type="number"
-                min="0"
-                max="100"
-                step="1"
-                value={depositPercent}
-                onChange={(e) => setDepositPercent(e.target.value)}
-                placeholder="e.g. 20"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">Calculated from each treatment's price. A per-treatment fixed deposit still overrides this.</p>
-            </div>
-          )}
+          <p className="text-sm text-muted-foreground">
+            Turning deposits on/off and setting the amount now lives in{" "}
+            <Link to="/dashboard/settings" className="font-medium text-primary underline underline-offset-2">
+              Booking settings → Payments &amp; deposits
+            </Link>
+            .
+          </p>
           <div>
             <Label>Deposit policy text (optional)</Label>
             <Textarea
@@ -176,6 +121,9 @@ function PoliciesPage() {
               placeholder="e.g. 20% deposit taken at time of booking, deductible from final price."
               rows={3}
             />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Wording shown to patients about your deposit. The amount is set in Booking settings.
+            </p>
           </div>
         </CardContent>
       </Card>
