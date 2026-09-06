@@ -960,7 +960,7 @@ function ServiceCard({
             {treat.name}
           </FitText>
 
-          <p className="text-xs font-medium text-primary">
+          <p className="shrink-0 whitespace-nowrap text-xs font-medium text-primary">
             £{Number(treat.price ?? 0).toFixed(2)}
             <span className="mx-1 text-muted-foreground">·</span>
             <span className="text-muted-foreground">{treat.duration} min</span>
