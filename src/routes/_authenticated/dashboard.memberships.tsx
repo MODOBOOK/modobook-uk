@@ -596,6 +596,83 @@ function MembershipsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Invite patients to a plan */}
+      <Dialog open={!!invitePlan} onOpenChange={(o) => !o && setInvitePlan(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Invite patients to {invitePlan?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-1">
+            <p className="text-sm text-muted-foreground">
+              Each patient gets an email with the plan details and a link to sign up and pay.
+            </p>
+
+            <div className="space-y-2">
+              <Label>Your patients</Label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  className="pl-8"
+                  placeholder="Search by name or email"
+                  value={inviteSearch}
+                  onChange={(e) => setInviteSearch(e.target.value)}
+                />
+              </div>
+              <div className="max-h-56 overflow-y-auto rounded-md border">
+                {candidatesQ.isLoading && (
+                  <p className="p-3 text-sm text-muted-foreground">Loading patients…</p>
+                )}
+                {!candidatesQ.isLoading && filteredCandidates.length === 0 && (
+                  <p className="p-3 text-sm text-muted-foreground">No patients with an email address found.</p>
+                )}
+                {filteredCandidates.slice(0, 300).map((c) => (
+                  <label key={c.id} className="flex cursor-pointer items-center gap-3 border-b px-3 py-2 last:border-0">
+                    <Checkbox
+                      checked={inviteIds.includes(c.id)}
+                      onCheckedChange={(v) =>
+                        setInviteIds((prev) => (v ? [...prev, c.id] : prev.filter((id) => id !== c.id)))
+                      }
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">{c.name}</span>
+                      <span className="block truncate text-xs text-muted-foreground">{c.email}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {inviteIds.length > 0 && (
+                <p className="text-xs text-muted-foreground">{inviteIds.length} selected</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Other email addresses (optional)</Label>
+              <Input
+                value={inviteEmails}
+                onChange={(e) => setInviteEmails(e.target.value)}
+                placeholder="name@example.com, another@example.com"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Personal note (optional)</Label>
+              <Textarea
+                rows={3}
+                value={inviteMessage}
+                onChange={(e) => setInviteMessage(e.target.value)}
+                placeholder="I think this would suit you perfectly — it covers your regular skin treatments."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInvitePlan(null)}>Cancel</Button>
+            <Button onClick={handleInvite} disabled={inviting}>
+              {inviting ? "Sending…" : "Send invitations"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
