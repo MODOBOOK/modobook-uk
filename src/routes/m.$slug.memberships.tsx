@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Crown, Wallet, CheckCircle2, Sparkles } from "lucide-react";
+import { Crown, Wallet, CheckCircle2, Sparkles, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { membershipsEnabled } from "@/lib/feature-flags";
 
@@ -27,6 +27,8 @@ export const Route = createFileRoute("/m/$slug/memberships")({
   component: MembershipsPublicPage,
 });
 
+import { membershipScheduleText } from "@/lib/membership-schedule";
+
 type IncludedTreatment = { treatment_id: string; quantity: number; name: string; price_cents: number | null };
 
 type PublicPlan = {
@@ -35,6 +37,8 @@ type PublicPlan = {
   description: string | null;
   price_cents: number;
   interval: "month" | "year";
+  treatment_frequency_months?: number | null;
+  min_commitment_months?: number | null;
   credit_cents: number;
   spend_mode: "any" | "restricted" | "manual";
   discount_percent: number | null;
@@ -263,6 +267,12 @@ function MembershipsPublicInner({ slug }: { slug: string }) {
                       {p.discount_percent}% off bookings
                     </Badge>
                   ) : null}
+                  {membershipScheduleText(p.treatment_frequency_months, p.min_commitment_months) && (
+                    <Badge variant="secondary" className="gap-1 rounded-full font-normal">
+                      <CalendarClock className="h-3 w-3" />
+                      {membershipScheduleText(p.treatment_frequency_months, p.min_commitment_months)}
+                    </Badge>
+                  )}
                 </div>
               </div>
 

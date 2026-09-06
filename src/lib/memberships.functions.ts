@@ -36,6 +36,8 @@ const planSchema = z.object({
   description: z.string().max(2000).nullish(),
   priceCents: z.number().int().min(100),
   interval: z.enum(["month", "year"]).default("month"),
+  treatmentFrequencyMonths: z.number().int().min(1).max(36).default(1),
+  minCommitmentMonths: z.number().int().min(0).max(36).default(0),
   creditCents: z.number().int().min(0).default(0),
   spendMode: z.enum(["any", "restricted", "manual"]).default("any"),
   eligibleTreatmentIds: z.array(z.string().uuid()).nullish(),
@@ -87,6 +89,8 @@ export const saveMembershipPlan = createServerFn({ method: "POST" })
       description: data.description?.trim() || null,
       price_cents: Math.round(data.priceCents),
       interval: data.interval,
+      treatment_frequency_months: data.treatmentFrequencyMonths,
+      min_commitment_months: data.minCommitmentMonths,
       credit_cents: Math.round(data.creditCents),
       spend_mode: data.spendMode,
       eligible_treatment_ids: data.spendMode === "restricted" ? (data.eligibleTreatmentIds ?? []) : null,
@@ -295,7 +299,7 @@ export const listPublicMembershipPlans = createServerFn({ method: "GET" })
     if (profileError || !profile) return { clinicName: null as string | null, heroTitle: null as string | null, heroSubtitle: null as string | null, plans: [] as never[] };
     const { data: plans } = await pub
       .from("membership_plans")
-      .select("id, name, description, price_cents, interval, credit_cents, spend_mode, discount_percent, perks, included_treatments, terms_text, terms_checkboxes")
+      .select("id, name, description, price_cents, interval, credit_cents, spend_mode, discount_percent, perks, included_treatments, terms_text, terms_checkboxes, treatment_frequency_months, min_commitment_months")
       .eq("profile_id", (profile as { id: string }).id)
       .eq("active", true)
       .order("price_cents", { ascending: true });
@@ -762,6 +766,10 @@ export const inviteToMembershipPlan = createServerFn({ method: "POST" })
           intervalLabel: plan.interval === "year" ? "year" : "month",
           creditText: plan.credit_cents > 0 ? gbp(plan.credit_cents) : null,
           discountPercent: plan.discount_percent,
+          scheduleText: (await import("./membership-schedule")).membershipScheduleText(
+            (plan as { treatment_frequency_months?: number }).treatment_frequency_months,
+            (plan as { min_commitment_months?: number }).min_commitment_months,
+          ),
           perks,
           includedTreatments,
           personalMessage: data.message || null,

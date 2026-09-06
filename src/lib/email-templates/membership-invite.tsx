@@ -11,6 +11,7 @@ interface Props {
   intervalLabel?: string
   creditText?: string | null
   discountPercent?: number | null
+  scheduleText?: string | null
   perks?: string[]
   includedTreatments?: Array<{ name: string; quantity: number }>
   personalMessage?: string | null
@@ -27,6 +28,7 @@ const Email = ({
   intervalLabel = 'month',
   creditText,
   discountPercent,
+  scheduleText,
   perks = [],
   includedTreatments = [],
   personalMessage,
@@ -86,6 +88,9 @@ const Email = ({
             <Text style={{ margin: '6px 0 0', fontSize: 14, color: '#fff' }}>
               {discountPercent}% off your bookings
             </Text>
+          ) : null}
+          {scheduleText ? (
+            <Text style={{ margin: '6px 0 0', fontSize: 14, color: '#fff', opacity: 0.9 }}>{scheduleText}</Text>
           ) : null}
         </Section>
 
