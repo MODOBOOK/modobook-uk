@@ -129,7 +129,7 @@ function FaqPage() {
       <main className="flex-1">
         {/* Hero */}
         <section className="border-b border-[color:var(--hairline)]">
-          <div className="mx-auto max-w-4xl px-5 py-14 text-center lg:py-20">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 py-14 text-center lg:py-20">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/25 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
               <HelpCircle className="h-3.5 w-3.5" /> Frequently asked
             </div>
@@ -144,7 +144,7 @@ function FaqPage() {
 
         {/* Quick nav */}
         <section className="border-b border-[color:var(--hairline)] bg-white/60">
-          <div className="mx-auto max-w-5xl px-5 py-6 lg:px-8">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6 lg:px-8">
             <div className="flex flex-wrap justify-center gap-2">
               {groups.map((g) => (
                 <a
@@ -162,7 +162,7 @@ function FaqPage() {
 
         {/* Groups */}
         <section>
-          <div className="mx-auto max-w-4xl px-5 py-12 lg:px-8 lg:py-16">
+          <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
             {groups.map((g) => (
               <div key={g.id} id={g.id} className="mb-14 scroll-mt-24">
                 <div className="mb-6 flex items-center gap-3">
@@ -176,18 +176,18 @@ function FaqPage() {
                     const id = `${g.id}-${i}`;
                     const isOpen = openId === id;
                     return (
-                      <div key={id} className="overflow-hidden rounded-xl border border-[color:var(--hairline)] bg-white">
+                      <div key={id} className="overflow-hidden tile !rounded-2xl">
                         <button
                           type="button"
                           onClick={() => setOpenId(isOpen ? null : id)}
-                          className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+                          className="flex w-full items-center justify-between gap-4 px-4 sm:px-6 py-4 text-left"
                           aria-expanded={isOpen}
                         >
                           <span className="font-medium text-[color:var(--ink)]">{item.q}</span>
                           <ArrowRight className={`h-4 w-4 shrink-0 text-[color:var(--ink-soft)] transition-transform ${isOpen ? "rotate-90" : ""}`} />
                         </button>
                         {isOpen && (
-                          <div className="border-t border-[color:var(--hairline)] px-5 py-4 text-sm leading-relaxed text-[color:var(--ink-soft)]">
+                          <div className="border-t border-[color:var(--hairline)] px-4 sm:px-6 py-4 text-sm leading-relaxed text-[color:var(--ink-soft)]">
                             {item.a}
                           </div>
                         )}

@@ -129,32 +129,32 @@ function LandingPage() {
       <SiteHeader />
 
       <main>
-        {/* HERO — editorial split with founders imagery */}
+        {/* HERO — editorial clinical bento */}
         <header className="relative overflow-hidden">
-          <div className="mx-auto grid max-w-7xl gap-12 px-5 pt-14 pb-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:px-8 lg:pt-24 lg:pb-24">
+          <div className="mx-auto max-w-7xl px-4 pt-8 pb-10 sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:px-8 lg:pt-20 lg:pb-20">
             <div>
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/25 bg-[color:var(--clinical-blue-soft)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--accent)]">
                 <span className="pulse-dot" />
                 Built exclusively for aesthetics
               </div>
 
-              <h1 className="text-4xl font-bold leading-[1.02] tracking-tight text-[color:var(--ink)] sm:text-6xl lg:text-[4.25rem]">
+              <h1 className="text-[2.15rem] font-extrabold leading-[0.98] tracking-tight text-[color:var(--ink)] sm:text-6xl lg:text-[4.25rem]">
                 Not another
                 <br />
-                generic booking app.
+                generic <span className="text-[color:var(--accent)]">booking app.</span>
               </h1>
 
-              <p className="mt-6 max-w-xl text-base leading-relaxed text-[color:var(--ink-soft)] sm:text-lg">
+              <p className="mt-5 max-w-xl text-base leading-relaxed text-[color:var(--ink-soft)] sm:text-lg">
                 The UK booking, consultation and clinical platform built <em className="not-italic text-[color:var(--ink)]">only</em> for
-                aesthetics. Bookings, medical records, consent, face mapping, payments
-                and a prescriber hub — designed by clinicians who still run aesthetics clinics themselves.
+                aesthetics — records, consent, face mapping, payments and a prescriber hub,
+                designed by clinicians who still run clinics themselves.
               </p>
 
-              <div className="mt-9 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-<Link to="/auth" className="w-full sm:w-auto">
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <Link to="/auth" className="w-full sm:w-auto">
                   <Button
                     size="lg"
-                    className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white shadow-sm hover:bg-[color:var(--ink)]/90 sm:w-auto"
+                    className="h-14 w-full rounded-2xl bg-[color:var(--ink)] px-8 text-base font-semibold text-[color:var(--paper)] shadow-xl shadow-[color:var(--ink)]/10 transition-transform active:scale-[0.98] hover:bg-[color:var(--ink)]/90 sm:h-12 sm:w-auto sm:text-sm"
                   >
                     Create your account
                   </Button>
@@ -163,97 +163,125 @@ function LandingPage() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
+                    className="h-14 w-full rounded-2xl border-[color:var(--hairline)] bg-transparent px-8 text-base font-semibold text-[color:var(--ink)] transition-transform active:scale-[0.98] hover:bg-white/60 sm:h-12 sm:w-auto sm:text-sm"
                   >
                     Try the demo <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
                 </Link>
+              </div>
 
+              <div className="mt-4 grid grid-cols-2 gap-3">
                 <a
                   href="https://modobook.uk/m/aestheticsbynurseryan"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-auto"
+                  className="tile flex items-center justify-between gap-2 !py-3 text-xs font-semibold text-[color:var(--ink)]"
                 >
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full rounded-full border-[color:var(--hairline)] bg-white px-6 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
-                  >
-                    Live clinic 1 <ArrowRight className="ml-1 h-4 w-4" />
-                  </Button>
+                  Live clinic 1 <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[color:var(--accent)]" />
                 </a>
                 <a
                   href="https://modobook.uk/m/aesthetiqbyjen"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-auto"
+                  className="tile flex items-center justify-between gap-2 !py-3 text-xs font-semibold text-[color:var(--ink)]"
                 >
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full rounded-full border-[color:var(--hairline)] bg-white px-6 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
-                  >
-                    Live clinic 2 <ArrowRight className="ml-1 h-4 w-4" />
-                  </Button>
+                  Live clinic 2 <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[color:var(--accent)]" />
                 </a>
               </div>
 
-              <p className="mt-5 text-xs text-[color:var(--ink-soft)]">
+              <p className="mt-5 text-xs leading-relaxed text-[color:var(--ink-soft)]">
                 <span className="font-semibold text-[color:var(--accent)]">First month free · No card details required.</span>{" "}
-                Now open to every aesthetics practitioner — sign up in minutes, cancel anytime
+                Open to every aesthetics practitioner — sign up in minutes, cancel anytime.
               </p>
-
             </div>
 
             {/* Branded product showcase */}
-            <div className="relative">
-              <div className="absolute -left-6 -top-6 hidden h-24 w-24 rounded-2xl border border-[color:var(--accent)]/30 bg-[color:var(--clinical-blue-soft)] lg:block" />
-              <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-[color:var(--muted)] shadow-[0_30px_60px_-20px_rgba(60,40,20,0.25)]">
+            <div className="relative mt-8 lg:mt-0">
+              <div className="relative overflow-hidden rounded-[1.75rem] border border-[color:var(--hairline)] bg-[color:var(--muted)] shadow-[0_30px_60px_-30px_rgba(60,40,20,0.35)] sm:rounded-[2rem]">
                 <img
                   src={consultationHero.url}
                   alt="A practitioner and patient using MODO on a tablet during consultation"
                   className="aspect-[4/5] w-full object-cover object-top"
                 />
 
-                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-2xl bg-white/95 px-4 py-3 backdrop-blur">
-                  <div>
+                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-3 rounded-2xl bg-white/95 px-4 py-3 backdrop-blur">
+                  <div className="min-w-0">
                     <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">The platform</div>
-                    <div className="text-sm font-semibold text-[color:var(--ink)]">Built only for aesthetics</div>
+                    <div className="truncate text-sm font-semibold text-[color:var(--ink)]">Built only for aesthetics</div>
                   </div>
-                  <img src={wordmark.url} alt="MODO" className="h-6 w-auto object-contain" />
+                  <img src={wordmark.url} alt="MODO" className="h-6 w-auto shrink-0 object-contain" />
                 </div>
               </div>
             </div>
           </div>
         </header>
 
-
-
-        {/* FEATURE PILLS — four clinical tiles */}
-        <section className="mx-auto max-w-7xl px-5 py-12 lg:px-8">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {[
-              { icon: Calendar, label: "Bookings" },
-              { icon: ClipboardList, label: "Consultations" },
-              { icon: FileSignature, label: "Consent" },
-              { icon: CreditCard, label: "Payments" },
-            ].map((t) => (
-              <div
-                key={t.label}
-                className="group flex flex-col items-center justify-center rounded-2xl border border-[color:var(--hairline)] bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-[color:var(--clinical-blue)]/40 hover:shadow-xl hover:shadow-[color:var(--clinical-blue)]/5"
-              >
-                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-[color:var(--muted)] text-[color:var(--ink)] transition-colors group-hover:bg-[color:var(--clinical-blue)] group-hover:text-white">
-                  <t.icon className="h-5 w-5" />
-                </div>
-                <span className="text-sm font-semibold tracking-tight">{t.label}</span>
+        {/* BENTO — capability tiles */}
+        <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            <div className="tile tile-accent col-span-2 flex min-h-[220px] flex-col justify-between lg:col-span-2 lg:min-h-[260px]">
+              <span className="tile-icon">
+                <ClipboardList className="h-5 w-5" />
+              </span>
+              <div className="mt-6">
+                <h3 className="font-display text-2xl font-extrabold leading-tight sm:text-3xl">Clinical safety first</h3>
+                <p className="mt-2 text-sm leading-snug text-[color:var(--paper)]/85">
+                  Compliant medical records, screening and automated consent — built into every
+                  booking rather than bolted on afterwards.
+                </p>
               </div>
-            ))}
+            </div>
+
+            <div className="tile flex aspect-square flex-col justify-between">
+              <span className="tile-icon">
+                <Calendar className="h-5 w-5" />
+              </span>
+              <h4 className="font-display text-base font-extrabold leading-tight text-[color:var(--ink)] sm:text-lg">
+                Smart bookings
+              </h4>
+            </div>
+
+            <div className="tile tile-ink flex aspect-square flex-col justify-between">
+              <span className="tile-icon">
+                <CreditCard className="h-5 w-5" />
+              </span>
+              <h4 className="font-display text-base font-extrabold leading-tight sm:text-lg">Payments</h4>
+            </div>
+
+            <div className="tile flex aspect-square flex-col justify-between">
+              <span className="tile-icon">
+                <Camera className="h-5 w-5" />
+              </span>
+              <h4 className="font-display text-base font-extrabold leading-tight text-[color:var(--ink)] sm:text-lg">
+                Face mapping
+              </h4>
+            </div>
+
+            <div className="tile tile-soft flex aspect-square flex-col justify-between">
+              <span className="tile-icon">
+                <Network className="h-5 w-5" />
+              </span>
+              <h4 className="font-display text-base font-extrabold leading-tight text-[color:var(--ink)] sm:text-lg">
+                Prescriber hub
+              </h4>
+            </div>
+
+            <div className="tile col-span-2 flex items-center gap-4 lg:col-span-4">
+              <div className="flex -space-x-3">
+                <span className="h-8 w-8 rounded-full border-2 border-[color:var(--paper)] bg-[color:var(--accent)]" />
+                <span className="h-8 w-8 rounded-full border-2 border-[color:var(--paper)] bg-[color:var(--ink-soft)]" />
+                <span className="h-8 w-8 rounded-full border-2 border-[color:var(--paper)] bg-[color:var(--ink)]" />
+              </div>
+              <p className="text-xs font-medium text-[color:var(--ink)]">
+                Trusted by UK aesthetics clinics — 0% booking fees, UK/EU data residency.
+              </p>
+            </div>
           </div>
         </section>
 
+
         {/* THE GAP — editorial band with brand board photo */}
-        <section className="relative my-12 overflow-hidden bg-[color:var(--ink)] px-5 py-24 lg:px-8">
+        <section className="relative my-12 overflow-hidden bg-[color:var(--ink)] px-4 py-14 sm:px-6 sm:py-24 lg:px-8">
           <img
             src={brandBoards.url}
             alt=""
@@ -288,7 +316,7 @@ function LandingPage() {
 
 
         {/* WHO IT'S FOR — two spec-sheet cards */}
-        <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
           <div className="mb-12 text-center">
             <div className="eyebrow">§ Who it's for</div>
             <h2 className="mt-4 text-3xl font-bold tracking-tight text-[color:var(--ink)] sm:text-4xl">
@@ -330,7 +358,7 @@ function LandingPage() {
 
         {/* FEATURES GRID — clinical rows */}
         <section className="border-t border-[color:var(--hairline)] bg-white">
-          <div className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
             <div className="mb-12 max-w-2xl">
               <div className="eyebrow">§ The platform</div>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -368,7 +396,7 @@ function LandingPage() {
 
         {/* PRESCRIBER HUB */}
         <section className="border-y border-[color:var(--hairline)] bg-[color:var(--paper)]">
-          <div className="mx-auto grid max-w-7xl gap-10 px-5 py-20 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:px-8">
+          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 sm:py-20 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:px-8">
             <div>
               <div className="eyebrow">§ Prescriber Hub</div>
               <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
@@ -397,7 +425,7 @@ function LandingPage() {
                 { icon: Network, title: "Connected teams", desc: "Prescribers support many; practitioners refer to many." },
                 { icon: HandshakeIcon, title: "Collaborative care", desc: "One workflow for HCPs and non-HCPs alike." },
               ].map((c) => (
-                <div key={c.title} className="rounded-2xl border border-[color:var(--hairline)] bg-white p-6">
+                <div key={c.title} className="tile p-6">
                   <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[color:var(--clinical-blue-soft)] text-[color:var(--clinical-blue)]">
                     <c.icon className="h-5 w-5" />
                   </div>
@@ -410,7 +438,7 @@ function LandingPage() {
         </section>
 
         {/* FOUNDERS BAND */}
-        <section className="mx-auto max-w-7xl px-5 py-20 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
           <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-14">
             <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
               <img
@@ -457,7 +485,7 @@ function LandingPage() {
 
 
         <section className="bg-white">
-          <div className="mx-auto max-w-4xl px-5 py-24 text-center lg:px-8">
+          <div className="mx-auto max-w-4xl px-4 py-14 sm:px-6 sm:py-24 text-center lg:px-8">
             <div className="eyebrow">Now open</div>
             <h2 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
               MODO is live
@@ -515,7 +543,7 @@ function ClinicalWhoCard({
   accent?: boolean;
 }) {
   return (
-    <div className="group rounded-3xl border border-[color:var(--hairline)] bg-white p-8 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[color:var(--clinical-blue)]/5 sm:p-10">
+    <div className="group tile p-8 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[color:var(--clinical-blue)]/5 sm:p-10">
       <div className="mb-6 flex items-center justify-between">
         <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] ${accent ? "bg-[color:var(--clinical-blue-soft)] text-[color:var(--clinical-blue)]" : "bg-[color:var(--muted)] text-[color:var(--ink-soft)]"}`}>
           {tag}
@@ -548,7 +576,7 @@ function ClinicalFeature({
   desc: string;
 }) {
   return (
-    <div className="group rounded-2xl border border-[color:var(--hairline)] bg-white p-6 transition-all hover:border-[color:var(--clinical-blue)]/30 hover:shadow-lg hover:shadow-[color:var(--clinical-blue)]/5">
+    <div className="group tile p-6 transition-all hover:border-[color:var(--clinical-blue)]/30 hover:shadow-lg hover:shadow-[color:var(--clinical-blue)]/5">
       <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[color:var(--muted)] text-[color:var(--ink)] transition-colors group-hover:bg-[color:var(--clinical-blue)] group-hover:text-white">
         <Icon className="h-5 w-5" />
       </div>
@@ -561,7 +589,7 @@ function ClinicalFeature({
 function WaitlistSection() {
   return (
     <section className="scroll-mt-24 border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 lg:px-8">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 sm:py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 lg:px-8">
         <div>
           <div className="eyebrow">§ Now open to everyone</div>
           <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
@@ -575,7 +603,7 @@ function WaitlistSection() {
           </p>
         </div>
 
-        <div className="rounded-3xl border border-[color:var(--hairline)] bg-white p-6 shadow-sm sm:p-8">
+        <div className="tile p-6 shadow-sm sm:p-8">
           <div className="py-4 text-center sm:py-6">
             <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/25 bg-[color:var(--clinical-blue-soft)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
               First month free · No card required
@@ -633,7 +661,7 @@ export function SiteHeader() {
   ];
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[color:var(--hairline)] bg-[color:var(--paper)]/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" aria-label="MODO home" className="flex items-center">
           <img
             src={wordmark.url}
@@ -648,7 +676,7 @@ export function SiteHeader() {
           <Link to="/auth" className="hidden sm:inline-flex">
             <Button
               size="sm"
-              className="rounded-full bg-[color:var(--ink)] px-5 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--paper)] hover:bg-[color:var(--ink)]/90"
+              className="rounded-full bg-[color:var(--ink)] px-4 sm:px-6 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--paper)] hover:bg-[color:var(--ink)]/90"
             >
               Create account
             </Button>
@@ -698,7 +726,7 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
-      <div className="mx-auto grid max-w-7xl gap-8 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div>
           <Link to="/" aria-label="MODO home" className="flex items-center">
             <img

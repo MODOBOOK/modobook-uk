@@ -84,7 +84,7 @@ function DemoPage() {
                   loading="lazy"
                 />
               </div>
-              <div className="absolute -bottom-5 -left-5 hidden rounded-2xl border border-[color:var(--hairline)] bg-white/90 px-5 py-4 shadow-lg backdrop-blur sm:block">
+              <div className="absolute -bottom-5 -left-5 hidden tile px-4 sm:px-6 py-4 shadow-lg backdrop-blur sm:block">
                 <p className="text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--ink-soft)]">MODO Demo Clinic</p>
                 <p className="mt-1 text-sm font-semibold text-[color:var(--ink)]">Seeded with a real clinic workflow</p>
               </div>
@@ -119,7 +119,7 @@ function DemoPage() {
 
         {/* Booking page shortcut */}
         <section className="mx-auto max-w-6xl px-6 py-8">
-          <div className="rounded-3xl border border-[color:var(--hairline)] bg-white p-7 shadow-sm sm:p-9">
+          <div className="tile p-7 shadow-sm sm:p-9">
             <div className="flex flex-wrap items-center justify-between gap-6">
               <div className="max-w-xl">
                 <h2 className="text-xl font-semibold text-[color:var(--ink)]">Just want to see the booking page?</h2>
@@ -203,7 +203,7 @@ function DemoCard({
   onClick: () => void;
 }) {
   return (
-    <div className="group flex flex-col rounded-3xl border border-[color:var(--hairline)] bg-white p-7 shadow-sm transition-shadow hover:shadow-lg hover:shadow-[color:var(--ink)]/5 sm:p-8">
+    <div className="group flex flex-col tile p-7 shadow-sm transition-shadow hover:shadow-lg hover:shadow-[color:var(--ink)]/5 sm:p-8">
       <div className="flex items-start justify-between">
         <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[color:var(--muted)]">{icon}</div>
         <ArrowUpRight className="h-5 w-5 text-[color:var(--ink-soft)] opacity-0 transition-opacity group-hover:opacity-100" />

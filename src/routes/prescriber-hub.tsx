@@ -32,7 +32,7 @@ function HubPage() {
       <main>
         {/* HERO */}
         <section className="border-b border-[color:var(--hairline)] bg-[color:var(--paper)]">
-          <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:px-8 lg:py-20">
+          <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:px-8 lg:py-20">
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/25 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
                 <Network className="h-3.5 w-3.5" /> The Prescriber Hub · In-person
@@ -65,7 +65,7 @@ function HubPage() {
                 Launching in the next few weeks.
               </p>
             </div>
-            <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white shadow-sm">
+            <div className="overflow-hidden tile shadow-sm">
               <img src={consultationPhoto.url} alt="Consultation using MODO" className="aspect-[4/5] w-full object-cover sm:aspect-[4/3]" loading="lazy" />
             </div>
           </div>
@@ -73,7 +73,7 @@ function HubPage() {
 
         {/* WHAT IT IS */}
         <section className="border-b border-[color:var(--hairline)] bg-white">
-          <div className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-20">
+          <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
             <div className="mx-auto max-w-2xl text-center">
               <div className="eyebrow">§ Built for in-person prescribing</div>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -121,7 +121,7 @@ function HubPage() {
         </section>
 
         {/* HOW IT WORKS - PRACTITIONER */}
-        <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-20">
+        <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
           <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
             <div>
               <div className="eyebrow">§ For practitioners</div>
@@ -144,7 +144,7 @@ function HubPage() {
 
         {/* HOW IT WORKS - PRESCRIBER */}
         <section className="border-y border-[color:var(--hairline)] bg-[color:var(--paper)]">
-          <div className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-20">
+          <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
             <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
               <div className="order-2 grid gap-4 lg:order-1">
                 <Step n={1} title="Connect to practitioners" desc="Accept invites from the clinics you cover. Set your travel radius, treatments and rates." />
@@ -167,7 +167,7 @@ function HubPage() {
         </section>
 
         {/* SHARED FEATURES */}
-        <section className="mx-auto max-w-7xl px-5 py-16 lg:px-8 lg:py-20">
+        <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
           <div className="mx-auto max-w-2xl text-center">
             <div className="eyebrow">§ Also in the hub</div>
             <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">The clinical layer.</h2>
@@ -188,7 +188,7 @@ function HubPage() {
 
         {/* CTA */}
         <section className="border-t border-[color:var(--hairline)] bg-white">
-          <div className="mx-auto max-w-3xl px-5 py-16 text-center lg:px-8">
+          <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16 text-center lg:px-8">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to join the Hub?</h2>
             <p className="mt-3 text-[color:var(--ink-soft)]">
               MODO is open to founding clinics on our launch list. Create your account and
@@ -224,7 +224,7 @@ function HubFeature({ icon: Icon, title, desc }: { icon: React.ComponentType<{ c
 
 function Step({ n, title, desc }: { n: number; title: string; desc: string }) {
   return (
-    <div className="flex gap-4 rounded-2xl border border-[color:var(--hairline)] bg-white p-5">
+    <div className="flex gap-4 tile p-5">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--ink)] text-sm font-semibold text-white">{n}</div>
       <div>
         <div className="font-semibold text-[color:var(--ink)]">{title}</div>

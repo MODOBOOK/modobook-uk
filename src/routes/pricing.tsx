@@ -108,7 +108,7 @@ function PricingPage() {
       <SiteHeader />
       <main>
         {ref && (
-          <div className="mx-auto mt-4 max-w-5xl px-5 lg:px-8">
+          <div className="mx-auto mt-4 max-w-5xl px-4 sm:px-6 lg:px-8">
             <div className="rounded-xl border border-[color:var(--ink)]/10 bg-[color:var(--ink)]/[0.04] px-4 py-3 text-sm">
               Referral code <strong>{ref}</strong> saved — it'll be applied automatically on your
               Plan &amp; billing page when you sign up. That's 25% off your first 3 months.
@@ -116,7 +116,7 @@ function PricingPage() {
           </div>
         )}
 
-        <section className="mx-auto max-w-5xl px-5 pt-16 pb-8 text-center lg:px-8 lg:pt-24">
+        <section className="mx-auto max-w-5xl px-4 sm:px-6 pt-16 pb-8 text-center lg:px-8 lg:pt-24">
           <div className="eyebrow">§ Pricing</div>
           <h1 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
             Simple pricing.
@@ -140,7 +140,7 @@ function PricingPage() {
 
         </section>
 
-        <section className="mx-auto max-w-6xl px-5 pb-16 lg:px-8">
+        <section className="mx-auto max-w-6xl px-4 sm:px-6 pb-16 lg:px-8">
           <div className="grid gap-6 lg:grid-cols-3">
             {tiers.map((t) => (
               <div
@@ -190,7 +190,7 @@ function PricingPage() {
             ))}
           </div>
 
-          <div className="mt-10 rounded-2xl border border-[color:var(--hairline)] bg-white/60 p-6 text-sm text-[color:var(--ink-soft)]">
+          <div className="mt-10 tile p-6 text-sm text-[color:var(--ink-soft)]">
             <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[color:var(--accent)]">
               What's included
             </div>
@@ -203,7 +203,7 @@ function PricingPage() {
         </section>
 
         <section className="border-t border-[color:var(--hairline)] bg-white">
-          <div className="mx-auto max-w-3xl px-5 py-16 text-center lg:px-8">
+          <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16 text-center lg:px-8">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
               Lock in founding-clinic pricing
             </h2>

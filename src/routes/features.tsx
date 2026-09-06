@@ -91,7 +91,7 @@ function FeaturesPage() {
     <div className="modo-marketing min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
       <SiteHeader />
       <main>
-        <section className="mx-auto max-w-5xl px-5 pt-14 pb-8 text-center lg:px-8">
+        <section className="mx-auto max-w-5xl px-4 sm:px-6 pt-14 pb-8 text-center lg:px-8">
           <div className="eyebrow">§ The platform</div>
           <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">Every feature in MODO.</h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-[color:var(--ink-soft)] sm:text-lg">
@@ -104,12 +104,12 @@ function FeaturesPage() {
         </section>
 
         {/* HERO PHOTO STRIP */}
-        <section className="mx-auto max-w-7xl px-5 pb-8 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 pb-8 lg:px-8">
           <div className="grid gap-4 sm:grid-cols-3 sm:h-[460px] lg:h-[540px]">
-            <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white sm:col-span-2">
+            <div className="overflow-hidden tile sm:col-span-2">
               <img src={tabletBooking.url} alt="MODO booking on tablet" className="h-full max-sm:aspect-[16/10] w-full object-cover object-center" loading="lazy" />
             </div>
-            <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)] bg-white">
+            <div className="overflow-hidden tile">
               <img src={consultationPhoto.url} alt="Practitioner using MODO on a tablet" className="h-full max-sm:aspect-[16/10] w-full object-cover object-center" loading="lazy" />
             </div>
           </div>
@@ -139,14 +139,14 @@ function FeaturesPage() {
           </section>
         ))}
 
-        <section className="mx-auto max-w-7xl px-5 pb-10 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 pb-10 lg:px-8">
           <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
             <img src={tabletPlatform.url} alt="MODO clinical platform" className="aspect-[21/9] w-full object-cover" style={{ objectPosition: "50% 30%" }} loading="lazy" />
           </div>
         </section>
 
         <section className="border-t border-[color:var(--hairline)] bg-white">
-          <div className="mx-auto max-w-3xl px-5 py-16 text-center lg:px-8">
+          <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16 text-center lg:px-8">
             <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-[color:var(--accent)]" />
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Want in at launch?</h2>
             <p className="mt-3 text-[color:var(--ink-soft)]">MODO is rolling out to founding clinics over the next few weeks. Create your account and we'll email you as soon as your account is ready.</p>
