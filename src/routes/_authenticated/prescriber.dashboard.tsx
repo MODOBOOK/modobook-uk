@@ -58,7 +58,7 @@ function PrescriberDashboard() {
   const amberCount = awaitingInfo.length + visitsPending.length + walkInsClose.length;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>

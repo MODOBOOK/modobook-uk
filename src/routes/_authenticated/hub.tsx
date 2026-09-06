@@ -191,8 +191,10 @@ function HubLayout() {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 overflow-x-hidden p-4 pb-32 sm:p-5 lg:p-10">
-          <Outlet />
+        <main className="min-w-0 flex-1 overflow-x-hidden px-4 py-5 pb-32 sm:px-6 lg:px-10 lg:py-8">
+          <div className="mx-auto w-full min-w-0 max-w-5xl space-y-5">
+            <Outlet />
+          </div>
         </main>
 
         <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
