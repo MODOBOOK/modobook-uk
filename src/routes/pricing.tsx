@@ -19,7 +19,7 @@ export const Route = createFileRoute("/pricing")({
       {
         property: "og:description",
         content:
-          "Founding-clinic pricing: £29.99/month, +£9.99 per extra team member, +£4.99 per extra location. No booking fees.",
+          "Founding-clinic pricing: £29.99/month, +£9.99 per extra team member, extra locations free for a limited time. No booking fees.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://modobook.uk/pricing" },
@@ -82,10 +82,10 @@ const tiers: Tier[] = [
   },
   {
     name: "Extra location",
-    tag: "Add-on",
-    now: "£4.99",
-    was: "£9.99",
-    unit: "per location / month",
+    tag: "Limited-time offer",
+    now: "FREE",
+    was: "£4.99",
+    unit: "per location / month — free for a limited time",
     blurb:
       "Run multiple rooms, clinics or venues from one MODO account with their own hours and bookings.",
     perks: [
