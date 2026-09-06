@@ -96,12 +96,12 @@ export const adminGetPractitioner = createServerFn({ method: "POST" })
     const [tx, locs, theme] = await Promise.all([
       db
         .from("treatments")
-        .select("id, name, duration_minutes, price_cents, active, category_id")
+        .select("id, name, duration, price_cents, active, category_id")
         .eq("profile_id", data.id)
         .order("name"),
       db
         .from("locations")
-        .select("id, name, address, active")
+        .select("id, name, address_line1, address_line2, city, postcode, active")
         .eq("profile_id", data.id),
       db.from("clinic_theme").select("*").eq("profile_id", data.id).maybeSingle(),
     ]);
