@@ -329,7 +329,11 @@ function BillingPage() {
             {locAddon && (
               <div className="rounded-lg border p-3">
                 <div className="font-medium text-sm">Extra locations</div>
-                <div className="text-xs text-muted-foreground">{money(locAddon.amount_cents, locAddon.currency)}/{locAddon.interval} each</div>
+                {FREE_EXTRA_LOCATIONS ? (
+                  <div className="text-xs"><span className="font-medium text-emerald-700">Free for a limited time</span> <span className="text-muted-foreground line-through">{money(locAddon.amount_cents, locAddon.currency)}/{locAddon.interval} each</span></div>
+                ) : (
+                  <div className="text-xs text-muted-foreground">{money(locAddon.amount_cents, locAddon.currency)}/{locAddon.interval} each</div>
+                )}
                 <div className="mt-2 flex items-center gap-2">
                   <Button size="icon" variant="outline" disabled={extraLocations <= minLocations} onClick={() => bump(setExtraLocations, Math.max(minLocations, extraLocations - 1))}><Minus className="h-4 w-4" /></Button>
                   <span className="w-8 text-center">{extraLocations}</span>

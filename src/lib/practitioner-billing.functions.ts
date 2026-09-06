@@ -359,7 +359,7 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
     const line_items: Array<{ price: string; quantity: number }> = [
       { price: base.stripe_price_id, quantity: 1 },
     ];
-    if ((data.extraLocations ?? 0) > 0 && locAddon?.stripe_price_id) {
+    if (!FREE_EXTRA_LOCATIONS && (data.extraLocations ?? 0) > 0 && locAddon?.stripe_price_id) {
       line_items.push({ price: locAddon.stripe_price_id, quantity: data.extraLocations! });
     }
     if ((data.extraPractitioners ?? 0) > 0 && pracAddon?.stripe_price_id) {
@@ -756,7 +756,7 @@ export const updateMySubscriptionItems = createServerFn({ method: "POST" })
     const wanted: Array<{ price: string; quantity: number }> = [
       { price: base.stripe_price_id, quantity: 1 },
     ];
-    if (data.extraLocations > 0 && locAddon?.stripe_price_id)
+    if (!FREE_EXTRA_LOCATIONS && data.extraLocations > 0 && locAddon?.stripe_price_id)
       wanted.push({ price: locAddon.stripe_price_id, quantity: data.extraLocations });
     if (data.extraPractitioners > 0 && pracAddon?.stripe_price_id)
       wanted.push({ price: pracAddon.stripe_price_id, quantity: data.extraPractitioners });
