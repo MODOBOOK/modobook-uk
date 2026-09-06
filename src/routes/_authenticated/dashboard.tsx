@@ -46,7 +46,7 @@ import {
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { PrescriberBottomNav } from "@/components/prescriber/PrescriberBottomNav";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -153,30 +153,18 @@ const mobileTabs = [
   { label: "Menu", to: "/dashboard/menu", icon: Menu },
 ];
 
-// While working inside the prescribing area, the bottom bar stays in that
-// context instead of throwing the user back into the clinic dashboard. It is
-// the SAME shared Prescriber Hub bar used on /hub/* and /prescriber/* so the
-// navigation never changes between prescribing pages.
-const prescribingTabs = [
-  { label: "Requests", to: "/dashboard/rx-requests", icon: MessageCircle, exact: true },
-  { label: "Prescribing", to: "/hub/prescribing", icon: Stethoscope },
-  { label: "New", to: "/dashboard/rx-requests/new", icon: CalendarPlus },
-  { label: "Hub", to: "/hub", icon: ShieldCheck, exact: true },
-];
-
-
 function DashboardLayout() {
   const { profile, isPrescriber } = Route.useRouteContext();
   const { primary: displayName } = resolveDisplayNames(profile as { clinic_name?: string | null; full_name?: string | null; display_name_mode?: string | null });
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isConsultationDetail = /^\/dashboard\/consultations\/[^/]+/.test(pathname);
-  const inPrescribing = pathname.startsWith("/dashboard/rx-requests");
   const bottomTabs = mobileTabs;
 
-  // Prescribing screens are part of the Prescriber Hub — always the clean
-  // clinical palette, never the clinic's brand colours.
-  const themeStyle = useDashboardThemeStyle(!inPrescribing);
+  // Practitioners keep ONE bottom bar everywhere on /dashboard/* — including
+  // the Rx Requests pages. The shared Prescriber Hub bar is only for the
+  // prescriber workspace (/hub/*, /prescriber/*).
+  const themeStyle = useDashboardThemeStyle();
   const fetchPending = useServerFn(countPendingReviews);
   const fetchHub = useServerFn(getHubNotifications);
   const [pendingReviews, setPendingReviews] = useState(0);
@@ -201,7 +189,7 @@ function DashboardLayout() {
   }
 
   return (
-    <div className={inPrescribing ? "rx-theme flex min-h-screen bg-background text-foreground" : "clinic-shell flex min-h-screen bg-background"} style={inPrescribing ? undefined : themeStyle}>
+    <div className="clinic-shell flex min-h-screen bg-background" style={themeStyle}>
       {/* Desktop / iPad sidebar */}
       {/* Desktop / iPad sidebar — hidden on consultation detail for a focused, full-width workspace */}
       {!isConsultationDetail && (
@@ -455,13 +443,7 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
         </main>
 
 
-        {/* Mobile bottom tab bar — prescribing pages share the Prescriber Hub bar */}
-        {inPrescribing ? (
-          <PrescriberBottomNav
-            tabs={prescribingTabs}
-            moreItems={[{ to: "/dashboard", label: "Clinic dashboard", icon: Home, exact: true }]}
-          />
-        ) : (
+        {/* Mobile bottom tab bar — one bar for the whole practitioner dashboard */}
         <nav
           className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-background/95 backdrop-blur lg:hidden"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -507,7 +489,6 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
             );
           })}
         </nav>
-        )}
 
         <Sheet open={addOpen} onOpenChange={setAddOpen}>
           <SheetContent side="bottom" className="rounded-t-2xl pb-8 pt-4">
