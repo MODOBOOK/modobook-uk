@@ -106,18 +106,24 @@ export function resolveDashboardTheme(
   theme: Record<string, unknown> | null | undefined,
 ): Record<string, unknown> | null {
   if (!theme) {
-    // No saved theme — use the general MODO Clinical palette.
+    // No saved theme at all — use the general MODO Clinical palette.
     return { ...DEFAULT_DASHBOARD_PALETTE.colors };
   }
-  // Brand colours only apply when the practitioner has explicitly opted in.
+  // Practitioner explicitly opted into their brand colours.
   if (theme["dashboard_follow_brand"] === true) return theme;
 
-  const palette = getDashboardPalette(theme["dashboard_palette"] as string) ?? DEFAULT_DASHBOARD_PALETTE;
+  const chosen = getDashboardPalette(theme["dashboard_palette"] as string);
+  if (!chosen) {
+    // No workspace palette chosen — the dashboard matches the clinic's own
+    // booking-page branding so both sides look like the same business.
+    return theme;
+  }
   const heading = (theme["dashboard_heading_font"] as string) || null;
   const body = (theme["dashboard_body_font"] as string) || null;
   return {
-    ...palette.colors,
+    ...chosen.colors,
     heading_font: heading,
     body_font: body,
   };
 }
+
