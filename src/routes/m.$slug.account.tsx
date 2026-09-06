@@ -358,7 +358,7 @@ function Account() {
               variant="outline"
               className="w-full"
               onClick={async () => {
-                await supabase.auth.signOut();
+                await supabase.auth.signOut({ scope: "local" });
                 navigate({ to: "/m/$slug/auth", params: { slug }, search: { tab: "signup" } });
               }}
             >
@@ -461,7 +461,7 @@ function Account() {
             size="sm"
             variant="ghost"
             onClick={async () => {
-              await supabase.auth.signOut();
+              await supabase.auth.signOut({ scope: "local" });
               toast.success("Signed out");
               navigate({ to: "/m/$slug/auth", params: { slug }, replace: true });
             }}
@@ -709,13 +709,13 @@ function Account() {
                 profile={profile!}
                 brand={brand}
                 onErased={async () => {
-                  await supabase.auth.signOut();
+                  await supabase.auth.signOut({ scope: "local" });
                   navigate({ to: "/m/$slug/auth", params: { slug }, replace: true });
                 }}
               />
 
               <div className="pt-2">
-                <Button variant="outline" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/m/$slug/auth", params: { slug }, replace: true }); }}>
+                <Button variant="outline" onClick={async () => { await supabase.auth.signOut({ scope: "local" }); navigate({ to: "/m/$slug/auth", params: { slug }, replace: true }); }}>
                   Sign out
                 </Button>
               </div>

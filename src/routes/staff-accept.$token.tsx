@@ -136,7 +136,7 @@ function AcceptInvitePage() {
               <p className="text-sm text-destructive text-center">
                 You're signed in as {sessionEmail}, but this invite is for {state.email}. Sign out and use the invited email.
               </p>
-              <Button variant="outline" className="w-full" onClick={async () => { await supabase.auth.signOut(); setSessionEmail(null); }}>
+              <Button variant="outline" className="w-full" onClick={async () => { await supabase.auth.signOut({ scope: "local" }); setSessionEmail(null); }}>
                 Sign out
               </Button>
             </div>

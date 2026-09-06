@@ -24,7 +24,7 @@ function MobileShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   async function signOut() {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "local" });
     window.location.href = "/mobile/login";
   }
 
