@@ -264,7 +264,7 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
               return (
                 <div key={item.to}>
                   {showHeading && (
-                    <p className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                    <p className="cl-section-label px-3 pb-1.5 pt-5">
                       {section}
                     </p>
                   )}
@@ -645,7 +645,7 @@ function NavSoon({
     <button
       type="button"
       onClick={onClick}
-      className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-muted-foreground transition-all hover:bg-sidebar-accent hover:text-foreground"
+      className="cl-rail-link group flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm"
     >
       <Icon className="h-4 w-4 opacity-60" />
       <span className="flex-1 tracking-wide opacity-70">{label}</span>
@@ -673,11 +673,7 @@ function NavLink({
     <Link
       to={to}
       activeOptions={{ exact: true }}
-      className={cn(
-        "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all",
-        "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
-        "[&.active]:bg-primary [&.active]:text-primary-foreground [&.active]:shadow-luxe",
-      )}
+      className="cl-rail-link group flex items-center gap-3 px-3 py-2.5 text-sm"
       onClick={onClick}
     >
       <Icon className="h-4 w-4 opacity-80" />
