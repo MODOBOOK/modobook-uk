@@ -74,11 +74,11 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
     const ctx = await getHubContext().catch(() => null);
     const profile = await getMyProfile();
     // Pure prescriber (no clinic profile): send them to the prescriber workspace
-    if (!profile && ctx?.role === "prescriber") {
+    if (!profile && ctx?.isPrescriber) {
       throw redirect({ to: "/prescriber" });
     }
     if (!profile) throw redirect({ to: "/onboarding" });
-    return { profile, isPrescriber: ctx?.role === "prescriber" };
+    return { profile, isPrescriber: !!ctx?.isPrescriber };
   },
   component: DashboardLayout,
 });
