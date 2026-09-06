@@ -19,6 +19,8 @@ import {
   Package,
   Menu,
   CalendarPlus,
+  CalendarClock,
+
   Shield,
   Home,
   Star,
