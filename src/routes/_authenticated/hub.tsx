@@ -1,9 +1,9 @@
 import { createFileRoute, Link, Outlet, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { PrescriberBottomNav } from "@/components/prescriber/PrescriberBottomNav";
 import {
   ArrowLeft,
   LayoutDashboard,
@@ -13,7 +13,6 @@ import {
   ShieldCheck,
   Pill,
   Stethoscope,
-  MoreHorizontal,
 } from "lucide-react";
 import { getHubContext } from "@/lib/hub.functions";
 import { listMyClinicVisits } from "@/lib/clinic-visits.functions";
@@ -64,7 +63,6 @@ function HubLayout() {
   const fetchCtx = useServerFn(getHubContext);
   const fetchVisits = useServerFn(listMyClinicVisits);
   const fetchRefs = useServerFn(listSentReferrals);
-  const [moreOpen, setMoreOpen] = useState(false);
 
   const ctxQ = useQuery({ queryKey: ["hub-context"], queryFn: () => fetchCtx() });
   const isPractitioner = ctxQ.data?.isPractitioner ?? false;
