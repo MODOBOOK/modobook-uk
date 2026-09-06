@@ -244,7 +244,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   };
 
   const selectMode = (mode: BookingMode) => {
-    const method = mode === "deposit" && o.requireDepositToConfirm && availableMethods.includes("card")
+    const method = (mode === "deposit" && o.requireDepositToConfirm && availableMethods.includes("card")) || mode === "cash_deposit"
       ? "card"
       : availableMethods[0] ?? "card";
     if (!chosen) {
@@ -253,7 +253,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
       onChange({
         ...chosen,
         mode,
-        method: mode === "deposit" || mode === "card_capture" ? method : chosen.method,
+        method: mode === "deposit" || mode === "cash_deposit" || mode === "card_capture" ? method : chosen.method,
         // Consent is specific to the card-capture option; drop it otherwise.
         policyAgreed: mode === "card_capture" ? chosen.policyAgreed === true : undefined,
       });
@@ -269,6 +269,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   };
 
   const isCash = chosen?.mode === "cash";
+  const isCashDeposit = chosen?.mode === "cash_deposit";
   const isCardCapture = chosen?.mode === "card_capture";
   const policyText = (o.cardCapturePolicy ?? "").trim() || DEFAULT_POLICY;
 
