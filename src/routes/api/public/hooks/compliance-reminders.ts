@@ -22,27 +22,41 @@ export const Route = createFileRoute('/api/public/hooks/compliance-reminders')({
         const db = supabaseAdmin as any
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || 'https://modobook.uk'
         const today = new Date().toISOString().slice(0, 10)
+        // Widest advance notice any clinic can set, so one query covers everyone.
+        const horizon = new Date(Date.now() + 60 * 86400000).toISOString().slice(0, 10)
+        const daysUntil = (iso: string) =>
+          Math.round((new Date(iso + 'T00:00:00Z').getTime() - new Date(today + 'T00:00:00Z').getTime()) / 86400000)
 
         const [checksRes, auditsRes] = await Promise.all([
           db
             .from('compliance_check_templates')
-            .select('id, profile_id, name, next_due_on, remind_email, remind_in_app, active')
+            .select(
+              'id, profile_id, name, next_due_on, remind_email, remind_in_app, remind_days_before, remind_when_overdue, active',
+            )
             .eq('active', true)
             .not('next_due_on', 'is', null)
-            .lte('next_due_on', today)
+            .lte('next_due_on', horizon)
             .limit(2000),
           db
             .from('compliance_audit_templates')
-            .select('id, profile_id, name, next_due_on, remind_email, remind_in_app, active')
+            .select(
+              'id, profile_id, name, next_due_on, remind_email, remind_in_app, remind_days_before, remind_when_overdue, active',
+            )
             .eq('active', true)
             .not('next_due_on', 'is', null)
-            .lte('next_due_on', today)
+            .lte('next_due_on', horizon)
             .limit(2000),
         ])
 
         type Item = { name: string; dueOn: string; overdue: boolean; email: boolean; inApp: boolean }
         const byClinic = new Map<string, Item[]>()
         for (const r of [...(checksRes.data ?? []), ...(auditsRes.data ?? [])]) {
+          const gap = daysUntil(r.next_due_on)
+          const lead = Math.max(0, Number(r.remind_days_before ?? 0))
+          // Not yet inside the advance-notice window for this item.
+          if (gap > lead) continue
+          // Overdue, but this item is set to remind on the due date only.
+          if (gap < 0 && r.remind_when_overdue === false) continue
           const list = byClinic.get(r.profile_id) ?? []
           list.push({
             name: r.name,
