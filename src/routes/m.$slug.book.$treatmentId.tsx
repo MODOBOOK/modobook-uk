@@ -1111,7 +1111,7 @@ function BookTreatmentPage() {
                   onChange={(e) => setUseCredit(e.target.checked)}
                 />
                 <span>
-                  Use my membership credit — pot balance £{((creditPreview?.balanceCents ?? 0) / 100).toFixed(2)}
+                  Use my credit — balance £{((creditPreview?.balanceCents ?? 0) / 100).toFixed(2)}
                   {" "}(−£{(Math.min(creditPreview!.applicableCents, Math.round(price * 100)) / 100).toFixed(2)} on this booking)
                 </span>
               </label>
