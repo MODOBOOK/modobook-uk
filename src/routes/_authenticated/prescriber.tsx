@@ -27,20 +27,24 @@ export const Route = createFileRoute("/_authenticated/prescriber")({
   component: PrescriberLayout,
 });
 
-const nav = [
-  { to: "/prescriber/dashboard", label: "Dashboard", shortLabel: "Home", icon: LayoutDashboard, key: "dashboard" as const },
-  { to: "/prescriber/requests", label: "Requests", shortLabel: "Requests", icon: MessageSquareText, key: "requests" as const },
-  { to: "/prescriber", label: "Referrals", shortLabel: "Referrals", icon: Inbox, exact: true, key: "referrals" as const },
-  { to: "/prescriber/visits", label: "Clinic visits", shortLabel: "Visits", icon: CalendarDays, key: "visits" as const },
-  { to: "/prescriber/library", label: "Prescriptions", shortLabel: "Rx", icon: Pill, key: "library" as const },
-  { to: "/prescriber/directions", label: "Directions", shortLabel: "Directions", icon: ClipboardList, key: "directions" as const },
-  { to: "/prescriber/invoices", label: "Invoices", shortLabel: "Invoices", icon: FileText, key: "invoices" as const },
-  { to: "/prescriber/connections", label: "Practitioners", shortLabel: "Team", icon: Network, key: "connections" as const },
-  { to: "/hub/verification", label: "Verification", shortLabel: "Verify", icon: ShieldCheck, key: "verification" as const },
+type NavItem = { to: string; label: string; icon: typeof Inbox; exact?: boolean; key: string };
+
+// Core day-to-day destinations — everything else lives under "More".
+const nav: (NavItem & { shortLabel: string })[] = [
+  { to: "/prescriber/dashboard", label: "Home", shortLabel: "Home", icon: LayoutDashboard, key: "dashboard" },
+  { to: "/prescriber/requests", label: "Requests", shortLabel: "Requests", icon: MessageSquareText, key: "requests" },
+  { to: "/prescriber/library", label: "Prescriptions", shortLabel: "Rx", icon: Pill, key: "library" },
+  { to: "/prescriber/connections", label: "Practitioners", shortLabel: "Team", icon: Network, key: "connections" },
 ];
 
-// Mobile: primary 4 tabs + More sheet for the rest
-const mobilePrimaryKeys = ["requests", "visits", "library", "connections"] as const;
+// Secondary items — desktop sidebar section & mobile More sheet.
+const moreNav: NavItem[] = [
+  { to: "/prescriber", label: "Referrals", icon: Inbox, exact: true, key: "referrals" },
+  { to: "/prescriber/visits", label: "Clinic visits", icon: CalendarDays, key: "visits" },
+  { to: "/prescriber/directions", label: "Directions", icon: ClipboardList, key: "directions" },
+  { to: "/prescriber/invoices", label: "Invoices", icon: FileText, key: "invoices" },
+  { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" },
+];
 
 
 
@@ -98,7 +102,7 @@ function PrescriberLayout() {
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-6">
           {nav.map((item) => {
-            const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+            const active = pathname.startsWith(item.to);
             const count = badges[item.key] ?? 0;
             return (
               <Link
@@ -106,6 +110,32 @@ function PrescriberLayout() {
                 to={item.to}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all",
+                  active
+                    ? "bg-primary text-primary-foreground shadow-luxe"
+                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
+                )}
+              >
+                <item.icon className="h-4 w-4 opacity-80" />
+                <span className="flex-1 tracking-wide">{item.label}</span>
+                {count > 0 && (
+                  <span className={cn(
+                    "ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
+                    active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary text-primary-foreground",
+                  )}>{count}</span>
+                )}
+              </Link>
+            );
+          })}
+          <div className="px-3 pb-1 pt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">More</div>
+          {moreNav.map((item) => {
+            const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
+            const count = badges[item.key] ?? 0;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
                   active
                     ? "bg-primary text-primary-foreground shadow-luxe"
                     : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
@@ -141,14 +171,19 @@ function PrescriberLayout() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between gap-2 border-b px-3 lg:h-20 lg:px-10">
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Prescriber Hub</div>
-            <div className="font-serif text-lg lg:text-2xl">{name}</div>
+        <header className="flex h-14 items-center justify-between gap-2 border-b px-4 lg:px-10">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground lg:hidden">
+              <Stethoscope className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="truncate font-serif text-base lg:text-xl">{name}</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Prescriber Hub</div>
+            </div>
           </div>
           {hasClinic && (
             <Link to="/dashboard" className="lg:hidden">
-              <Button variant="outline" size="sm">Clinic</Button>
+              <Button variant="outline" size="sm" className="shrink-0">Clinic</Button>
             </Link>
           )}
         </header>
@@ -158,30 +193,28 @@ function PrescriberLayout() {
         </main>
 
         <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
-          {nav
-            .filter((t) => (mobilePrimaryKeys as readonly string[]).includes(t.key))
-            .map((tab) => {
-              const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
-              const count = badges[tab.key] ?? 0;
-              return (
-                <Link
-                  key={tab.to}
-                  to={tab.to}
-                  className={cn(
-                    "relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition",
-                    active ? "text-primary" : "text-muted-foreground",
-                  )}
-                >
-                  <tab.icon className="h-5 w-5" />
-                  <span className="truncate">{tab.shortLabel}</span>
-                  {count > 0 && (
-                    <span className="absolute right-4 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
-                      {count}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
+          {nav.map((tab) => {
+            const active = pathname.startsWith(tab.to);
+            const count = badges[tab.key] ?? 0;
+            return (
+              <Link
+                key={tab.to}
+                to={tab.to}
+                className={cn(
+                  "relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition",
+                  active ? "text-primary" : "text-muted-foreground",
+                )}
+              >
+                <tab.icon className="h-5 w-5" />
+                <span className="truncate">{tab.shortLabel}</span>
+                {count > 0 && (
+                  <span className="absolute right-4 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                    {count}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
           <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
             <SheetTrigger asChild>
               <button
@@ -197,25 +230,29 @@ function PrescriberLayout() {
                 <SheetTitle className="font-serif text-lg">More</SheetTitle>
               </SheetHeader>
               <div className="mt-4 grid grid-cols-3 gap-2">
-                {nav
-                  .filter((t) => !(mobilePrimaryKeys as readonly string[]).includes(t.key))
-                  .map((tab) => {
-                    const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
-                    return (
-                      <Link
-                        key={tab.to}
-                        to={tab.to}
-                        onClick={() => setMoreOpen(false)}
-                        className={cn(
-                          "flex flex-col items-center justify-center gap-2 rounded-xl border p-4 text-xs font-medium transition",
-                          active ? "border-primary bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted",
-                        )}
-                      >
-                        <tab.icon className="h-5 w-5" />
-                        <span className="text-center">{tab.label}</span>
-                      </Link>
-                    );
-                  })}
+                {moreNav.map((tab) => {
+                  const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
+                  const count = badges[tab.key] ?? 0;
+                  return (
+                    <Link
+                      key={tab.to}
+                      to={tab.to}
+                      onClick={() => setMoreOpen(false)}
+                      className={cn(
+                        "relative flex flex-col items-center justify-center gap-2 rounded-xl border p-4 text-xs font-medium transition",
+                        active ? "border-primary bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted",
+                      )}
+                    >
+                      <tab.icon className="h-5 w-5" />
+                      <span className="text-center">{tab.label}</span>
+                      {count > 0 && (
+                        <span className="absolute right-2 top-2 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                          {count}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
                 {hasClinic && (
                   <Link
                     to="/dashboard"
