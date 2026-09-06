@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getPractitionerBio } from "@/lib/practitioner-public.functions";
 import { getPublicRewardsOverview } from "@/lib/rewards.functions";
 import { listPublicGiftCards } from "@/lib/gift-cards.functions";
+import { listPublicMembershipPlans } from "@/lib/memberships.functions";
 import { Button } from "@/components/ui/button";
 import { UserCircle2 } from "lucide-react";
 import { resolveDisplayNames } from "@/lib/display-name";
