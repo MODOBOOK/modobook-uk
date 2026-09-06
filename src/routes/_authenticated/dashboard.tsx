@@ -172,7 +172,9 @@ function DashboardLayout() {
   const inPrescribing = pathname.startsWith("/dashboard/rx-requests");
   const bottomTabs = inPrescribing ? prescribingTabs : mobileTabs;
 
-  const themeStyle = useDashboardThemeStyle();
+  // Prescribing screens are part of the Prescriber Hub — always the clean
+  // clinical palette, never the clinic's brand colours.
+  const themeStyle = useDashboardThemeStyle(!inPrescribing);
   const fetchPending = useServerFn(countPendingReviews);
   const fetchHub = useServerFn(getHubNotifications);
   const [pendingReviews, setPendingReviews] = useState(0);
