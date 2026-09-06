@@ -127,7 +127,8 @@ export function CourseGroupRow({
   const padding = size === "lg" ? "p-4 sm:p-5" : size === "md" ? "p-4" : "p-3.5";
   const nameSize = size === "lg" ? "text-lg sm:text-xl" : size === "md" ? "text-base sm:text-lg" : "text-[15px] sm:text-base";
   const actionSize = size === "lg" ? "text-lg" : size === "md" ? "text-base" : "text-[15px]";
-  const checkSize = size === "lg" ? "h-6 w-6" : "h-5 w-5";
+  const checkSize = size === "lg" ? "h-5 w-5" : "h-4 w-4";
+  const tickSize = size === "lg" ? "h-3 w-3" : "h-2.5 w-2.5";
 
   return (
     <>
