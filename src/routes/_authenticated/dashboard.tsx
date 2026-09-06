@@ -167,6 +167,9 @@ function DashboardLayout() {
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isConsultationDetail = /^\/dashboard\/consultations\/[^/]+/.test(pathname);
+  const inPrescribing = pathname.startsWith("/dashboard/rx-requests");
+  const bottomTabs = inPrescribing ? prescribingTabs : mobileTabs;
+
   const themeStyle = useDashboardThemeStyle();
   const fetchPending = useServerFn(countPendingReviews);
   const fetchHub = useServerFn(getHubNotifications);
