@@ -266,13 +266,13 @@ function BookingsPage() {
     }
   }, [loading, view]);
 
-  // In 3-day view we render a long horizontal strip (3 columns wide on screen)
-  // so you can keep scrolling sideways through following days.
+  // Day and 3-day views render a long horizontal strip so you can keep
+  // scrolling sideways through following days.
   const STRIP_DAYS = 21;
-  const isStrip = view === "3day";
+  const isStrip = view === "3day" || view === "day";
 
   const days = useMemo(() => {
-    if (view === "day") return [anchor];
+    if (view === "day") return Array.from({ length: STRIP_DAYS }, (_, i) => addDays(anchor, i));
     if (view === "3day") return Array.from({ length: STRIP_DAYS }, (_, i) => addDays(anchor, i));
     if (view === "week") {
       const start = startOfWeek(anchor);
@@ -281,8 +281,12 @@ function BookingsPage() {
     return [];
   }, [anchor, view]);
 
-  // 3-day strip: fixed column width so exactly 3 fit on screen, rest scrolls sideways.
-  const stripColWidth = isMobile
+  // 3-day strip: 3 columns per screen. Day strip: 1 column per screen.
+  const stripColWidth = view === "day"
+    ? isMobile
+      ? "calc(100vw - var(--gutter) - 2.5rem)"
+      : "calc(100vw - var(--gutter) - 22rem)"
+    : isMobile
     ? "calc((100vw - var(--gutter) - 2.5rem) / 3)"
     : "calc((100vw - var(--gutter) - 22rem) / 3)";
   const gridCols = isStrip
