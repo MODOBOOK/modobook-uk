@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { getPrescriberHome } from "@/lib/prescriber-analytics.functions";
 import { saveMyPrescriberFees, setSignoffPin } from "@/lib/prescriber.functions";
+import { getMyDirectoryListing } from "@/lib/prescriber-directory.functions";
 import { WalkInDialog } from "@/components/prescriber/WalkInDialog";
 import { toast } from "sonner";
 
