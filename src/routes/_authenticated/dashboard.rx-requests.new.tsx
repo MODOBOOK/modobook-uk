@@ -83,7 +83,7 @@ function NewRxRequest() {
 
   return (
     <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4">
-      <h1 className="text-2xl font-bold">New prescription request</h1>
+
       <form onSubmit={onSubmit} className="space-y-6">
         <Card>
           <CardHeader><CardTitle>Prescriber</CardTitle></CardHeader>
