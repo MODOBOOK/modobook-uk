@@ -353,7 +353,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
               </button>
             )}
           </div>
-          {(chosen?.mode === "cash" || chosen?.mode === "cash_deposit") && cashDepositAvailable && (
+          {(chosen?.mode === "cash" || chosen?.mode === "cash_deposit") && cashDepositAvailable && cashFullAvailable && (
             <div className="mt-2 space-y-2">
               {([
                 {
