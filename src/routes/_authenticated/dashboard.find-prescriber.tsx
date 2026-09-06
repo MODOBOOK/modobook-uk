@@ -155,11 +155,18 @@ function FindPrescriberPage() {
             <Compass className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
             <p className="font-medium">
               {listings.length === 0
-                ? "No prescribers are listed yet — check back soon."
+                ? "No prescribers are listed yet."
                 : "No prescribers match your search."}
             </p>
+            {listings.length === 0 && (
+              <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                Prescribers choose to appear here once they've been approved on MODO. As soon as one lists
+                themselves you'll see their area, what they prescribe and how to request a connection.
+              </p>
+            )}
           </CardContent>
         </Card>
+
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {filtered.map((l) => {
