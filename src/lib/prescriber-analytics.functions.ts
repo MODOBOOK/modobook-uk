@@ -92,7 +92,7 @@ export const getPrescriberHome = createServerFn({ method: "GET" })
       { data: rxPending },
       { data: rxAwaiting },
       { data: visits },
-      { data: signedThisMonth },
+      { count: signedThisMonthCount },
       { data: signoffs },
       { data: myProfile },
     ] = await Promise.all([
@@ -126,6 +126,7 @@ export const getPrescriberHome = createServerFn({ method: "GET" })
       supabase
         .from("prescriptions")
         .select("id", { count: "exact", head: true })
+        .limit(1)
         .eq("prescriber_user_id", userId)
         .eq("status", "signed")
         .gte("signed_at", startOfMonth),
