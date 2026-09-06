@@ -337,8 +337,15 @@ const [saving, setSaving] = useState(false);
             label="Cash only for remaining balance"
             hint="Patients pay the deposit online, then bring the rest in cash. Hides the 'Pay in full online' option."
             checked={s.cash_only_balance}
-            onChange={(v) => set("cash_only_balance", v)}
+            onChange={(v) =>
+              setS((p) => ({
+                ...p,
+                cash_only_balance: v,
+                payment_card_full_enabled: v ? false : p.payment_card_full_enabled,
+              }))
+            }
           />
+
           <ToggleRow
             label="Save card on file for no-shows / late cancels"
             hint="Card details are stored securely via Stripe against the patient's profile (card-only, no Apple/Google Pay). Make sure your booking terms tell the patient this will happen — that acceptance is their GDPR consent to store the card."
