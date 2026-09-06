@@ -44,6 +44,10 @@ const planSchema = z.object({
     .default([]),
   discountPercent: z.number().min(0).max(100).nullish(),
   perks: z.string().max(2000).nullish(),
+  termsText: z.string().max(20000).nullish(),
+  termsCheckboxes: z
+    .array(z.object({ label: z.string().min(1).max(500), required: z.boolean().default(true) }))
+    .default([]),
   active: z.boolean().default(true),
 });
 
@@ -89,6 +93,8 @@ export const saveMembershipPlan = createServerFn({ method: "POST" })
       included_treatments: data.includedTreatments,
       discount_percent: data.discountPercent ?? null,
       perks: data.perks?.trim() || null,
+      terms_text: data.termsText?.trim() || null,
+      terms_checkboxes: data.termsCheckboxes,
       active: data.active,
     };
 
@@ -289,7 +295,7 @@ export const listPublicMembershipPlans = createServerFn({ method: "GET" })
     if (profileError || !profile) return { clinicName: null as string | null, plans: [] as never[] };
     const { data: plans } = await pub
       .from("membership_plans")
-      .select("id, name, description, price_cents, interval, credit_cents, spend_mode, discount_percent, perks, included_treatments")
+      .select("id, name, description, price_cents, interval, credit_cents, spend_mode, discount_percent, perks, included_treatments, terms_text, terms_checkboxes")
       .eq("profile_id", (profile as { id: string }).id)
       .eq("active", true)
       .order("price_cents", { ascending: true });
@@ -384,7 +390,9 @@ export const getMyMembershipForClinic = createServerFn({ method: "GET" })
 
 export const subscribeToMembershipPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { slug: string; planId: string }) => input)
+  .inputValidator(
+    (input: { slug: string; planId: string; acceptedCheckboxes?: string[] }) => input,
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     if (!membershipsEnabled(data.slug)) throw new Error(NOT_LIVE);
@@ -401,13 +409,15 @@ export const subscribeToMembershipPlan = createServerFn({ method: "POST" })
 
     const { data: planRow } = await supabase
       .from("membership_plans")
-      .select("id, name, price_cents, interval, stripe_price_id, active")
+      .select("id, name, price_cents, interval, stripe_price_id, active, terms_text, terms_checkboxes")
       .eq("id", data.planId)
       .eq("profile_id", p.id)
       .maybeSingle();
     const plan = planRow as {
       id: string; name: string; price_cents: number;
       interval: "month" | "year"; stripe_price_id: string | null; active: boolean;
+      terms_text: string | null;
+      terms_checkboxes: Array<{ label: string; required?: boolean }> | null;
     } | null;
     if (!plan?.active) throw new Error("This plan is no longer available.");
 
@@ -420,6 +430,57 @@ export const subscribeToMembershipPlan = createServerFn({ method: "POST" })
       .in("status", ["active", "paused"])
       .maybeSingle();
     if (existing) throw new Error("You're already subscribed to this plan.");
+
+    // ---- Terms & conditions -------------------------------------------------
+    const boxes = (plan.terms_checkboxes ?? []) as Array<{ label: string; required?: boolean }>;
+    const accepted = new Set((data.acceptedCheckboxes ?? []).map((l) => String(l)));
+    const missing = boxes.filter((b) => b.required !== false && !accepted.has(b.label));
+    const hasTerms = !!(plan.terms_text?.trim() || boxes.length);
+    if (hasTerms) {
+      if (missing.length) throw new Error("Please agree to all the required terms first.");
+      const email = (context.claims as { email?: string } | undefined)?.email ?? null;
+      const { data: client } = await supabase
+        .from("clinic_clients")
+        .select("id")
+        .eq("profile_id", p.id)
+        .ilike("email", email ?? "___none___")
+        .maybeSingle();
+      await supabase.from("membership_terms_acceptances").insert({
+        clinic_profile_id: p.id,
+        plan_id: plan.id,
+        patient_user_id: userId,
+        client_id: (client as { id: string } | null)?.id ?? null,
+        patient_email: email,
+        plan_name: plan.name,
+        terms_text: plan.terms_text,
+        checkbox_items: boxes.map((b) => ({
+          label: b.label,
+          required: b.required !== false,
+          agreed: accepted.has(b.label),
+        })),
+      } as never);
+
+      if (email) {
+        const { getPractitionerBranding, tryEnqueueAppEmail } = await import("./email/send.server");
+        const branding = await getPractitionerBranding(p.id);
+        await tryEnqueueAppEmail({
+          templateName: "membership-terms",
+          recipientEmail: email,
+          messageId: `membership-terms-${plan.id}-${userId}-${Date.now()}`,
+          templateData: {
+            profileId: p.id,
+            clinicName: p.clinic_name || branding.clinicName || p.full_name || "Your clinic",
+            planName: plan.name,
+            termsText: plan.terms_text,
+            checkboxes: boxes.map((b) => b.label),
+            acceptedAt: new Date().toLocaleString("en-GB", { timeZone: "Europe/London" }),
+            logoUrl: branding.logoUrl,
+            brandColor: branding.brandColor,
+          },
+        });
+      }
+    }
+
 
     let priceId = plan.stripe_price_id;
     if (!priceId) {
@@ -711,4 +772,30 @@ export const inviteToMembershipPlan = createServerFn({ method: "POST" })
       else failed.push(email);
     }
     return { sent, failed };
+  });
+
+// Terms & conditions a patient has agreed to, for the practitioner's patient
+// record. Looked up by clinic client id (and the linked patient account).
+export const listPatientTermsAcceptances = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { clientId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const profile = await getProfile(context.supabase, context.userId);
+    if (!profile) return [];
+    const { data: client } = await context.supabase
+      .from("clinic_clients")
+      .select("id, email")
+      .eq("id", data.clientId)
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+    if (!client) return [];
+    const email = ((client as { email: string | null }).email ?? "").trim().toLowerCase();
+    const { data: rows } = await context.supabase
+      .from("membership_terms_acceptances")
+      .select("id, plan_name, terms_text, checkbox_items, accepted_at, patient_email, client_id")
+      .eq("clinic_profile_id", profile.id)
+      .order("accepted_at", { ascending: false });
+    return ((rows ?? []) as any[]).filter(
+      (r) => r.client_id === data.clientId || (email && String(r.patient_email ?? "").toLowerCase() === email),
+    );
   });

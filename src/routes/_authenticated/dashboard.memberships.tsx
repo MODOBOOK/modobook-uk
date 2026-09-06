@@ -51,6 +51,8 @@ type Plan = {
   included_treatments: Array<{ treatment_id: string; quantity: number }>;
   discount_percent: number | null;
   perks: string | null;
+  terms_text: string | null;
+  terms_checkboxes: Array<{ label: string; required?: boolean }>;
   active: boolean;
 };
 
@@ -78,6 +80,8 @@ const emptyPlan: Omit<Plan, "id"> = {
   included_treatments: [],
   discount_percent: null,
   perks: "",
+  terms_text: "",
+  terms_checkboxes: [],
   active: true,
 };
 
@@ -204,6 +208,10 @@ function MembershipsPage() {
           includedTreatments: editing.included_treatments,
           discountPercent: editing.discount_percent,
           perks: editing.perks,
+          termsText: editing.terms_text,
+          termsCheckboxes: (editing.terms_checkboxes ?? [])
+            .filter((b) => b.label.trim())
+            .map((b) => ({ label: b.label.trim(), required: b.required !== false })),
           active: editing.active,
         },
       });
@@ -551,6 +559,62 @@ function MembershipsPage() {
                     placeholder={"Priority booking\nFree skin reviews"}
                     rows={2}
                   />
+                </div>
+              </div>
+              <div className="space-y-3 rounded-md border p-3">
+                <div>
+                  <Label>Terms &amp; conditions</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Shown before a patient joins. They get a copy by email and it is logged on their record.
+                  </p>
+                </div>
+                <Textarea
+                  value={editing.terms_text ?? ""}
+                  onChange={(e) => setEditing({ ...editing, terms_text: e.target.value })}
+                  placeholder={"Minimum term of 3 months.\nCredit expires 12 months after issue."}
+                  rows={4}
+                />
+                <div className="space-y-2">
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">Tick boxes</Label>
+                  {(editing.terms_checkboxes ?? []).map((b, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <Input
+                        value={b.label}
+                        onChange={(e) => {
+                          const next = [...(editing.terms_checkboxes ?? [])];
+                          next[i] = { ...b, label: e.target.value };
+                          setEditing({ ...editing, terms_checkboxes: next });
+                        }}
+                        placeholder="I agree to the cancellation policy"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setEditing({
+                            ...editing,
+                            terms_checkboxes: (editing.terms_checkboxes ?? []).filter((_, j) => j !== i),
+                          })
+                        }
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setEditing({
+                        ...editing,
+                        terms_checkboxes: [...(editing.terms_checkboxes ?? []), { label: "", required: true }],
+                      })
+                    }
+                  >
+                    Add tick box
+                  </Button>
                 </div>
               </div>
               <div className="flex items-center justify-between rounded-md border p-3">

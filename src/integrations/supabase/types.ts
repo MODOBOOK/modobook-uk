@@ -4301,6 +4301,8 @@ export type Database = {
           profile_id: string
           spend_mode: string
           stripe_price_id: string | null
+          terms_checkboxes: Json
+          terms_text: string | null
           updated_at: string
         }
         Insert: {
@@ -4319,6 +4321,8 @@ export type Database = {
           profile_id: string
           spend_mode?: string
           stripe_price_id?: string | null
+          terms_checkboxes?: Json
+          terms_text?: string | null
           updated_at?: string
         }
         Update: {
@@ -4337,6 +4341,8 @@ export type Database = {
           profile_id?: string
           spend_mode?: string
           stripe_price_id?: string | null
+          terms_checkboxes?: Json
+          terms_text?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -4345,6 +4351,73 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      membership_terms_acceptances: {
+        Row: {
+          accepted_at: string
+          checkbox_items: Json
+          client_id: string | null
+          clinic_profile_id: string
+          created_at: string
+          id: string
+          patient_email: string | null
+          patient_user_id: string
+          plan_id: string | null
+          plan_name: string | null
+          terms_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string
+          checkbox_items?: Json
+          client_id?: string | null
+          clinic_profile_id: string
+          created_at?: string
+          id?: string
+          patient_email?: string | null
+          patient_user_id: string
+          plan_id?: string | null
+          plan_name?: string | null
+          terms_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string
+          checkbox_items?: Json
+          client_id?: string | null
+          clinic_profile_id?: string
+          created_at?: string
+          id?: string
+          patient_email?: string | null
+          patient_user_id?: string
+          plan_id?: string | null
+          plan_name?: string | null
+          terms_text?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "membership_terms_acceptances_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_terms_acceptances_clinic_profile_id_fkey"
+            columns: ["clinic_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "membership_terms_acceptances_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "membership_plans"
             referencedColumns: ["id"]
           },
         ]

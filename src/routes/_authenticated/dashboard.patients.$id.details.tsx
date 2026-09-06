@@ -43,6 +43,7 @@ import { ClientFormsList } from "@/components/patient/ClientFormsList";
 import { ConsultationDocCard } from "@/components/patient/ConsultationDocCard";
 import { LoyaltyPointsCard } from "@/components/patient/LoyaltyPointsCard";
 import { PatientCreditCard } from "@/components/patient/PatientCreditCard";
+import { PatientTermsCard } from "@/components/patient/PatientTermsCard";
 
 
 import { logCommunication, sendPatientEmail } from "@/lib/patient-hub.functions";
@@ -379,6 +380,7 @@ function PatientProfilePage() {
 
       {/* Account credit */}
       <PatientCreditCard clientId={id} />
+      <PatientTermsCard clientId={id} />
 
       {/* Loyalty points */}
       <LoyaltyPointsCard clientId={id} />

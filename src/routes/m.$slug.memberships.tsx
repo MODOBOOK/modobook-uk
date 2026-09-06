@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Crown, Wallet, CheckCircle2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { membershipsEnabled } from "@/lib/feature-flags";
@@ -39,6 +41,8 @@ type PublicPlan = {
   perks: string | null;
   included_treatments: Array<{ treatment_id: string; quantity: number }> | unknown;
   includedTreatmentDetails?: IncludedTreatment[];
+  terms_text?: string | null;
+  terms_checkboxes?: Array<{ label: string; required?: boolean }> | null;
 };
 
 const gbp = (cents: number) => `£${(cents / 100).toFixed(2)}`;
@@ -68,6 +72,8 @@ function MembershipsPublicInner({ slug }: { slug: string }) {
   const search = useSearch({ strict: false }) as { joined?: string };
   const [sessionUser, setSessionUser] = useState<string | null>(null);
   const [joiningId, setJoiningId] = useState<string | null>(null);
+  const [termsPlan, setTermsPlan] = useState<PublicPlan | null>(null);
+  const [ticked, setTicked] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSessionUser(data.session?.user.id ?? null));
@@ -113,14 +119,25 @@ function MembershipsPublicInner({ slug }: { slug: string }) {
     return set;
   }, [mine]);
 
-  async function handleJoin(planId: string) {
+  function handleJoin(planId: string) {
     if (!sessionUser) {
       window.location.href = `/m/${slug}/auth?next=${encodeURIComponent(`/m/${slug}/memberships`)}`;
       return;
     }
+    const plan = plans.find((p) => p.id === planId) ?? null;
+    const boxes = plan?.terms_checkboxes ?? [];
+    if (plan && (plan.terms_text?.trim() || boxes.length)) {
+      setTicked({});
+      setTermsPlan(plan);
+      return;
+    }
+    void startCheckout(planId, []);
+  }
+
+  async function startCheckout(planId: string, acceptedCheckboxes: string[]) {
     setJoiningId(planId);
     try {
-      const res = await subscribe({ data: { slug, planId } });
+      const res = await subscribe({ data: { slug, planId, acceptedCheckboxes } });
       if (res.url) window.location.href = res.url;
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not start checkout");
@@ -333,6 +350,57 @@ function MembershipsPublicInner({ slug }: { slug: string }) {
           ← Back to bookings
         </Link>
       </div>
+
+      {/* Terms & conditions before joining */}
+      <Dialog open={!!termsPlan} onOpenChange={(o) => !o && setTermsPlan(null)}>
+        <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{termsPlan?.name} — terms &amp; conditions</DialogTitle>
+          </DialogHeader>
+          {termsPlan?.terms_text?.trim() ? (
+            <div className="max-h-56 overflow-y-auto rounded-xl bg-muted/50 p-4 text-sm leading-relaxed whitespace-pre-line">
+              {termsPlan.terms_text}
+            </div>
+          ) : null}
+          <div className="space-y-3">
+            {(termsPlan?.terms_checkboxes ?? []).map((b, i) => (
+              <label key={i} className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed">
+                <Checkbox
+                  className="mt-0.5"
+                  checked={!!ticked[b.label]}
+                  onCheckedChange={(v) => setTicked((t) => ({ ...t, [b.label]: !!v }))}
+                />
+                <span>{b.label}</span>
+              </label>
+            ))}
+          </div>
+          <p className="text-xs opacity-60">
+            We'll email you a copy of these terms and record your agreement with {clinicName}.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTermsPlan(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={
+                !!joiningId ||
+                (termsPlan?.terms_checkboxes ?? []).some((b) => b.required !== false && !ticked[b.label])
+              }
+              onClick={() => {
+                if (!termsPlan) return;
+                const accepted = (termsPlan.terms_checkboxes ?? [])
+                  .filter((b) => ticked[b.label])
+                  .map((b) => b.label);
+                const id = termsPlan.id;
+                setTermsPlan(null);
+                void startCheckout(id, accepted);
+              }}
+            >
+              Agree &amp; continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
