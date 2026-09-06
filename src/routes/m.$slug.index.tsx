@@ -3177,11 +3177,12 @@ function TreatmentRow({
         aria-pressed={selected}
         aria-label={capInfo?.full ? "Fully booked" : selected ? "Deselect" : "Select"}
         className={`mt-0.5 flex min-h-0 flex-shrink-0 self-start items-center justify-center rounded-full border transition ${checkSize} ${capInfo?.full ? "cursor-not-allowed opacity-40" : ""}`}
-        style={
-          selected
+        style={{
+          minHeight: 0,
+          ...(selected
             ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
-            : { borderColor: `${brand}66` }
-        }
+            : { borderColor: `${brand}66` }),
+        }}
       >
         {selected && <Check className={tickSize} />}
       </button>
