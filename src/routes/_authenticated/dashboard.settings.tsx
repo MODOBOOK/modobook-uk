@@ -298,9 +298,9 @@ const [saving, setSaving] = useState(false);
                   s.payment_pass_fees_to_customer ? "border-primary bg-primary/5" : "opacity-70"
                 }`}
               >
-                <div className="font-medium">My client pays the fee</div>
+                <div className="font-medium">My client pays the Stripe fee</div>
                 <div className="text-xs text-muted-foreground">
-                  Shown as a separate "{PLATFORM_FEE_LABEL}" line at checkout, on top of the price.
+                  Shown as a separate "Stripe platform fee" line at checkout, on top of the price.
                 </div>
               </button>
             </div>
