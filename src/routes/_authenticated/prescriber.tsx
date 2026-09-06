@@ -171,22 +171,25 @@ function PrescriberLayout() {
 
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between gap-2 border-b px-4 lg:px-10">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-2 border-b border-[var(--sidebar-border)] bg-[var(--sidebar)] px-4 text-[var(--sidebar-foreground)] lg:px-10">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground lg:hidden">
-              <Stethoscope className="h-4 w-4" />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)] lg:hidden">
+              <Stethoscope className="h-4.5 w-4.5" />
             </div>
             <div className="min-w-0">
-              <div className="truncate font-serif text-base lg:text-xl">{name}</div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Prescriber Hub</div>
+              <div className="truncate text-base font-semibold lg:text-xl">{name}</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] opacity-70">Prescriber Hub</div>
             </div>
           </div>
           {hasClinic && (
             <Link to="/dashboard" className="lg:hidden">
-              <Button variant="outline" size="sm" className="shrink-0">Clinic</Button>
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--sidebar-border)] px-3 py-1.5 text-xs font-medium">
+                <Building2 className="h-3.5 w-3.5" /> Clinic
+              </span>
             </Link>
           )}
         </header>
+
 
         <main className="min-w-0 flex-1 overflow-x-hidden p-5 pb-24 lg:p-10">
           <Outlet />
