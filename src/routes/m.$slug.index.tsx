@@ -339,6 +339,20 @@ function BookPage() {
   }>;
   const hasGiftCards = giftCards.length > 0;
 
+  const fetchMembershipPlans = useServerFn(listPublicMembershipPlans);
+  const membershipPlansQuery = useQuery({
+    queryKey: ["public-membership-plans-promo", slug],
+    queryFn: () => fetchMembershipPlans({ data: { slug } }),
+    staleTime: 60_000,
+  });
+  const membershipPlans = (membershipPlansQuery.data?.plans ?? []) as Array<{
+    id: string; name: string; price_cents: number; interval: "month" | "year"; credit_cents: number;
+  }>;
+  const hasMembershipPlans = membershipsEnabled(slug) && membershipPlans.length > 0;
+  const lowestMembershipPrice = hasMembershipPlans
+    ? Math.min(...membershipPlans.map((p) => p.price_cents))
+    : null;
+
   const fetchClinicVisits = useServerFn(listPublicClinicVisits);
   const clinicVisitsQuery = useQuery({
     queryKey: ["public-clinic-visits", slug],
