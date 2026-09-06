@@ -26,6 +26,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Pencil, Pause, Play, XCircle, Crown, Wallet, Users, Mail, Search } from "lucide-react";
+import { membershipScheduleText } from "@/lib/membership-schedule";
 import { toast } from "sonner";
 import { membershipsEnabled } from "@/lib/feature-flags";
 
@@ -45,6 +46,8 @@ type Plan = {
   description: string | null;
   price_cents: number;
   interval: "month" | "year";
+  treatment_frequency_months: number;
+  min_commitment_months: number;
   credit_cents: number;
   spend_mode: "any" | "restricted" | "manual";
   eligible_treatment_ids: string[] | null;
@@ -74,6 +77,8 @@ const emptyPlan: Omit<Plan, "id"> = {
   description: "",
   price_cents: 0,
   interval: "month",
+  treatment_frequency_months: 1,
+  min_commitment_months: 0,
   credit_cents: 0,
   spend_mode: "any",
   eligible_treatment_ids: [],
@@ -235,6 +240,8 @@ function MembershipsPage() {
           description: editing.description,
           priceCents: editing.price_cents,
           interval: editing.interval,
+          treatmentFrequencyMonths: editing.treatment_frequency_months ?? 1,
+          minCommitmentMonths: editing.min_commitment_months ?? 0,
           creditCents: editing.credit_cents,
           spendMode: editing.spend_mode,
           eligibleTreatmentIds: editing.eligible_treatment_ids ?? [],
@@ -418,6 +425,11 @@ function MembershipsPage() {
                       </Badge>
                     )}
                     {p.discount_percent ? <Badge variant="outline">{p.discount_percent}% member discount</Badge> : null}
+                    {membershipScheduleText(p.treatment_frequency_months, p.min_commitment_months) && (
+                      <Badge variant="outline">
+                        {membershipScheduleText(p.treatment_frequency_months, p.min_commitment_months)}
+                      </Badge>
+                    )}
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Credit spend: {p.spend_mode === "any" ? "any booking" : p.spend_mode === "restricted" ? `${(p.eligible_treatment_ids ?? []).length} selected treatments` : "manual — you apply it in clinic"}
@@ -550,6 +562,44 @@ function MembershipsPage() {
                   </Select>
                 </div>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Treatment due every</Label>
+                  <Select
+                    value={String(editing.treatment_frequency_months ?? 1)}
+                    onValueChange={(v) => setEditing({ ...editing, treatment_frequency_months: Number(v) })}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4, 6, 9, 12].map((n) => (
+                        <SelectItem key={n} value={String(n)}>
+                          {n === 1 ? "Every month" : n === 12 ? "Once a year" : `Every ${n} months`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Minimum term</Label>
+                  <Select
+                    value={String(editing.min_commitment_months ?? 0)}
+                    onValueChange={(v) => setEditing({ ...editing, min_commitment_months: Number(v) })}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {[0, 3, 4, 6, 12].map((n) => (
+                        <SelectItem key={n} value={String(n)}>
+                          {n === 0 ? "No minimum" : `${n} months`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <p className="-mt-1 text-xs text-muted-foreground">
+                Example: £50 a month, treatment due every 4 months with a 4 month minimum — they pay for 4 months, then
+                have their treatment.
+              </p>
               <div className="space-y-1.5">
                 <Label>Credit added to their pot each cycle (£)</Label>
                 <Input
