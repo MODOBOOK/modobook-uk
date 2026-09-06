@@ -174,6 +174,7 @@ import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_
 import { Route as AuthenticatedDashboardNotificationsSmsRouteImport } from './routes/_authenticated/dashboard.notifications.sms'
 import { Route as AuthenticatedDashboardNotificationsEmailRouteImport } from './routes/_authenticated/dashboard.notifications.email'
 import { Route as AuthenticatedDashboardMarketingTemplatesRouteImport } from './routes/_authenticated/dashboard.marketing.templates'
+import { Route as AuthenticatedDashboardMarketingSmsRouteImport } from './routes/_authenticated/dashboard.marketing.sms'
 import { Route as AuthenticatedDashboardMarketingSegmentsRouteImport } from './routes/_authenticated/dashboard.marketing.segments'
 import { Route as AuthenticatedDashboardMarketingAutomationsRouteImport } from './routes/_authenticated/dashboard.marketing.automations'
 import { Route as AuthenticatedDashboardMarketingAnalyticsRouteImport } from './routes/_authenticated/dashboard.marketing.analytics'
@@ -1110,6 +1111,12 @@ const AuthenticatedDashboardMarketingTemplatesRoute =
     path: '/templates',
     getParentRoute: () => AuthenticatedDashboardMarketingRoute,
   } as any)
+const AuthenticatedDashboardMarketingSmsRoute =
+  AuthenticatedDashboardMarketingSmsRouteImport.update({
+    id: '/sms',
+    path: '/sms',
+    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
+  } as any)
 const AuthenticatedDashboardMarketingSegmentsRoute =
   AuthenticatedDashboardMarketingSegmentsRouteImport.update({
     id: '/segments',
@@ -1321,6 +1328,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/marketing/analytics': typeof AuthenticatedDashboardMarketingAnalyticsRoute
   '/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
+  '/dashboard/marketing/sms': typeof AuthenticatedDashboardMarketingSmsRoute
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/dashboard/notifications/email': typeof AuthenticatedDashboardNotificationsEmailRoute
   '/dashboard/notifications/sms': typeof AuthenticatedDashboardNotificationsSmsRoute
@@ -1489,6 +1497,7 @@ export interface FileRoutesByTo {
   '/dashboard/marketing/analytics': typeof AuthenticatedDashboardMarketingAnalyticsRoute
   '/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
+  '/dashboard/marketing/sms': typeof AuthenticatedDashboardMarketingSmsRoute
   '/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/dashboard/notifications/email': typeof AuthenticatedDashboardNotificationsEmailRoute
   '/dashboard/notifications/sms': typeof AuthenticatedDashboardNotificationsSmsRoute
@@ -1669,6 +1678,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/marketing/analytics': typeof AuthenticatedDashboardMarketingAnalyticsRoute
   '/_authenticated/dashboard/marketing/automations': typeof AuthenticatedDashboardMarketingAutomationsRoute
   '/_authenticated/dashboard/marketing/segments': typeof AuthenticatedDashboardMarketingSegmentsRoute
+  '/_authenticated/dashboard/marketing/sms': typeof AuthenticatedDashboardMarketingSmsRoute
   '/_authenticated/dashboard/marketing/templates': typeof AuthenticatedDashboardMarketingTemplatesRoute
   '/_authenticated/dashboard/notifications/email': typeof AuthenticatedDashboardNotificationsEmailRoute
   '/_authenticated/dashboard/notifications/sms': typeof AuthenticatedDashboardNotificationsSmsRoute
@@ -1850,6 +1860,7 @@ export interface FileRouteTypes {
     | '/dashboard/marketing/analytics'
     | '/dashboard/marketing/automations'
     | '/dashboard/marketing/segments'
+    | '/dashboard/marketing/sms'
     | '/dashboard/marketing/templates'
     | '/dashboard/notifications/email'
     | '/dashboard/notifications/sms'
@@ -2018,6 +2029,7 @@ export interface FileRouteTypes {
     | '/dashboard/marketing/analytics'
     | '/dashboard/marketing/automations'
     | '/dashboard/marketing/segments'
+    | '/dashboard/marketing/sms'
     | '/dashboard/marketing/templates'
     | '/dashboard/notifications/email'
     | '/dashboard/notifications/sms'
@@ -2197,6 +2209,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/marketing/analytics'
     | '/_authenticated/dashboard/marketing/automations'
     | '/_authenticated/dashboard/marketing/segments'
+    | '/_authenticated/dashboard/marketing/sms'
     | '/_authenticated/dashboard/marketing/templates'
     | '/_authenticated/dashboard/notifications/email'
     | '/_authenticated/dashboard/notifications/sms'
@@ -3454,6 +3467,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardMarketingTemplatesRouteImport
       parentRoute: typeof AuthenticatedDashboardMarketingRoute
     }
+    '/_authenticated/dashboard/marketing/sms': {
+      id: '/_authenticated/dashboard/marketing/sms'
+      path: '/sms'
+      fullPath: '/dashboard/marketing/sms'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingSmsRouteImport
+      parentRoute: typeof AuthenticatedDashboardMarketingRoute
+    }
     '/_authenticated/dashboard/marketing/segments': {
       id: '/_authenticated/dashboard/marketing/segments'
       path: '/segments'
@@ -3592,6 +3612,7 @@ interface AuthenticatedDashboardMarketingRouteChildren {
   AuthenticatedDashboardMarketingAnalyticsRoute: typeof AuthenticatedDashboardMarketingAnalyticsRoute
   AuthenticatedDashboardMarketingAutomationsRoute: typeof AuthenticatedDashboardMarketingAutomationsRoute
   AuthenticatedDashboardMarketingSegmentsRoute: typeof AuthenticatedDashboardMarketingSegmentsRoute
+  AuthenticatedDashboardMarketingSmsRoute: typeof AuthenticatedDashboardMarketingSmsRoute
   AuthenticatedDashboardMarketingTemplatesRoute: typeof AuthenticatedDashboardMarketingTemplatesRoute
   AuthenticatedDashboardMarketingIndexRoute: typeof AuthenticatedDashboardMarketingIndexRoute
   AuthenticatedDashboardMarketingCampaignsIdRoute: typeof AuthenticatedDashboardMarketingCampaignsIdRoute
@@ -3605,6 +3626,8 @@ const AuthenticatedDashboardMarketingRouteChildren: AuthenticatedDashboardMarket
       AuthenticatedDashboardMarketingAutomationsRoute,
     AuthenticatedDashboardMarketingSegmentsRoute:
       AuthenticatedDashboardMarketingSegmentsRoute,
+    AuthenticatedDashboardMarketingSmsRoute:
+      AuthenticatedDashboardMarketingSmsRoute,
     AuthenticatedDashboardMarketingTemplatesRoute:
       AuthenticatedDashboardMarketingTemplatesRoute,
     AuthenticatedDashboardMarketingIndexRoute:

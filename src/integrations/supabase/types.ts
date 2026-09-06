@@ -7799,6 +7799,72 @@ export type Database = {
           },
         ]
       }
+      sms_blasts: {
+        Row: {
+          billable_texts: number
+          body: string
+          created_at: string
+          failed_count: number
+          id: string
+          name: string
+          paid_at: string | null
+          practitioner_id: string
+          recipient_count: number
+          recipients: Json
+          segments: number
+          sent_at: string | null
+          sent_count: number
+          status: string
+          stripe_payment_intent: string | null
+          stripe_session_id: string | null
+          total_pence: number
+          unit_price_pence: number
+          updated_at: string
+        }
+        Insert: {
+          billable_texts?: number
+          body: string
+          created_at?: string
+          failed_count?: number
+          id?: string
+          name?: string
+          paid_at?: string | null
+          practitioner_id: string
+          recipient_count?: number
+          recipients?: Json
+          segments?: number
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          stripe_payment_intent?: string | null
+          stripe_session_id?: string | null
+          total_pence?: number
+          unit_price_pence?: number
+          updated_at?: string
+        }
+        Update: {
+          billable_texts?: number
+          body?: string
+          created_at?: string
+          failed_count?: number
+          id?: string
+          name?: string
+          paid_at?: string | null
+          practitioner_id?: string
+          recipient_count?: number
+          recipients?: Json
+          segments?: number
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          stripe_payment_intent?: string | null
+          stripe_session_id?: string | null
+          total_pence?: number
+          unit_price_pence?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       staff_members: {
         Row: {
           accepted_at: string | null
