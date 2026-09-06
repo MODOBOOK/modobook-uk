@@ -150,12 +150,26 @@ const mobileTabs = [
   { label: "Menu", to: "/dashboard/menu", icon: Menu },
 ];
 
+// While working inside the prescribing area, the bottom bar stays in that
+// context instead of throwing the user back into the clinic dashboard.
+const prescribingTabs = [
+  { label: "Requests", to: "/dashboard/rx-requests", icon: MessageCircle, exact: true },
+  { label: "Prescribing", to: "/hub/prescribing", icon: Stethoscope },
+  { label: "New", to: "/dashboard/rx-requests/new", icon: CalendarPlus, cta: true },
+  { label: "Hub", to: "/hub", icon: ShieldCheck, exact: true },
+  { label: "Clinic", to: "/dashboard", icon: Home, exact: true },
+];
+
+
 function DashboardLayout() {
   const { profile, isPrescriber } = Route.useRouteContext();
   const { primary: displayName } = resolveDisplayNames(profile as { clinic_name?: string | null; full_name?: string | null; display_name_mode?: string | null });
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isConsultationDetail = /^\/dashboard\/consultations\/[^/]+/.test(pathname);
+  const inPrescribing = pathname.startsWith("/dashboard/rx-requests");
+  const bottomTabs = inPrescribing ? prescribingTabs : mobileTabs;
+
   const themeStyle = useDashboardThemeStyle();
   const fetchPending = useServerFn(countPendingReviews);
   const fetchHub = useServerFn(getHubNotifications);
@@ -430,9 +444,23 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
           className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-background/95 backdrop-blur lg:hidden"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
-          {mobileTabs.map((tab) => {
+          {bottomTabs.map((tab) => {
             const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
             if ((tab as { cta?: boolean }).cta) {
+              if (inPrescribing) {
+                return (
+                  <Link
+                    key={tab.to}
+                    to={tab.to}
+                    className="flex min-h-[60px] flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground transition active:scale-[0.97]"
+                  >
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md ring-4 ring-primary/15 transition active:scale-95">
+                      <tab.icon className="h-5 w-5" />
+                    </span>
+                    {tab.label}
+                  </Link>
+                );
+              }
               return (
                 <button
                   key={tab.to}
@@ -448,6 +476,7 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
                 </button>
               );
             }
+
             return (
               <Link
                 key={tab.to}
