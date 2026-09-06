@@ -138,8 +138,11 @@ function SmsBlastPage() {
     <div className="space-y-6 max-w-full">
       <div className="grid gap-3 sm:grid-cols-3">
         <Card><CardContent className="p-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground"><Users2 className="h-4 w-4" /> Opted-in mobiles</div>
-          <div className="text-2xl font-semibold mt-1">{recipients}</div>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground"><Users2 className="h-4 w-4" /> Patients selected</div>
+          <div className="text-2xl font-semibold mt-1">
+            {recipients}
+            {excluded.size > 0 && <span className="text-sm font-normal text-muted-foreground"> of {allPatients.length}</span>}
+          </div>
         </CardContent></Card>
         <Card><CardContent className="p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground"><MessageSquare className="h-4 w-4" /> Texts in this blast</div>
@@ -156,6 +159,63 @@ function SmsBlastPage() {
           <div className="space-y-2">
             <label className="text-sm font-medium">Name (just for your records)</label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="August offer" />
+          </div>
+
+          {/* Recipient picker */}
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => setPickerOpen((v) => !v)}
+              className="w-full flex items-center justify-between gap-2 rounded-md border border-border px-3 py-2.5 text-sm hover:bg-accent/50 transition"
+            >
+              <span className="flex items-center gap-2 font-medium">
+                <Users2 className="h-4 w-4 text-muted-foreground" />
+                Send to {recipients} patient{recipients === 1 ? '' : 's'}
+                {excluded.size > 0 && (
+                  <span className="text-xs text-muted-foreground font-normal">({excluded.size} removed)</span>
+                )}
+              </span>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${pickerOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {pickerOpen && (
+              <div className="rounded-md border border-border">
+                <div className="flex items-center gap-2 p-2 border-b border-border">
+                  <div className="relative flex-1">
+                    <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={pickerQuery}
+                      onChange={(e) => setPickerQuery(e.target.value)}
+                      placeholder="Search name or number"
+                      className="pl-8 h-8 text-sm"
+                    />
+                  </div>
+                  <Button type="button" size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setExcluded(new Set())}>
+                    All
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setExcluded(new Set(allPatients.map((p) => p.id)))}>
+                    None
+                  </Button>
+                </div>
+                <div className="max-h-64 overflow-y-auto divide-y divide-border">
+                  {filteredPatients.length === 0 && (
+                    <p className="p-3 text-xs text-muted-foreground">No patients match.</p>
+                  )}
+                  {filteredPatients.map((p) => {
+                    const checked = !excluded.has(p.id)
+                    return (
+                      <label key={p.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-accent/40">
+                        <Checkbox checked={checked} onCheckedChange={() => togglePatient(p.id)} />
+                        <span className="flex-1 min-w-0">
+                          <span className="block text-sm truncate">{p.name || 'Unnamed'}</span>
+                          <span className="block text-xs text-muted-foreground">{p.phone}</span>
+                        </span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Message</label>
