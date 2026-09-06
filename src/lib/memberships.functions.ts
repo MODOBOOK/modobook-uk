@@ -262,6 +262,9 @@ export const getPatientCreditForClinic = createServerFn({ method: "GET" })
 export const listPublicMembershipPlans = createServerFn({ method: "GET" })
   .inputValidator((input: { slug: string }) => input)
   .handler(async ({ data }) => {
+    if (!membershipsEnabled(data.slug)) {
+      return { clinicName: null as string | null, plans: [] as never[] };
+    }
     const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
     const { createClient } = await import("@supabase/supabase-js");
     const pub = createClient(process.env["SUPABASE_URL"]!, key, {
@@ -302,6 +305,7 @@ export const getMyMembershipForClinic = createServerFn({ method: "GET" })
   .inputValidator((input: { slug: string }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    if (!membershipsEnabled(data.slug)) return { memberships: [], balanceCents: 0 };
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
@@ -335,6 +339,7 @@ export const subscribeToMembershipPlan = createServerFn({ method: "POST" })
   .inputValidator((input: { slug: string; planId: string }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    if (!membershipsEnabled(data.slug)) throw new Error(NOT_LIVE);
     const { data: profile } = await supabase
       .from("profiles")
       .select("id, slug, clinic_name, full_name, stripe_connect_account_id")
@@ -412,6 +417,9 @@ export const previewMembershipCredit = createServerFn({ method: "POST" })
   .inputValidator((input: { slug: string; treatmentIds: string[]; totalCents: number }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    if (!membershipsEnabled(data.slug)) {
+      return { applicableCents: 0, balanceCents: 0, mode: null as string | null };
+    }
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
@@ -474,6 +482,7 @@ export const redeemMembershipCredit = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    if (!membershipsEnabled(data.slug)) return { ok: true, applied: 0 };
     const amount = Math.round(data.amountCents);
     if (amount <= 0) return { ok: true, applied: 0 };
 
