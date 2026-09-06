@@ -509,6 +509,83 @@ html, body {
 }
 
 /* ---------------------------------------------------------------
+ * Prescriber Hub — one consistent clean/medical look on every page.
+ * Normalises ad-hoc utility colours used across hub pages onto the
+ * clinical palette, and enforces mobile-friendly card/table rules.
+ * -------------------------------------------------------------- */
+.rx-theme {
+  --rx-ok: oklch(0.55 0.09 175);
+  --rx-ok-soft: oklch(0.95 0.03 180);
+  --rx-warn: oklch(0.60 0.09 75);
+  --rx-warn-soft: oklch(0.96 0.035 85);
+  --rx-info: oklch(0.52 0.075 235);
+  --rx-info-soft: oklch(0.95 0.025 235);
+}
+
+/* Cards + surfaces share one radius, border and shadow */
+.rx-theme [data-slot="card"],
+.rx-theme .rx-card {
+  border-radius: 1rem;
+  border-color: var(--border);
+  box-shadow: 0 1px 2px oklch(0.24 0.03 250 / 0.05), 0 14px 30px -24px oklch(0.24 0.03 250 / 0.35);
+}
+
+/* Colour normalisation: accent utilities map to clinical tones */
+.rx-theme [class*="bg-emerald-5"],
+.rx-theme [class*="bg-emerald-1"],
+.rx-theme [class*="bg-green-1"],
+.rx-theme [class*="bg-green-5"] { background-color: var(--rx-ok-soft) !important; }
+.rx-theme [class*="text-emerald-"],
+.rx-theme [class*="text-green-"] { color: var(--rx-ok) !important; }
+.rx-theme [class*="border-emerald-"],
+.rx-theme [class*="border-green-"] { border-color: color-mix(in oklab, var(--rx-ok) 40%, transparent) !important; }
+.rx-theme .bg-emerald-600,
+.rx-theme .bg-emerald-700,
+.rx-theme .bg-green-600 { background-color: var(--rx-ok) !important; color: white !important; }
+
+.rx-theme [class*="bg-amber-5"],
+.rx-theme [class*="bg-amber-1"],
+.rx-theme [class*="bg-amber-9"],
+.rx-theme [class*="bg-yellow-1"] { background-color: var(--rx-warn-soft) !important; }
+.rx-theme [class*="text-amber-"],
+.rx-theme [class*="text-yellow-"] { color: var(--rx-warn) !important; }
+.rx-theme [class*="border-amber-"],
+.rx-theme [class*="border-yellow-"] { border-color: color-mix(in oklab, var(--rx-warn) 40%, transparent) !important; }
+.rx-theme .bg-amber-500,
+.rx-theme .bg-amber-600 { background-color: var(--rx-warn) !important; color: white !important; }
+
+.rx-theme [class*="bg-blue-1"],
+.rx-theme [class*="bg-blue-5"],
+.rx-theme [class*="bg-indigo-1"],
+.rx-theme [class*="bg-slate-1"],
+.rx-theme [class*="bg-gray-1"] { background-color: var(--rx-info-soft) !important; }
+.rx-theme [class*="text-blue-"],
+.rx-theme [class*="text-indigo-"] { color: var(--rx-info) !important; }
+.rx-theme [class*="border-blue-"],
+.rx-theme [class*="border-indigo-"] { border-color: color-mix(in oklab, var(--rx-info) 40%, transparent) !important; }
+.rx-theme .bg-slate-500,
+.rx-theme .bg-slate-600,
+.rx-theme .bg-gray-500 { background-color: var(--muted-foreground) !important; color: white !important; }
+.rx-theme .bg-white { background-color: var(--card) !important; }
+.rx-theme [class*="text-slate-"],
+.rx-theme [class*="text-gray-"] { color: var(--foreground) !important; }
+
+/* Mobile friendliness on every hub page */
+.rx-theme main :where(h1) { font-size: clamp(1.35rem, 5vw, 1.75rem); line-height: 1.15; }
+.rx-theme main :where(h2) { font-size: clamp(1.05rem, 4vw, 1.25rem); line-height: 1.2; }
+.rx-theme main :where(p, span, div) { overflow-wrap: anywhere; }
+.rx-theme main :where(table) { min-width: 100%; }
+.rx-theme main :where(table):not(:where([data-slot="card"] table)) { display: table; }
+.rx-theme main :where(pre, code) { white-space: pre-wrap; word-break: break-word; }
+@media (max-width: 639px) {
+  .rx-theme main :where([data-slot="card-header"], [data-slot="card-content"], [data-slot="card-footer"]) {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .rx-theme main :where(.grid) { min-width: 0; }
+}
+
+/* ---------------------------------------------------------------
  * Practitioner studio shell — same modern polish as the prescriber
  * hub, but driven by each clinic's own brand tokens (set inline by
  * useDashboardThemeStyle), so every practitioner's workspace feels
