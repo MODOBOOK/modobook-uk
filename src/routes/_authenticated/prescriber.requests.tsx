@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getPrescriberDashboard, listMyRxRequests, type RxStatus } from "@/lib/rx-requests.functions";
+import { QuickApproveButton } from "@/components/prescriber/QuickApproveButton";
 import { Clock, MessageCircleQuestion, CheckCircle2, Users, Timer } from "lucide-react";
 import { useState } from "react";
 

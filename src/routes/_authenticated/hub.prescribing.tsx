@@ -137,12 +137,19 @@ function Row({
                   <SelectValue placeholder="Pick a prescriber" />
                 </SelectTrigger>
                 <SelectContent>
-                  {prescribers.map((p) => (
-                    <SelectItem key={p.user_id} value={p.user_id}>
-                      {p.name}
-                      {p.regulatory_body ? ` · ${p.regulatory_body}` : ""}
-                    </SelectItem>
-                  ))}
+                  {prescribers.map((p) => {
+                    const fees = [
+                      p.fee_per_prescription_pence != null ? `£${(p.fee_per_prescription_pence / 100).toFixed(0)}/script` : null,
+                      p.fee_per_consult_pence != null ? `£${(p.fee_per_consult_pence / 100).toFixed(0)}/consult` : null,
+                    ].filter(Boolean).join(" · ");
+                    return (
+                      <SelectItem key={p.user_id} value={p.user_id}>
+                        {p.name}
+                        {p.regulatory_body ? ` · ${p.regulatory_body}` : ""}
+                        {fees ? ` — ${fees}` : ""}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
