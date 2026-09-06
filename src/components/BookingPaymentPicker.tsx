@@ -20,6 +20,7 @@ type ConfiguredOptions = {
   depositEnabled: boolean;
   cashEnabled: boolean;
   cashOnlyBalance: boolean;
+  allowPayInClinic: boolean;
   cardCaptureEnabled: boolean;
   cardCapturePolicy: string | null;
   depositCents: number;
@@ -117,14 +118,18 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
 
 
 
+  // "Pay in full in cash" is governed by the clinic's own "Allow pay in
+  // clinic" toggle — independent of deposits.
+  const cashFullAvailable = !!configured && (opts as ConfiguredOptions).allowPayInClinic !== false;
   // "Pay deposit now, rest in cash" is available whenever the clinic takes
-  // deposits, allows pay-in-clinic and the deposit is smaller than the total.
+  // deposits, accepts cash at the clinic (either toggle) and the deposit is
+  // smaller than the total.
   const cashDepositAvailable = !!configured
     && !depositWaived
     && !!(opts as ConfiguredOptions).depositEnabled
     && effectiveDepositCents >= 100
     && effectiveDepositCents < treatmentTotalCents
-    && !!(opts as ConfiguredOptions).cashEnabled;
+    && (cashFullAvailable || !!(opts as ConfiguredOptions).cashOnlyBalance);
 
   // Methods depend on the selected mode: deposits are always card-only
   // (Klarna/Clearpay can't save a reusable card on file). Full payments allow
