@@ -19,6 +19,10 @@ const tabs = [
 
 function MarketingLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
+  // The SMS blast page is SMS-only — skip the email marketing header and tabs.
+  if (pathname.startsWith('/dashboard/marketing/sms')) {
+    return <Outlet />
+  }
   return (
     <div className="space-y-6">
       <div>
