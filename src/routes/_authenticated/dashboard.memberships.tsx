@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -13,7 +13,7 @@ import {
   inviteToMembershipPlan,
 } from "@/lib/memberships.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
-import { getMyProfile } from "@/lib/profiles.functions";
+import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -97,6 +97,7 @@ function MembershipsPage() {
   const adjustFn = useServerFn(adjustPatientCredit);
   const candidatesFn = useServerFn(listMembershipInviteCandidates);
   const inviteFn = useServerFn(inviteToMembershipPlan);
+  const updateProfileFn = useServerFn(updateProfile);
 
   const plansQ = useQuery({ queryKey: ["membership-plans"], queryFn: () => listPlansFn() });
   const membersQ = useQuery({ queryKey: ["patient-memberships"], queryFn: () => listMembersFn() });
@@ -115,6 +116,38 @@ function MembershipsPage() {
   const [inviteEmails, setInviteEmails] = useState("");
   const [inviteMessage, setInviteMessage] = useState("");
   const [inviting, setInviting] = useState(false);
+
+  const [heroTitle, setHeroTitle] = useState("");
+  const [heroSubtitle, setHeroSubtitle] = useState("");
+  const [savingHero, setSavingHero] = useState(false);
+
+  useEffect(() => {
+    const p = profileQ.data as { membership_hero_title?: string | null; membership_hero_subtitle?: string | null } | undefined;
+    if (!p) return;
+    setHeroTitle(p.membership_hero_title ?? "");
+    setHeroSubtitle(p.membership_hero_subtitle ?? "");
+  }, [profileQ.data]);
+
+  async function handleSaveHero() {
+    const profile = profileQ.data as { id?: string } | undefined;
+    if (!profile?.id) return;
+    setSavingHero(true);
+    try {
+      await updateProfileFn({
+        data: {
+          id: profile.id,
+          membership_hero_title: heroTitle.trim() || null,
+          membership_hero_subtitle: heroSubtitle.trim() || null,
+        },
+      });
+      toast.success("Membership page wording saved");
+      qc.invalidateQueries({ queryKey: ["profile-for-memberships"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not save wording");
+    } finally {
+      setSavingHero(false);
+    }
+  }
 
   const candidatesQ = useQuery({
     queryKey: ["membership-invite-candidates"],
@@ -311,6 +344,53 @@ function MembershipsPage() {
           )}
         </CardContent></Card>
       </div>
+
+      <Card>
+        <CardContent className="space-y-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="font-semibold">Membership page headline</div>
+              <p className="text-xs text-muted-foreground">
+                Customise the wording patients see at the top of your public memberships page.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              disabled={savingHero || !profileQ.data}
+              onClick={handleSaveHero}
+            >
+              {savingHero ? "Saving…" : "Save wording"}
+            </Button>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="hero-title">Headline</Label>
+            <Input
+              id="hero-title"
+              value={heroTitle}
+              onChange={(e) => setHeroTitle(e.target.value)}
+              placeholder="Look after your skin, every month"
+              maxLength={120}
+            />
+            <p className="text-xs text-muted-foreground">
+              Leave blank to use the default headline.
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="hero-subtitle">Intro text</Label>
+            <Textarea
+              id="hero-subtitle"
+              value={heroSubtitle}
+              onChange={(e) => setHeroSubtitle(e.target.value)}
+              placeholder="Join a plan with us. Pay monthly by card, build a savings pot of treatment credit and enjoy member pricing and perks."
+              rows={3}
+              maxLength={500}
+            />
+            <p className="text-xs text-muted-foreground">
+              Leave blank to use the default intro.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       <Tabs defaultValue="plans">
         <TabsList>

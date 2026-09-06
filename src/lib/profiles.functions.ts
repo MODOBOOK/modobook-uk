@@ -211,6 +211,8 @@ export const updateProfile = createServerFn({ method: "POST" })
       qualifications?: { label: string; year?: string }[];
       timeline?: { year: string; label: string }[];
       avatar_url?: string | null;
+      membership_hero_title?: string | null;
+      membership_hero_subtitle?: string | null;
     }) => input,
   )
 
@@ -277,6 +279,8 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.qualifications !== undefined) update.qualifications = data.qualifications as Json;
     if (data.timeline !== undefined) update.timeline = data.timeline as Json;
     if (data.avatar_url !== undefined) update.avatar_url = data.avatar_url;
+    if (data.membership_hero_title !== undefined) update.membership_hero_title = data.membership_hero_title;
+    if (data.membership_hero_subtitle !== undefined) update.membership_hero_subtitle = data.membership_hero_subtitle;
 
     const passthroughKeys = [
       "booking_min_notice_hours","booking_max_lead_days","booking_buffer_before_minutes",
