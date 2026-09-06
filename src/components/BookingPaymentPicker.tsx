@@ -5,7 +5,7 @@ import { getPublicPaymentOptions, type PaymentChoice } from "@/lib/public-bookin
 import { CreditCard, ShieldCheck } from "lucide-react";
 import { platformFeeCents, PLATFORM_FEE_LABEL } from "@/lib/platform-fee";
 
-type BookingMode = "deposit" | "full" | "cash" | "card_capture";
+type BookingMode = "deposit" | "full" | "cash" | "cash_deposit" | "card_capture";
 
 const DEFAULT_POLICY =
   "I authorise the clinic to securely store my card details and to charge the cancellation or no-show fee set out in their booking policy if I cancel late or do not attend.";
@@ -117,6 +117,15 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
 
 
 
+  // "Pay deposit now, rest in cash" is available whenever the clinic takes
+  // deposits, allows pay-in-clinic and the deposit is smaller than the total.
+  const cashDepositAvailable = !!configured
+    && !depositWaived
+    && !!(opts as ConfiguredOptions).depositEnabled
+    && effectiveDepositCents >= 100
+    && effectiveDepositCents < treatmentTotalCents
+    && !!(opts as ConfiguredOptions).cashEnabled;
+
   // Methods depend on the selected mode: deposits are always card-only
   // (Klarna/Clearpay can't save a reusable card on file). Full payments allow
   // any method the clinic has enabled.
@@ -124,7 +133,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     if (!configured) return [] as Array<"card" | "klarna" | "clearpay">;
     const o = opts as ConfiguredOptions;
     const mode = value?.mode ?? availableModes[0];
-    if (mode === "deposit" || mode === "card_capture") {
+    if (mode === "deposit" || mode === "cash_deposit" || mode === "card_capture") {
       return o.cardEnabled ? (["card"] as Array<"card" | "klarna" | "clearpay">) : [];
     }
     const arr: Array<"card" | "klarna" | "clearpay"> = [];
@@ -158,7 +167,9 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
       return;
     }
     if (!value) return;
-    const chosenMode = availableModes.includes(value.mode) ? value.mode : availableModes[0];
+    const chosenMode = value.mode === "cash_deposit"
+      ? (cashDepositAvailable ? "cash_deposit" : (availableModes.includes("cash") ? "cash" : availableModes[0]))
+      : availableModes.includes(value.mode) ? value.mode : availableModes[0];
     // Cash mode doesn't need a method; keep any prior method for stability.
     const needsMethod = chosenMode !== "cash" && chosenMode !== "card_capture";
     const chosenMethod = availableMethods.includes(value.method)
@@ -179,12 +190,14 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     if (value.mode === "deposit" && !depositWaived && o.requireDepositToConfirm && o.depositEnabled && availableMethods.includes("card")) {
       return { mode: "deposit" as const, method: "card" as const };
     }
-    const mode = availableModes.includes(value.mode) ? value.mode : (availableModes[0] ?? "full");
+    const mode = value.mode === "cash_deposit"
+      ? (cashDepositAvailable ? ("cash_deposit" as const) : ((availableModes.includes("cash") ? "cash" : availableModes[0]) ?? "full"))
+      : availableModes.includes(value.mode) ? value.mode : (availableModes[0] ?? "full");
     const method = availableMethods.includes(value.method) ? value.method : (availableMethods[0] ?? "card");
     // When deposit equals the full price, treat it as a full payment.
     const normalizedMode = mode === "deposit" && effectiveDepositCents === treatmentTotalCents ? "full" : mode;
     return { mode: normalizedMode, method, policyAgreed: value.policyAgreed === true };
-  }, [value, opts, availableModes, availableMethods, depositWaived, effectiveDepositCents, treatmentTotalCents]);
+  }, [value, opts, availableModes, availableMethods, depositWaived, effectiveDepositCents, treatmentTotalCents, cashDepositAvailable]);
 
 
   if (!configured || availableModes.length === 0) return null;
@@ -197,7 +210,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   const o = opts as ConfiguredOptions;
   const forceDepositCard = !depositWaived && o.requireDepositToConfirm && chosen?.mode === "deposit";
 
-  const baseCents = chosen?.mode === "deposit" ? effectiveDepositCents : treatmentTotalCents;
+  const baseCents = chosen?.mode === "deposit" || chosen?.mode === "cash_deposit" ? effectiveDepositCents : treatmentTotalCents;
   // One uniform platform fee across every online payment method. Cash / pay in
   // clinic never carries it, and neither does a card-capture-only booking.
   const isOnlinePayment = !!chosen && chosen.mode !== "cash";
@@ -231,7 +244,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   };
 
   const selectMode = (mode: BookingMode) => {
-    const method = mode === "deposit" && o.requireDepositToConfirm && availableMethods.includes("card")
+    const method = (mode === "deposit" && o.requireDepositToConfirm && availableMethods.includes("card")) || mode === "cash_deposit"
       ? "card"
       : availableMethods[0] ?? "card";
     if (!chosen) {
@@ -240,7 +253,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
       onChange({
         ...chosen,
         mode,
-        method: mode === "deposit" || mode === "card_capture" ? method : chosen.method,
+        method: mode === "deposit" || mode === "cash_deposit" || mode === "card_capture" ? method : chosen.method,
         // Consent is specific to the card-capture option; drop it otherwise.
         policyAgreed: mode === "card_capture" ? chosen.policyAgreed === true : undefined,
       });
@@ -256,6 +269,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   };
 
   const isCash = chosen?.mode === "cash";
+  const isCashDeposit = chosen?.mode === "cash_deposit";
   const isCardCapture = chosen?.mode === "card_capture";
   const policyText = (o.cardCapturePolicy ?? "").trim() || DEFAULT_POLICY;
 
@@ -315,13 +329,57 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
                 type="button"
                 onClick={() => selectMode("cash")}
                 className="text-left rounded-xl border-2 px-3 py-2.5 transition sm:col-span-2"
-                style={optionStyle(chosen?.mode === "cash")}
+                style={optionStyle(chosen?.mode === "cash" || chosen?.mode === "cash_deposit")}
               >
                 <div className="text-sm font-semibold">Pay in cash at your appointment</div>
-                <div className="text-xs opacity-75">Nothing to pay now — please bring £{totalAmount.toFixed(2)} in cash on the day.</div>
+                <div className="text-xs opacity-75">
+                  {cashDepositAvailable
+                    ? "Choose below: secure with a deposit now, or pay the full amount in cash on the day."
+                    : `Nothing to pay now — please bring £${totalAmount.toFixed(2)} in cash on the day.`}
+                </div>
               </button>
             )}
           </div>
+          {(chosen?.mode === "cash" || chosen?.mode === "cash_deposit") && cashDepositAvailable && (
+            <div className="mt-2 space-y-2">
+              {([
+                {
+                  mode: "cash_deposit" as const,
+                  title: `Pay ${formatGBP(effectiveDepositCents)} deposit now`,
+                  sub: `Card payment today — remaining ${formatGBP(treatmentTotalCents - effectiveDepositCents)} in cash on the day.`,
+                },
+                {
+                  mode: "cash" as const,
+                  title: "Pay in full in cash",
+                  sub: `Nothing to pay now — please bring ${formatGBP(treatmentTotalCents)} in cash on the day.`,
+                },
+              ]).map((opt) => {
+                const selected = chosen?.mode === opt.mode;
+                return (
+                  <button
+                    key={opt.mode}
+                    type="button"
+                    onClick={() => selectMode(opt.mode)}
+                    className="w-full text-left rounded-xl border-2 px-3 py-2.5 transition flex items-start gap-2.5"
+                    style={optionStyle(selected)}
+                  >
+                    <span
+                      className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2"
+                      style={accent ? { borderColor: accent } : {}}
+                    >
+                      {selected && (
+                        <span className="h-2 w-2 rounded-full" style={accent ? { background: accent } : { background: "currentColor" }} />
+                      )}
+                    </span>
+                    <span>
+                      <span className="block text-sm font-semibold">{opt.title}</span>
+                      <span className="block text-xs opacity-75">{opt.sub}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -388,6 +446,32 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
               <span className="text-lg font-bold" style={headingStyle}>{formatGBP(treatmentTotalCents)}</span>
             </div>
             <p className="mt-1 text-xs opacity-70">You won't be charged online. Please bring cash on the day.</p>
+          </div>
+        ) : isCashDeposit ? (
+          <div
+            className="mt-4 pt-3 space-y-1.5 text-sm border-t"
+            style={accent ? { borderColor: `color-mix(in oklab, ${accent} 25%, transparent)` } : undefined}
+          >
+            <div className="flex items-baseline justify-between">
+              <span className="opacity-70">Deposit</span>
+              <span>{formatGBP(effectiveDepositCents)}</span>
+            </div>
+            {surchargeCents > 0 && (
+              <div className="flex items-baseline justify-between">
+                <span className="opacity-70">{PLATFORM_FEE_LABEL}</span>
+                <span>{formatGBP(surchargeCents)}</span>
+              </div>
+            )}
+            <div
+              className="flex items-baseline justify-between border-t pt-2 mt-1"
+              style={accent ? { borderColor: `color-mix(in oklab, ${accent} 25%, transparent)` } : undefined}
+            >
+              <span className="font-medium">Deposit today</span>
+              <span className="text-lg font-bold" style={headingStyle}>{formatGBP(totalCents)}</span>
+            </div>
+            <p className="mt-1 text-xs opacity-70">
+              Remaining {formatGBP(treatmentTotalCents - effectiveDepositCents)} to pay in cash at your appointment.
+            </p>
           </div>
         ) : (
           <div

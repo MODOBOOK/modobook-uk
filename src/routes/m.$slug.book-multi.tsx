@@ -469,7 +469,7 @@ function MultiBookPage() {
     setSubmitting(true);
     try {
       const applicableIds = new Set(discount?.applies_to_treatment_ids ?? []);
-      const depositOverridesSplit = paymentChoice?.mode === "deposit";
+      const depositOverridesSplit = paymentChoice?.mode === "deposit" || paymentChoice?.mode === "cash_deposit";
       const pickedAddonTotalCents = Math.round(
         availableAddons
           .filter((a) => addonPicks.has(a.id))
@@ -1513,7 +1513,7 @@ function MultiBookPage() {
                 })()}
 
                 {(() => {
-                  const isDeposit = paymentChoice?.mode === "deposit";
+                  const isDeposit = paymentChoice?.mode === "deposit" || paymentChoice?.mode === "cash_deposit";
                   // Deposit overrides split: charge deposit today, balance at appointment.
                   const anySplit = !isDeposit && splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split");
                   let dueToday = 0;

@@ -600,8 +600,9 @@ export const DEFAULT_CARD_CAPTURE_POLICY =
   "I authorise the clinic to securely store my card details and to charge the cancellation or no-show fee set out in their booking policy if I cancel late or do not attend.";
 
 export type PaymentChoice = {
-  /** "card_capture" = store the card (no charge now) and pay in clinic. */
-  mode: "deposit" | "full" | "cash" | "card_capture";
+  /** "card_capture" = store the card (no charge now) and pay in clinic.
+   *  "cash_deposit" = pay the deposit online now, remaining balance in cash. */
+  mode: "deposit" | "full" | "cash" | "cash_deposit" | "card_capture";
   method: "card" | "klarna" | "clearpay";
   /** Patient ticked the clinic's cancellation / no-show policy. */
   policyAgreed?: boolean;
@@ -1149,6 +1150,8 @@ async function maybeCreateBookingCheckout(args: {
   // when the patient hasn't opted for full payment.
   const wantsDeposit = args.choice?.mode === "full"
     ? false
+    : args.choice?.mode === "cash_deposit"
+    ? true
     : depositRequiredForProfile(p)
     ? true
     : args.choice
@@ -1392,7 +1395,7 @@ function bookingNeedsStripePayment(
   // Free bookings (£0) never require a Stripe payment, regardless of choice.
   if (totalAmount != null && !(totalAmount > 0)) return false;
   if (choice?.mode === "cash") return false;
-  if (choice?.mode === "deposit" || choice?.mode === "full" || choice?.mode === "card_capture") return true;
+  if (choice?.mode === "deposit" || choice?.mode === "cash_deposit" || choice?.mode === "full" || choice?.mode === "card_capture") return true;
   if (!profile) return false;
   if (!profile.stripe_connect_account_id) return false;
   if (profile.stripe_connect_onboarding_status && profile.stripe_connect_onboarding_status !== "active") return false;
@@ -1428,6 +1431,12 @@ function normaliseBookingPaymentChoice(
   }
   // Cash at the appointment: nothing is taken online and no card is stored.
   if (choice?.mode === "cash") return choice;
+  // Deposit now + cash balance: honoured only when the clinic takes deposits;
+  // charged card-only exactly like a normal deposit.
+  if (choice?.mode === "cash_deposit") {
+    if (depositRequiredForProfile(profile)) return { mode: "cash_deposit", method: "card" };
+    return { mode: "cash", method: choice.method };
+  }
   // Deposits are mandatory whenever the clinic enables deposits, and deposits
   // must be card-only so Stripe can both charge today and save the card for file.
   if (choice?.mode === "deposit" || (depositRequiredForProfile(profile) && choice?.mode !== "full")) {
