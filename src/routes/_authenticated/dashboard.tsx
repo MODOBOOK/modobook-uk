@@ -197,7 +197,7 @@ function DashboardLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background" style={themeStyle}>
+    <div className="clinic-shell flex min-h-screen bg-background" style={themeStyle}>
       {/* Desktop / iPad sidebar */}
       {/* Desktop / iPad sidebar — hidden on consultation detail for a focused, full-width workspace */}
       {!isConsultationDetail && (
@@ -264,7 +264,7 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
               return (
                 <div key={item.to}>
                   {showHeading && (
-                    <p className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                    <p className="cl-section-label px-3 pb-1.5 pt-5">
                       {section}
                     </p>
                   )}
@@ -301,10 +301,10 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
           })()}
         </nav>
 
-        <div className="border-t border-border/60 p-4 space-y-2">
+        <div className="border-t border-border/60 p-4 space-y-1.5">
           <Button
             variant="ghost"
-            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            className="cl-rail-link w-full justify-start"
             asChild
           >
             <a
@@ -317,7 +317,7 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
               WhatsApp support
             </a>
           </Button>
-          <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={signOut}>
+          <Button variant="ghost" className="cl-rail-link w-full justify-start" onClick={signOut}>
             <LogOut className="mr-2 h-4 w-4" />
             Sign out
           </Button>
@@ -407,11 +407,11 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
 
 
         {/* Desktop / iPad header */}
-        <header className="sticky top-0 z-40 hidden h-20 items-center justify-between border-b border-border/60 bg-background px-6 lg:flex lg:px-10">
+        <header className="sticky top-0 z-40 hidden h-20 items-center justify-between border-b border-border/60 bg-background/85 px-6 backdrop-blur-md lg:flex lg:px-10">
           <div className="flex items-center gap-3">
             <BackButton />
             <div>
-              <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Studio</div>
+              <div className="cl-section-label">Studio</div>
               <div className="font-serif text-xl leading-tight lg:text-2xl">{displayName || "Dashboard"}</div>
             </div>
           </div>
@@ -645,7 +645,7 @@ function NavSoon({
     <button
       type="button"
       onClick={onClick}
-      className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-muted-foreground transition-all hover:bg-sidebar-accent hover:text-foreground"
+      className="cl-rail-link group flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm"
     >
       <Icon className="h-4 w-4 opacity-60" />
       <span className="flex-1 tracking-wide opacity-70">{label}</span>
@@ -673,11 +673,7 @@ function NavLink({
     <Link
       to={to}
       activeOptions={{ exact: true }}
-      className={cn(
-        "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all",
-        "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
-        "[&.active]:bg-primary [&.active]:text-primary-foreground [&.active]:shadow-luxe",
-      )}
+      className="cl-rail-link group flex items-center gap-3 px-3 py-2.5 text-sm"
       onClick={onClick}
     >
       <Icon className="h-4 w-4 opacity-80" />

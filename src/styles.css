@@ -507,3 +507,34 @@ html, body {
   background: var(--sidebar-primary);
   color: var(--sidebar-primary-foreground);
 }
+
+/* ---------------------------------------------------------------
+ * Practitioner studio shell — same modern polish as the prescriber
+ * hub, but driven by each clinic's own brand tokens (set inline by
+ * useDashboardThemeStyle), so every practitioner's workspace feels
+ * like *their* clinic rather than a generic admin.
+ * -------------------------------------------------------------- */
+.clinic-shell .cl-rail-link {
+  border-radius: 0.75rem;
+  color: var(--muted-foreground);
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.clinic-shell .cl-rail-link:hover {
+  background: color-mix(in oklab, var(--primary) 9%, transparent);
+  color: var(--foreground);
+}
+.clinic-shell .cl-rail-link.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: 0 10px 22px -12px color-mix(in oklab, var(--primary) 70%, transparent);
+}
+.clinic-shell .cl-rail-link.active svg {
+  opacity: 1;
+}
+.clinic-shell .cl-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: color-mix(in oklab, var(--muted-foreground) 75%, transparent);
+}
