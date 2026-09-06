@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { membershipsEnabled } from "@/lib/feature-flags";
+
+const NOT_LIVE = "Memberships are not available for this clinic yet.";
 
 async function __activeProfileId(supabase: any, userId: string) {
   const { activeProfileId } = await import("./clinic-context.server");
@@ -45,7 +48,7 @@ export const listMembershipPlans = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const profile = await getProfile(context.supabase, context.userId);
-    if (!profile) return [];
+    if (!profile || !membershipsEnabled(profile.slug)) return [];
     const { data, error } = await context.supabase
       .from("membership_plans")
       .select("*")
@@ -61,6 +64,7 @@ export const saveMembershipPlan = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profile = await getProfile(context.supabase, context.userId);
     if (!profile) throw new Error("Profile not found");
+    if (!membershipsEnabled(profile.slug)) throw new Error(NOT_LIVE);
     if (!profile.stripe_connect_account_id) {
       throw new Error("Connect your Stripe account first (Dashboard → Payments).");
     }
@@ -125,6 +129,7 @@ export const deleteMembershipPlan = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profile = await getProfile(context.supabase, context.userId);
     if (!profile) throw new Error("Profile not found");
+    if (!membershipsEnabled(profile.slug)) throw new Error(NOT_LIVE);
     // Soft-delete so existing subscribers keep their history; the plan just
     // stops being sold.
     const { error } = await context.supabase
@@ -142,7 +147,7 @@ export const listMemberships = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const profile = await getProfile(context.supabase, context.userId);
-    if (!profile) return [];
+    if (!profile || !membershipsEnabled(profile.slug)) return [];
     const { data, error } = await context.supabase
       .from("patient_memberships")
       .select("*, membership_plans(name, price_cents, interval, credit_cents)")
@@ -159,6 +164,7 @@ export const setMembershipStatus = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profile = await getProfile(context.supabase, context.userId);
     if (!profile) throw new Error("Profile not found");
+    if (!membershipsEnabled(profile.slug)) throw new Error(NOT_LIVE);
     const { data: m } = await context.supabase
       .from("patient_memberships")
       .select("id, status, stripe_subscription_id")
@@ -199,6 +205,7 @@ export const adjustPatientCredit = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profile = await getProfile(context.supabase, context.userId);
     if (!profile) throw new Error("Profile not found");
+    if (!membershipsEnabled(profile.slug)) throw new Error(NOT_LIVE);
     const delta = Math.round(data.deltaCents);
     if (!delta) throw new Error("Enter a non-zero amount");
     if (Math.abs(delta) > 1_000_000) throw new Error("Amount too large");
@@ -237,7 +244,7 @@ export const getPatientCreditForClinic = createServerFn({ method: "GET" })
   .inputValidator((input: { patientUserId: string }) => input)
   .handler(async ({ data, context }) => {
     const profile = await getProfile(context.supabase, context.userId);
-    if (!profile) return { balanceCents: 0 };
+    if (!profile || !membershipsEnabled(profile.slug)) return { balanceCents: 0 };
     const { data: rows } = await context.supabase
       .from("patient_credit_ledger")
       .select("delta_pennies")
