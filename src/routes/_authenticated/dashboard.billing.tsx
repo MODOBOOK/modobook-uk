@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Minus, Plus, MapPin, Users, FileText, ExternalLink } from "lucide-react";
 import { captureReferralFromUrl, clearStoredReferral } from "@/lib/referral-capture";
+import { FREE_EXTRA_LOCATIONS } from "@/lib/free-locations";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard/billing")({
