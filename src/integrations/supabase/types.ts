@@ -9824,15 +9824,35 @@ export type Database = {
           bio: string
           brand_color: string
           cancellation_rules: Json
+          chooser_consultation_treatment_id: string
+          chooser_consultation_treatment_ids: string[]
+          chooser_enabled: boolean
+          chooser_intro_text: string
+          chooser_show_consultation: boolean
+          chooser_show_know: boolean
+          chooser_show_unsure: boolean
           clinic_name: string
+          contact_sms_number: string
+          contact_whatsapp_number: string
           created_at: string
           deposit_amount_cents: number
+          deposit_percent: number
           deposit_policy_text: string
+          deposit_type: string
+          display_name_mode: string
+          favourite_treatment_ids: string[]
+          favourites_custom_title: string
+          favourites_enabled: boolean
           full_name: string
           hero_url: string
           id: string
           membership_hero_subtitle: string
           membership_hero_title: string
+          model_slots_position: string
+          no_refund_policy_enabled: boolean
+          no_refund_policy_text: string
+          payment_pass_fees_to_customer: boolean
+          practitioner_selection_mode: string
           qualifications: Json
           slug: string
           social_links: Json
