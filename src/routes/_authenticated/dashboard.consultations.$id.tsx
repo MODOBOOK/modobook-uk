@@ -504,8 +504,22 @@ function Step4({ plan, onChange }: any) {
   );
 }
 
-function Step5({ consent, patientName, onChange }: any) {
+function Step5({ consultationId, consent, patientName, onChange, onLinked }: any) {
+  const saveConsent = useServerFn(saveConsultationConsentToProfile);
+  const [savingConsent, setSavingConsent] = useState(false);
+  async function saveToProfile() {
+    setSavingConsent(true);
+    try {
+      const res: any = await saveConsent({ data: { id: consultationId } });
+      if (res?.client_id) onLinked?.(res.client_id);
+      if (res?.saved) toast.success("Consent saved to the patient's profile");
+      else toast.error("Ask the patient to sign first");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to save");
+    } finally { setSavingConsent(false); }
+  }
   const body = consent?.body ?? defaultConsent(patientName);
+
   const attachedIds: string[] = Array.isArray(consent?.attached_template_ids)
     ? consent.attached_template_ids
     : [];
