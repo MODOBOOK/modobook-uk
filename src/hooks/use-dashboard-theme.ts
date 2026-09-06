@@ -15,7 +15,7 @@ import { resolveDashboardTheme } from "@/lib/dashboard-appearance";
  * Popover, Select) — which render outside the dashboard wrapper — inherit
  * the same theme.
  */
-export function useDashboardThemeStyle(): CSSProperties {
+export function useDashboardThemeStyle(enabled = true): CSSProperties {
   const fn = useServerFn(getMyTheme);
   const { data: theme } = useQuery({
     queryKey: ["my-theme"],
@@ -24,13 +24,17 @@ export function useDashboardThemeStyle(): CSSProperties {
   });
 
   const vars = useMemo<Record<string, string>>(() => {
+    // Disabled surfaces (e.g. the Prescriber Hub) always use the clean
+    // clinical palette via .rx-theme, never the clinic's brand colours.
+    if (!enabled) return {};
     // resolveDashboardTheme falls back to the general MODO Clinical palette
     // when the practitioner hasn't saved a theme.
     return buildThemeVars(resolveDashboardTheme((theme as Record<string, unknown>) ?? null));
-  }, [theme]);
+  }, [theme, enabled]);
 
   const serialized = JSON.stringify(vars);
   useEffect(() => {
+    if (!enabled) return;
     const root = document.documentElement;
     const applied: string[] = [];
     for (const [key, val] of Object.entries(vars)) {
@@ -41,7 +45,7 @@ export function useDashboardThemeStyle(): CSSProperties {
       for (const key of applied) root.style.removeProperty(key);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [serialized]);
+  }, [serialized, enabled]);
 
   return vars as CSSProperties;
 }
