@@ -5,14 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  CalendarDays,
   ExternalLink,
   Copy,
-  CalendarPlus,
   FileText,
   ChevronRight,
-  Sparkles,
-  Info,
   Stethoscope,
   Wallet,
 } from "lucide-react";
