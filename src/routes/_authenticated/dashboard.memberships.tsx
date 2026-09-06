@@ -9,6 +9,8 @@ import {
   listMemberships,
   setMembershipStatus,
   adjustPatientCredit,
+  listMembershipInviteCandidates,
+  inviteToMembershipPlan,
 } from "@/lib/memberships.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
@@ -23,7 +25,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Pencil, Pause, Play, XCircle, Crown, Wallet, Users } from "lucide-react";
+import { Plus, Pencil, Pause, Play, XCircle, Crown, Wallet, Users, Mail, Search } from "lucide-react";
 import { toast } from "sonner";
 import { membershipsEnabled } from "@/lib/feature-flags";
 
@@ -89,6 +91,8 @@ function MembershipsPage() {
   const delFn = useServerFn(deleteMembershipPlan);
   const statusFn = useServerFn(setMembershipStatus);
   const adjustFn = useServerFn(adjustPatientCredit);
+  const candidatesFn = useServerFn(listMembershipInviteCandidates);
+  const inviteFn = useServerFn(inviteToMembershipPlan);
 
   const plansQ = useQuery({ queryKey: ["membership-plans"], queryFn: () => listPlansFn() });
   const membersQ = useQuery({ queryKey: ["patient-memberships"], queryFn: () => listMembersFn() });
@@ -101,6 +105,58 @@ function MembershipsPage() {
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustNote, setAdjustNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [invitePlan, setInvitePlan] = useState<Plan | null>(null);
+  const [inviteSearch, setInviteSearch] = useState("");
+  const [inviteIds, setInviteIds] = useState<string[]>([]);
+  const [inviteEmails, setInviteEmails] = useState("");
+  const [inviteMessage, setInviteMessage] = useState("");
+  const [inviting, setInviting] = useState(false);
+
+  const candidatesQ = useQuery({
+    queryKey: ["membership-invite-candidates"],
+    queryFn: () => candidatesFn(),
+    enabled: !!invitePlan,
+  });
+  const candidates = (candidatesQ.data ?? []) as Array<{ id: string; name: string; email: string }>;
+  const filteredCandidates = candidates.filter((c) => {
+    const q = inviteSearch.trim().toLowerCase();
+    if (!q) return true;
+    return c.name.toLowerCase().includes(q) || c.email.includes(q);
+  });
+
+  async function handleInvite() {
+    if (!invitePlan) return;
+    const extraEmails = inviteEmails
+      .split(/[\s,;]+/)
+      .map((e) => e.trim())
+      .filter((e) => e.includes("@"));
+    if (inviteIds.length === 0 && extraEmails.length === 0) {
+      toast.error("Pick at least one patient or add an email address.");
+      return;
+    }
+    setInviting(true);
+    try {
+      const res = (await inviteFn({
+        data: {
+          planId: invitePlan.id,
+          clientIds: inviteIds,
+          extraEmails,
+          message: inviteMessage.trim() || null,
+        },
+      })) as { sent: number; failed: string[] };
+      toast.success(`Invitation sent to ${res.sent} patient${res.sent === 1 ? "" : "s"}`);
+      if (res.failed.length) toast.error(`Couldn't send to ${res.failed.length} address(es)`);
+      setInvitePlan(null);
+      setInviteIds([]);
+      setInviteEmails("");
+      setInviteMessage("");
+      setInviteSearch("");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't send invitations");
+    } finally {
+      setInviting(false);
+    }
+  }
 
   const plans = (plansQ.data ?? []) as unknown as Plan[];
   const members = (membersQ.data ?? []) as Member[];
@@ -281,7 +337,10 @@ function MembershipsPage() {
                   </p>
                   {p.description && <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{p.description}</p>}
                 </div>
-                <div className="flex shrink-0 gap-2">
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  <Button size="sm" onClick={() => { setInvitePlan(p); setInviteIds([]); }} disabled={!p.active}>
+                    <Mail className="mr-1 h-3.5 w-3.5" /> Invite patients
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => { setEditing(p); setOpen(true); }}>
                     <Pencil className="mr-1 h-3.5 w-3.5" /> Edit
                   </Button>
