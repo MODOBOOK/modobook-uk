@@ -217,9 +217,8 @@ function BookingsPage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [anchor, setAnchor] = useState(new Date());
-  const [view, setView] = useState<ViewMode>(() =>
-    typeof window !== "undefined" && window.innerWidth < 768 ? "3day" : "week"
-  );
+  // Open straight into the full month: tap a date to scroll into that day.
+  const [view, setView] = useState<ViewMode>("month");
   const [actionsOpen, setActionsOpen] = useState(false);
   const [selectedAppt, setSelectedAppt] = useState<Appt | null>(null);
   const [showPayLink, setShowPayLink] = useState(false);
