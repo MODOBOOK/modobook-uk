@@ -286,9 +286,9 @@ const [saving, setSaving] = useState(false);
                   s.payment_pass_fees_to_customer ? "opacity-70" : "border-primary bg-primary/5"
                 }`}
               >
-                <div className="font-medium">I pay the fee</div>
+                <div className="font-medium">I pay the Stripe fee</div>
                 <div className="text-xs text-muted-foreground">
-                  Client pays the advertised price. The fee comes out of your payout.
+                  Client pays the advertised price. The Stripe fee comes out of your payout.
                 </div>
               </button>
               <button
