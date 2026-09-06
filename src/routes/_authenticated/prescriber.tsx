@@ -101,17 +101,18 @@ function PrescriberLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="hidden w-64 shrink-0 flex-col border-r bg-sidebar lg:flex">
-        <div className="flex h-20 items-center gap-3 border-b px-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
+    <div className="rx-theme flex min-h-screen bg-background text-foreground">
+      <aside className="rx-rail hidden w-64 shrink-0 flex-col border-r lg:flex">
+        <div className="flex h-20 items-center gap-3 border-b border-[var(--sidebar-border)] px-5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)]">
             <Stethoscope className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <div className="truncate font-serif text-lg leading-tight">{name}</div>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Prescriber</div>
+            <div className="truncate text-lg font-semibold leading-tight">{name}</div>
+            <div className="text-[10px] uppercase tracking-[0.2em] opacity-70">Prescriber Hub</div>
           </div>
         </div>
+
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-6">
           {nav.map((item) => {
             const active = pathname.startsWith(item.to);
@@ -120,25 +121,18 @@ function PrescriberLayout() {
               <Link
                 key={item.to}
                 to={item.to}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all",
-                  active
-                    ? "bg-primary text-primary-foreground shadow-luxe"
-                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
-                )}
+                data-active={active}
+                className="rx-rail-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all"
               >
                 <item.icon className="h-4 w-4 opacity-80" />
                 <span className="flex-1 tracking-wide">{item.label}</span>
                 {count > 0 && (
-                  <span className={cn(
-                    "ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
-                    active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary text-primary-foreground",
-                  )}>{count}</span>
+                  <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--sidebar-primary)] px-1.5 text-[11px] font-semibold text-[var(--sidebar-primary-foreground)]">{count}</span>
                 )}
               </Link>
             );
           })}
-          <div className="px-3 pb-1 pt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">More</div>
+          <div className="px-3 pb-1 pt-5 text-[10px] font-semibold uppercase tracking-[0.2em] opacity-50">More</div>
           {moreNav.map((item) => {
             const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
             const count = badges[item.key] ?? 0;
@@ -146,20 +140,13 @@ function PrescriberLayout() {
               <Link
                 key={item.to}
                 to={item.to}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
-                  active
-                    ? "bg-primary text-primary-foreground shadow-luxe"
-                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
-                )}
+                data-active={active}
+                className="rx-rail-link flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all"
               >
                 <item.icon className="h-4 w-4 opacity-80" />
                 <span className="flex-1 tracking-wide">{item.label}</span>
                 {count > 0 && (
-                  <span className={cn(
-                    "ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
-                    active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary text-primary-foreground",
-                  )}>{count}</span>
+                  <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--sidebar-primary)] px-1.5 text-[11px] font-semibold text-[var(--sidebar-primary-foreground)]">{count}</span>
                 )}
               </Link>
             );
@@ -167,38 +154,42 @@ function PrescriberLayout() {
           {hasClinic && (
             <Link
               to="/dashboard"
-              className="mt-4 flex items-center gap-3 rounded-lg border border-dashed px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground"
+              className="rx-rail-link mt-4 flex items-center gap-3 rounded-xl border border-dashed border-[var(--sidebar-border)] px-3 py-2.5 text-sm"
             >
               <Building2 className="h-4 w-4" />
               <span>Switch to clinic dashboard</span>
             </Link>
           )}
         </nav>
-        <div className="border-t p-4">
-          <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={signOut}>
+        <div className="border-t border-[var(--sidebar-border)] p-4">
+          <Button variant="ghost" className="rx-rail-link w-full justify-start" onClick={signOut}>
             <LogOut className="mr-2 h-4 w-4" />
             Sign out
           </Button>
         </div>
       </aside>
 
+
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between gap-2 border-b px-4 lg:px-10">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-2 border-b border-[var(--sidebar-border)] bg-[var(--sidebar)] px-4 text-[var(--sidebar-foreground)] lg:px-10">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground lg:hidden">
-              <Stethoscope className="h-4 w-4" />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)] lg:hidden">
+              <Stethoscope className="h-4.5 w-4.5" />
             </div>
             <div className="min-w-0">
-              <div className="truncate font-serif text-base lg:text-xl">{name}</div>
-              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Prescriber Hub</div>
+              <div className="truncate text-base font-semibold lg:text-xl">{name}</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] opacity-70">Prescriber Hub</div>
             </div>
           </div>
           {hasClinic && (
             <Link to="/dashboard" className="lg:hidden">
-              <Button variant="outline" size="sm" className="shrink-0">Clinic</Button>
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--sidebar-border)] px-3 py-1.5 text-xs font-medium">
+                <Building2 className="h-3.5 w-3.5" /> Clinic
+              </span>
             </Link>
           )}
         </header>
+
 
         <main className="min-w-0 flex-1 overflow-x-hidden p-5 pb-24 lg:p-10">
           <Outlet />
