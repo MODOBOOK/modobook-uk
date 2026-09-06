@@ -18,6 +18,7 @@ import {
   Pill,
   ArrowRight,
   ChevronRight,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
