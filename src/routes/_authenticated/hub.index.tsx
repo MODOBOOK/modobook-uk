@@ -207,7 +207,9 @@ function HubIndex() {
           <ShieldCheck className="h-3.5 w-3.5" /> Your hub code
         </div>
         <p className="mt-2 max-w-md text-sm opacity-85">
-          Share this with a prescriber so they can connect to your clinic.
+          {ctx.isPrescriber
+            ? "Share this with a clinic so they can connect with you and send referrals."
+            : "Share this with a prescriber so they can connect to your clinic."}
         </p>
         {code ? (
           <div className="mt-4 flex flex-wrap items-center gap-2">
