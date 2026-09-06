@@ -44,6 +44,10 @@ const planSchema = z.object({
     .default([]),
   discountPercent: z.number().min(0).max(100).nullish(),
   perks: z.string().max(2000).nullish(),
+  termsText: z.string().max(20000).nullish(),
+  termsCheckboxes: z
+    .array(z.object({ label: z.string().min(1).max(500), required: z.boolean().default(true) }))
+    .default([]),
   active: z.boolean().default(true),
 });
 
@@ -89,6 +93,8 @@ export const saveMembershipPlan = createServerFn({ method: "POST" })
       included_treatments: data.includedTreatments,
       discount_percent: data.discountPercent ?? null,
       perks: data.perks?.trim() || null,
+      terms_text: data.termsText?.trim() || null,
+      terms_checkboxes: data.termsCheckboxes,
       active: data.active,
     };
 
@@ -289,7 +295,7 @@ export const listPublicMembershipPlans = createServerFn({ method: "GET" })
     if (profileError || !profile) return { clinicName: null as string | null, plans: [] as never[] };
     const { data: plans } = await pub
       .from("membership_plans")
-      .select("id, name, description, price_cents, interval, credit_cents, spend_mode, discount_percent, perks, included_treatments")
+      .select("id, name, description, price_cents, interval, credit_cents, spend_mode, discount_percent, perks, included_treatments, terms_text, terms_checkboxes")
       .eq("profile_id", (profile as { id: string }).id)
       .eq("active", true)
       .order("price_cents", { ascending: true });
@@ -384,7 +390,9 @@ export const getMyMembershipForClinic = createServerFn({ method: "GET" })
 
 export const subscribeToMembershipPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { slug: string; planId: string }) => input)
+  .inputValidator(
+    (input: { slug: string; planId: string; acceptedCheckboxes?: string[] }) => input,
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     if (!membershipsEnabled(data.slug)) throw new Error(NOT_LIVE);
@@ -401,13 +409,15 @@ export const subscribeToMembershipPlan = createServerFn({ method: "POST" })
 
     const { data: planRow } = await supabase
       .from("membership_plans")
-      .select("id, name, price_cents, interval, stripe_price_id, active")
+      .select("id, name, price_cents, interval, stripe_price_id, active, terms_text, terms_checkboxes")
       .eq("id", data.planId)
       .eq("profile_id", p.id)
       .maybeSingle();
     const plan = planRow as {
       id: string; name: string; price_cents: number;
       interval: "month" | "year"; stripe_price_id: string | null; active: boolean;
+      terms_text: string | null;
+      terms_checkboxes: Array<{ label: string; required?: boolean }> | null;
     } | null;
     if (!plan?.active) throw new Error("This plan is no longer available.");
 
