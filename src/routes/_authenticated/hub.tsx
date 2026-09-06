@@ -135,7 +135,9 @@ function HubLayout() {
                   <span
                     className={cn(
                       "inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
-                      active ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary text-primary-foreground",
+                      active
+                        ? "bg-[var(--sidebar-primary-foreground)]/20 text-[var(--sidebar-primary-foreground)]"
+                        : "bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)]",
                     )}
                   >
                     {count}
@@ -146,7 +148,7 @@ function HubLayout() {
           })}
           <Link
             to="/dashboard"
-            className="mt-4 flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm text-muted-foreground transition hover:bg-primary/5 hover:text-foreground"
+            className="rx-rail-link mt-4 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back to dashboard</span>
