@@ -36,7 +36,7 @@ function AppearancePage() {
   useEffect(() => {
     load().then((t: Record<string, unknown> | null) => {
       if (!t) return;
-      setFollow(t["dashboard_follow_brand"] !== false);
+      setFollow(t["dashboard_follow_brand"] === true);
       if (t["dashboard_palette"]) setPalette(String(t["dashboard_palette"]));
       if (t["dashboard_heading_font"]) setHeading(String(t["dashboard_heading_font"]));
       if (t["dashboard_body_font"]) setBody(String(t["dashboard_body_font"]));
