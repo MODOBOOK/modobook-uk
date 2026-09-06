@@ -74,11 +74,11 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
     const ctx = await getHubContext().catch(() => null);
     const profile = await getMyProfile();
     // Pure prescriber (no clinic profile): send them to the prescriber workspace
-    if (!profile && ctx?.role === "prescriber") {
+    if (!profile && ctx?.isPrescriber) {
       throw redirect({ to: "/prescriber" });
     }
     if (!profile) throw redirect({ to: "/onboarding" });
-    return { profile, isPrescriber: ctx?.role === "prescriber" };
+    return { profile, isPrescriber: !!ctx?.isPrescriber };
   },
   component: DashboardLayout,
 });
@@ -375,6 +375,16 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel className="truncate">{displayName || "My Clinic"}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {isPrescriber && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/prescriber" className="font-medium text-primary">
+                          <Stethoscope className="mr-2 h-4 w-4" /> Prescriber workspace
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem asChild><Link to="/dashboard/settings">Settings</Link></DropdownMenuItem>
                   <DropdownMenuItem asChild><Link to="/dashboard/billing">Plan &amp; billing</Link></DropdownMenuItem>
                   <DropdownMenuItem asChild><Link to="/dashboard/payments">Payments</Link></DropdownMenuItem>
