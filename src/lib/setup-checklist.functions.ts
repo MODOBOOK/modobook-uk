@@ -26,7 +26,7 @@ export const getSetupChecklist = createServerFn({ method: "GET" })
     const { data: profile } = await supabase
       .from("profiles")
       .select(
-        "id, clinic_name, avatar_url, phone, welcome_intro_html, about_page, stripe_connect_account_id, deposit_amount_cents, deposit_percent, deposit_policy_text",
+        "id, created_at, clinic_name, avatar_url, phone, welcome_intro_html, about_page, stripe_connect_account_id, deposit_amount_cents, deposit_percent, deposit_policy_text",
       )
       .eq("id", await __activeProfileId(supabase, userId))
       .maybeSingle();
@@ -121,12 +121,16 @@ export const getSetupChecklist = createServerFn({ method: "GET" })
         ),
       },
     ];
+    const done = steps.filter((s) => s.done).length;
 
+    // The checklist is a nudge for new clinics, not a permanent fixture: if
+    // the account is over a week old and they haven't finished every step
+    // (some clinics never use every feature), stop showing it.
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    const createdAt = profile.created_at ? new Date(profile.created_at).getTime() : Date.now();
+    if (done < steps.length && Date.now() - createdAt > SEVEN_DAYS_MS) {
+      return { steps: [] as SetupStep[], done: 0, total: 0 };
+    }
 
-
-    return {
-      steps,
-      done: steps.filter((s) => s.done).length,
-      total: steps.length,
-    };
+    return { steps, done, total: steps.length };
   });
