@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
   SMS_TEMPLATES,
+  SMS_ENABLED_KEYS,
   SMS_SOFT_LIMIT,
   smsSegments,
   defaultSmsTemplate,
@@ -32,13 +33,13 @@ export function SmsTemplateEditor({
   return (
     <div className="space-y-4">
       <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700">
-        Web links are never sent by text — UK networks block them.{" "}
-        <code>{"{location}"}</code> inserts the location name, and{" "}
-        <code>{"{address}"}</code> the full address. The address is only allowed on booking
-        confirmations, reminders and reschedules; on other messages it's removed automatically.
+        Only these three messages go by text to keep costs down — cancellations, reschedules and
+        rebook/top-up reminders are always sent by free email instead. Web links are never sent by
+        text (UK networks block them). <code>{"{location}"}</code> inserts the location name and{" "}
+        <code>{"{address}"}</code> the full address.
       </p>
 
-      {SMS_TEMPLATES.map((t) => {
+      {SMS_TEMPLATES.filter((t) => (SMS_ENABLED_KEYS as string[]).includes(t.key)).map((t) => {
         const channel = channelFor(channels, t.key);
         const text = templates[t.key] ?? defaultSmsTemplate(t.key);
         const len = text.length;

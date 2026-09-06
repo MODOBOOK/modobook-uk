@@ -116,8 +116,8 @@ export const SMS_TEMPLATES: SmsTemplateMeta[] = [
   },
   {
     key: 'review-request',
-    label: 'Review request',
-    hint: 'Sent about 2 hours after the appointment.',
+    label: 'Aftercare & review',
+    hint: 'Sent about 2 hours after the appointment, pointing patients to their aftercare and review link.',
     tags: ['{name}', '{clinic}'],
     default:
       'Hi {name}, your appointment with {clinic} is complete. Check your emails for your review link and aftercare. Any issues, please contact your practitioner.',
