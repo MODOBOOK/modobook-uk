@@ -212,7 +212,7 @@ export const sendConnectRequest = createServerFn({ method: "POST" })
         p_body: `${profile.clinic_name ?? profile.full_name ?? "A clinic"} wants to connect with you.`,
         p_emoji: "🤝",
         p_link: "/prescriber/directory",
-        p_entity_id: null,
+        p_entity_id: undefined as never as string,
         p_entity_type: "prescriber_connect_request",
       });
     }
@@ -316,7 +316,7 @@ export const respondToConnectRequest = createServerFn({ method: "POST" })
             : `${presc?.full_name ?? "The prescriber"} isn't able to connect right now.`,
         p_emoji: data.action === "accept" ? "🤝" : "ℹ️",
         p_link: "/dashboard/find-prescriber",
-        p_entity_id: null,
+        p_entity_id: undefined as never as string,
         p_entity_type: "prescriber_connect_request",
       });
     }
