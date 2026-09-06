@@ -321,7 +321,9 @@ function Step1({ consultationId, medical, onChange, clientId, clientName, client
   onLinked: (pid: string) => void;
 }) {
   const ensure = useServerFn(ensureConsultationPatient);
+  const saveMedical = useServerFn(saveConsultationMedicalToProfile);
   const [linking, setLinking] = useState(false);
+  const [savingForm, setSavingForm] = useState(false);
   const answers = medical?.answers ?? {};
   const notes = medical?.notes ?? "";
   const toggle = (q: string, v: boolean) => onChange({ ...medical, answers: { ...answers, [q]: v } });
@@ -338,6 +340,19 @@ function Step1({ consultationId, medical, onChange, clientId, clientName, client
       toast.error(e?.message ?? "Failed to link patient");
     } finally { setLinking(false); }
   }
+
+  async function saveToProfile() {
+    setSavingForm(true);
+    try {
+      const res: any = await saveMedical({ data: { id: consultationId } });
+      if (res?.client_id) onLinked(res.client_id);
+      if (res?.saved) toast.success("Medical form saved to the patient's profile");
+      else toast.error("Nothing to save yet — tick some answers or add notes");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to save");
+    } finally { setSavingForm(false); }
+  }
+
 
   return (
     <div className="space-y-4">
