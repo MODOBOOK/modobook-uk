@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useServerFn } from '@tanstack/react-start'
 import {
   getSmsBlastAudience, listSmsBlasts, startSmsBlastCheckout, confirmSmsBlast, cancelSmsBlast,
+  sendSmsBlastTest,
 } from '@/lib/sms-marketing.functions'
 import { countSms, blastCost, formatPence, SMS_MIN_TEXTS } from '@/lib/sms-count'
 import { Button } from '@/components/ui/button'
@@ -48,6 +49,22 @@ function SmsBlastPage() {
   const checkoutFn = useServerFn(startSmsBlastCheckout)
   const confirmFn = useServerFn(confirmSmsBlast)
   const cancelFn = useServerFn(cancelSmsBlast)
+  const testFn = useServerFn(sendSmsBlastTest)
+  const [testBusy, setTestBusy] = useState(false)
+
+  async function sendTest() {
+    if (!body.trim()) { toast.error('Write your message first'); return }
+    setTestBusy(true)
+    try {
+      await testFn({ data: { body: body.trim() } })
+      toast.success('Test text sent to your phone')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Test text failed to send')
+    } finally {
+      setTestBusy(false)
+    }
+  }
+
 
   const [audience, setAudience] = useState<{ count: number; patients: Patient[]; pricePence: number; minTexts: number } | null>(null)
   const [blasts, setBlasts] = useState<Blast[]>([])
@@ -245,10 +262,22 @@ function SmsBlastPage() {
             <p className="text-xs text-muted-foreground">
               Paid up front by card. Texts go out from MODO as soon as the payment clears.
             </p>
-            <Button className="w-full sm:w-auto" disabled={busy || belowMin || !body.trim()} onClick={pay}>
-              {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CreditCard className="h-4 w-4 mr-2" />}
-              Pay {formatPence(cost.pence)} &amp; send
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+                disabled={busy || testBusy || !body.trim()}
+                onClick={sendTest}
+              >
+                {testBusy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Send test to me (free)
+              </Button>
+              <Button className="w-full sm:w-auto" disabled={busy || testBusy || belowMin || !body.trim()} onClick={pay}>
+                {busy ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CreditCard className="h-4 w-4 mr-2" />}
+                Pay {formatPence(cost.pence)} &amp; send
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
