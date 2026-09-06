@@ -524,6 +524,35 @@ function BookPage() {
     </a>
   ) : null;
 
+  const membershipPromoNode = hasMembershipPlans ? (
+    <Link
+      to="/m/$slug/memberships"
+      params={{ slug }}
+      className="group flex items-center justify-between gap-4 rounded-2xl border px-5 py-4 shadow-sm transition hover:shadow-md"
+      style={{ borderColor: `${brand}26`, backgroundColor: `${brand}0d`, color: textColor }}
+    >
+      <span className="flex min-w-0 items-center gap-3">
+        <span
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+          style={{ backgroundColor: `${brand}18`, color: brand }}
+        >
+          <Crown className="h-5 w-5" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-base font-semibold" style={{ color: brand }}>
+            Memberships
+          </span>
+          <span className="mt-0.5 block truncate text-sm opacity-70">
+            {lowestMembershipPrice
+              ? `From £${(lowestMembershipPrice / 100).toFixed(2)}/month — build treatment credit`
+              : "Join a plan and build treatment credit"}
+          </span>
+        </span>
+      </span>
+      <ArrowRight className="h-5 w-5 shrink-0 transition-transform group-hover:translate-x-0.5" style={{ color: brand }} />
+    </Link>
+  ) : null;
+
   // "Coming soon" locations are visible but cannot be booked yet.
   const bookableLocations = locations.filter(
     (l) => !(l as { coming_soon?: boolean | null }).coming_soon,
