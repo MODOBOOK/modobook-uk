@@ -126,12 +126,8 @@ function HubLayout() {
               <Link
                 key={item.to}
                 to={item.to}
-                className={cn(
-                  "flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all",
-                  active
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-primary/5 hover:text-foreground",
-                )}
+                data-active={active}
+                className="rx-rail-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all"
               >
                 <item.icon className="h-4 w-4 opacity-90" />
                 <span className="flex-1">{item.label === "Rx" ? "Rx requests" : item.label}</span>
