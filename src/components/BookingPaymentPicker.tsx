@@ -344,9 +344,11 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
               >
                 <div className="text-sm font-semibold">Pay in cash at your appointment</div>
                 <div className="text-xs opacity-75">
-                  {cashDepositAvailable
+                  {cashDepositAvailable && cashFullAvailable
                     ? "Choose below: secure with a deposit now, or pay the full amount in cash on the day."
-                    : `Nothing to pay now — please bring £${totalAmount.toFixed(2)} in cash on the day.`}
+                    : cashDepositAvailable
+                      ? `Pay ${formatGBP(effectiveDepositCents)} deposit now by card — the rest in cash on the day.`
+                      : `Nothing to pay now — please bring £${totalAmount.toFixed(2)} in cash on the day.`}
                 </div>
               </button>
             )}
