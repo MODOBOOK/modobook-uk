@@ -1101,6 +1101,22 @@ function BookTreatmentPage() {
               />
             </div>
           )}
+          {showPrices && patientUserId && creditAvailable && (
+            <div className="sm:col-span-2">
+              <label className="flex cursor-pointer items-center gap-2 rounded-md border bg-muted/40 p-3 text-sm">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={useCredit}
+                  onChange={(e) => setUseCredit(e.target.checked)}
+                />
+                <span>
+                  Use my membership credit — pot balance £{((creditPreview?.balanceCents ?? 0) / 100).toFixed(2)}
+                  {" "}(−£{(Math.min(creditPreview!.applicableCents, Math.round(price * 100)) / 100).toFixed(2)} on this booking)
+                </span>
+              </label>
+            </div>
+          )}
           <div className="sm:col-span-2">
             <ReferralCodeInput clinicSlug={slug} brand={brand} />
           </div>
