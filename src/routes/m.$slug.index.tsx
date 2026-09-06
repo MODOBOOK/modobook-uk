@@ -1360,6 +1360,10 @@ function BookPage() {
         </section>
       )}
 
+      {/* Mobile membership promo */}
+      {isMobile && membershipPromoNode && (
+        <section className="mx-auto mt-4 max-w-3xl px-4">{membershipPromoNode}</section>
+      )}
 
       {/* Model slots now render inside the Treatments tab after the user presses "I know what I want". */}
 
