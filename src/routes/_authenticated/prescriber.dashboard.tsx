@@ -74,6 +74,22 @@ function PrescriberDashboard() {
         <WalkInDialog trigger={<Button className="h-11 rounded-xl">+ New walk-in consult</Button>} />
       </div>
 
+      {showDirectoryNudge && (
+        <Link to="/prescriber/directory" className="block">
+          <Card className="border-primary/40 bg-primary/5 transition hover:bg-primary/10">
+            <CardContent className="flex items-center justify-between gap-3 p-4">
+              <div>
+                <p className="font-medium">Get discovered by clinics near you</p>
+                <p className="text-sm text-muted-foreground">
+                  Set up your Discovery listing — town, travel radius, services and rates — so practitioners can request to connect.
+                </p>
+              </div>
+              <ArrowRight className="h-5 w-5 shrink-0 text-primary" />
+            </CardContent>
+          </Card>
+        </Link>
+      )}
+
       {/* ACTION-NEEDED BOARD */}
       <div className="grid gap-3 md:grid-cols-2">
         <ActionCard
