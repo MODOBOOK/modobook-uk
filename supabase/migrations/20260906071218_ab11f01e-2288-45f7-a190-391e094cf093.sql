@@ -1,0 +1,5 @@
+CREATE POLICY "Owners manage compliance check templates" ON public.compliance_check_templates FOR ALL TO authenticated USING (public.is_profile_owner(profile_id)) WITH CHECK (public.is_profile_owner(profile_id));
+CREATE POLICY "Owners manage compliance audit templates" ON public.compliance_audit_templates FOR ALL TO authenticated USING (public.is_profile_owner(profile_id)) WITH CHECK (public.is_profile_owner(profile_id));
+CREATE POLICY "Owners manage compliance check records" ON public.compliance_check_records FOR ALL TO authenticated USING (public.is_profile_owner(profile_id)) WITH CHECK (public.is_profile_owner(profile_id));
+CREATE POLICY "Owners manage compliance audits" ON public.compliance_audits FOR ALL TO authenticated USING (public.is_profile_owner(profile_id)) WITH CHECK (public.is_profile_owner(profile_id));
+CREATE POLICY "Owners manage compliance actions" ON public.compliance_actions FOR ALL TO authenticated USING (public.is_profile_owner(profile_id)) WITH CHECK (public.is_profile_owner(profile_id));

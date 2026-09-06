@@ -43,12 +43,89 @@ function nextDue(frequency: string, from: string) {
 
 // ---- Overview -------------------------------------------------------------
 
+/**
+ * Insert any ready-made checks/audits the clinic doesn't already have.
+ * Shared by the automatic first-load seed and the manual button.
+ */
+async function seedPresets(db: any, profileId: string, checkKeys?: string[], auditKeys?: string[]) {
+  const today = todayIso();
+  const wantChecks = CHECK_PRESETS.filter((p) => !checkKeys || checkKeys.includes(p.key));
+  const wantAudits = AUDIT_PRESETS.filter((p) => !auditKeys || auditKeys.includes(p.key));
+
+  const [{ data: existingChecks }, { data: existingAudits }] = await Promise.all([
+    db.from("compliance_check_templates").select("name").eq("profile_id", profileId),
+    db.from("compliance_audit_templates").select("name").eq("profile_id", profileId),
+  ]);
+  const haveCheck = new Set((existingChecks ?? []).map((r: any) => r.name));
+  const haveAudit = new Set((existingAudits ?? []).map((r: any) => r.name));
+
+  const checkRows = wantChecks
+    .filter((p) => !haveCheck.has(p.name))
+    .map((p, i) => ({
+      profile_id: profileId,
+      name: p.name,
+      kind: p.kind,
+      description: p.description,
+      frequency: p.frequency,
+      fields: p.fields,
+      next_due_on: today,
+      sort_order: i,
+      remind_email: true,
+      remind_in_app: true,
+      active: true,
+    }));
+  const auditRows = wantAudits
+    .filter((p) => !haveAudit.has(p.name))
+    .map((p) => ({
+      profile_id: profileId,
+      name: p.name,
+      description: p.description,
+      category: p.category,
+      questions: p.questions,
+      frequency: p.frequency,
+      next_due_on: nextDue(p.frequency, today) ?? today,
+      remind_email: true,
+      remind_in_app: true,
+      active: true,
+    }));
+
+  if (checkRows.length) {
+    const { error } = await db.from("compliance_check_templates").insert(checkRows);
+    if (error) throw error;
+  }
+  if (auditRows.length) {
+    const { error } = await db.from("compliance_audit_templates").insert(auditRows);
+    if (error) throw error;
+  }
+  return { checks: checkRows.length, audits: auditRows.length };
+}
+
 export const getCompliance = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const db = context.supabase as any;
     const a = await access(context as Ctx);
+
+    // First visit: give the clinic the full ready-made set, already scheduled
+    // with reminders, so audits open pre-filled with their questions.
+    const { count: tplCount } = await db
+      .from("compliance_check_templates")
+      .select("id", { count: "exact", head: true })
+      .eq("profile_id", a.profileId);
+    const { count: audCount } = await db
+      .from("compliance_audit_templates")
+      .select("id", { count: "exact", head: true })
+      .eq("profile_id", a.profileId);
+    if (!tplCount && !audCount) {
+      try {
+        await seedPresets(db, a.profileId);
+      } catch {
+        /* non-fatal — the page still loads and the button can retry */
+      }
+    }
+
     const [checks, audits, records, auditRuns, actions] = await Promise.all([
+
       db.from("compliance_check_templates").select("*").eq("profile_id", a.profileId).order("sort_order").order("name"),
       db.from("compliance_audit_templates").select("*").eq("profile_id", a.profileId).order("name"),
       db
@@ -91,56 +168,10 @@ export const seedComplianceDefaults = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const db = context.supabase as any;
     const a = await access(context as Ctx);
-    const today = todayIso();
-
-    const wantChecks = CHECK_PRESETS.filter((p) => !data.checkKeys || data.checkKeys.includes(p.key));
-    const wantAudits = AUDIT_PRESETS.filter((p) => !data.auditKeys || data.auditKeys.includes(p.key));
-
-    const { data: existingChecks } = await db
-      .from("compliance_check_templates")
-      .select("name")
-      .eq("profile_id", a.profileId);
-    const { data: existingAudits } = await db
-      .from("compliance_audit_templates")
-      .select("name")
-      .eq("profile_id", a.profileId);
-    const haveCheck = new Set((existingChecks ?? []).map((r: any) => r.name));
-    const haveAudit = new Set((existingAudits ?? []).map((r: any) => r.name));
-
-    const checkRows = wantChecks
-      .filter((p) => !haveCheck.has(p.name))
-      .map((p, i) => ({
-        profile_id: a.profileId,
-        name: p.name,
-        kind: p.kind,
-        description: p.description,
-        frequency: p.frequency,
-        fields: p.fields,
-        next_due_on: today,
-        sort_order: i,
-      }));
-    const auditRows = wantAudits
-      .filter((p) => !haveAudit.has(p.name))
-      .map((p) => ({
-        profile_id: a.profileId,
-        name: p.name,
-        description: p.description,
-        category: p.category,
-        questions: p.questions,
-        frequency: p.frequency,
-        next_due_on: nextDue(p.frequency, today) ?? today,
-      }));
-
-    if (checkRows.length) {
-      const { error } = await db.from("compliance_check_templates").insert(checkRows);
-      if (error) throw error;
-    }
-    if (auditRows.length) {
-      const { error } = await db.from("compliance_audit_templates").insert(auditRows);
-      if (error) throw error;
-    }
-    return { checks: checkRows.length, audits: auditRows.length };
+    return await seedPresets(db, a.profileId, data.checkKeys, data.auditKeys);
   });
+
+
 
 // ---- Check templates ------------------------------------------------------
 
