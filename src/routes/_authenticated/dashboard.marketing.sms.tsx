@@ -49,6 +49,22 @@ function SmsBlastPage() {
   const checkoutFn = useServerFn(startSmsBlastCheckout)
   const confirmFn = useServerFn(confirmSmsBlast)
   const cancelFn = useServerFn(cancelSmsBlast)
+  const testFn = useServerFn(sendSmsBlastTest)
+  const [testBusy, setTestBusy] = useState(false)
+
+  async function sendTest() {
+    if (!body.trim()) { toast.error('Write your message first'); return }
+    setTestBusy(true)
+    try {
+      await testFn({ data: { body: body.trim() } })
+      toast.success('Test text sent to your phone')
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Test text failed to send')
+    } finally {
+      setTestBusy(false)
+    }
+  }
+
 
   const [audience, setAudience] = useState<{ count: number; patients: Patient[]; pricePence: number; minTexts: number } | null>(null)
   const [blasts, setBlasts] = useState<Blast[]>([])
