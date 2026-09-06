@@ -289,6 +289,7 @@ function ModoLayout() {
               <TabLink slug={slug} to="/m/$slug" label={theme?.header_button_label || "Book"} exact />
               <TabLink slug={slug} to="/m/$slug/about" label="About" />
               <RewardsTabLink slug={slug} />
+              <MembershipsTabLink slug={slug} />
               <TabLink slug={slug} to="/m/$slug/reviews" label="Reviews" />
               <Link to="/m/$slug/account" params={{ slug }} aria-label="My account">
                 {/* Styled from the header's own text colour (currentColor) so the
@@ -334,7 +335,7 @@ function TabLink({
   exact,
 }: {
   slug: string;
-  to: "/m/$slug" | "/m/$slug/rewards" | "/m/$slug/reviews" | "/m/$slug/about" | "/m/$slug/training" | "/m/$slug/gift-cards";
+  to: "/m/$slug" | "/m/$slug/rewards" | "/m/$slug/reviews" | "/m/$slug/about" | "/m/$slug/training" | "/m/$slug/gift-cards" | "/m/$slug/memberships";
   label: string;
   exact?: boolean;
 }) {
@@ -372,4 +373,15 @@ function GiftCardsTabLink({ slug }: { slug: string }) {
   const cards = (q.data?.cards ?? []) as Array<unknown>;
   if (cards.length === 0) return null;
   return <TabLink slug={slug} to="/m/$slug/gift-cards" label="Gift cards" />;
+}
+
+function MembershipsTabLink({ slug }: { slug: string }) {
+  const fetchPlans = useServerFn(listPublicMembershipPlans);
+  const q = useQuery({
+    queryKey: ["public-memberships-visible", slug],
+    queryFn: () => fetchPlans({ data: { slug } }),
+    staleTime: 60_000,
+  });
+  if (!q.data || (q.data.plans as unknown[]).length === 0) return null;
+  return <TabLink slug={slug} to="/m/$slug/memberships" label="Memberships" />;
 }
