@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Crown, Wallet, CheckCircle2, Sparkles } from "lucide-react";
+import { Crown, Wallet, CheckCircle2, Sparkles, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { membershipsEnabled } from "@/lib/feature-flags";
 
