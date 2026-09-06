@@ -465,9 +465,7 @@ export const previewMembershipCredit = createServerFn({ method: "POST" })
   .inputValidator((input: { slug: string; treatmentIds: string[]; totalCents: number }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    if (!membershipsEnabled(data.slug)) {
-      return { applicableCents: 0, balanceCents: 0, mode: null as string | null };
-    }
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
