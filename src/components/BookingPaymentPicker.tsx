@@ -447,6 +447,32 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
             </div>
             <p className="mt-1 text-xs opacity-70">You won't be charged online. Please bring cash on the day.</p>
           </div>
+        ) : isCashDeposit ? (
+          <div
+            className="mt-4 pt-3 space-y-1.5 text-sm border-t"
+            style={accent ? { borderColor: `color-mix(in oklab, ${accent} 25%, transparent)` } : undefined}
+          >
+            <div className="flex items-baseline justify-between">
+              <span className="opacity-70">Deposit</span>
+              <span>{formatGBP(effectiveDepositCents)}</span>
+            </div>
+            {surchargeCents > 0 && (
+              <div className="flex items-baseline justify-between">
+                <span className="opacity-70">{PLATFORM_FEE_LABEL}</span>
+                <span>{formatGBP(surchargeCents)}</span>
+              </div>
+            )}
+            <div
+              className="flex items-baseline justify-between border-t pt-2 mt-1"
+              style={accent ? { borderColor: `color-mix(in oklab, ${accent} 25%, transparent)` } : undefined}
+            >
+              <span className="font-medium">Deposit today</span>
+              <span className="text-lg font-bold" style={headingStyle}>{formatGBP(totalCents)}</span>
+            </div>
+            <p className="mt-1 text-xs opacity-70">
+              Remaining {formatGBP(treatmentTotalCents - effectiveDepositCents)} to pay in cash at your appointment.
+            </p>
+          </div>
         ) : (
           <div
             className="mt-4 pt-3 space-y-1.5 text-sm border-t"
