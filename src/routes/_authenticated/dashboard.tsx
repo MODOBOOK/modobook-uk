@@ -153,13 +153,14 @@ const mobileTabs = [
 ];
 
 // While working inside the prescribing area, the bottom bar stays in that
-// context instead of throwing the user back into the clinic dashboard.
+// context instead of throwing the user back into the clinic dashboard. It is
+// the SAME shared Prescriber Hub bar used on /hub/* and /prescriber/* so the
+// navigation never changes between prescribing pages.
 const prescribingTabs = [
   { label: "Requests", to: "/dashboard/rx-requests", icon: MessageCircle, exact: true },
   { label: "Prescribing", to: "/hub/prescribing", icon: Stethoscope },
-  { label: "New", to: "/dashboard/rx-requests/new", icon: CalendarPlus, cta: true },
+  { label: "New", to: "/dashboard/rx-requests/new", icon: CalendarPlus },
   { label: "Hub", to: "/hub", icon: ShieldCheck, exact: true },
-  { label: "Clinic", to: "/dashboard", icon: Home, exact: true },
 ];
 
 
@@ -170,7 +171,7 @@ function DashboardLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isConsultationDetail = /^\/dashboard\/consultations\/[^/]+/.test(pathname);
   const inPrescribing = pathname.startsWith("/dashboard/rx-requests");
-  const bottomTabs = inPrescribing ? prescribingTabs : mobileTabs;
+  const bottomTabs = mobileTabs;
 
   // Prescribing screens are part of the Prescriber Hub — always the clean
   // clinical palette, never the clinic's brand colours.
