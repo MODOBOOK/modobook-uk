@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -83,7 +83,7 @@ function HubIndex() {
   const upcoming = visits
     .filter((v) => v.status !== "cancelled" && v.visit_date >= new Date().toISOString().slice(0, 10))
     .sort((a, b) => (a.visit_date + a.start_time).localeCompare(b.visit_date + b.start_time));
-  const awaitingConfirm = upcoming.filter((v) => !v.confirmed_by_prescriber && v.status !== "pending_approval").length;
+  
   const pendingRefs = refs.filter((r) => r.status === "pending").length;
 
   const choosePractitioner = () => {
@@ -135,9 +135,14 @@ function HubIndex() {
     },
   ];
 
+  const pendingRefItems = refs.filter((r) => r.status === "pending");
+  const awaitingVisits = upcoming.filter((v) => !v.confirmed_by_prescriber && v.status !== "pending_approval");
+  const attentionCount = pendingRefItems.length + awaitingVisits.length;
+
   return (
-    <div className="space-y-5">
+    <div className="mx-auto max-w-5xl space-y-6">
       <Dialog open={showChooser} onOpenChange={(open) => { if (open) setShowChooser(true); }}>
+
         <DialogContent className="sm:max-w-lg" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Are you a practitioner or a prescriber?</DialogTitle>
@@ -172,8 +177,23 @@ function HubIndex() {
         </DialogContent>
       </Dialog>
 
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-serif text-2xl sm:text-3xl">Overview</h2>
+          <p className="text-sm text-muted-foreground">
+            {attentionCount > 0
+              ? `${attentionCount} thing${attentionCount === 1 ? "" : "s"} need your attention.`
+              : "All clear. Nothing needs your attention."}
+          </p>
+        </div>
+        <Link to="/hub/visits">
+          <Button className="h-11 rounded-xl">+ Request prescriber day</Button>
+        </Link>
+      </div>
+
       {ctx.isPrescriber && status !== "approved" && (
-        <div className="rounded-3xl border border-amber-300/60 bg-amber-50/70 p-4 dark:bg-amber-950/20 sm:p-5">
+        <div className="rounded-2xl border border-amber-300/60 bg-amber-50/70 p-4 dark:bg-amber-950/20 sm:p-5">
           <div className="flex items-start gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 dark:bg-amber-900/40">
               <AlertTriangle className="h-5 w-5" />
@@ -202,7 +222,7 @@ function HubIndex() {
       )}
 
       {/* Hero: hub code */}
-      <div className="overflow-hidden rounded-3xl bg-primary p-5 text-primary-foreground shadow-lg sm:p-7">
+      <div className="overflow-hidden rounded-2xl bg-primary p-5 text-primary-foreground shadow-lg sm:p-7">
         <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.2em] opacity-80">
           <ShieldCheck className="h-3.5 w-3.5" /> Your hub code
         </div>
@@ -238,11 +258,42 @@ function HubIndex() {
         )}
       </div>
 
+      {/* Action-needed board */}
+      <div className="grid gap-3 md:grid-cols-2">
+        <ActionCard
+          tone="red"
+          icon={<Send className="h-5 w-5" />}
+          title="Referrals waiting for a response"
+          items={pendingRefItems.map((r) => ({
+            id: r.id,
+            title: r.patient_name ?? "Patient",
+            subtitle: `${r.treatment_name} · ${r.prescriber_name}`,
+            href: "/hub/referrals",
+          }))}
+          empty="No referrals waiting."
+          viewAll={{ href: "/hub/referrals", label: "Open referrals" }}
+        />
+        <ActionCard
+          tone="amber"
+          icon={<CalendarDays className="h-5 w-5" />}
+          title="Clinic days awaiting confirmation"
+          items={awaitingVisits.map((v) => ({
+            id: v.id,
+            title: `${formatDate(v.visit_date)} · ${v.start_time.slice(0, 5)}–${v.end_time.slice(0, 5)}`,
+            subtitle: v.prescriber_name + (v.location_name ? ` · ${v.location_name}` : ""),
+            href: "/hub/visits",
+          }))}
+          empty="No clinic days waiting."
+          viewAll={{ href: "/hub/visits", label: "Open clinic days" }}
+        />
+      </div>
+
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
-        <Stat label="Prescribers" value={prescribers.length} to="/hub/connections" />
-        <Stat label="Clinic days" value={upcoming.length} accent={awaitingConfirm > 0} to="/hub/visits" />
-        <Stat label="Referrals" value={pendingRefs} accent={pendingRefs > 0} to="/hub/referrals" />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatTile icon={<Network className="h-4 w-4" />} label="Prescribers" value={prescribers.length} href="/hub/connections" />
+        <StatTile icon={<CalendarDays className="h-4 w-4" />} label="Clinic days" value={upcoming.length} href="/hub/visits" />
+        <StatTile icon={<Send className="h-4 w-4" />} label="Referrals" value={pendingRefs} href="/hub/referrals" />
+        <StatTile icon={<Pill className="h-4 w-4" />} label="Rules" value="Manage" href="/hub/prescribing" />
       </div>
 
       {/* Quick actions */}
@@ -340,17 +391,74 @@ function HubIndex() {
   );
 }
 
-function Stat({ label, value, accent = false, to }: { label: string; value: number; accent?: boolean; to: string }) {
+function ActionCard({
+  tone,
+  icon,
+  title,
+  items,
+  empty,
+  viewAll,
+}: {
+  tone: "red" | "amber";
+  icon: React.ReactNode;
+  title: string;
+  items: { id: string; title: string; subtitle: string; href: string }[];
+  empty: string;
+  viewAll?: { href: string; label: string };
+}) {
+  const toneCls =
+    tone === "red"
+      ? "border-red-300/70 bg-red-50/60 dark:bg-red-950/20"
+      : "border-amber-300/70 bg-amber-50/60 dark:bg-amber-950/20";
+  const iconCls = tone === "red" ? "bg-red-600 text-white" : "bg-amber-500 text-white";
   return (
-    <Link
-      to={to}
-      className={cn(
-        "rounded-3xl border border-border/60 bg-card p-3 text-center transition hover:border-primary/40 sm:p-4",
-        accent && "border-primary/50 bg-primary/5",
-      )}
-    >
-      <div className={cn("text-2xl font-semibold tracking-tight sm:text-3xl", accent && "text-primary")}>{value}</div>
-      <div className="mt-0.5 truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{label}</div>
+    <Card className={`rounded-2xl ${toneCls} ${items.length ? "" : "opacity-80"}`}>
+      <CardHeader className="flex-row items-center gap-3 space-y-0 pb-2">
+        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>{icon}</span>
+        <CardTitle className="text-sm font-semibold leading-tight">{title}</CardTitle>
+        {items.length > 0 && (
+          <span className={`ml-auto flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-xs font-bold text-white ${tone === "red" ? "bg-red-600" : "bg-amber-500"}`}>
+            {items.length}
+          </span>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-1.5">
+        {items.length === 0 ? (
+          <p className="py-1 text-sm text-muted-foreground">{empty}</p>
+        ) : (
+          items.slice(0, 4).map((it) => (
+            <Link
+              key={it.id}
+              to={it.href}
+              className="flex items-center justify-between gap-2 rounded-lg bg-background/70 px-3 py-2 text-sm transition hover:bg-background"
+            >
+              <div className="min-w-0">
+                <p className="truncate font-medium">{it.title}</p>
+                <p className="truncate text-xs text-muted-foreground">{it.subtitle}</p>
+              </div>
+              <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+            </Link>
+          ))
+        )}
+        {viewAll && items.length > 0 && (
+          <Link to={viewAll.href} className="block pt-1 text-xs font-medium text-primary hover:underline">
+            {viewAll.label} →
+          </Link>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function StatTile({ icon, label, value, href }: { icon: React.ReactNode; label: string; value: string | number; href: string }) {
+  return (
+    <Link to={href}>
+      <Card className="h-full rounded-2xl transition hover:shadow-luxe">
+        <CardContent className="space-y-1 p-4">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">{icon}{label}</div>
+          <div className="font-serif text-2xl">{value}</div>
+        </CardContent>
+      </Card>
     </Link>
   );
 }
