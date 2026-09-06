@@ -42,8 +42,11 @@ function gbp(pence: number | null) {
 
 function PrescriberDashboard() {
   const fetchHome = useServerFn(getPrescriberHome);
+  const fetchListing = useServerFn(getMyDirectoryListing);
   const q = useQuery({ queryKey: ["prescriber-home"], queryFn: () => fetchHome(), refetchInterval: 60_000 });
+  const listingQ = useQuery({ queryKey: ["prescriber-directory"], queryFn: () => fetchListing() });
   const d = q.data;
+  const showDirectoryNudge = listingQ.data?.approved && !listingQ.data.listing?.is_listed;
 
   const rxPending = d?.board.rxPending ?? [];
   const refsPending = d?.board.referralsPending ?? [];
