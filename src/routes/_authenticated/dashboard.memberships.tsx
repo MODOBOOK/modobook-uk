@@ -345,6 +345,53 @@ function MembershipsPage() {
         </CardContent></Card>
       </div>
 
+      <Card>
+        <CardContent className="space-y-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="font-semibold">Membership page headline</div>
+              <p className="text-xs text-muted-foreground">
+                Customise the wording patients see at the top of your public memberships page.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              disabled={savingHero || !profileQ.data}
+              onClick={handleSaveHero}
+            >
+              {savingHero ? "Saving…" : "Save wording"}
+            </Button>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="hero-title">Headline</Label>
+            <Input
+              id="hero-title"
+              value={heroTitle}
+              onChange={(e) => setHeroTitle(e.target.value)}
+              placeholder="Look after your skin, every month"
+              maxLength={120}
+            />
+            <p className="text-xs text-muted-foreground">
+              Leave blank to use the default headline.
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="hero-subtitle">Intro text</Label>
+            <Textarea
+              id="hero-subtitle"
+              value={heroSubtitle}
+              onChange={(e) => setHeroSubtitle(e.target.value)}
+              placeholder="Join a plan with us. Pay monthly by card, build a savings pot of treatment credit and enjoy member pricing and perks."
+              rows={3}
+              maxLength={500}
+            />
+            <p className="text-xs text-muted-foreground">
+              Leave blank to use the default intro. {clinicName} will be inserted automatically.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="plans">
         <TabsList>
           <TabsTrigger value="plans">Plans ({plans.length})</TabsTrigger>
