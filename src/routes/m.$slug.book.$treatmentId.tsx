@@ -549,6 +549,12 @@ function BookTreatmentPage() {
           await consumePts({ data: { slug, code: discount.code, appointmentId: res.id, pointsToUse: discount.pointsToUse } });
         }
       } catch { /* non-fatal */ }
+      // Deduct membership savings-pot credit (idempotent per appointment).
+      try {
+        if (creditOff > 0 && res.id) {
+          await redeemCreditFn({ data: { slug, appointmentId: res.id, amountCents: Math.round(creditOff * 100) } });
+        }
+      } catch { /* non-fatal */ }
 
       const emb = (res as { embeddedPayment?: {
         clientSecret: string;
