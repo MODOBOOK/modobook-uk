@@ -24,7 +24,7 @@ export function useDashboardThemeStyle(): CSSProperties {
 
   const vars = useMemo<Record<string, string>>(() => {
     if (!theme) return {};
-    return buildThemeVars(theme as Record<string, unknown>);
+    return buildThemeVars(resolveDashboardTheme(theme as Record<string, unknown>));
   }, [theme]);
 
   const serialized = JSON.stringify(vars);
