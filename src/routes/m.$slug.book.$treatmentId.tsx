@@ -460,6 +460,13 @@ function BookTreatmentPage() {
       const picked = availableAddons.filter((a) => addonPicks.has(a.id));
       effectivePrice += picked.reduce((sum, a) => sum + addonNet(a), 0);
 
+      // Membership savings-pot credit (signed-in patients with a pot).
+      let creditOff = 0;
+      if (useCredit && creditAvailable) {
+        creditOff = Math.min(creditPreview!.applicableCents / 100, effectivePrice);
+        effectivePrice = Math.max(0, effectivePrice - creditOff);
+      }
+
       const res = await reqFn({
         data: {
           profileId: ctx.profileId,
