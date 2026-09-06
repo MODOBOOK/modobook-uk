@@ -118,6 +118,13 @@ export const updateConsultation = createServerFn({ method: "POST" })
         await syncConsultationConsent(supabase, pid, data.id);
       } catch (e) { console.error("[updateConsultation] consent sync failed", e); }
     }
+    // Medical history mirrors onto the patient profile as it is filled in.
+    if (patch['medical']) {
+      try {
+        const { syncConsultationMedical } = await import("@/lib/consultation-medical.server");
+        await syncConsultationMedical(supabase, pid, data.id);
+      } catch (e) { console.error("[updateConsultation] medical sync failed", e); }
+    }
     return { ok: true };
   });
 
@@ -134,6 +141,19 @@ export const saveConsultationConsentToProfile = createServerFn({ method: "POST" 
     const { syncConsultationConsent } = await import("@/lib/consultation-consent.server");
     return await syncConsultationConsent(supabase, pid, data.id);
   });
+
+// Same, for the medical history captured in the consultation.
+export const saveConsultationMedicalToProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const pid = await getProfileId(supabase, userId);
+    if (!pid) throw new Error("No profile");
+    const { syncConsultationMedical } = await import("@/lib/consultation-medical.server");
+    return await syncConsultationMedical(supabase, pid, data.id);
+  });
+
 
 
 
