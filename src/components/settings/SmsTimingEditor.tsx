@@ -1,7 +1,7 @@
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   CONFIRMATION_DELAY_OPTIONS,
-  REMINDER_HOUR_OPTIONS,
   REVIEW_DELAY_OPTIONS,
   type SmsTimings,
 } from "@/lib/whatsapp/templates";
@@ -37,12 +37,10 @@ export function SmsTimingEditor({
   value: SmsTimings;
   onChange: (v: SmsTimings) => void;
 }) {
-  function toggleHour(h: number) {
-    const has = value.reminderHoursBefore.includes(h);
-    const next = has
-      ? value.reminderHoursBefore.filter((x) => x !== h)
-      : [...value.reminderHoursBefore, h].sort((a, b) => a - b);
-    onChange({ ...value, reminderHoursBefore: next });
+  const reminderOn = value.reminderHoursBefore.length > 0;
+  function toggleReminder(on: boolean) {
+    // A single 24-hour reminder text — keeps costs down while cutting no-shows.
+    onChange({ ...value, reminderHoursBefore: on ? [24] : [] });
   }
 
   return (
@@ -69,26 +67,14 @@ export function SmsTimingEditor({
         </div>
       </div>
 
-      <div>
-        <p className="mb-1.5 text-xs font-medium">Appointment reminder</p>
-        <div className="flex flex-wrap gap-1.5">
-          {REMINDER_HOUR_OPTIONS.map((o) => (
-            <Chip
-              key={o.value}
-              active={value.reminderHoursBefore.includes(o.value)}
-              onClick={() => toggleHour(o.value)}
-            >
-              {o.label}
-            </Chip>
-          ))}
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-medium">Appointment reminder</p>
+          <p className="text-[11px] text-muted-foreground">
+            One text, 24 hours before the appointment.
+          </p>
         </div>
-        <p className="mt-1 text-[11px] text-muted-foreground">
-          {value.reminderHoursBefore.length === 0
-            ? "No reminder texts will be sent."
-            : `${value.reminderHoursBefore.length} reminder text${
-                value.reminderHoursBefore.length > 1 ? "s" : ""
-              } per appointment.`}
-        </p>
+        <Switch checked={reminderOn} onCheckedChange={toggleReminder} />
       </div>
 
       <div>
