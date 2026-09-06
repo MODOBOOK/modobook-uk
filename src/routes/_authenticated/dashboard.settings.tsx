@@ -321,14 +321,14 @@ const [saving, setSaving] = useState(false);
 
           {/* Deposit is now always required when Deposits is enabled — no toggle. */}
           <ToggleRow
-            label="Allow pay in clinic"
-            hint="Show 'Pay at appointment' option at checkout."
+            label="Pay in full in cash at the appointment"
+            hint="Patients can choose to pay the whole amount in cash on the day — no deposit or card payment taken online."
             checked={s.allow_pay_in_clinic}
             onChange={(v) => set("allow_pay_in_clinic", v)}
           />
           <ToggleRow
-            label="Offer cash for the remaining balance"
-            hint="Patients can pay the deposit online and bring the rest in cash. Works alongside 'Full card payment' — patients choose."
+            label="Deposit now, rest in cash"
+            hint="Patients pay the deposit online by card and bring the remaining balance in cash to their appointment. Works alongside 'Full card payment' — patients choose."
             checked={s.cash_only_balance}
             onChange={(v) => set("cash_only_balance", v)}
           />
