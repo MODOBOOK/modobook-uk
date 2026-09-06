@@ -414,24 +414,22 @@ function BookingsPage() {
 
   const todayStr = ymd(now);
   const totalHeight = (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT;
+  // Month-style views just show the month (dates were inaccurate for the
+  // scrollable 3-day strip). Day view keeps the full single date.
+  const monthRangeLabel = (from: Date, to: Date) => {
+    const sameMonth = from.getMonth() === to.getMonth() && from.getFullYear() === to.getFullYear();
+    if (sameMonth) return from.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    const sameYear = from.getFullYear() === to.getFullYear();
+    return `${from.toLocaleDateString(undefined, { month: "short", ...(sameYear ? {} : { year: "numeric" as const }) })} – ${to.toLocaleDateString(undefined, { month: "short", year: "numeric" })}`;
+  };
   const headerLabel =
     view === "day"
       ? anchor.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })
       : view === "3day"
-      ? (() => {
-          const e = addDays(anchor, 2);
-          const sameMonth = anchor.getMonth() === e.getMonth();
-          return sameMonth
-            ? `${anchor.getDate()}–${e.getDate()} ${e.toLocaleDateString(undefined, { month: "short", year: "numeric" })}`
-            : `${anchor.toLocaleDateString(undefined, { day: "numeric", month: "short" })} – ${e.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`;
-        })()
+      ? monthRangeLabel(anchor, addDays(anchor, STRIP_DAYS - 1))
       : view === "week"
-      ? (() => {
-          const s = startOfWeek(anchor);
-          const e = addDays(s, 6);
-          return `${s.toLocaleDateString(undefined, { day: "numeric", month: "short" })} – ${e.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`;
-        })()
-      : anchor.toLocaleString(undefined, { month: "long", year: "numeric" });
+      ? monthRangeLabel(startOfWeek(anchor), addDays(startOfWeek(anchor), 6))
+      : anchor.toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
   const viewSwitcher = (
     <div className="inline-flex rounded-full bg-muted p-0.5 text-xs sm:text-sm">
