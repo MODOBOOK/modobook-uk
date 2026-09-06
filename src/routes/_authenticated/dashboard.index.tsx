@@ -20,6 +20,7 @@ import { resolveDisplayNames } from "@/lib/display-name";
 import { SetupChecklistCard } from "@/components/SetupChecklistCard";
 import { upcomingEnabled } from "@/lib/feature-flags";
 import { WhatsNewBanner } from "@/components/WhatsNewBanner";
+import { WhatsNewDialog } from "@/components/WhatsNewDialog";
 
 import { toast } from "sonner";
 
@@ -176,6 +177,8 @@ function DashboardIndex() {
           </div>
         </CardContent>
       </Card>
+
+      <WhatsNewDialog />
 
       <WhatsNewBanner slug={profile.slug} />
 

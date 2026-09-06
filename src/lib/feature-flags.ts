@@ -42,7 +42,7 @@ export function associateBillingEnabled(slug?: string | null) {
  * associate oversight, clinic-owner grouping). Pilot account only until we
  * flip these live for everyone.
  */
-export const PILOT_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
+export const PILOT_SLUGS: string[] = [];
 
 export function pilotFeaturesEnabled(slug?: string | null) {
   return isFeatureLive(PILOT_SLUGS, slug);
@@ -61,7 +61,7 @@ export function packagesEnabled(slug?: string | null) {
  * Custom link button on the public booking page (e.g. a skincare store) —
  * pilot account only until we're happy with it.
  */
-export const LINK_BUTTON_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
+export const LINK_BUTTON_SLUGS: string[] = [];
 
 export function linkButtonEnabled(slug?: string | null) {
   return isFeatureLive(LINK_BUTTON_SLUGS, slug);
@@ -90,7 +90,7 @@ export function upcomingEnabled(slug?: string | null) {
  * pilot clinics while we finish carrier-filter testing. Everyone else sees
  * "Coming soon" and can never send (even test messages).
  */
-export const WHATSAPP_SLUGS: string[] = ["aestheticsbynurseryan", "aesthetiqbyjen", "na-aesthetics"];
+export const WHATSAPP_SLUGS: string[] = [];
 
 export function whatsappMessagingEnabled(slug?: string | null) {
   return isFeatureLive(WHATSAPP_SLUGS, slug);
@@ -101,10 +101,12 @@ export function whatsappMessagingEnabled(slug?: string | null) {
  * (no confirmations, cancellations, rebook or review texts) until the full
  * rollout to everyone.
  */
-export const WHATSAPP_REMINDER_ONLY_SLUGS: string[] = ["na-aesthetics"];
+export const WHATSAPP_REMINDER_ONLY_SLUGS: string[] = [];
 
 export function whatsappReminderOnly(slug?: string | null) {
-  return isFeatureLive(WHATSAPP_REMINDER_ONLY_SLUGS, slug);
+  // Explicit allowlist: an empty list means nobody is restricted.
+  if (!slug) return false;
+  return WHATSAPP_REMINDER_ONLY_SLUGS.includes(slug.toLowerCase());
 }
 
 
@@ -140,9 +142,19 @@ export function practitionerReferralsEnabled(slug?: string | null) {
  * Pilot clinics only for now — hidden from everyone else's dashboard,
  * booking pages and checkout.
  */
-export const MEMBERSHIPS_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
+export const MEMBERSHIPS_SLUGS: string[] = [];
 
 export function membershipsEnabled(slug?: string | null) {
   return isFeatureLive(MEMBERSHIPS_SLUGS, slug);
 }
 
+
+/**
+ * Paid SMS marketing blasts — still pilot only while we finish billing checks.
+ * (Transactional SMS notifications are live for everyone.)
+ */
+export const SMS_MARKETING_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
+
+export function smsMarketingEnabled(slug?: string | null) {
+  return isFeatureLive(SMS_MARKETING_SLUGS, slug);
+}
