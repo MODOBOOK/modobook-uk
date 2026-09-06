@@ -350,6 +350,57 @@ function MembershipsPublicInner({ slug }: { slug: string }) {
           ← Back to bookings
         </Link>
       </div>
+
+      {/* Terms & conditions before joining */}
+      <Dialog open={!!termsPlan} onOpenChange={(o) => !o && setTermsPlan(null)}>
+        <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{termsPlan?.name} — terms &amp; conditions</DialogTitle>
+          </DialogHeader>
+          {termsPlan?.terms_text?.trim() ? (
+            <div className="max-h-56 overflow-y-auto rounded-xl bg-muted/50 p-4 text-sm leading-relaxed whitespace-pre-line">
+              {termsPlan.terms_text}
+            </div>
+          ) : null}
+          <div className="space-y-3">
+            {(termsPlan?.terms_checkboxes ?? []).map((b, i) => (
+              <label key={i} className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed">
+                <Checkbox
+                  className="mt-0.5"
+                  checked={!!ticked[b.label]}
+                  onCheckedChange={(v) => setTicked((t) => ({ ...t, [b.label]: !!v }))}
+                />
+                <span>{b.label}</span>
+              </label>
+            ))}
+          </div>
+          <p className="text-xs opacity-60">
+            We'll email you a copy of these terms and record your agreement with {clinicName}.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTermsPlan(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={
+                !!joiningId ||
+                (termsPlan?.terms_checkboxes ?? []).some((b) => b.required !== false && !ticked[b.label])
+              }
+              onClick={() => {
+                if (!termsPlan) return;
+                const accepted = (termsPlan.terms_checkboxes ?? [])
+                  .filter((b) => ticked[b.label])
+                  .map((b) => b.label);
+                const id = termsPlan.id;
+                setTermsPlan(null);
+                void startCheckout(id, accepted);
+              }}
+            >
+              Agree &amp; continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
