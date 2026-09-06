@@ -189,7 +189,7 @@ function DashboardLayout() {
   }
 
   return (
-    <div className={inPrescribing ? "rx-theme flex min-h-screen bg-background text-foreground" : "clinic-shell flex min-h-screen bg-background"} style={inPrescribing ? undefined : themeStyle}>
+    <div className="clinic-shell flex min-h-screen bg-background" style={themeStyle}>
       {/* Desktop / iPad sidebar */}
       {/* Desktop / iPad sidebar — hidden on consultation detail for a focused, full-width workspace */}
       {!isConsultationDetail && (
