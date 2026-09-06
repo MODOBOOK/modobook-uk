@@ -152,6 +152,7 @@ export interface SmsMergeValues {
   clinic?: string | null
   treatment?: string | null
   date?: string | null
+  time?: string | null
   location?: string | null
   address?: string | null
   link?: string | null
@@ -163,11 +164,17 @@ export function renderSmsTemplate(
   values: SmsMergeValues,
   opts?: { keepAddress?: boolean },
 ) {
+  // Older saved templates only use {date}, which used to include the time —
+  // keep that behaviour unless the template explicitly uses {time}.
+  const usesTimeTag = template.includes('{time}')
+  const dateTime = values.date || ''
+  const [datePart, timePart] = dateTime.split('·').map((s) => s.trim())
   const map: Record<string, string> = {
     '{name}': (values.name ?? '').split(' ')[0] || 'there',
     '{clinic}': values.clinic || 'your clinic',
     '{treatment}': values.treatment || 'your treatment',
-    '{date}': values.date || '',
+    '{date}': usesTimeTag ? datePart || '' : dateTime,
+    '{time}': values.time || (usesTimeTag ? timePart || '' : ''),
     '{location}': (values.location ?? '').trim(),
     '{address}': opts?.keepAddress ? (values.address ?? '').trim() : '',
     '{link}': '',
