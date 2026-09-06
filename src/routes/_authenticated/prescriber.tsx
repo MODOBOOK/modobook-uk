@@ -330,8 +330,9 @@ function PrescriberLayout() {
               >
                 <LogOut className="mr-2 h-4 w-4" /> Sign out
               </Button>
-            </SheetContent>
-          </Sheet>
+              </SheetContent>
+            </Sheet>
+          </div>
         </nav>
       </div>
     </div>
