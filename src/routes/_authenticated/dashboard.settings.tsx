@@ -197,16 +197,9 @@ const [saving, setSaving] = useState(false);
             label="Full card payment"
             hint="Standard Stripe card checkout."
             checked={s.payment_card_full_enabled}
-            onChange={(v) =>
-              // "Cash only for remaining balance" hides pay-in-full, so the two
-              // settings can never be on at the same time.
-              setS((p) => ({
-                ...p,
-                payment_card_full_enabled: v,
-                cash_only_balance: v ? false : p.cash_only_balance,
-              }))
-            }
+            onChange={(v) => set("payment_card_full_enabled", v)}
           />
+
 
           <ToggleRow
             label="Deposits"
@@ -334,17 +327,12 @@ const [saving, setSaving] = useState(false);
             onChange={(v) => set("allow_pay_in_clinic", v)}
           />
           <ToggleRow
-            label="Cash only for remaining balance"
-            hint="Patients pay the deposit online, then bring the rest in cash. Hides the 'Pay in full online' option."
+            label="Offer cash for the remaining balance"
+            hint="Patients can pay the deposit online and bring the rest in cash. Works alongside 'Full card payment' — patients choose."
             checked={s.cash_only_balance}
-            onChange={(v) =>
-              setS((p) => ({
-                ...p,
-                cash_only_balance: v,
-                payment_card_full_enabled: v ? false : p.payment_card_full_enabled,
-              }))
-            }
+            onChange={(v) => set("cash_only_balance", v)}
           />
+
 
           <ToggleRow
             label="Save card on file for no-shows / late cancels"
