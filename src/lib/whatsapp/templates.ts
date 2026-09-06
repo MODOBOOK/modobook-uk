@@ -51,6 +51,21 @@ export function allowsAddress(key: string) {
   return (ADDRESS_KINDS as string[]).includes(key)
 }
 
+/**
+ * Only these message types can go out by SMS. Everything else (cancellation,
+ * reschedule, rebook, top-up) is email-only to keep text costs down — SMS is
+ * reserved for the three highest-value moments.
+ */
+export const SMS_ENABLED_KEYS: SmsTemplateKey[] = [
+  'booking-confirmation',
+  'appointment-reminder',
+  'review-request',
+]
+
+export function smsCapable(key: string) {
+  return (SMS_ENABLED_KEYS as string[]).includes(key)
+}
+
 export const SMS_TEMPLATES: SmsTemplateMeta[] = [
   {
     key: 'booking-confirmation',
@@ -81,6 +96,8 @@ export const SMS_TEMPLATES: SmsTemplateMeta[] = [
     tags: ['{name}', '{clinic}', '{location}', '{address}', '{date}'],
     default: 'Hi {name}, your appointment with {clinic} at {location} has moved to {date}. {address}',
   },
+  // The four below are kept for template storage/back-compat but are
+  // email-only — see SMS_ENABLED_KEYS.
   {
     key: 'rebook-reminder',
     label: 'Rebook reminder',
@@ -99,8 +116,8 @@ export const SMS_TEMPLATES: SmsTemplateMeta[] = [
   },
   {
     key: 'review-request',
-    label: 'Review request',
-    hint: 'Sent about 2 hours after the appointment.',
+    label: 'Aftercare & review',
+    hint: 'Sent about 2 hours after the appointment, pointing patients to their aftercare and review link.',
     tags: ['{name}', '{clinic}'],
     default:
       'Hi {name}, your appointment with {clinic} is complete. Check your emails for your review link and aftercare. Any issues, please contact your practitioner.',
@@ -178,6 +195,8 @@ export function channelFor(
   channels: Record<string, unknown> | null | undefined,
   key: SmsTemplateKey,
 ): MessageChannel {
+  // Non-SMS-capable kinds are always email-only regardless of stored choice.
+  if (!smsCapable(key)) return 'email'
   const v = channels?.[key]
   return v === 'sms' || v === 'email' || v === 'off' || v === 'both' ? v : DEFAULT_CHANNEL
 }
