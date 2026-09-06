@@ -177,8 +177,23 @@ function HubIndex() {
         </DialogContent>
       </Dialog>
 
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-serif text-2xl sm:text-3xl">Overview</h2>
+          <p className="text-sm text-muted-foreground">
+            {attentionCount > 0
+              ? `${attentionCount} thing${attentionCount === 1 ? "" : "s"} need your attention.`
+              : "All clear. Nothing needs your attention."}
+          </p>
+        </div>
+        <Link to="/hub/visits">
+          <Button className="h-11 rounded-xl">+ Request prescriber day</Button>
+        </Link>
+      </div>
+
       {ctx.isPrescriber && status !== "approved" && (
-        <div className="rounded-3xl border border-amber-300/60 bg-amber-50/70 p-4 dark:bg-amber-950/20 sm:p-5">
+        <div className="rounded-2xl border border-amber-300/60 bg-amber-50/70 p-4 dark:bg-amber-950/20 sm:p-5">
           <div className="flex items-start gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 dark:bg-amber-900/40">
               <AlertTriangle className="h-5 w-5" />
