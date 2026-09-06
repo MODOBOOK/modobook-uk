@@ -397,7 +397,18 @@ function Step1({ consultationId, medical, onChange, clientId, clientName, client
         <Label>Additional notes</Label>
         <Textarea rows={3} value={notes} onChange={(e) => onChange({ ...medical, notes: e.target.value })} placeholder="Allergies, medications, anything relevant…" />
       </div>
+
+      <div className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-muted-foreground">
+          Saves this medical history to the patient's profile now — you don't need to finish the consultation.
+        </p>
+        <Button size="sm" className="w-full sm:w-auto" onClick={saveToProfile} disabled={savingForm}>
+          {savingForm ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Check className="mr-1.5 h-3.5 w-3.5" />}
+          Save to patient profile
+        </Button>
+      </div>
     </div>
+
   );
 }
 
