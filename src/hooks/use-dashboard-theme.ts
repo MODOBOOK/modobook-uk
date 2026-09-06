@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, type CSSProperties } from "react";
 import { getMyTheme } from "@/lib/theme.functions";
 import { buildThemeVars } from "@/lib/theme-vars";
+import { resolveDashboardTheme } from "@/lib/dashboard-appearance";
 
 
 /**
