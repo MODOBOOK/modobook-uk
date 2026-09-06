@@ -516,8 +516,11 @@ export const previewMembershipCredit = createServerFn({ method: "POST" })
     if (mode === "manual") {
       return { applicableCents: 0, balanceCents: balance, mode };
     }
-    const applicableCents = mode ? Math.min(balance, Math.max(0, Math.round(data.totalCents))) : 0;
+    // No membership plan rules — plain clinic credit can be spent on anything.
+    if (!mode) mode = "any";
+    const applicableCents = Math.min(balance, Math.max(0, Math.round(data.totalCents)));
     return { applicableCents, balanceCents: balance, mode };
+
   });
 
 // Deduct credit after a booking is confirmed. Idempotent on appointment id.
