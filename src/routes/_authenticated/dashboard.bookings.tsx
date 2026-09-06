@@ -418,7 +418,7 @@ function BookingsPage() {
   const todayStr = ymd(now);
   const totalHeight = (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT;
   // Month-style views just show the month (dates were inaccurate for the
-  // scrollable 3-day strip). Day view keeps the full single date.
+  // scrollable day / 3-day strip).
   const monthRangeLabel = (from: Date, to: Date) => {
     const sameMonth = from.getMonth() === to.getMonth() && from.getFullYear() === to.getFullYear();
     if (sameMonth) return from.toLocaleDateString(undefined, { month: "long", year: "numeric" });
