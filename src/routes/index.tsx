@@ -219,7 +219,7 @@ function LandingPage() {
         {/* BENTO — capability tiles */}
         <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16">
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            <div className="tile tile-accent col-span-2 flex min-h-[220px] flex-col justify-between lg:col-span-2 lg:min-h-[260px]">
+            <div className="tile tile-accent col-span-2 row-span-2 flex min-h-[220px] flex-col justify-between lg:min-h-0">
               <span className="tile-icon">
                 <ClipboardList className="h-5 w-5" />
               </span>
