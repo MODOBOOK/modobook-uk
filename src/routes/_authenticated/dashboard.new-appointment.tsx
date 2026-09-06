@@ -108,7 +108,11 @@ function NewAppointmentPage() {
   const [modelExpanded, setModelExpanded] = useState(true);
 
 
-  type ClientRow = { id: string; full_name: string; email: string | null; phone: string | null; dob: string | null; address: string | null };
+  type ClientRow = {
+    id: string; full_name: string; email: string | null; phone: string | null; dob: string | null;
+    address: string | null;
+    address_line1?: string | null; city?: string | null; postcode?: string | null;
+  };
   type TemplateRow = { id: string; name: string };
   const [clients, setClients] = useState<ClientRow[]>([]);
   const [clientId, setClientId] = useState<string>("");
