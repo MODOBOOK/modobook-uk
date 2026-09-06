@@ -121,6 +121,34 @@ function MembershipsPage() {
   const [heroSubtitle, setHeroSubtitle] = useState("");
   const [savingHero, setSavingHero] = useState(false);
 
+  useEffect(() => {
+    const p = profileQ.data as { membership_hero_title?: string | null; membership_hero_subtitle?: string | null } | undefined;
+    if (!p) return;
+    setHeroTitle(p.membership_hero_title ?? "");
+    setHeroSubtitle(p.membership_hero_subtitle ?? "");
+  }, [profileQ.data]);
+
+  async function handleSaveHero() {
+    const profile = profileQ.data as { id?: string } | undefined;
+    if (!profile?.id) return;
+    setSavingHero(true);
+    try {
+      await updateProfileFn({
+        data: {
+          id: profile.id,
+          membership_hero_title: heroTitle.trim() || null,
+          membership_hero_subtitle: heroSubtitle.trim() || null,
+        },
+      });
+      toast.success("Membership page wording saved");
+      qc.invalidateQueries({ queryKey: ["profile-for-memberships"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not save wording");
+    } finally {
+      setSavingHero(false);
+    }
+  }
+
   const candidatesQ = useQuery({
     queryKey: ["membership-invite-candidates"],
     queryFn: () => candidatesFn(),
