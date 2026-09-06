@@ -301,10 +301,10 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
           })()}
         </nav>
 
-        <div className="border-t border-border/60 p-4 space-y-2">
+        <div className="border-t border-border/60 p-4 space-y-1.5">
           <Button
             variant="ghost"
-            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            className="cl-rail-link w-full justify-start"
             asChild
           >
             <a
@@ -407,11 +407,11 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
 
 
         {/* Desktop / iPad header */}
-        <header className="sticky top-0 z-40 hidden h-20 items-center justify-between border-b border-border/60 bg-background px-6 lg:flex lg:px-10">
+        <header className="sticky top-0 z-40 hidden h-20 items-center justify-between border-b border-border/60 bg-background/85 px-6 backdrop-blur-md lg:flex lg:px-10">
           <div className="flex items-center gap-3">
             <BackButton />
             <div>
-              <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Studio</div>
+              <div className="cl-section-label">Studio</div>
               <div className="font-serif text-xl leading-tight lg:text-2xl">{displayName || "Dashboard"}</div>
             </div>
           </div>
