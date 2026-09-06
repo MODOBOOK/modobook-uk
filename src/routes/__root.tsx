@@ -219,7 +219,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
-      <Toaster />
+      <Toaster position="bottom-right" duration={2000} closeButton />
       <CookieConsent />
     </QueryClientProvider>
   );
