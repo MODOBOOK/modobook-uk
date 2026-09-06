@@ -842,7 +842,12 @@ function MonthView({
 }) {
   const monthStart = startOfMonth(anchor);
   const gridStart = startOfWeek(monthStart);
-  const cells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
+  // Full month only: complete weeks up to the week containing the last day,
+  // never a whole extra row of next month.
+  const monthEnd = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0);
+  const gridEnd = addDays(startOfWeek(monthEnd), 6);
+  const cellCount = Math.round((gridEnd.getTime() - gridStart.getTime()) / 86_400_000) + 1;
+  const cells = Array.from({ length: cellCount }, (_, i) => addDays(gridStart, i));
   const weekdayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   return (
