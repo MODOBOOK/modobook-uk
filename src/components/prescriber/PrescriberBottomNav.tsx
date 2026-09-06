@@ -36,8 +36,11 @@ export function PrescriberBottomNav({
   const moreActive = moreItems.some((i) => (i.exact ? pathname === i.to : pathname.startsWith(i.to)));
 
   return (
+    const colCount = Math.min(tabs.length, 4) + 1;
+
+  return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
-      <div className="grid grid-cols-5">
+      <div className="grid" style={{ gridTemplateColumns: `repeat(${colCount}, minmax(0, 1fr))` }}>
         {tabs.slice(0, 4).map((tab) => {
           const active = tab.exact ? pathname === tab.to : pathname.startsWith(tab.to);
           return (

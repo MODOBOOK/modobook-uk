@@ -100,7 +100,6 @@ function HubLayout() {
     referrals: pendingRefs,
   };
 
-  const moreCount = moreNav.reduce((n, i) => n + (badges[i.key] ?? 0), 0);
   const name = ctxQ.data?.displayName ?? "Prescriber Hub";
   const activeLabel = nav.find((n) => (n.exact ? pathname === n.to : pathname.startsWith(n.to)))?.label ?? "Overview";
 
