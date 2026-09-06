@@ -2280,6 +2280,10 @@ export type Database = {
           contact_tile_layout: string
           created_at: string
           custom_css: string | null
+          dashboard_body_font: string | null
+          dashboard_follow_brand: boolean
+          dashboard_heading_font: string | null
+          dashboard_palette: string | null
           draft: Json | null
           draft_updated_at: string | null
           favicon_url: string | null
@@ -2369,6 +2373,10 @@ export type Database = {
           contact_tile_layout?: string
           created_at?: string
           custom_css?: string | null
+          dashboard_body_font?: string | null
+          dashboard_follow_brand?: boolean
+          dashboard_heading_font?: string | null
+          dashboard_palette?: string | null
           draft?: Json | null
           draft_updated_at?: string | null
           favicon_url?: string | null
@@ -2458,6 +2466,10 @@ export type Database = {
           contact_tile_layout?: string
           created_at?: string
           custom_css?: string | null
+          dashboard_body_font?: string | null
+          dashboard_follow_brand?: boolean
+          dashboard_heading_font?: string | null
+          dashboard_palette?: string | null
           draft?: Json | null
           draft_updated_at?: string | null
           favicon_url?: string | null

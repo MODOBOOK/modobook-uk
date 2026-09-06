@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, type CSSProperties } from "react";
 import { getMyTheme } from "@/lib/theme.functions";
 import { buildThemeVars } from "@/lib/theme-vars";
+import { resolveDashboardTheme } from "@/lib/dashboard-appearance";
 
 
 /**
@@ -24,7 +25,7 @@ export function useDashboardThemeStyle(): CSSProperties {
 
   const vars = useMemo<Record<string, string>>(() => {
     if (!theme) return {};
-    return buildThemeVars(theme as Record<string, unknown>);
+    return buildThemeVars(resolveDashboardTheme(theme as Record<string, unknown>));
   }, [theme]);
 
   const serialized = JSON.stringify(vars);
