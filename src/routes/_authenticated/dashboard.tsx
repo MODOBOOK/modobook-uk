@@ -19,6 +19,8 @@ import {
   Package,
   Menu,
   CalendarPlus,
+  CalendarClock,
+
   Shield,
   Home,
   Star,
@@ -556,7 +558,18 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
                 </span>
                 <span className="text-sm font-medium">Consultation</span>
               </Link>
+              <Link
+                to="/dashboard/availability"
+                onClick={() => setAddOpen(false)}
+                className="flex flex-col items-center justify-center gap-2 rounded-xl border bg-background p-4 text-center transition active:scale-95 hover:bg-muted/50"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/12 text-primary">
+                  <CalendarClock className="h-5 w-5" />
+                </span>
+                <span className="text-sm font-medium">Availability</span>
+              </Link>
             </div>
+
           </SheetContent>
         </Sheet>
 
