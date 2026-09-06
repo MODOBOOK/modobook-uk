@@ -366,25 +366,27 @@ function comingSoonFor(to: string): ComingSoonKey | null {
                   onClick={() => setActiveGroup(g.title)}
                   className="group block w-full rounded-2xl border border-muted-foreground/10 bg-card p-4 text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-primary/30 hover:shadow-md active:scale-[0.99]"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-black/5">
-                      <g.icon className="h-6 w-6" />
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground ring-1 ring-black/5 sm:h-14 sm:w-14">
+                      <g.icon className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="flex items-center gap-2 truncate text-base font-semibold leading-tight">
-                        {g.title}
+                      <p className="flex min-w-0 items-center gap-2 text-base font-semibold leading-tight">
+                        <span className="truncate">{g.title}</span>
                         {soonCount > 0 && (
-                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-primary">
-                            Soon
+                          <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] text-primary">
+                            {soonCount} soon
                           </span>
                         )}
                       </p>
                       <p className="mt-0.5 truncate text-xs text-muted-foreground">{g.blurb}</p>
                     </div>
-                    <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                      {g.items.length}
-                    </span>
-                    <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5" />
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                        {g.items.length}
+                      </span>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground transition group-hover:translate-x-0.5" />
+                    </div>
                   </div>
                 </button>
               );
