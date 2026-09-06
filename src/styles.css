@@ -231,7 +231,7 @@
 
 
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Syne", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Helvetica Neue", Helvetica, Arial, ui-sans-serif, sans-serif;
 
   background-color: var(--background);
   color: var(--foreground);
@@ -243,9 +243,16 @@
 .modo-marketing h2,
 .modo-marketing h3 {
   font-family: var(--font-display);
-  letter-spacing: -0.035em;
-  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  text-wrap: balance;
 }
+
+/* Fluid, mobile-first marketing headings */
+.modo-marketing h1 { font-size: clamp(2rem, 7.5vw, 4rem); line-height: 1.05; }
+.modo-marketing h2 { font-size: clamp(1.6rem, 5.5vw, 2.75rem); line-height: 1.1; }
+.modo-marketing h3 { font-size: clamp(1.15rem, 4vw, 1.5rem); line-height: 1.2; }
+.modo-marketing p { overflow-wrap: break-word; }
 
 @layer components {
 /* --- Editorial clinical bento kit ------------------------------- */
