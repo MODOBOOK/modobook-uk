@@ -278,6 +278,20 @@ function PrescriberLayout() {
                     </Link>
                   );
                 })}
+                {hasClinic && clinicNav.map((tab) => (
+                  <Link
+                    key={tab.to}
+                    to={tab.to}
+                    onClick={() => setMoreOpen(false)}
+                    className={cn(
+                      "flex flex-col items-center justify-center gap-2 rounded-xl border p-4 text-xs font-medium transition",
+                      pathname.startsWith(tab.to) ? "border-primary bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted",
+                    )}
+                  >
+                    <tab.icon className="h-5 w-5" />
+                    <span className="text-center">{tab.label}</span>
+                  </Link>
+                ))}
                 {hasClinic && (
                   <Link
                     to="/dashboard"
