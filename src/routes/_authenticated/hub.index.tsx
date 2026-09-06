@@ -391,17 +391,74 @@ function HubIndex() {
   );
 }
 
-function Stat({ label, value, accent = false, to }: { label: string; value: number; accent?: boolean; to: string }) {
+function ActionCard({
+  tone,
+  icon,
+  title,
+  items,
+  empty,
+  viewAll,
+}: {
+  tone: "red" | "amber";
+  icon: React.ReactNode;
+  title: string;
+  items: { id: string; title: string; subtitle: string; href: string }[];
+  empty: string;
+  viewAll?: { href: string; label: string };
+}) {
+  const toneCls =
+    tone === "red"
+      ? "border-red-300/70 bg-red-50/60 dark:bg-red-950/20"
+      : "border-amber-300/70 bg-amber-50/60 dark:bg-amber-950/20";
+  const iconCls = tone === "red" ? "bg-red-600 text-white" : "bg-amber-500 text-white";
   return (
-    <Link
-      to={to}
-      className={cn(
-        "rounded-3xl border border-border/60 bg-card p-3 text-center transition hover:border-primary/40 sm:p-4",
-        accent && "border-primary/50 bg-primary/5",
-      )}
-    >
-      <div className={cn("text-2xl font-semibold tracking-tight sm:text-3xl", accent && "text-primary")}>{value}</div>
-      <div className="mt-0.5 truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{label}</div>
+    <Card className={`rounded-2xl ${toneCls} ${items.length ? "" : "opacity-80"}`}>
+      <CardHeader className="flex-row items-center gap-3 space-y-0 pb-2">
+        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconCls}`}>{icon}</span>
+        <CardTitle className="text-sm font-semibold leading-tight">{title}</CardTitle>
+        {items.length > 0 && (
+          <span className={`ml-auto flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-xs font-bold text-white ${tone === "red" ? "bg-red-600" : "bg-amber-500"}`}>
+            {items.length}
+          </span>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-1.5">
+        {items.length === 0 ? (
+          <p className="py-1 text-sm text-muted-foreground">{empty}</p>
+        ) : (
+          items.slice(0, 4).map((it) => (
+            <Link
+              key={it.id}
+              to={it.href}
+              className="flex items-center justify-between gap-2 rounded-lg bg-background/70 px-3 py-2 text-sm transition hover:bg-background"
+            >
+              <div className="min-w-0">
+                <p className="truncate font-medium">{it.title}</p>
+                <p className="truncate text-xs text-muted-foreground">{it.subtitle}</p>
+              </div>
+              <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+            </Link>
+          ))
+        )}
+        {viewAll && items.length > 0 && (
+          <Link to={viewAll.href} className="block pt-1 text-xs font-medium text-primary hover:underline">
+            {viewAll.label} →
+          </Link>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function StatTile({ icon, label, value, href }: { icon: React.ReactNode; label: string; value: string | number; href: string }) {
+  return (
+    <Link to={href}>
+      <Card className="h-full rounded-2xl transition hover:shadow-luxe">
+        <CardContent className="space-y-1 p-4">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">{icon}{label}</div>
+          <div className="font-serif text-2xl">{value}</div>
+        </CardContent>
+      </Card>
     </Link>
   );
 }
