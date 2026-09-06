@@ -211,6 +211,8 @@ export const updateProfile = createServerFn({ method: "POST" })
       qualifications?: { label: string; year?: string }[];
       timeline?: { year: string; label: string }[];
       avatar_url?: string | null;
+      membership_hero_title?: string | null;
+      membership_hero_subtitle?: string | null;
     }) => input,
   )
 
