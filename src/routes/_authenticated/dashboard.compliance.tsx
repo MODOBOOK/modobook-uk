@@ -260,6 +260,9 @@ function Page() {
                   frequency: "weekly",
                   fields: [{ key: "f1", label: "", type: "yesno" }],
                   next_due_on: today,
+                  custom_interval_days: 30,
+                  remind_days_before: 0,
+                  remind_when_overdue: true,
                   remind_email: true,
                   remind_in_app: true,
                   active: true,
@@ -294,6 +297,16 @@ function Page() {
                       size="sm"
                       variant="ghost"
                       onClick={() => {
+                        const { id: _id, ...rest } = t;
+                        setEditCheck({ ...rest, name: `${t.name} (copy)` });
+                      }}
+                    >
+                      Duplicate
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
                         if (confirm(`Delete "${t.name}"? Past records are kept.`))
                           run(() => delCheck({ data: { id: t.id } }), "Check deleted");
                       }}
@@ -324,6 +337,10 @@ function Page() {
                   category: "",
                   frequency: "quarterly",
                   questions: [{ id: "q1", section: "General", text: "" }],
+                  next_due_on: today,
+                  custom_interval_days: 90,
+                  remind_days_before: 7,
+                  remind_when_overdue: true,
                   remind_email: true,
                   remind_in_app: true,
                   active: true,
@@ -348,6 +365,16 @@ function Page() {
                 <div className="flex gap-2">
                   <Button size="sm" onClick={() => openAudit(t)}>Start</Button>
                   <Button size="sm" variant="outline" onClick={() => setEditAudit(t)}>Edit</Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      const { id: _id, ...rest } = t;
+                      setEditAudit({ ...rest, name: `${t.name} (copy)` });
+                    }}
+                  >
+                    Duplicate
+                  </Button>
                   <Button
                     size="sm"
                     variant="ghost"
@@ -790,14 +817,6 @@ function Page() {
                   onChange={(e) => setEditCheck({ ...editCheck, description: e.target.value })}
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label>Next due</Label>
-                <Input
-                  type="date"
-                  value={editCheck.next_due_on ?? today}
-                  onChange={(e) => setEditCheck({ ...editCheck, next_due_on: e.target.value })}
-                />
-              </div>
               <div className="space-y-2">
                 <Label>Questions</Label>
                 {(editCheck.fields ?? []).map((f: CheckField, i: number) => (
@@ -856,27 +875,7 @@ function Page() {
                   <Plus className="mr-1.5 h-4 w-4" /> Add question
                 </Button>
               </div>
-              <div className="flex items-center justify-between rounded-md border p-3">
-                <span className="text-sm">Email me when it's due</span>
-                <Switch
-                  checked={editCheck.remind_email !== false}
-                  onCheckedChange={(v) => setEditCheck({ ...editCheck, remind_email: v })}
-                />
-              </div>
-              <div className="flex items-center justify-between rounded-md border p-3">
-                <span className="text-sm">Show in my notifications</span>
-                <Switch
-                  checked={editCheck.remind_in_app !== false}
-                  onCheckedChange={(v) => setEditCheck({ ...editCheck, remind_in_app: v })}
-                />
-              </div>
-              <div className="flex items-center justify-between rounded-md border p-3">
-                <span className="text-sm">Active</span>
-                <Switch
-                  checked={editCheck.active !== false}
-                  onCheckedChange={(v) => setEditCheck({ ...editCheck, active: v })}
-                />
-              </div>
+              <TimingSettings value={editCheck} onChange={setEditCheck} today={today} />
             </div>
           )}
           <DialogFooter>
@@ -931,6 +930,15 @@ function Page() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-1.5">
+                <Label>Description</Label>
+                <Textarea
+                  rows={2}
+                  value={editAudit.description ?? ""}
+                  onChange={(e) => setEditAudit({ ...editAudit, description: e.target.value })}
+                />
+              </div>
+              <TimingSettings value={editAudit} onChange={setEditAudit} today={today} />
               <div className="space-y-2">
                 <Label>Standards</Label>
                 {(editAudit.questions ?? []).map((q: Any, i: number) => (
@@ -1059,5 +1067,97 @@ function PresetHint({ title, items }: { title: string; items: string[] }) {
     <p className="pt-2 text-xs text-muted-foreground">
       <span className="font-medium">{title}:</span> {items.join(" · ")}
     </p>
+  );
+}
+
+/** Timing + reminder settings shared by the check and audit editors. */
+function TimingSettings({
+  value,
+  onChange,
+  today,
+}: {
+  value: any;
+  onChange: (v: any) => void;
+  today: string;
+}) {
+  const set = (patch: Record<string, unknown>) => onChange({ ...value, ...patch });
+  const scheduled = value.frequency !== "adhoc";
+  return (
+    <div className="space-y-3 rounded-lg border p-3">
+      <p className="text-sm font-medium">Timing &amp; reminders</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {value.frequency === "custom" && (
+          <div className="space-y-1.5">
+            <Label>Repeat every (days)</Label>
+            <Input
+              type="number"
+              min={1}
+              max={730}
+              value={value.custom_interval_days ?? 30}
+              onChange={(e) => set({ custom_interval_days: Number(e.target.value) })}
+            />
+          </div>
+        )}
+        <div className="space-y-1.5">
+          <Label>Next due</Label>
+          <Input
+            type="date"
+            value={value.next_due_on ?? today}
+            onChange={(e) => set({ next_due_on: e.target.value })}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Remind me in advance</Label>
+          <Select
+            value={String(value.remind_days_before ?? 0)}
+            onValueChange={(v) => set({ remind_days_before: Number(v) })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="0">On the day it's due</SelectItem>
+              <SelectItem value="1">1 day before</SelectItem>
+              <SelectItem value="2">2 days before</SelectItem>
+              <SelectItem value="3">3 days before</SelectItem>
+              <SelectItem value="7">1 week before</SelectItem>
+              <SelectItem value="14">2 weeks before</SelectItem>
+              <SelectItem value="30">1 month before</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      {!scheduled && (
+        <p className="text-xs text-muted-foreground">
+          This one has no set schedule, so reminders only go out if you set a due date.
+        </p>
+      )}
+      <div className="flex items-center justify-between rounded-md border p-3">
+        <span className="text-sm">Email me</span>
+        <Switch
+          checked={value.remind_email !== false}
+          onCheckedChange={(v) => set({ remind_email: v })}
+        />
+      </div>
+      <div className="flex items-center justify-between rounded-md border p-3">
+        <span className="text-sm">Show in my notifications</span>
+        <Switch
+          checked={value.remind_in_app !== false}
+          onCheckedChange={(v) => set({ remind_in_app: v })}
+        />
+      </div>
+      <div className="flex items-center justify-between rounded-md border p-3">
+        <span className="text-sm">Keep reminding while it's overdue</span>
+        <Switch
+          checked={value.remind_when_overdue !== false}
+          onCheckedChange={(v) => set({ remind_when_overdue: v })}
+        />
+      </div>
+      <div className="flex items-center justify-between rounded-md border p-3">
+        <span className="text-sm">Active</span>
+        <Switch
+          checked={value.active !== false}
+          onCheckedChange={(v) => set({ active: v })}
+        />
+      </div>
+    </div>
   );
 }
