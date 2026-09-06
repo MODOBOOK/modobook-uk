@@ -33,7 +33,7 @@ import { PrescribingClinicCard } from "@/components/PrescribingClinicCard";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
-import { Star, X, Check, ChevronsUpDown, MapPin, ChevronDown } from "lucide-react";
+import { Star, X, Check, ChevronsUpDown, MapPin } from "lucide-react";
 
 
 
