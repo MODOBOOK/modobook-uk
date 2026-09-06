@@ -6234,6 +6234,9 @@ export type Database = {
         Row: {
           admin_note: string | null
           created_at: string
+          fee_notes: string | null
+          fee_per_consult_pence: number | null
+          fee_per_prescription_pence: number | null
           full_name: string
           id: string
           id_document_path: string | null
@@ -6242,6 +6245,7 @@ export type Database = {
           regulatory_body_other: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          signoff_pin_hash: string | null
           status: Database["public"]["Enums"]["prescriber_status"]
           updated_at: string
           user_id: string
@@ -6249,6 +6253,9 @@ export type Database = {
         Insert: {
           admin_note?: string | null
           created_at?: string
+          fee_notes?: string | null
+          fee_per_consult_pence?: number | null
+          fee_per_prescription_pence?: number | null
           full_name: string
           id?: string
           id_document_path?: string | null
@@ -6257,6 +6264,7 @@ export type Database = {
           regulatory_body_other?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          signoff_pin_hash?: string | null
           status?: Database["public"]["Enums"]["prescriber_status"]
           updated_at?: string
           user_id: string
@@ -6264,6 +6272,9 @@ export type Database = {
         Update: {
           admin_note?: string | null
           created_at?: string
+          fee_notes?: string | null
+          fee_per_consult_pence?: number | null
+          fee_per_prescription_pence?: number | null
           full_name?: string
           id?: string
           id_document_path?: string | null
@@ -6272,6 +6283,7 @@ export type Database = {
           regulatory_body_other?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          signoff_pin_hash?: string | null
           status?: Database["public"]["Enums"]["prescriber_status"]
           updated_at?: string
           user_id?: string

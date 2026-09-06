@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { getPrescriberDashboard, listMyRxRequests, type RxStatus } from "@/lib/rx-requests.functions";
+import { QuickApproveButton } from "@/components/prescriber/QuickApproveButton";
 import { Clock, MessageCircleQuestion, CheckCircle2, Users, Timer } from "lucide-react";
 import { useState } from "react";
 
@@ -84,15 +85,16 @@ function PrescriberRequests() {
               ) : (listQ.data ?? []).length === 0 ? (
                 <div className="text-muted-foreground text-sm py-6 text-center">Nothing here yet.</div>
               ) : (
-                <ul className="divide-y">
+                 <ul className="divide-y">
                   {(listQ.data ?? []).map((r) => {
                     const snap = (r.patient_snapshot ?? {}) as { full_name?: string };
+                    const open = r.status === "pending" || r.status === "awaiting_info";
                     return (
-                      <li key={r.id}>
+                      <li key={r.id} className="flex items-center gap-2 py-3 px-2">
                         <Link
                           to="/prescriber/requests/$id"
                           params={{ id: r.id }}
-                          className="flex items-center justify-between gap-3 py-3 hover:bg-muted/40 rounded px-2"
+                          className="flex min-w-0 flex-1 items-center justify-between gap-3 rounded hover:bg-muted/40"
                         >
                           <div className="min-w-0">
                             <div className="font-medium truncate">{r.treatment_name}</div>
@@ -102,6 +104,11 @@ function PrescriberRequests() {
                           </div>
                           <StatusBadge status={r.status as RxStatus} />
                         </Link>
+                        {open && (
+                          <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <QuickApproveButton requestId={r.id} label="Sign" />
+                          </div>
+                        )}
                       </li>
                     );
                   })}
