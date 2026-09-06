@@ -320,18 +320,59 @@ const [saving, setSaving] = useState(false);
           </div>
 
           {/* Deposit is now always required when Deposits is enabled — no toggle. */}
-          <ToggleRow
-            label="Pay in full in cash at the appointment"
-            hint="Patients can choose to pay the whole amount in cash on the day — no deposit or card payment taken online."
-            checked={s.allow_pay_in_clinic}
-            onChange={(v) => set("allow_pay_in_clinic", v)}
-          />
-          <ToggleRow
-            label="Deposit now, rest in cash"
-            hint="Patients pay the deposit online by card and bring the remaining balance in cash to their appointment. Works alongside 'Full card payment' — patients choose."
-            checked={s.cash_only_balance}
-            onChange={(v) => set("cash_only_balance", v)}
-          />
+          <div className="rounded-xl border p-3 space-y-2">
+            <div>
+              <div className="text-sm font-medium">Pay in cash at the clinic</div>
+              <p className="text-xs text-muted-foreground">
+                Let patients choose cash on the booking page — and decide whether they must pay a deposit online first.
+              </p>
+            </div>
+            <div className="grid gap-2">
+              {([
+                {
+                  key: "off",
+                  title: "No cash option",
+                  desc: "Cash is not offered on your booking page.",
+                  active: !s.allow_pay_in_clinic && !s.cash_only_balance,
+                  apply: () => { set("allow_pay_in_clinic", false); set("cash_only_balance", false); },
+                },
+                {
+                  key: "full",
+                  title: "Cash in full — no deposit",
+                  desc: "Patients book without paying anything online and pay the whole amount in cash on the day.",
+                  active: s.allow_pay_in_clinic && !s.cash_only_balance,
+                  apply: () => { set("allow_pay_in_clinic", true); set("cash_only_balance", false); },
+                },
+                {
+                  key: "deposit",
+                  title: "Deposit required, rest in cash",
+                  desc: "Patients pay the deposit online by card to secure the booking, then bring the remaining balance in cash.",
+                  active: s.cash_only_balance,
+                  apply: () => { set("allow_pay_in_clinic", false); set("cash_only_balance", true); },
+                },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={opt.apply}
+                  className={`rounded-md border p-3 text-left text-sm transition ${
+                    opt.active ? "border-primary bg-primary/5" : "opacity-80 hover:opacity-100"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-block h-3 w-3 rounded-full border ${opt.active ? "border-primary bg-primary" : "border-muted-foreground"}`} />
+                    <span className="font-medium">{opt.title}</span>
+                  </div>
+                  <div className="mt-1 pl-5 text-xs text-muted-foreground">{opt.desc}</div>
+                </button>
+              ))}
+            </div>
+            {s.cash_only_balance && !s.payment_deposit_enabled && (
+              <p className="text-xs text-amber-600">
+                Deposits are switched off above — turn the "Deposits" option on so patients can pay the deposit online.
+              </p>
+            )}
+          </div>
 
 
           <ToggleRow
