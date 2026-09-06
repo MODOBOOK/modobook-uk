@@ -41,7 +41,7 @@ function RewardsPage() {
       <main className="flex-1">
         {/* Hero */}
         <section className="relative overflow-hidden border-b border-[color:var(--hairline)] bg-[color:var(--paper)]">
-          <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1fr_1fr] lg:items-center lg:gap-14 lg:px-8 lg:py-20">
+          <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 py-14 lg:grid-cols-[1fr_1fr] lg:items-center lg:gap-14 lg:px-8 lg:py-20">
             <div>
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/25 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
                 <Gift className="h-3.5 w-3.5" /> Built for practitioners

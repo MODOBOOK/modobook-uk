@@ -66,7 +66,7 @@ function WaitlistPage() {
       <SiteHeader />
 
       <main>
-        <section className="mx-auto max-w-6xl px-5 py-16 lg:px-8 lg:py-24">
+        <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
           <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-start lg:gap-16">
             {/* Left copy */}
             <div>
@@ -96,7 +96,7 @@ function WaitlistPage() {
             </div>
 
             {/* Right form */}
-            <div className="rounded-3xl border border-[color:var(--hairline)] bg-white p-6 shadow-sm sm:p-8 lg:p-10">
+            <div className="tile p-6 shadow-sm sm:p-8 lg:p-10">
               <div className="mb-6">
                 <h2 className="text-2xl font-semibold tracking-tight">Already on the list?</h2>
                 <p className="mt-1 text-sm text-[color:var(--ink-soft)]">
@@ -110,7 +110,7 @@ function WaitlistPage() {
 
         {/* Perks */}
         <section className="border-y border-[color:var(--hairline)] bg-white">
-          <div className="mx-auto max-w-6xl px-5 py-16 lg:px-8">
+          <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8">
             <div className="mb-10 text-center">
               <div className="eyebrow">§ Why join early</div>
               <h2 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl">
@@ -135,7 +135,7 @@ function WaitlistPage() {
         </section>
 
         {/* Bottom CTA */}
-        <section className="mx-auto max-w-4xl px-5 py-20 text-center lg:px-8">
+        <section className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-20 text-center lg:px-8">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Want to see what's coming first?
           </h2>

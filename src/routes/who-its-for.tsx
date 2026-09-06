@@ -109,7 +109,7 @@ function WhoPage() {
       <SiteHeader />
       <main>
         <section className="border-b border-[color:var(--hairline)]">
-          <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14 lg:px-8 lg:py-20">
+          <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14 lg:px-8 lg:py-20">
             <div>
               <div className="eyebrow">§ Who it's for</div>
               <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
@@ -130,7 +130,7 @@ function WhoPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-5 py-14 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 py-14 lg:px-8">
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {personas.map((p) => (
@@ -156,14 +156,14 @@ function WhoPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-5 pb-4 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 pb-4 lg:px-8">
           <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
             <img src={builtForPhoto.url} alt="Built exclusively for aesthetics" className="aspect-[21/9] w-full object-cover" loading="lazy" />
           </div>
         </section>
 
         <section className="border-t border-[color:var(--hairline)] bg-white">
-          <div className="mx-auto max-w-3xl px-5 py-16 text-center lg:px-8">
+          <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16 text-center lg:px-8">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to join MODO?</h2>
             <p className="mt-3 text-[color:var(--ink-soft)]">We're opening up to founding clinics over the next few weeks. Create your account and we'll be in touch as soon as your account is ready.</p>
             <Link to="/auth"><Button size="lg" className="mt-6 rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90">Create your account</Button></Link>
