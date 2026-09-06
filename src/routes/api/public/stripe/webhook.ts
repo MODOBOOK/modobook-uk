@@ -249,6 +249,24 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 break;
               }
 
+              // MODO SMS blast: money lands on MODO's own account, then the
+              // texts go out. Idempotent — a retried webhook can't double-send.
+              if (metadata.kind === "sms_blast" && metadata.sms_blast_id) {
+                if (session.payment_status !== "paid") break;
+                try {
+                  const { markBlastPaid, dispatchSmsBlast } = await import("@/lib/sms-blast.server");
+                  await markBlastPaid({
+                    blastId: String(metadata.sms_blast_id),
+                    sessionId: session.id,
+                    paymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null,
+                  });
+                  await dispatchSmsBlast(String(metadata.sms_blast_id));
+                } catch (e) {
+                  console.error("[stripe-webhook] sms blast dispatch failed", e);
+                }
+                break;
+              }
+
               // Training courses: confirm the booking (and its calendar entry)
               // once payment lands.
               if (metadata.kind === "training_booking" && metadata.training_booking_id) {
