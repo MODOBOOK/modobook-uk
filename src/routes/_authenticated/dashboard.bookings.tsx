@@ -426,9 +426,7 @@ function BookingsPage() {
     return `${from.toLocaleDateString(undefined, { month: "short", ...(sameYear ? {} : { year: "numeric" as const }) })} – ${to.toLocaleDateString(undefined, { month: "short", year: "numeric" })}`;
   };
   const headerLabel =
-    view === "day"
-      ? anchor.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })
-      : view === "3day"
+    view === "day" || view === "3day"
       ? monthRangeLabel(anchor, addDays(anchor, STRIP_DAYS - 1))
       : view === "week"
       ? monthRangeLabel(startOfWeek(anchor), addDays(startOfWeek(anchor), 6))
