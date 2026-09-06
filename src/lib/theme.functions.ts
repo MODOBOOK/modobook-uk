@@ -92,6 +92,11 @@ export type ClinicThemeInput = {
   contact_tile_icon_size?: string;
   contact_tile_bg_color?: string | null;
   contact_tile_border_color?: string | null;
+  // Practitioner workspace only (never rendered on the patient booking page)
+  dashboard_follow_brand?: boolean;
+  dashboard_palette?: string | null;
+  dashboard_heading_font?: string | null;
+  dashboard_body_font?: string | null;
 };
 
 
