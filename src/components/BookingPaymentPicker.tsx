@@ -167,7 +167,9 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
       return;
     }
     if (!value) return;
-    const chosenMode = availableModes.includes(value.mode) ? value.mode : availableModes[0];
+    const chosenMode = value.mode === "cash_deposit"
+      ? (cashDepositAvailable ? "cash_deposit" : (availableModes.includes("cash") ? "cash" : availableModes[0]))
+      : availableModes.includes(value.mode) ? value.mode : availableModes[0];
     // Cash mode doesn't need a method; keep any prior method for stability.
     const needsMethod = chosenMode !== "cash" && chosenMode !== "card_capture";
     const chosenMethod = availableMethods.includes(value.method)
@@ -188,12 +190,14 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     if (value.mode === "deposit" && !depositWaived && o.requireDepositToConfirm && o.depositEnabled && availableMethods.includes("card")) {
       return { mode: "deposit" as const, method: "card" as const };
     }
-    const mode = availableModes.includes(value.mode) ? value.mode : (availableModes[0] ?? "full");
+    const mode = value.mode === "cash_deposit"
+      ? (cashDepositAvailable ? ("cash_deposit" as const) : ((availableModes.includes("cash") ? "cash" : availableModes[0]) ?? "full"))
+      : availableModes.includes(value.mode) ? value.mode : (availableModes[0] ?? "full");
     const method = availableMethods.includes(value.method) ? value.method : (availableMethods[0] ?? "card");
     // When deposit equals the full price, treat it as a full payment.
     const normalizedMode = mode === "deposit" && effectiveDepositCents === treatmentTotalCents ? "full" : mode;
     return { mode: normalizedMode, method, policyAgreed: value.policyAgreed === true };
-  }, [value, opts, availableModes, availableMethods, depositWaived, effectiveDepositCents, treatmentTotalCents]);
+  }, [value, opts, availableModes, availableMethods, depositWaived, effectiveDepositCents, treatmentTotalCents, cashDepositAvailable]);
 
 
   if (!configured || availableModes.length === 0) return null;
@@ -206,7 +210,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   const o = opts as ConfiguredOptions;
   const forceDepositCard = !depositWaived && o.requireDepositToConfirm && chosen?.mode === "deposit";
 
-  const baseCents = chosen?.mode === "deposit" ? effectiveDepositCents : treatmentTotalCents;
+  const baseCents = chosen?.mode === "deposit" || chosen?.mode === "cash_deposit" ? effectiveDepositCents : treatmentTotalCents;
   // One uniform platform fee across every online payment method. Cash / pay in
   // clinic never carries it, and neither does a card-capture-only booking.
   const isOnlinePayment = !!chosen && chosen.mode !== "cash";
