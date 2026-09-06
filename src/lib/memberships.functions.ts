@@ -293,12 +293,57 @@ export const listPublicMembershipPlans = createServerFn({ method: "GET" })
       .eq("profile_id", (profile as { id: string }).id)
       .eq("active", true)
       .order("price_cents", { ascending: true });
+
+    // Resolve the names/prices of any treatments included in each plan so the
+    // public page can show exactly what a member gets, not just a count.
+    const planRows = (plans ?? []) as Array<{
+      included_treatments: unknown;
+      [k: string]: unknown;
+    }>;
+    const ids = new Set<string>();
+    for (const p of planRows) {
+      const list = Array.isArray(p.included_treatments) ? p.included_treatments : [];
+      for (const t of list as Array<{ treatment_id?: string }>) {
+        if (t?.treatment_id) ids.add(t.treatment_id);
+      }
+    }
+    let treatmentMap: Record<string, { name: string; price_cents: number | null }> = {};
+    if (ids.size > 0) {
+      const { data: treatments } = await pub
+        .from("treatments")
+        .select("id, name, price")
+        .in("id", Array.from(ids));
+      treatmentMap = Object.fromEntries(
+        ((treatments ?? []) as Array<{ id: string; name: string; price: number | null }>).map((t) => [
+          t.id,
+          { name: t.name, price_cents: t.price == null ? null : Math.round(Number(t.price) * 100) },
+        ]),
+      );
+    }
+    const enriched = planRows.map((p) => {
+      const list = (Array.isArray(p.included_treatments) ? p.included_treatments : []) as Array<{
+        treatment_id?: string;
+        quantity?: number;
+      }>;
+      return {
+        ...p,
+        includedTreatmentDetails: list
+          .filter((t) => t?.treatment_id && treatmentMap[t.treatment_id])
+          .map((t) => ({
+            treatment_id: t.treatment_id!,
+            quantity: Number(t.quantity ?? 1),
+            name: treatmentMap[t.treatment_id!]!.name,
+            price_cents: treatmentMap[t.treatment_id!]!.price_cents,
+          })),
+      };
+    });
+
     return {
       clinicName:
         (profile as { clinic_name?: string | null; full_name?: string | null }).clinic_name ??
         (profile as { full_name?: string | null }).full_name ??
         null,
-      plans: (plans ?? []) as never[],
+      plans: enriched as never[],
     };
   });
 
