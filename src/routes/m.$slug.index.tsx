@@ -39,6 +39,7 @@ import {
   CalendarDays,
   ArrowRight,
   Timer,
+  Crown,
 } from "lucide-react";
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
