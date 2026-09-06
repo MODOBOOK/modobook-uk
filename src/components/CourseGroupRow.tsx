@@ -147,7 +147,7 @@ export function CourseGroupRow({
         }}
       >
         <span
-          className={`mt-0.5 flex shrink-0 items-center justify-center rounded-full border ${checkSize}`}
+          className={`mt-0.5 flex shrink-0 self-start items-center justify-center rounded-full border ${checkSize}`}
           style={chosen.length
             ? { backgroundColor: brand, borderColor: brand, color: "white" }
             : { borderColor: `${brand}66` }}

@@ -3176,7 +3176,7 @@ function TreatmentRow({
         disabled={capInfo?.full}
         aria-pressed={selected}
         aria-label={capInfo?.full ? "Fully booked" : selected ? "Deselect" : "Select"}
-        className={`mt-0.5 flex flex-shrink-0 items-center justify-center rounded-full border transition ${checkSize} ${capInfo?.full ? "cursor-not-allowed opacity-40" : ""}`}
+        className={`mt-0.5 flex flex-shrink-0 self-start items-center justify-center rounded-full border transition ${checkSize} ${capInfo?.full ? "cursor-not-allowed opacity-40" : ""}`}
         style={
           selected
             ? { backgroundColor: brand, borderColor: brand, color: "#fff" }
