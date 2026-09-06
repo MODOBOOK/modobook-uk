@@ -271,11 +271,11 @@ const [saving, setSaving] = useState(false);
           />
           <div className="rounded-md border p-3 space-y-3">
             <div>
-              <div className="text-sm font-medium">{PLATFORM_FEE_LABEL} — who pays?</div>
+              <div className="text-sm font-medium">Stripe platform fee — who pays?</div>
               <p className="text-xs text-muted-foreground">
-                A fixed {PLATFORM_FEE_DESCRIPTION} on every online payment — card, Klarna and Clearpay
+                A fixed {PLATFORM_FEE_DESCRIPTION} Stripe fee on every online payment — card, Klarna and Clearpay
                 are all charged exactly the same. Cash / pay-in-clinic bookings and card-on-file
-                captures never carry a fee.
+                captures never carry a Stripe fee.
               </p>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
@@ -286,9 +286,9 @@ const [saving, setSaving] = useState(false);
                   s.payment_pass_fees_to_customer ? "opacity-70" : "border-primary bg-primary/5"
                 }`}
               >
-                <div className="font-medium">I pay the fee</div>
+                <div className="font-medium">I pay the Stripe fee</div>
                 <div className="text-xs text-muted-foreground">
-                  Client pays the advertised price. The fee comes out of your payout.
+                  Client pays the advertised price. The Stripe fee comes out of your payout.
                 </div>
               </button>
               <button
@@ -298,9 +298,9 @@ const [saving, setSaving] = useState(false);
                   s.payment_pass_fees_to_customer ? "border-primary bg-primary/5" : "opacity-70"
                 }`}
               >
-                <div className="font-medium">My client pays the fee</div>
+                <div className="font-medium">My client pays the Stripe fee</div>
                 <div className="text-xs text-muted-foreground">
-                  Shown as a separate "{PLATFORM_FEE_LABEL}" line at checkout, on top of the price.
+                  Shown as a separate "Stripe platform fee" line at checkout, on top of the price.
                 </div>
               </button>
             </div>
