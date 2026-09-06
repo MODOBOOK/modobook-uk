@@ -24,8 +24,9 @@ export function useDashboardThemeStyle(): CSSProperties {
   });
 
   const vars = useMemo<Record<string, string>>(() => {
-    if (!theme) return {};
-    return buildThemeVars(resolveDashboardTheme(theme as Record<string, unknown>));
+    // resolveDashboardTheme falls back to the general MODO Clinical palette
+    // when the practitioner hasn't saved a theme.
+    return buildThemeVars(resolveDashboardTheme((theme as Record<string, unknown>) ?? null));
   }, [theme]);
 
   const serialized = JSON.stringify(vars);

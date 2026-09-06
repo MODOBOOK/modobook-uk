@@ -12,7 +12,30 @@ export type DashboardPalette = {
   colors: Record<string, string>;
 };
 
+// The general MODO workspace palette — the same cool clinical slate +
+// medical teal used by the Prescriber Hub. This is the default for every
+// practitioner dashboard unless they pick another palette in Appearance.
+export const DEFAULT_DASHBOARD_PALETTE: DashboardPalette = {
+  key: "modo-clinical",
+  name: "MODO Clinical",
+  tagline: "The standard MODO look — clean slate with medical teal.",
+  swatches: ["#f2f6f9", "#182837", "#0f5c6f", "#25a6a6"],
+  colors: {
+    background_color: "#f2f6f9",
+    text_color: "#14202d",
+    primary_color: "#0f5c6f",
+    accent_color: "#dfeaf0",
+    menu_card_bg: "#ffffff",
+    menu_card_border_color: "#d4dce2",
+    header_bg_color: "#182837",
+    header_text_color: "#f5f9fb",
+    button_color: "#0f5c6f",
+    button_text_color: "#f5f9fb",
+  },
+};
+
 const EXTRA: DashboardPalette[] = [
+  DEFAULT_DASHBOARD_PALETTE,
   {
     key: "midnight",
     name: "Midnight",
@@ -82,10 +105,14 @@ export function getDashboardPalette(key: string | null | undefined) {
 export function resolveDashboardTheme(
   theme: Record<string, unknown> | null | undefined,
 ): Record<string, unknown> | null {
-  if (!theme) return null;
-  if (theme["dashboard_follow_brand"] !== false) return theme;
+  if (!theme) {
+    // No saved theme — use the general MODO Clinical palette.
+    return { ...DEFAULT_DASHBOARD_PALETTE.colors };
+  }
+  // Brand colours only apply when the practitioner has explicitly opted in.
+  if (theme["dashboard_follow_brand"] === true) return theme;
 
-  const palette = getDashboardPalette(theme["dashboard_palette"] as string) ?? DASHBOARD_PALETTES[0];
+  const palette = getDashboardPalette(theme["dashboard_palette"] as string) ?? DEFAULT_DASHBOARD_PALETTE;
   const heading = (theme["dashboard_heading_font"] as string) || null;
   const body = (theme["dashboard_body_font"] as string) || null;
   return {
