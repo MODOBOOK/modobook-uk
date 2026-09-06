@@ -59,6 +59,7 @@ function PrescriberLayout() {
 
   const fetchRefs = useServerFn(listMyReferrals);
   const fetchVisits = useServerFn(listMyPrescriberVisits);
+  const fetchConnects = useServerFn(listConnectRequests);
   const refsQ = useQuery({
     queryKey: ["prescriber-nav-refs"],
     queryFn: () => fetchRefs(),
@@ -71,9 +72,16 @@ function PrescriberLayout() {
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
   });
+  const connectsQ = useQuery({
+    queryKey: ["connect-requests"],
+    queryFn: () => fetchConnects(),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  });
   const pendingRefs = (refsQ.data ?? []).filter((r) => r.status === "pending").length;
   const pendingVisits = (visitsQ.data ?? []).filter((v) => v.status === "pending_approval").length;
-  const totalPending = pendingRefs + pendingVisits;
+  const pendingConnects = (connectsQ.data ?? []).filter((r) => r.direction === "received" && r.status === "pending").length;
+  const totalPending = pendingRefs + pendingVisits + pendingConnects;
 
   useEffect(() => {
     const base = "Prescriber Hub";
@@ -84,6 +92,7 @@ function PrescriberLayout() {
   const badges: Record<string, number> = {
     referrals: pendingRefs,
     visits: pendingVisits,
+    directory: pendingConnects,
   };
 
   async function signOut() {
