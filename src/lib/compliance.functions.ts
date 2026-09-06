@@ -36,7 +36,11 @@ async function actorName(context: Ctx, profileId: string) {
   return (p?.full_name || p?.clinic_name || context.claims?.email || "Clinic team") as string;
 }
 
-function nextDue(frequency: string, from: string) {
+function nextDue(frequency: string, from: string, customDays?: number | null) {
+  if (frequency === "custom") {
+    const d = Number(customDays);
+    return Number.isFinite(d) && d > 0 ? addDays(from, Math.round(d)) : null;
+  }
   const days = frequencyDays(frequency);
   return days > 0 ? addDays(from, days) : null;
 }
@@ -186,6 +190,9 @@ export const saveCheckTemplate = createServerFn({ method: "POST" })
       frequency: string;
       fields: unknown[];
       next_due_on?: string | null;
+      custom_interval_days?: number | null;
+      remind_days_before?: number | null;
+      remind_when_overdue?: boolean;
       remind_email?: boolean;
       remind_in_app?: boolean;
       active?: boolean;
@@ -203,6 +210,12 @@ export const saveCheckTemplate = createServerFn({ method: "POST" })
       frequency: data.frequency,
       fields: data.fields ?? [],
       next_due_on: data.next_due_on || todayIso(),
+      custom_interval_days:
+        data.frequency === "custom" && Number(data.custom_interval_days) > 0
+          ? Math.round(Number(data.custom_interval_days))
+          : null,
+      remind_days_before: Math.max(0, Math.min(60, Math.round(Number(data.remind_days_before ?? 0)) || 0)),
+      remind_when_overdue: data.remind_when_overdue ?? true,
       remind_email: data.remind_email ?? true,
       remind_in_app: data.remind_in_app ?? true,
       active: data.active ?? true,
@@ -279,7 +292,7 @@ export const recordCheck = createServerFn({ method: "POST" })
 
     await db
       .from("compliance_check_templates")
-      .update({ next_due_on: nextDue(tpl.frequency, performedOn) })
+      .update({ next_due_on: nextDue(tpl.frequency, performedOn, tpl.custom_interval_days) })
       .eq("id", tpl.id)
       .eq("profile_id", a.profileId);
 
@@ -308,6 +321,9 @@ export const saveAuditTemplate = createServerFn({ method: "POST" })
       frequency: string;
       questions: Array<{ id: string; section: string; text: string }>;
       next_due_on?: string | null;
+      custom_interval_days?: number | null;
+      remind_days_before?: number | null;
+      remind_when_overdue?: boolean;
       remind_email?: boolean;
       remind_in_app?: boolean;
       active?: boolean;
@@ -324,7 +340,13 @@ export const saveAuditTemplate = createServerFn({ method: "POST" })
       category: data.category?.trim() || null,
       frequency: data.frequency,
       questions: data.questions ?? [],
-      next_due_on: data.next_due_on || nextDue(data.frequency, todayIso()),
+      next_due_on: data.next_due_on || nextDue(data.frequency, todayIso(), data.custom_interval_days),
+      custom_interval_days:
+        data.frequency === "custom" && Number(data.custom_interval_days) > 0
+          ? Math.round(Number(data.custom_interval_days))
+          : null,
+      remind_days_before: Math.max(0, Math.min(60, Math.round(Number(data.remind_days_before ?? 0)) || 0)),
+      remind_when_overdue: data.remind_when_overdue ?? true,
       remind_email: data.remind_email ?? true,
       remind_in_app: data.remind_in_app ?? true,
       active: data.active ?? true,
@@ -419,13 +441,13 @@ export const saveAudit = createServerFn({ method: "POST" })
     if (data.complete && data.template_id) {
       const { data: tpl } = await db
         .from("compliance_audit_templates")
-        .select("frequency")
+        .select("frequency, custom_interval_days")
         .eq("id", data.template_id)
         .maybeSingle();
       if (tpl) {
         await db
           .from("compliance_audit_templates")
-          .update({ next_due_on: nextDue(tpl.frequency, conductedOn) })
+          .update({ next_due_on: nextDue(tpl.frequency, conductedOn, tpl.custom_interval_days) })
           .eq("id", data.template_id)
           .eq("profile_id", a.profileId);
       }
