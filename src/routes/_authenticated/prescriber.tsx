@@ -27,21 +27,23 @@ export const Route = createFileRoute("/_authenticated/prescriber")({
   component: PrescriberLayout,
 });
 
+type NavItem = { to: string; label: string; icon: typeof Inbox; exact?: boolean; key: string };
+
 // Core day-to-day destinations — everything else lives under "More".
-const nav = [
-  { to: "/prescriber/dashboard", label: "Home", shortLabel: "Home", icon: LayoutDashboard, key: "dashboard" as const },
-  { to: "/prescriber/requests", label: "Requests", shortLabel: "Requests", icon: MessageSquareText, key: "requests" as const },
-  { to: "/prescriber/library", label: "Prescriptions", shortLabel: "Rx", icon: Pill, key: "library" as const },
-  { to: "/prescriber/connections", label: "Practitioners", shortLabel: "Team", icon: Network, key: "connections" as const },
+const nav: (NavItem & { shortLabel: string })[] = [
+  { to: "/prescriber/dashboard", label: "Home", shortLabel: "Home", icon: LayoutDashboard, key: "dashboard" },
+  { to: "/prescriber/requests", label: "Requests", shortLabel: "Requests", icon: MessageSquareText, key: "requests" },
+  { to: "/prescriber/library", label: "Prescriptions", shortLabel: "Rx", icon: Pill, key: "library" },
+  { to: "/prescriber/connections", label: "Practitioners", shortLabel: "Team", icon: Network, key: "connections" },
 ];
 
 // Secondary items — desktop sidebar section & mobile More sheet.
-const moreNav = [
-  { to: "/prescriber", label: "Referrals", icon: Inbox, exact: true, key: "referrals" as const },
-  { to: "/prescriber/visits", label: "Clinic visits", icon: CalendarDays, key: "visits" as const },
-  { to: "/prescriber/directions", label: "Directions", icon: ClipboardList, key: "directions" as const },
-  { to: "/prescriber/invoices", label: "Invoices", icon: FileText, key: "invoices" as const },
-  { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" as const },
+const moreNav: NavItem[] = [
+  { to: "/prescriber", label: "Referrals", icon: Inbox, exact: true, key: "referrals" },
+  { to: "/prescriber/visits", label: "Clinic visits", icon: CalendarDays, key: "visits" },
+  { to: "/prescriber/directions", label: "Directions", icon: ClipboardList, key: "directions" },
+  { to: "/prescriber/invoices", label: "Invoices", icon: FileText, key: "invoices" },
+  { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" },
 ];
 
 
