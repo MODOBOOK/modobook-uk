@@ -645,17 +645,20 @@ export const getPublicPaymentOptions = createServerFn({ method: "GET" })
       && (!prof.stripe_connect_onboarding_status || prof.stripe_connect_onboarding_status === "active");
     const cashOnlyBalance = !!(prof as { cash_only_balance?: boolean }).cash_only_balance;
     const depositEnabled = !!prof.payment_deposit_enabled;
-    const fullCardEnabled = prof.payment_card_full_enabled !== false && !cashOnlyBalance;
+    // "Cash for the remaining balance" is an ADDITIONAL patient choice — it no
+    // longer hides paying in full online.
+    const fullCardEnabled = prof.payment_card_full_enabled !== false;
     return {
       configured: active,
       requireDepositToConfirm: !!prof.require_deposit_to_confirm || depositEnabled,
-      // When cash-only-for-balance is on, patients cannot pay the full price online.
       cardEnabled: fullCardEnabled || depositEnabled,
       fullCardEnabled,
-      klarnaEnabled: !!prof.payment_klarna_enabled && !cashOnlyBalance,
-      clearpayEnabled: !!prof.payment_clearpay_enabled && !cashOnlyBalance,
+      klarnaEnabled: !!prof.payment_klarna_enabled,
+      clearpayEnabled: !!prof.payment_clearpay_enabled,
       depositEnabled,
-      cashEnabled: prof.allow_pay_in_clinic !== false,
+      // Cash-for-balance implies the patient may settle in cash at the clinic.
+      cashEnabled: prof.allow_pay_in_clinic !== false || cashOnlyBalance,
+
       cardCaptureEnabled: !!(prof as { payment_card_capture_enabled?: boolean }).payment_card_capture_enabled,
       cardCapturePolicy:
         ((prof as { card_capture_policy_text?: string | null }).card_capture_policy_text ?? "").trim() || null,
