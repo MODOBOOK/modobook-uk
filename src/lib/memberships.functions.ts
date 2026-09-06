@@ -531,7 +531,7 @@ export const redeemMembershipCredit = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    if (!membershipsEnabled(data.slug)) return { ok: true, applied: 0 };
+    
     const amount = Math.round(data.amountCents);
     if (amount <= 0) return { ok: true, applied: 0 };
 
