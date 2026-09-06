@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { getConsultation, updateConsultation, ensureConsultationPatient } from "@/lib/consultations.functions";
+import { getConsultation, updateConsultation, ensureConsultationPatient, saveConsultationMedicalToProfile, saveConsultationConsentToProfile } from "@/lib/consultations.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { TreatmentPlansPanel } from "@/components/TreatmentPlansPanel";
 import { createPaymentLink } from "@/lib/payment-links.functions";
@@ -278,7 +278,7 @@ export function ConsultationWizard() {
             )}
           </>
         )}
-        {step === 5 && <Step5 consent={c.consent} patientName={c.patient_name} onChange={(v: any) => setField("consent", v)} />}
+        {step === 5 && <Step5 consultationId={c.id} consent={c.consent} patientName={c.patient_name} onChange={(v: any) => setField("consent", v)} onLinked={(pid: string) => setC((prev: any) => ({ ...prev, patient_id: pid }))} />}
         {step === 6 && <Step6 profileId={c.profile_id} consultationId={c.id} photos={c.after_photos} onChange={(v: any) => setField("after_photos", v)} />}
         {step === 7 && <Step7 log={c.treatment_log} onChange={(v: any) => setField("treatment_log", v)} />}
         {step === 8 && <Step8 invoice={c.invoice} email={c.patient_email} patientName={c.patient_name} consultationId={c.id} onChange={(v: any) => setField("invoice", v)} onComplete={complete} completed={c.status === "completed"} />}
@@ -321,7 +321,9 @@ function Step1({ consultationId, medical, onChange, clientId, clientName, client
   onLinked: (pid: string) => void;
 }) {
   const ensure = useServerFn(ensureConsultationPatient);
+  const saveMedical = useServerFn(saveConsultationMedicalToProfile);
   const [linking, setLinking] = useState(false);
+  const [savingForm, setSavingForm] = useState(false);
   const answers = medical?.answers ?? {};
   const notes = medical?.notes ?? "";
   const toggle = (q: string, v: boolean) => onChange({ ...medical, answers: { ...answers, [q]: v } });
@@ -338,6 +340,19 @@ function Step1({ consultationId, medical, onChange, clientId, clientName, client
       toast.error(e?.message ?? "Failed to link patient");
     } finally { setLinking(false); }
   }
+
+  async function saveToProfile() {
+    setSavingForm(true);
+    try {
+      const res: any = await saveMedical({ data: { id: consultationId } });
+      if (res?.client_id) onLinked(res.client_id);
+      if (res?.saved) toast.success("Medical form saved to the patient's profile");
+      else toast.error("Nothing to save yet — tick some answers or add notes");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to save");
+    } finally { setSavingForm(false); }
+  }
+
 
   return (
     <div className="space-y-4">
@@ -382,7 +397,18 @@ function Step1({ consultationId, medical, onChange, clientId, clientName, client
         <Label>Additional notes</Label>
         <Textarea rows={3} value={notes} onChange={(e) => onChange({ ...medical, notes: e.target.value })} placeholder="Allergies, medications, anything relevant…" />
       </div>
+
+      <div className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-muted-foreground">
+          Saves this medical history to the patient's profile now — you don't need to finish the consultation.
+        </p>
+        <Button size="sm" className="w-full sm:w-auto" onClick={saveToProfile} disabled={savingForm}>
+          {savingForm ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Check className="mr-1.5 h-3.5 w-3.5" />}
+          Save to patient profile
+        </Button>
+      </div>
     </div>
+
   );
 }
 
@@ -478,8 +504,22 @@ function Step4({ plan, onChange }: any) {
   );
 }
 
-function Step5({ consent, patientName, onChange }: any) {
+function Step5({ consultationId, consent, patientName, onChange, onLinked }: any) {
+  const saveConsent = useServerFn(saveConsultationConsentToProfile);
+  const [savingConsent, setSavingConsent] = useState(false);
+  async function saveToProfile() {
+    setSavingConsent(true);
+    try {
+      const res: any = await saveConsent({ data: { id: consultationId } });
+      if (res?.client_id) onLinked?.(res.client_id);
+      if (res?.saved) toast.success("Consent saved to the patient's profile");
+      else toast.error("Ask the patient to sign first");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to save");
+    } finally { setSavingConsent(false); }
+  }
   const body = consent?.body ?? defaultConsent(patientName);
+
   const attachedIds: string[] = Array.isArray(consent?.attached_template_ids)
     ? consent.attached_template_ids
     : [];
@@ -535,7 +575,18 @@ function Step5({ consent, patientName, onChange }: any) {
       </div>
 
       <SignaturePad value={consent?.signature ?? null} signedAt={consent?.signed_at} signerName={consent?.signer_name ?? patientName} onChange={(sig, name) => onChange({ ...consent, body, signature: sig, signed_at: sig ? new Date().toISOString() : null, signer_name: name })} />
+
+      <div className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-muted-foreground">
+          Saves the signed consent to the patient's profile now — no need to finish the consultation.
+        </p>
+        <Button size="sm" className="w-full sm:w-auto" onClick={saveToProfile} disabled={savingConsent}>
+          {savingConsent ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Check className="mr-1.5 h-3.5 w-3.5" />}
+          Save to patient profile
+        </Button>
+      </div>
     </div>
+
   );
 }
 
