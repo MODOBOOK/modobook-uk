@@ -9,7 +9,7 @@ import {
   Copy,
   FileText,
   ChevronRight,
-  Stethoscope,
+  
   Wallet,
 } from "lucide-react";
 
