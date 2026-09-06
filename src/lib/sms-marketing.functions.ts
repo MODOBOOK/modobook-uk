@@ -56,7 +56,7 @@ export const getSmsBlastAudience = createServerFn({ method: 'GET' })
   .handler(async ({ context }) => {
     const profileId = await getOwnerProfileId(context.supabase, context.userId)
     const list = await loadAudience(context.supabase, profileId)
-    return { count: list.length, pricePence: SMS_PRICE_PENCE, minTexts: SMS_MIN_TEXTS }
+    return { count: list.length, patients: list, pricePence: SMS_PRICE_PENCE, minTexts: SMS_MIN_TEXTS }
   })
 
 export const listSmsBlasts = createServerFn({ method: 'GET' })
@@ -80,6 +80,7 @@ export const startSmsBlastCheckout = createServerFn({ method: 'POST' })
     z.object({
       name: z.string().max(120).optional(),
       body: z.string().min(5).max(1600),
+      recipientIds: z.array(z.string().uuid()).max(5000).optional(),
       successUrl: z.string().url(),
       cancelUrl: z.string().url(),
     }).parse(raw),
@@ -90,13 +91,17 @@ export const startSmsBlastCheckout = createServerFn({ method: 'POST' })
     const { segments } = countSms(body)
     if (segments < 1) throw new Error('Write your message first')
 
-    const audience = await loadAudience(context.supabase, profileId)
-    if (!audience.length) throw new Error('No patients have opted in to marketing texts yet')
+    const all = await loadAudience(context.supabase, profileId)
+    if (!all.length) throw new Error('No patients have opted in to marketing texts yet')
+    const audience = data.recipientIds?.length
+      ? all.filter((p) => data.recipientIds!.includes(p.id))
+      : all
+    if (!audience.length) throw new Error('Select at least one patient to text')
 
     const { texts, pence } = blastCost(audience.length, segments)
     if (texts < SMS_MIN_TEXTS) {
       throw new Error(
-        `Blasts start at ${SMS_MIN_TEXTS} texts. This one is only ${texts} — add more opted-in patients or lengthen the message.`,
+        `Blasts start at ${SMS_MIN_TEXTS} texts. This one is only ${texts} — select more patients or lengthen the message.`,
       )
     }
 
