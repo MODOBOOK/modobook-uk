@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Wallet, CheckCircle2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { membershipsEnabled } from "@/lib/feature-flags";
 
 export const Route = createFileRoute("/m/$slug/memberships")({
   head: () => ({
@@ -41,6 +42,22 @@ const gbp = (cents: number) => `£${(cents / 100).toFixed(2)}`;
 
 function MembershipsPublicPage() {
   const { slug } = useParams({ from: "/m/$slug/memberships" });
+
+  // Memberships are pilot-only: clinics outside the pilot get no public page.
+  if (!membershipsEnabled(slug)) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-20 text-center">
+        <Crown className="mx-auto h-10 w-10 opacity-40" />
+        <h1 className="mt-4 text-xl font-semibold">Page not available</h1>
+        <p className="mt-2 text-sm opacity-70">This clinic doesn't offer memberships yet.</p>
+      </div>
+    );
+  }
+
+  return <MembershipsPublicInner slug={slug} />;
+}
+
+function MembershipsPublicInner({ slug }: { slug: string }) {
   const qc = useQueryClient();
   const fetchPlans = useServerFn(listPublicMembershipPlans);
   const fetchMine = useServerFn(getMyMembershipForClinic);

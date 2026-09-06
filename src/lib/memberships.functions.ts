@@ -1,6 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { membershipsEnabled } from "@/lib/feature-flags";
+
+const NOT_LIVE = "Memberships are not available for this clinic yet.";
 
 async function __activeProfileId(supabase: any, userId: string) {
   const { activeProfileId } = await import("./clinic-context.server");
@@ -45,7 +48,7 @@ export const listMembershipPlans = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const profile = await getProfile(context.supabase, context.userId);
-    if (!profile) return [];
+    if (!profile || !membershipsEnabled(profile.slug)) return [];
     const { data, error } = await context.supabase
       .from("membership_plans")
       .select("*")
@@ -61,6 +64,7 @@ export const saveMembershipPlan = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profile = await getProfile(context.supabase, context.userId);
     if (!profile) throw new Error("Profile not found");
+    if (!membershipsEnabled(profile.slug)) throw new Error(NOT_LIVE);
     if (!profile.stripe_connect_account_id) {
       throw new Error("Connect your Stripe account first (Dashboard → Payments).");
     }
@@ -125,6 +129,7 @@ export const deleteMembershipPlan = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profile = await getProfile(context.supabase, context.userId);
     if (!profile) throw new Error("Profile not found");
+    if (!membershipsEnabled(profile.slug)) throw new Error(NOT_LIVE);
     // Soft-delete so existing subscribers keep their history; the plan just
     // stops being sold.
     const { error } = await context.supabase
@@ -142,7 +147,7 @@ export const listMemberships = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const profile = await getProfile(context.supabase, context.userId);
-    if (!profile) return [];
+    if (!profile || !membershipsEnabled(profile.slug)) return [];
     const { data, error } = await context.supabase
       .from("patient_memberships")
       .select("*, membership_plans(name, price_cents, interval, credit_cents)")
@@ -159,6 +164,7 @@ export const setMembershipStatus = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profile = await getProfile(context.supabase, context.userId);
     if (!profile) throw new Error("Profile not found");
+    if (!membershipsEnabled(profile.slug)) throw new Error(NOT_LIVE);
     const { data: m } = await context.supabase
       .from("patient_memberships")
       .select("id, status, stripe_subscription_id")
@@ -199,6 +205,7 @@ export const adjustPatientCredit = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profile = await getProfile(context.supabase, context.userId);
     if (!profile) throw new Error("Profile not found");
+    if (!membershipsEnabled(profile.slug)) throw new Error(NOT_LIVE);
     const delta = Math.round(data.deltaCents);
     if (!delta) throw new Error("Enter a non-zero amount");
     if (Math.abs(delta) > 1_000_000) throw new Error("Amount too large");
@@ -237,7 +244,7 @@ export const getPatientCreditForClinic = createServerFn({ method: "GET" })
   .inputValidator((input: { patientUserId: string }) => input)
   .handler(async ({ data, context }) => {
     const profile = await getProfile(context.supabase, context.userId);
-    if (!profile) return { balanceCents: 0 };
+    if (!profile || !membershipsEnabled(profile.slug)) return { balanceCents: 0 };
     const { data: rows } = await context.supabase
       .from("patient_credit_ledger")
       .select("delta_pennies")
@@ -255,6 +262,9 @@ export const getPatientCreditForClinic = createServerFn({ method: "GET" })
 export const listPublicMembershipPlans = createServerFn({ method: "GET" })
   .inputValidator((input: { slug: string }) => input)
   .handler(async ({ data }) => {
+    if (!membershipsEnabled(data.slug)) {
+      return { clinicName: null as string | null, plans: [] as never[] };
+    }
     const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
     const { createClient } = await import("@supabase/supabase-js");
     const pub = createClient(process.env["SUPABASE_URL"]!, key, {
@@ -295,6 +305,7 @@ export const getMyMembershipForClinic = createServerFn({ method: "GET" })
   .inputValidator((input: { slug: string }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    if (!membershipsEnabled(data.slug)) return { memberships: [], balanceCents: 0 };
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
@@ -328,6 +339,7 @@ export const subscribeToMembershipPlan = createServerFn({ method: "POST" })
   .inputValidator((input: { slug: string; planId: string }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    if (!membershipsEnabled(data.slug)) throw new Error(NOT_LIVE);
     const { data: profile } = await supabase
       .from("profiles")
       .select("id, slug, clinic_name, full_name, stripe_connect_account_id")
@@ -405,6 +417,9 @@ export const previewMembershipCredit = createServerFn({ method: "POST" })
   .inputValidator((input: { slug: string; treatmentIds: string[]; totalCents: number }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    if (!membershipsEnabled(data.slug)) {
+      return { applicableCents: 0, balanceCents: 0, mode: null as string | null };
+    }
     const { data: profile } = await supabase
       .from("profiles")
       .select("id")
@@ -467,6 +482,7 @@ export const redeemMembershipCredit = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    if (!membershipsEnabled(data.slug)) return { ok: true, applied: 0 };
     const amount = Math.round(data.amountCents);
     if (amount <= 0) return { ok: true, applied: 0 };
 

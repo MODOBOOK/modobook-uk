@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Pencil, Pause, Play, XCircle, Crown, Wallet, Users } from "lucide-react";
 import { toast } from "sonner";
+import { membershipsEnabled } from "@/lib/feature-flags";
 
 export const Route = createFileRoute("/_authenticated/dashboard/memberships")({
   head: () => ({
@@ -107,6 +108,23 @@ function MembershipsPage() {
     (Array.isArray(treatmentsQ.data) ? (treatmentsQ.data as Array<{ id: string; name: string }>) : [])) as Array<{ id: string; name: string }>;
   const slug = (profileQ.data as { slug?: string } | undefined)?.slug;
   const stripeConnected = !!(profileQ.data as { stripe_connect_account_id?: string | null } | undefined)?.stripe_connect_account_id;
+
+  // Memberships are pilot-only: if the profile has loaded and this clinic
+  // isn't in the pilot, don't render the manager (all server fns are also
+  // gated, so nothing can be read or changed anyway).
+  if (profileQ.data && !membershipsEnabled(slug ?? null)) {
+    return (
+      <div className="mx-auto max-w-md px-4 py-16 text-center">
+        <Crown className="mx-auto h-10 w-10 text-muted-foreground" />
+        <h1 className="mt-4 text-xl font-semibold">Memberships</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Memberships aren't available for your clinic yet. We're trialling them
+          with a small group first — they'll be switched on for everyone soon.
+        </p>
+      </div>
+    );
+  }
+
 
   const activeMembers = members.filter((m) => m.status === "active").length;
   const monthlyRecurring = members
