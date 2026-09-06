@@ -70,6 +70,36 @@ function newKey() {
   return Math.random().toString(36).slice(2);
 }
 
+/** Legacy records sometimes stored an address object as a JSON string. */
+function asAddressObject(value: unknown): Record<string, string> | null {
+  if (!value || typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed.startsWith("{")) return null;
+  try {
+    const parsed = JSON.parse(trimmed);
+    return parsed && typeof parsed === "object" ? (parsed as Record<string, string>) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Strip a JSON blob down to its line1 value so inputs never show raw JSON. */
+function unwrapAddressField(value: string | null | undefined): string {
+  const obj = asAddressObject(value);
+  if (!obj) return value ?? "";
+  return unwrapAddressField(String(obj.line1 ?? obj.address_line1 ?? ""));
+}
+
+function parseStoredAddress(value: string | null | undefined): { line1: string; city: string; postcode: string } {
+  const obj = asAddressObject(value);
+  if (!obj) return { line1: value ?? "", city: "", postcode: "" };
+  return {
+    line1: unwrapAddressField(String(obj.line1 ?? obj.address_line1 ?? "")),
+    city: String(obj.city ?? ""),
+    postcode: String(obj.postcode ?? ""),
+  };
+}
+
 function toMin(t: string) { const [h, m] = t.split(":").map(Number); return h * 60 + m; }
 function fromMin(n: number) { return `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`; }
 
@@ -108,7 +138,11 @@ function NewAppointmentPage() {
   const [modelExpanded, setModelExpanded] = useState(true);
 
 
-  type ClientRow = { id: string; full_name: string; email: string | null; phone: string | null; dob: string | null; address: string | null };
+  type ClientRow = {
+    id: string; full_name: string; email: string | null; phone: string | null; dob: string | null;
+    address: string | null;
+    address_line1?: string | null; city?: string | null; postcode?: string | null;
+  };
   type TemplateRow = { id: string; name: string };
   const [clients, setClients] = useState<ClientRow[]>([]);
   const [clientId, setClientId] = useState<string>("");
@@ -174,9 +208,12 @@ function NewAppointmentPage() {
     setPatientEmail(c.email ?? "");
     setPatientPhone(c.phone ?? "");
     setPatientDob(c.dob ?? "");
-    if (c.address) {
-      setAddrLine1(c.address);
-    }
+    // Some legacy records stored the whole address as a JSON blob in a single
+    // field — unpack it rather than dumping raw JSON into "Address line 1".
+    const parsed = parseStoredAddress(c.address);
+    setAddrLine1(c.address_line1 ? unwrapAddressField(c.address_line1) : parsed.line1);
+    setAddrCity(c.city ? unwrapAddressField(c.city) : parsed.city);
+    setAddrPostcode(c.postcode ? unwrapAddressField(c.postcode) : parsed.postcode);
     setClientPickerOpen(false);
   }
 
