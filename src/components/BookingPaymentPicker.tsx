@@ -5,7 +5,7 @@ import { getPublicPaymentOptions, type PaymentChoice } from "@/lib/public-bookin
 import { CreditCard, ShieldCheck } from "lucide-react";
 import { platformFeeCents, PLATFORM_FEE_LABEL } from "@/lib/platform-fee";
 
-type BookingMode = "deposit" | "full" | "cash" | "card_capture";
+type BookingMode = "deposit" | "full" | "cash" | "cash_deposit" | "card_capture";
 
 const DEFAULT_POLICY =
   "I authorise the clinic to securely store my card details and to charge the cancellation or no-show fee set out in their booking policy if I cancel late or do not attend.";
