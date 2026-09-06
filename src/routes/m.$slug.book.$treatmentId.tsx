@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getBookingContext, getDayAvailability, getMonthAvailability, requestBooking, type PaymentChoice } from "@/lib/public-booking.functions";
 import { redeemGiftCardCode } from "@/lib/gift-cards.functions";
+import { previewMembershipCredit, redeemMembershipCredit } from "@/lib/memberships.functions";
 import { ruleAppliesOnDate } from "@/lib/rota";
 
 import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
@@ -186,6 +187,7 @@ function BookTreatmentPage() {
   const [splitAgreed, setSplitAgreed] = useState(false);
   const [discount, setDiscount] = useState<AppliedDiscount | null>(null);
   const [paymentChoice, setPaymentChoice] = useState<PaymentChoice | null>(null);
+  const [useCredit, setUseCredit] = useState(false);
 
 
 
@@ -235,6 +237,21 @@ function BookTreatmentPage() {
   const linkReferral = useServerFn(linkReferralToAppointment);
   const redeemGc = useServerFn(redeemGiftCardCode);
   const consumePts = useServerFn(consumePointsRedemption);
+  const previewCreditFn = useServerFn(previewMembershipCredit);
+  const redeemCreditFn = useServerFn(redeemMembershipCredit);
+
+  // Membership savings-pot credit available to the signed-in patient here.
+  const creditQ = useQuery({
+    queryKey: ["membership-credit", slug, treatment?.id, price],
+    queryFn: () =>
+      previewCreditFn({
+        data: { slug, treatmentIds: [treatment.id], totalCents: Math.round(price * 100) },
+      }),
+    enabled: !!patientUserId && !!treatment?.id,
+    staleTime: 30_000,
+  });
+  const creditPreview = creditQ.data;
+  const creditAvailable = (creditPreview?.applicableCents ?? 0) > 0;
 
 
 
