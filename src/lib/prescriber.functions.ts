@@ -24,17 +24,97 @@ export const listMyConnectedPrescribers = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [{ data: codes }, { data: presc }] = await Promise.all([
       supabaseAdmin.from("hub_codes").select("user_id, owner_kind, display_name, code").in("user_id", otherIds),
-      supabaseAdmin.from("prescriber_profiles").select("user_id, full_name, status, regulatory_body").in("user_id", otherIds),
+      supabaseAdmin.from("prescriber_profiles").select("user_id, full_name, status, regulatory_body, fee_per_prescription_pence, fee_per_consult_pence, fee_notes").in("user_id", otherIds),
     ]);
     const prescMap = new Map((presc ?? []).map((p) => [p.user_id, p]));
     return (codes ?? [])
       .filter((c) => c.owner_kind === "prescriber" && prescMap.get(c.user_id)?.status === "approved")
-      .map((c) => ({
-        user_id: c.user_id,
-        name: prescMap.get(c.user_id)?.full_name ?? c.display_name ?? "Prescriber",
-        regulatory_body: prescMap.get(c.user_id)?.regulatory_body ?? null,
-        code: c.code,
-      }));
+      .map((c) => {
+        const p = prescMap.get(c.user_id);
+        return {
+          user_id: c.user_id,
+          name: p?.full_name ?? c.display_name ?? "Prescriber",
+          regulatory_body: p?.regulatory_body ?? null,
+          code: c.code,
+          fee_per_prescription_pence: (p as { fee_per_prescription_pence?: number | null } | undefined)?.fee_per_prescription_pence ?? null,
+          fee_per_consult_pence: (p as { fee_per_consult_pence?: number | null } | undefined)?.fee_per_consult_pence ?? null,
+          fee_notes: (p as { fee_notes?: string | null } | undefined)?.fee_notes ?? null,
+        };
+      });
+  });
+
+// ---- Prescriber: my fee settings (read) ----
+export const getMyPrescriberFees = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data } = await supabase
+      .from("prescriber_profiles")
+      .select("fee_per_prescription_pence, fee_per_consult_pence, fee_notes, signoff_pin_hash")
+      .eq("user_id", userId)
+      .maybeSingle();
+    return {
+      feeRx: data?.fee_per_prescription_pence ?? null,
+      feeConsult: data?.fee_per_consult_pence ?? null,
+      feeNotes: data?.fee_notes ?? "",
+      hasPin: !!data?.signoff_pin_hash,
+    };
+  });
+
+// ---- Prescriber: save my fee settings ----
+const FeesSchema = z.object({
+  fee_per_prescription: z.number().min(0).max(100000).nullable(),
+  fee_per_consult: z.number().min(0).max(100000).nullable(),
+  fee_notes: z.string().max(500).optional(),
+});
+export const saveMyPrescriberFees = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: z.infer<typeof FeesSchema>) => FeesSchema.parse(i))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const toPence = (v: number | null) => (v == null ? null : Math.round(v * 100));
+    const { error } = await supabase
+      .from("prescriber_profiles")
+      .update({
+        fee_per_prescription_pence: toPence(data.fee_per_prescription),
+        fee_per_consult_pence: toPence(data.fee_per_consult),
+        fee_notes: data.fee_notes?.trim() || null,
+      } as never)
+      .eq("user_id", userId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+async function hashPin(userId: string, pin: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${userId}::${pin}`));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// ---- Prescriber: set/change my quick sign-off PIN ----
+export const setSignoffPin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { pin: string; current_pin?: string }) => i)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    if (!/^\d{4,6}$/.test(data.pin)) throw new Error("PIN must be 4–6 digits");
+    const { data: prof } = await supabase
+      .from("prescriber_profiles")
+      .select("signoff_pin_hash")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!prof) throw new Error("No prescriber profile");
+    if (prof.signoff_pin_hash) {
+      if (!data.current_pin) throw new Error("Enter your current PIN to change it");
+      const current = await hashPin(userId, data.current_pin);
+      if (current !== prof.signoff_pin_hash) throw new Error("Current PIN is incorrect");
+    }
+    const next = await hashPin(userId, data.pin);
+    const { error } = await supabase
+      .from("prescriber_profiles")
+      .update({ signoff_pin_hash: next } as never)
+      .eq("user_id", userId);
+    if (error) throw error;
+    return { ok: true };
   });
 
 // ---- Practitioner: my treatments (id + name + prescriber settings) ----

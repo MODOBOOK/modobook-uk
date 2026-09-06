@@ -311,6 +311,55 @@ export const decideRxRequest = createServerFn({ method: "POST" })
     return { ok: true, status: (updates.status as string) ?? req.status };
   });
 
+// ---------- Quick sign-off: approve with PIN from the list ----------
+export const quickApproveRxRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string; pin: string }) => i)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: prof } = await supabase
+      .from("prescriber_profiles")
+      .select("signoff_pin_hash")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!prof?.signoff_pin_hash) throw new Error("Set a sign-off PIN in the Prescriber Hub first");
+    const buf = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(`${userId}::${data.pin}`),
+    );
+    const hash = Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+    if (hash !== prof.signoff_pin_hash) throw new Error("Incorrect PIN");
+
+    const { data: req, error: rerr } = await supabase
+      .from("prescription_requests")
+      .select("id, prescriber_id, status, first_response_at")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (rerr) throw rerr;
+    if (!req || req.prescriber_id !== userId) throw new Error("Not found");
+    if (req.status !== "pending" && req.status !== "awaiting_info") throw new Error("Already decided");
+
+    const now = new Date().toISOString();
+    const { error: uerr } = await supabase
+      .from("prescription_requests")
+      .update({
+        status: "approved",
+        decided_at: now,
+        ...(req.first_response_at ? {} : { first_response_at: now }),
+      } as never)
+      .eq("id", data.id);
+    if (uerr) throw uerr;
+
+    await supabase.from("prescription_request_events").insert({
+      request_id: data.id,
+      actor_id: userId,
+      actor_role: "prescriber",
+      kind: "approved" as never,
+      summary: "Approved via quick sign-off (PIN verified)",
+    });
+    return { ok: true };
+  });
+
 // ---------- Attachments ----------
 export const addRxAttachment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
