@@ -489,7 +489,6 @@ if (!canAccessRoute(clinicRole, item.to)) return false;
             );
           })}
         </nav>
-        )}
 
         <Sheet open={addOpen} onOpenChange={setAddOpen}>
           <SheetContent side="bottom" className="rounded-t-2xl pb-8 pt-4">
