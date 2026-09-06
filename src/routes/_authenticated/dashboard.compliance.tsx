@@ -369,6 +369,16 @@ function Page() {
                     size="sm"
                     variant="ghost"
                     onClick={() => {
+                      const { id: _id, ...rest } = t;
+                      setEditAudit({ ...rest, name: `${t.name} (copy)` });
+                    }}
+                  >
+                    Duplicate
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
                       if (confirm(`Delete "${t.name}"? Completed audits are kept.`))
                         run(() => delAuditTpl({ data: { id: t.id } }), "Audit template deleted");
                     }}
