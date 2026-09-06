@@ -292,7 +292,7 @@ export const listPublicMembershipPlans = createServerFn({ method: "GET" })
     const { data: profile, error: profileError } = await pub
       .rpc("get_public_profile_by_slug", { p_slug: data.slug.toLowerCase() })
       .maybeSingle();
-    if (profileError || !profile) return { clinicName: null as string | null, plans: [] as never[] };
+    if (profileError || !profile) return { clinicName: null as string | null, heroTitle: null as string | null, heroSubtitle: null as string | null, plans: [] as never[] };
     const { data: plans } = await pub
       .from("membership_plans")
       .select("id, name, description, price_cents, interval, credit_cents, spend_mode, discount_percent, perks, included_treatments, terms_text, terms_checkboxes")
@@ -349,6 +349,8 @@ export const listPublicMembershipPlans = createServerFn({ method: "GET" })
         (profile as { clinic_name?: string | null; full_name?: string | null }).clinic_name ??
         (profile as { full_name?: string | null }).full_name ??
         null,
+      heroTitle: (profile as { membership_hero_title?: string | null }).membership_hero_title || null,
+      heroSubtitle: (profile as { membership_hero_subtitle?: string | null }).membership_hero_subtitle || null,
       plans: enriched as never[],
     };
   });
