@@ -135,9 +135,14 @@ function HubIndex() {
     },
   ];
 
+  const pendingRefItems = refs.filter((r) => r.status === "pending");
+  const awaitingVisits = upcoming.filter((v) => !v.confirmed_by_prescriber && v.status !== "pending_approval");
+  const attentionCount = pendingRefItems.length + awaitingVisits.length;
+
   return (
-    <div className="space-y-5">
+    <div className="mx-auto max-w-5xl space-y-6">
       <Dialog open={showChooser} onOpenChange={(open) => { if (open) setShowChooser(true); }}>
+
         <DialogContent className="sm:max-w-lg" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Are you a practitioner or a prescriber?</DialogTitle>
