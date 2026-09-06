@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -17,6 +17,7 @@ import {
   Network,
   Pill,
   ArrowRight,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
@@ -62,7 +63,17 @@ function HubIndex() {
   const refsQ = useQuery({ queryKey: ["hub-overview-refs"], queryFn: () => fetchRefs() });
   const prescQ = useQuery({ queryKey: ["hub-overview-presc"], queryFn: () => fetchPrescribers() });
 
-  if (!ctx) return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
+  if (!ctx) {
+    return (
+      <div className="space-y-4">
+        <div className="h-40 animate-pulse rounded-3xl bg-muted" />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="h-24 animate-pulse rounded-3xl bg-muted" />
+          <div className="h-24 animate-pulse rounded-3xl bg-muted" />
+        </div>
+      </div>
+    );
+  }
 
   const status = ctx.prescriber?.status;
   const visits = visitsQ.data ?? [];
@@ -91,7 +102,6 @@ function HubIndex() {
     icon: typeof CalendarDays;
     title: string;
     desc: string;
-    accent: string;
     disabled?: boolean;
     disabledHint?: string;
   }> = [
@@ -99,8 +109,7 @@ function HubIndex() {
       to: "/hub/visits",
       icon: CalendarDays,
       title: "Request prescriber days",
-      desc: "Pick dates for a prescriber to be in your clinic. They confirm from their end.",
-      accent: "from-amber-100 to-amber-50 text-amber-900",
+      desc: "Pick dates for a prescriber to be in your clinic.",
       disabled: prescribers.length === 0,
       disabledHint: "Connect a prescriber first",
     },
@@ -108,8 +117,7 @@ function HubIndex() {
       to: "/hub/referrals",
       icon: Send,
       title: "Send a referral",
-      desc: "Route a patient to a prescriber for POM sign-off — with medical & consent history.",
-      accent: "from-rose-100 to-rose-50 text-rose-900",
+      desc: "Route a patient for POM sign-off with full history.",
       disabled: prescribers.length === 0,
       disabledHint: "Connect a prescriber first",
     },
@@ -117,20 +125,18 @@ function HubIndex() {
       to: "/hub/connections",
       icon: Network,
       title: "Manage prescribers",
-      desc: "Add a prescriber with their PR code, or share your RX code with a new one.",
-      accent: "from-sky-100 to-sky-50 text-sky-900",
+      desc: "Add a prescriber with their code, or share yours.",
     },
     {
       to: "/hub/prescribing",
       icon: Pill,
       title: "Prescribing rules",
-      desc: "Set which treatments need a prescriber and how patients are routed.",
-      accent: "from-emerald-100 to-emerald-50 text-emerald-900",
+      desc: "Choose which treatments need a prescriber.",
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <Dialog open={showChooser} onOpenChange={(open) => { if (open) setShowChooser(true); }}>
         <DialogContent className="sm:max-w-lg" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader>
@@ -143,7 +149,7 @@ function HubIndex() {
             <button
               type="button"
               onClick={choosePractitioner}
-              className="rounded-lg border p-4 text-left transition hover:border-primary hover:bg-primary/5"
+              className="rounded-2xl border p-4 text-left transition hover:border-primary hover:bg-primary/5"
             >
               <Stethoscope className="mb-2 h-5 w-5 text-primary" />
               <div className="font-medium">I'm a practitioner</div>
@@ -154,7 +160,7 @@ function HubIndex() {
             <button
               type="button"
               onClick={choosePrescriber}
-              className="rounded-lg border p-4 text-left transition hover:border-primary hover:bg-primary/5"
+              className="rounded-2xl border p-4 text-left transition hover:border-primary hover:bg-primary/5"
             >
               <ClipboardCheck className="mb-2 h-5 w-5 text-primary" />
               <div className="font-medium">I'm a prescriber</div>
@@ -167,107 +173,98 @@ function HubIndex() {
       </Dialog>
 
       {ctx.isPrescriber && status !== "approved" && (
-        <Card className="border-amber-300/50 bg-amber-50/40 dark:bg-amber-950/20">
-          <CardHeader className="flex flex-row items-start gap-3 space-y-0">
-            <AlertTriangle className="mt-1 h-5 w-5 text-amber-600" />
-            <div>
-              <CardTitle className="text-base">
+        <div className="rounded-3xl border border-amber-300/60 bg-amber-50/70 p-4 dark:bg-amber-950/20 sm:p-5">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 dark:bg-amber-900/40">
+              <AlertTriangle className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">
                 {status === "pending" && "Verification in review"}
                 {status === "more_info" && "More info requested"}
                 {status === "rejected" && "Verification rejected"}
                 {!status && "Verification required"}
-              </CardTitle>
-              <CardDescription>
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
                 {status === "pending" && "Our team is reviewing your documents — usually 1–2 working days."}
                 {status === "more_info" && (ctx.prescriber?.admin_note ?? "Please update your submission.")}
                 {status === "rejected" && (ctx.prescriber?.admin_note ?? "We were unable to verify your registration.")}
                 {!status && "Submit your verification to unlock the Hub."}
-              </CardDescription>
+              </p>
+              <Link to="/hub/verification" className="mt-3 inline-block">
+                <Button size="sm" variant="outline" className="rounded-full">
+                  {status ? "Update verification" : "Start verification"}
+                </Button>
+              </Link>
             </div>
-          </CardHeader>
-          <CardContent>
-            <Link to="/hub/verification">
-              <Button size="sm" variant="outline">
-                {status ? "Update verification" : "Start verification"}
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
-      {/* Hero: hub code + stats */}
-      <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background">
-        <CardContent className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[1.2fr_1fr] lg:gap-10">
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-                <ShieldCheck className="h-3 w-3" /> Your hub code
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Share this with a prescriber so they can connect to your clinic.
-              </p>
-            </div>
-            {code ? (
-              <div className="flex flex-wrap items-center gap-2">
-                <code className="rounded-lg border bg-background px-4 py-3 font-mono text-xl tracking-[0.3em] shadow-sm">
-                  {formatHubCode(code)}
-                </code>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    navigator.clipboard.writeText(formatHubCode(code));
-                    toast.success("Copied");
-                  }}
-                >
-                  <Copy className="mr-2 h-4 w-4" /> Copy
-                </Button>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">{blocked ?? "Generating…"}</p>
-            )}
-            {ctx.isPrescriber && status === "approved" && (
-              <p className="flex items-start gap-2 text-xs text-muted-foreground">
-                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 text-emerald-600" />
-                You are verified and visible in the Hub.
-              </p>
-            )}
+      {/* Hero: hub code */}
+      <div className="overflow-hidden rounded-3xl bg-primary p-5 text-primary-foreground shadow-lg sm:p-7">
+        <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.2em] opacity-80">
+          <ShieldCheck className="h-3.5 w-3.5" /> Your hub code
+        </div>
+        <p className="mt-2 max-w-md text-sm opacity-85">
+          Share this with a prescriber so they can connect to your clinic.
+        </p>
+        {code ? (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <code className="rounded-2xl bg-primary-foreground/15 px-4 py-3 font-mono text-xl tracking-[0.28em] sm:text-2xl">
+              {formatHubCode(code)}
+            </code>
+            <Button
+              variant="secondary"
+              className="rounded-full"
+              onClick={() => {
+                navigator.clipboard.writeText(formatHubCode(code));
+                toast.success("Copied");
+              }}
+            >
+              <Copy className="mr-2 h-4 w-4" /> Copy
+            </Button>
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            <Stat label="Prescribers" value={prescribers.length} />
-            <Stat label="Upcoming days" value={upcoming.length} accent={awaitingConfirm > 0} />
-            <Stat label="Open referrals" value={pendingRefs} accent={pendingRefs > 0} />
-          </div>
-        </CardContent>
-      </Card>
+        ) : (
+          <p className="mt-4 text-sm opacity-80">{blocked ?? "Generating…"}</p>
+        )}
+        {ctx.isPrescriber && status === "approved" && (
+          <p className="mt-3 flex items-start gap-2 text-xs opacity-85">
+            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5" />
+            You are verified and visible in the Hub.
+          </p>
+        )}
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+        <Stat label="Prescribers" value={prescribers.length} to="/hub/connections" />
+        <Stat label="Clinic days" value={upcoming.length} accent={awaitingConfirm > 0} to="/hub/visits" />
+        <Stat label="Referrals" value={pendingRefs} accent={pendingRefs > 0} to="/hub/referrals" />
+      </div>
 
       {/* Quick actions */}
       <section>
-        <h2 className="mb-3 font-serif text-lg">What would you like to do?</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <h2 className="mb-2.5 text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">Quick actions</h2>
+        <div className="grid gap-2.5 sm:grid-cols-2">
           {actions.map((a) => {
             const body = (
-              <Card
+              <div
                 className={cn(
-                  "group h-full overflow-hidden border transition-all",
+                  "group flex h-full items-center gap-3.5 rounded-3xl border border-border/60 bg-card p-4 transition-all",
                   a.disabled ? "opacity-60" : "hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md",
                 )}
               >
-                <CardContent className="flex h-full gap-4 p-4 sm:p-5">
-                  <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br", a.accent)}>
-                    <a.icon className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="font-semibold">{a.title}</h3>
-                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-foreground" />
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">{a.desc}</p>
-                    {a.disabled && (
-                      <p className="mt-2 text-[11px] font-medium text-amber-700">{a.disabledHint}</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <a.icon className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate text-[15px] font-semibold leading-tight">{a.title}</h3>
+                  <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{a.desc}</p>
+                  {a.disabled && <p className="mt-1.5 text-[11px] font-medium text-amber-700">{a.disabledHint}</p>}
+                </div>
+                <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-foreground" />
+              </div>
             );
             return a.disabled ? (
               <div key={a.to}>{body}</div>
@@ -282,16 +279,18 @@ function HubIndex() {
 
       {/* Upcoming clinic days */}
       <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-serif text-lg">Upcoming clinic days</h2>
-          <Link to="/hub/visits" className="text-xs font-medium text-primary hover:underline">
-            View all
+        <div className="mb-2.5 flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            Upcoming clinic days
+          </h2>
+          <Link to="/hub/visits" className="inline-flex items-center text-xs font-medium text-primary hover:underline">
+            View all <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
         {upcoming.length === 0 ? (
-          <Card>
+          <Card className="rounded-3xl border-dashed">
             <CardContent className="p-6 text-center text-sm text-muted-foreground">
-              <CalendarDays className="mx-auto mb-2 h-8 w-8 opacity-60" />
+              <CalendarDays className="mx-auto mb-2 h-8 w-8 opacity-50" />
               No clinic days scheduled yet.
               {prescribers.length > 0 && (
                 <>
@@ -306,26 +305,31 @@ function HubIndex() {
         ) : (
           <div className="space-y-2">
             {upcoming.slice(0, 3).map((v) => (
-              <Card key={v.id}>
-                <CardContent className="flex items-center justify-between gap-3 p-4">
-                  <div className="min-w-0">
-                    <p className="font-medium">
-                      {formatDate(v.visit_date)} · {v.start_time.slice(0, 5)}–{v.end_time.slice(0, 5)}
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {v.prescriber_name}
-                      {v.location_name ? ` · ${v.location_name}` : ""}
-                    </p>
-                  </div>
-                  {v.status === "pending_approval" ? (
-                    <Badge variant="outline" className="border-amber-400 text-amber-700">Pending</Badge>
-                  ) : v.confirmed_by_prescriber ? (
-                    <Badge className="bg-emerald-600">Confirmed</Badge>
-                  ) : (
-                    <Badge variant="outline">Awaiting prescriber</Badge>
-                  )}
-                </CardContent>
-              </Card>
+              <div
+                key={v.id}
+                className="flex items-center justify-between gap-3 rounded-3xl border border-border/60 bg-card p-4"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">
+                    {formatDate(v.visit_date)} · {v.start_time.slice(0, 5)}–{v.end_time.slice(0, 5)}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {v.prescriber_name}
+                    {v.location_name ? ` · ${v.location_name}` : ""}
+                  </p>
+                </div>
+                {v.status === "pending_approval" ? (
+                  <Badge variant="outline" className="shrink-0 rounded-full border-amber-400 text-amber-700">
+                    Pending
+                  </Badge>
+                ) : v.confirmed_by_prescriber ? (
+                  <Badge className="shrink-0 rounded-full bg-emerald-600">Confirmed</Badge>
+                ) : (
+                  <Badge variant="outline" className="shrink-0 rounded-full">
+                    Awaiting
+                  </Badge>
+                )}
+              </div>
             ))}
           </div>
         )}
@@ -334,17 +338,18 @@ function HubIndex() {
   );
 }
 
-function Stat({ label, value, accent = false }: { label: string; value: number; accent?: boolean }) {
+function Stat({ label, value, accent = false, to }: { label: string; value: number; accent?: boolean; to: string }) {
   return (
-    <div
+    <Link
+      to={to}
       className={cn(
-        "rounded-xl border bg-background/60 p-3 text-center backdrop-blur",
-        accent && "border-primary/40",
+        "rounded-3xl border border-border/60 bg-card p-3 text-center transition hover:border-primary/40 sm:p-4",
+        accent && "border-primary/50 bg-primary/5",
       )}
     >
-      <div className={cn("font-serif text-2xl", accent && "text-primary")}>{value}</div>
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-    </div>
+      <div className={cn("text-2xl font-semibold tracking-tight sm:text-3xl", accent && "text-primary")}>{value}</div>
+      <div className="mt-0.5 truncate text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{label}</div>
+    </Link>
   );
 }
 
