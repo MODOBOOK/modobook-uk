@@ -13,7 +13,7 @@ import {
   inviteToMembershipPlan,
 } from "@/lib/memberships.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
-import { getMyProfile } from "@/lib/profiles.functions";
+import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -115,6 +115,10 @@ function MembershipsPage() {
   const [inviteEmails, setInviteEmails] = useState("");
   const [inviteMessage, setInviteMessage] = useState("");
   const [inviting, setInviting] = useState(false);
+
+  const [heroTitle, setHeroTitle] = useState("");
+  const [heroSubtitle, setHeroSubtitle] = useState("");
+  const [savingHero, setSavingHero] = useState(false);
 
   const candidatesQ = useQuery({
     queryKey: ["membership-invite-candidates"],
