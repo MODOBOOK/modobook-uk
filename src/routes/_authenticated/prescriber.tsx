@@ -5,10 +5,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut, Inbox, Network, ShieldCheck, Stethoscope, Building2, CalendarDays, Pill, LayoutDashboard, ClipboardList, MoreHorizontal, FileText, MessageSquareText } from "lucide-react";
+import { LogOut, Inbox, Network, ShieldCheck, Stethoscope, Building2, CalendarDays, Pill, LayoutDashboard, ClipboardList, MoreHorizontal, FileText, MessageSquareText, Compass } from "lucide-react";
 import { getHubContext } from "@/lib/hub.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { listMyReferrals } from "@/lib/prescriber.functions";
+import { listConnectRequests } from "@/lib/prescriber-directory.functions";
 import { listMyPrescriberVisits } from "@/lib/clinic-visits.functions";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,7 @@ const nav: (NavItem & { shortLabel: string })[] = [
 const moreNav: NavItem[] = [
   { to: "/prescriber", label: "Referrals", icon: Inbox, exact: true, key: "referrals" },
   { to: "/prescriber/visits", label: "Clinic visits", icon: CalendarDays, key: "visits" },
+  { to: "/prescriber/directory", label: "Discovery", icon: Compass, key: "directory" },
   { to: "/prescriber/directions", label: "Directions", icon: ClipboardList, key: "directions" },
   { to: "/prescriber/invoices", label: "Invoices", icon: FileText, key: "invoices" },
   { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" },
@@ -57,6 +59,7 @@ function PrescriberLayout() {
 
   const fetchRefs = useServerFn(listMyReferrals);
   const fetchVisits = useServerFn(listMyPrescriberVisits);
+  const fetchConnects = useServerFn(listConnectRequests);
   const refsQ = useQuery({
     queryKey: ["prescriber-nav-refs"],
     queryFn: () => fetchRefs(),
@@ -69,9 +72,16 @@ function PrescriberLayout() {
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
   });
+  const connectsQ = useQuery({
+    queryKey: ["connect-requests"],
+    queryFn: () => fetchConnects(),
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  });
   const pendingRefs = (refsQ.data ?? []).filter((r) => r.status === "pending").length;
   const pendingVisits = (visitsQ.data ?? []).filter((v) => v.status === "pending_approval").length;
-  const totalPending = pendingRefs + pendingVisits;
+  const pendingConnects = (connectsQ.data ?? []).filter((r) => r.direction === "received" && r.status === "pending").length;
+  const totalPending = pendingRefs + pendingVisits + pendingConnects;
 
   useEffect(() => {
     const base = "Prescriber Hub";
@@ -82,6 +92,7 @@ function PrescriberLayout() {
   const badges: Record<string, number> = {
     referrals: pendingRefs,
     visits: pendingVisits,
+    directory: pendingConnects,
   };
 
   async function signOut() {

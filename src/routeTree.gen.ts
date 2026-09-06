@@ -73,6 +73,7 @@ import { Route as AuthenticatedPrescriberVisitsRouteImport } from './routes/_aut
 import { Route as AuthenticatedPrescriberRequestsRouteImport } from './routes/_authenticated/prescriber.requests'
 import { Route as AuthenticatedPrescriberLibraryRouteImport } from './routes/_authenticated/prescriber.library'
 import { Route as AuthenticatedPrescriberInvoicesRouteImport } from './routes/_authenticated/prescriber.invoices'
+import { Route as AuthenticatedPrescriberDirectoryRouteImport } from './routes/_authenticated/prescriber.directory'
 import { Route as AuthenticatedPrescriberDirectionsRouteImport } from './routes/_authenticated/prescriber.directions'
 import { Route as AuthenticatedPrescriberDashboardRouteImport } from './routes/_authenticated/prescriber.dashboard'
 import { Route as AuthenticatedPrescriberConnectionsRouteImport } from './routes/_authenticated/prescriber.connections'
@@ -112,6 +113,7 @@ import { Route as AuthenticatedDashboardIncomeReportRouteImport } from './routes
 import { Route as AuthenticatedDashboardHelpRouteImport } from './routes/_authenticated/dashboard.help'
 import { Route as AuthenticatedDashboardGiftCardsRouteImport } from './routes/_authenticated/dashboard.gift-cards'
 import { Route as AuthenticatedDashboardFormAllocationRouteImport } from './routes/_authenticated/dashboard.form-allocation'
+import { Route as AuthenticatedDashboardFindPrescriberRouteImport } from './routes/_authenticated/dashboard.find-prescriber'
 import { Route as AuthenticatedDashboardEmailsRouteImport } from './routes/_authenticated/dashboard.emails'
 import { Route as AuthenticatedDashboardDiscountsRouteImport } from './routes/_authenticated/dashboard.discounts'
 import { Route as AuthenticatedDashboardDesignStudioRouteImport } from './routes/_authenticated/dashboard.design-studio'
@@ -519,6 +521,12 @@ const AuthenticatedPrescriberInvoicesRoute =
     path: '/invoices',
     getParentRoute: () => AuthenticatedPrescriberRoute,
   } as any)
+const AuthenticatedPrescriberDirectoryRoute =
+  AuthenticatedPrescriberDirectoryRouteImport.update({
+    id: '/directory',
+    path: '/directory',
+    getParentRoute: () => AuthenticatedPrescriberRoute,
+  } as any)
 const AuthenticatedPrescriberDirectionsRoute =
   AuthenticatedPrescriberDirectionsRouteImport.update({
     id: '/directions',
@@ -750,6 +758,12 @@ const AuthenticatedDashboardFormAllocationRoute =
   AuthenticatedDashboardFormAllocationRouteImport.update({
     id: '/form-allocation',
     path: '/form-allocation',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardFindPrescriberRoute =
+  AuthenticatedDashboardFindPrescriberRouteImport.update({
+    id: '/find-prescriber',
+    path: '/find-prescriber',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardEmailsRoute =
@@ -1283,6 +1297,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/design-studio': typeof AuthenticatedDashboardDesignStudioRoute
   '/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
   '/dashboard/emails': typeof AuthenticatedDashboardEmailsRoute
+  '/dashboard/find-prescriber': typeof AuthenticatedDashboardFindPrescriberRoute
   '/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
   '/dashboard/gift-cards': typeof AuthenticatedDashboardGiftCardsRoute
   '/dashboard/help': typeof AuthenticatedDashboardHelpRoute
@@ -1322,6 +1337,7 @@ export interface FileRoutesByFullPath {
   '/prescriber/connections': typeof AuthenticatedPrescriberConnectionsRoute
   '/prescriber/dashboard': typeof AuthenticatedPrescriberDashboardRoute
   '/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
+  '/prescriber/directory': typeof AuthenticatedPrescriberDirectoryRoute
   '/prescriber/invoices': typeof AuthenticatedPrescriberInvoicesRoute
   '/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/prescriber/requests': typeof AuthenticatedPrescriberRequestsRouteWithChildren
@@ -1459,6 +1475,7 @@ export interface FileRoutesByTo {
   '/dashboard/design-studio': typeof AuthenticatedDashboardDesignStudioRoute
   '/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
   '/dashboard/emails': typeof AuthenticatedDashboardEmailsRoute
+  '/dashboard/find-prescriber': typeof AuthenticatedDashboardFindPrescriberRoute
   '/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
   '/dashboard/gift-cards': typeof AuthenticatedDashboardGiftCardsRoute
   '/dashboard/help': typeof AuthenticatedDashboardHelpRoute
@@ -1495,6 +1512,7 @@ export interface FileRoutesByTo {
   '/prescriber/connections': typeof AuthenticatedPrescriberConnectionsRoute
   '/prescriber/dashboard': typeof AuthenticatedPrescriberDashboardRoute
   '/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
+  '/prescriber/directory': typeof AuthenticatedPrescriberDirectoryRoute
   '/prescriber/invoices': typeof AuthenticatedPrescriberInvoicesRoute
   '/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/prescriber/requests': typeof AuthenticatedPrescriberRequestsRouteWithChildren
@@ -1639,6 +1657,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/design-studio': typeof AuthenticatedDashboardDesignStudioRoute
   '/_authenticated/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
   '/_authenticated/dashboard/emails': typeof AuthenticatedDashboardEmailsRoute
+  '/_authenticated/dashboard/find-prescriber': typeof AuthenticatedDashboardFindPrescriberRoute
   '/_authenticated/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
   '/_authenticated/dashboard/gift-cards': typeof AuthenticatedDashboardGiftCardsRoute
   '/_authenticated/dashboard/help': typeof AuthenticatedDashboardHelpRoute
@@ -1678,6 +1697,7 @@ export interface FileRoutesById {
   '/_authenticated/prescriber/connections': typeof AuthenticatedPrescriberConnectionsRoute
   '/_authenticated/prescriber/dashboard': typeof AuthenticatedPrescriberDashboardRoute
   '/_authenticated/prescriber/directions': typeof AuthenticatedPrescriberDirectionsRoute
+  '/_authenticated/prescriber/directory': typeof AuthenticatedPrescriberDirectoryRoute
   '/_authenticated/prescriber/invoices': typeof AuthenticatedPrescriberInvoicesRoute
   '/_authenticated/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/_authenticated/prescriber/requests': typeof AuthenticatedPrescriberRequestsRouteWithChildren
@@ -1824,6 +1844,7 @@ export interface FileRouteTypes {
     | '/dashboard/design-studio'
     | '/dashboard/discounts'
     | '/dashboard/emails'
+    | '/dashboard/find-prescriber'
     | '/dashboard/form-allocation'
     | '/dashboard/gift-cards'
     | '/dashboard/help'
@@ -1863,6 +1884,7 @@ export interface FileRouteTypes {
     | '/prescriber/connections'
     | '/prescriber/dashboard'
     | '/prescriber/directions'
+    | '/prescriber/directory'
     | '/prescriber/invoices'
     | '/prescriber/library'
     | '/prescriber/requests'
@@ -2000,6 +2022,7 @@ export interface FileRouteTypes {
     | '/dashboard/design-studio'
     | '/dashboard/discounts'
     | '/dashboard/emails'
+    | '/dashboard/find-prescriber'
     | '/dashboard/form-allocation'
     | '/dashboard/gift-cards'
     | '/dashboard/help'
@@ -2036,6 +2059,7 @@ export interface FileRouteTypes {
     | '/prescriber/connections'
     | '/prescriber/dashboard'
     | '/prescriber/directions'
+    | '/prescriber/directory'
     | '/prescriber/invoices'
     | '/prescriber/library'
     | '/prescriber/requests'
@@ -2179,6 +2203,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/design-studio'
     | '/_authenticated/dashboard/discounts'
     | '/_authenticated/dashboard/emails'
+    | '/_authenticated/dashboard/find-prescriber'
     | '/_authenticated/dashboard/form-allocation'
     | '/_authenticated/dashboard/gift-cards'
     | '/_authenticated/dashboard/help'
@@ -2218,6 +2243,7 @@ export interface FileRouteTypes {
     | '/_authenticated/prescriber/connections'
     | '/_authenticated/prescriber/dashboard'
     | '/_authenticated/prescriber/directions'
+    | '/_authenticated/prescriber/directory'
     | '/_authenticated/prescriber/invoices'
     | '/_authenticated/prescriber/library'
     | '/_authenticated/prescriber/requests'
@@ -2798,6 +2824,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPrescriberInvoicesRouteImport
       parentRoute: typeof AuthenticatedPrescriberRoute
     }
+    '/_authenticated/prescriber/directory': {
+      id: '/_authenticated/prescriber/directory'
+      path: '/directory'
+      fullPath: '/prescriber/directory'
+      preLoaderRoute: typeof AuthenticatedPrescriberDirectoryRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRoute
+    }
     '/_authenticated/prescriber/directions': {
       id: '/_authenticated/prescriber/directions'
       path: '/directions'
@@ -3069,6 +3102,13 @@ declare module '@tanstack/react-router' {
       path: '/form-allocation'
       fullPath: '/dashboard/form-allocation'
       preLoaderRoute: typeof AuthenticatedDashboardFormAllocationRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/find-prescriber': {
+      id: '/_authenticated/dashboard/find-prescriber'
+      path: '/find-prescriber'
+      fullPath: '/dashboard/find-prescriber'
+      preLoaderRoute: typeof AuthenticatedDashboardFindPrescriberRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/emails': {
@@ -3787,6 +3827,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardDesignStudioRoute: typeof AuthenticatedDashboardDesignStudioRoute
   AuthenticatedDashboardDiscountsRoute: typeof AuthenticatedDashboardDiscountsRoute
   AuthenticatedDashboardEmailsRoute: typeof AuthenticatedDashboardEmailsRoute
+  AuthenticatedDashboardFindPrescriberRoute: typeof AuthenticatedDashboardFindPrescriberRoute
   AuthenticatedDashboardFormAllocationRoute: typeof AuthenticatedDashboardFormAllocationRoute
   AuthenticatedDashboardGiftCardsRoute: typeof AuthenticatedDashboardGiftCardsRoute
   AuthenticatedDashboardHelpRoute: typeof AuthenticatedDashboardHelpRoute
@@ -3859,6 +3900,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardDesignStudioRoute,
     AuthenticatedDashboardDiscountsRoute: AuthenticatedDashboardDiscountsRoute,
     AuthenticatedDashboardEmailsRoute: AuthenticatedDashboardEmailsRoute,
+    AuthenticatedDashboardFindPrescriberRoute:
+      AuthenticatedDashboardFindPrescriberRoute,
     AuthenticatedDashboardFormAllocationRoute:
       AuthenticatedDashboardFormAllocationRoute,
     AuthenticatedDashboardGiftCardsRoute: AuthenticatedDashboardGiftCardsRoute,
@@ -3984,6 +4027,7 @@ interface AuthenticatedPrescriberRouteChildren {
   AuthenticatedPrescriberConnectionsRoute: typeof AuthenticatedPrescriberConnectionsRoute
   AuthenticatedPrescriberDashboardRoute: typeof AuthenticatedPrescriberDashboardRoute
   AuthenticatedPrescriberDirectionsRoute: typeof AuthenticatedPrescriberDirectionsRoute
+  AuthenticatedPrescriberDirectoryRoute: typeof AuthenticatedPrescriberDirectoryRoute
   AuthenticatedPrescriberInvoicesRoute: typeof AuthenticatedPrescriberInvoicesRoute
   AuthenticatedPrescriberLibraryRoute: typeof AuthenticatedPrescriberLibraryRoute
   AuthenticatedPrescriberRequestsRoute: typeof AuthenticatedPrescriberRequestsRouteWithChildren
@@ -3999,6 +4043,8 @@ const AuthenticatedPrescriberRouteChildren: AuthenticatedPrescriberRouteChildren
       AuthenticatedPrescriberDashboardRoute,
     AuthenticatedPrescriberDirectionsRoute:
       AuthenticatedPrescriberDirectionsRoute,
+    AuthenticatedPrescriberDirectoryRoute:
+      AuthenticatedPrescriberDirectoryRoute,
     AuthenticatedPrescriberInvoicesRoute: AuthenticatedPrescriberInvoicesRoute,
     AuthenticatedPrescriberLibraryRoute: AuthenticatedPrescriberLibraryRoute,
     AuthenticatedPrescriberRequestsRoute:
