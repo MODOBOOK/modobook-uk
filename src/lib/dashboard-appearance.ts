@@ -12,7 +12,30 @@ export type DashboardPalette = {
   colors: Record<string, string>;
 };
 
+// The general MODO workspace palette — the same cool clinical slate +
+// medical teal used by the Prescriber Hub. This is the default for every
+// practitioner dashboard unless they pick another palette in Appearance.
+export const DEFAULT_DASHBOARD_PALETTE: DashboardPalette = {
+  key: "modo-clinical",
+  name: "MODO Clinical",
+  tagline: "The standard MODO look — clean slate with medical teal.",
+  swatches: ["#f2f6f9", "#182837", "#0f5c6f", "#25a6a6"],
+  colors: {
+    background_color: "#f2f6f9",
+    text_color: "#14202d",
+    primary_color: "#0f5c6f",
+    accent_color: "#dfeaf0",
+    menu_card_bg: "#ffffff",
+    menu_card_border_color: "#d4dce2",
+    header_bg_color: "#182837",
+    header_text_color: "#f5f9fb",
+    button_color: "#0f5c6f",
+    button_text_color: "#f5f9fb",
+  },
+};
+
 const EXTRA: DashboardPalette[] = [
+  DEFAULT_DASHBOARD_PALETTE,
   {
     key: "midnight",
     name: "Midnight",
