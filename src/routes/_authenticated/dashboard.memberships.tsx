@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -97,6 +97,7 @@ function MembershipsPage() {
   const adjustFn = useServerFn(adjustPatientCredit);
   const candidatesFn = useServerFn(listMembershipInviteCandidates);
   const inviteFn = useServerFn(inviteToMembershipPlan);
+  const updateProfileFn = useServerFn(updateProfile);
 
   const plansQ = useQuery({ queryKey: ["membership-plans"], queryFn: () => listPlansFn() });
   const membersQ = useQuery({ queryKey: ["patient-memberships"], queryFn: () => listMembersFn() });
