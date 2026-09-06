@@ -100,6 +100,10 @@ function MembershipsPublicInner({ slug }: { slug: string }) {
 
   const plans = (plansQ.data?.plans ?? []) as unknown as PublicPlan[];
   const clinicName = plansQ.data?.clinicName ?? "this clinic";
+  const heroTitle = plansQ.data?.heroTitle?.trim() || "Look after your skin, every month";
+  const heroSubtitle =
+    plansQ.data?.heroSubtitle?.trim() ||
+    `Join a plan with ${clinicName}. Pay monthly by card, build a savings pot of treatment credit and enjoy member pricing and perks.`;
   const mine = mineQ.data;
 
   const myPlanIds = useMemo(
@@ -169,11 +173,10 @@ function MembershipsPublicInner({ slug }: { slug: string }) {
             className="mt-4 text-3xl font-semibold leading-tight sm:text-5xl"
             style={{ fontFamily: "var(--heading-font, inherit)" }}
           >
-            Look after your skin, every month
+            {heroTitle}
           </h1>
-          <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/85 sm:text-base">
-            Join a plan with {clinicName}. Pay monthly by card, build a savings pot of treatment credit and enjoy member
-            pricing and perks.
+          <p className="mt-3 max-w-xl whitespace-pre-line text-sm leading-relaxed text-white/85 sm:text-base">
+            {heroSubtitle}
           </p>
         </div>
       </section>
