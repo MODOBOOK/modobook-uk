@@ -301,6 +301,16 @@
   background-color: color-mix(in oklab, white 18%, transparent);
   color: currentColor;
 }
+.modo-marketing .tile-compact {
+  border-radius: 1.1rem;
+  padding: 0.7rem 0.9rem;
+}
+.modo-marketing .tile-compact .tile-icon {
+  height: 1.9rem;
+  width: 1.9rem;
+  border-radius: 0.6rem;
+  flex-shrink: 0;
+}
 }
 
 .modo-marketing .section {
