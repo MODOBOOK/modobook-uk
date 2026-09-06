@@ -107,8 +107,8 @@ function HubLayout() {
   const activeLabel = nav.find((n) => (n.exact ? pathname === n.to : pathname.startsWith(n.to)))?.label ?? "Overview";
 
   return (
-    <div className="flex min-h-screen bg-muted/30">
-      <aside className="hidden w-64 shrink-0 flex-col border-r bg-sidebar lg:flex">
+    <div className="rx-theme flex min-h-screen bg-background text-foreground">
+      <aside className="rx-rail hidden w-64 shrink-0 flex-col border-r lg:flex">
         <div className="flex h-20 items-center gap-3 px-5">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
             <Stethoscope className="h-5 w-5" />
