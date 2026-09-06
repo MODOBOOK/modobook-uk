@@ -6330,6 +6330,105 @@ export type Database = {
           },
         ]
       }
+      prescriber_connect_requests: {
+        Row: {
+          clinic_name: string | null
+          created_at: string
+          id: string
+          message: string
+          practitioner_email: string | null
+          practitioner_name: string | null
+          practitioner_phone: string | null
+          practitioner_user_id: string
+          prescriber_user_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          clinic_name?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          practitioner_email?: string | null
+          practitioner_name?: string | null
+          practitioner_phone?: string | null
+          practitioner_user_id: string
+          prescriber_user_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          clinic_name?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          practitioner_email?: string | null
+          practitioner_name?: string | null
+          practitioner_phone?: string | null
+          practitioner_user_id?: string
+          prescriber_user_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      prescriber_directory_listings: {
+        Row: {
+          availability: string | null
+          bio: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          day_rate_pence: number | null
+          display_name: string
+          id: string
+          is_listed: boolean
+          postcode_area: string | null
+          rates_on_request: boolean
+          services: string[]
+          town: string
+          travel_radius_miles: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          availability?: string | null
+          bio?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          day_rate_pence?: number | null
+          display_name: string
+          id?: string
+          is_listed?: boolean
+          postcode_area?: string | null
+          rates_on_request?: boolean
+          services?: string[]
+          town: string
+          travel_radius_miles?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          availability?: string | null
+          bio?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          day_rate_pence?: number | null
+          display_name?: string
+          id?: string
+          is_listed?: boolean
+          postcode_area?: string | null
+          rates_on_request?: boolean
+          services?: string[]
+          town?: string
+          travel_radius_miles?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       prescriber_invoices: {
         Row: {
           created_at: string
