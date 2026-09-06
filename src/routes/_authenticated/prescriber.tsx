@@ -101,17 +101,18 @@ function PrescriberLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="hidden w-64 shrink-0 flex-col border-r bg-sidebar lg:flex">
-        <div className="flex h-20 items-center gap-3 border-b px-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
+    <div className="rx-theme flex min-h-screen bg-background text-foreground">
+      <aside className="rx-rail hidden w-64 shrink-0 flex-col border-r lg:flex">
+        <div className="flex h-20 items-center gap-3 border-b border-[var(--sidebar-border)] px-5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)]">
             <Stethoscope className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <div className="truncate font-serif text-lg leading-tight">{name}</div>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Prescriber</div>
+            <div className="truncate text-lg font-semibold leading-tight">{name}</div>
+            <div className="text-[10px] uppercase tracking-[0.2em] opacity-70">Prescriber Hub</div>
           </div>
         </div>
+
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-6">
           {nav.map((item) => {
             const active = pathname.startsWith(item.to);
