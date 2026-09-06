@@ -189,10 +189,11 @@ export function CourseOptionsEditor({
   useEffect(() => setServiceName(courseGroupLabel(dbGroupName)), [dbGroupName]);
 
   // displayLabel is what the client sees; groupName is the internal grouping
-  // key. A treatment with no explicit group gets a unique key so two separate
-  // treatments with the same name never merge into one course row.
-  const displayLabel = serviceName.trim() || courseGroupLabel(dbGroupName);
-  const groupName = displayLabel === courseGroupLabel(dbGroupName) ? dbGroupName : displayLabel;
+  // key and always stays the persisted one — renaming happens only through the
+  // "Update" button, which moves every option in the group together.
+  const displayLabel = courseGroupLabel(dbGroupName);
+  const groupName = dbGroupName;
+
 
   const matchingOptions = useMemo(() => {
     const inGroup = allTreatments.filter((t) => {
