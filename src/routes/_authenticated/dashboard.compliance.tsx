@@ -297,6 +297,16 @@ function Page() {
                       size="sm"
                       variant="ghost"
                       onClick={() => {
+                        const { id: _id, ...rest } = t;
+                        setEditCheck({ ...rest, name: `${t.name} (copy)` });
+                      }}
+                    >
+                      Duplicate
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
                         if (confirm(`Delete "${t.name}"? Past records are kept.`))
                           run(() => delCheck({ data: { id: t.id } }), "Check deleted");
                       }}
