@@ -658,6 +658,9 @@ export const getPublicPaymentOptions = createServerFn({ method: "GET" })
       depositEnabled,
       // Cash-for-balance implies the patient may settle in cash at the clinic.
       cashEnabled: prof.allow_pay_in_clinic !== false || cashOnlyBalance,
+      // "Pay in full in cash" is governed by its own toggle, separately from
+      // the deposit-then-cash-balance option.
+      allowPayInClinic: prof.allow_pay_in_clinic !== false,
 
       cardCaptureEnabled: !!(prof as { payment_card_capture_enabled?: boolean }).payment_card_capture_enabled,
       cardCapturePolicy:
@@ -1421,9 +1424,13 @@ function normaliseBookingPaymentChoice(
     payment_deposit_enabled?: boolean | null;
     require_deposit_to_confirm?: boolean | null;
     payment_card_capture_enabled?: boolean | null;
+    allow_pay_in_clinic?: boolean | null;
+    cash_only_balance?: boolean | null;
   } | null,
   choice?: PaymentChoice | null,
 ): PaymentChoice | null {
+  const allowCashFull = profile?.allow_pay_in_clinic !== false;
+  const cashBalanceOk = allowCashFull || !!profile?.cash_only_balance;
   // Card capture (no charge now) is only honoured when the clinic offers it
   // and the patient ticked the cancellation policy.
   if (choice?.mode === "card_capture") {
@@ -1433,12 +1440,19 @@ function normaliseBookingPaymentChoice(
     return null;
   }
   // Cash at the appointment: nothing is taken online and no card is stored.
-  if (choice?.mode === "cash") return choice;
-  // Deposit now + cash balance: honoured only when the clinic takes deposits;
-  // charged card-only exactly like a normal deposit.
+  // Only honoured when the clinic explicitly allows paying in clinic; if they
+  // only offer "deposit now + cash balance", upgrade to that instead.
+  if (choice?.mode === "cash") {
+    if (allowCashFull) return choice;
+    if (cashBalanceOk && depositRequiredForProfile(profile)) return { mode: "cash_deposit", method: "card" };
+    return null;
+  }
+  // Deposit now + cash balance: honoured only when the clinic takes deposits
+  // AND accepts cash at the clinic; charged card-only like a normal deposit.
   if (choice?.mode === "cash_deposit") {
-    if (depositRequiredForProfile(profile)) return { mode: "cash_deposit", method: "card" };
-    return { mode: "cash", method: choice.method };
+    if (depositRequiredForProfile(profile) && cashBalanceOk) return { mode: "cash_deposit", method: "card" };
+    if (allowCashFull) return { mode: "cash", method: choice.method };
+    return null;
   }
   // Deposits are mandatory whenever the clinic enables deposits, and deposits
   // must be card-only so Stripe can both charge today and save the card for file.
