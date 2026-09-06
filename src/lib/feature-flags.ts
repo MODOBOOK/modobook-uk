@@ -135,3 +135,14 @@ export function practitionerReferralsEnabled(slug?: string | null) {
   return isFeatureLive(PRACTITIONER_REFERRALS_SLUGS, slug);
 }
 
+/**
+ * Patient memberships (recurring plans, savings pots & member perks).
+ * Pilot clinics only for now — hidden from everyone else's dashboard,
+ * booking pages and checkout.
+ */
+export const MEMBERSHIPS_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
+
+export function membershipsEnabled(slug?: string | null) {
+  return isFeatureLive(MEMBERSHIPS_SLUGS, slug);
+}
+
