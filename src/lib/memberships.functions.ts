@@ -773,3 +773,29 @@ export const inviteToMembershipPlan = createServerFn({ method: "POST" })
     }
     return { sent, failed };
   });
+
+// Terms & conditions a patient has agreed to, for the practitioner's patient
+// record. Looked up by clinic client id (and the linked patient account).
+export const listPatientTermsAcceptances = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { clientId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const profile = await getProfile(context.supabase, context.userId);
+    if (!profile) return [];
+    const { data: client } = await context.supabase
+      .from("clinic_clients")
+      .select("id, email")
+      .eq("id", data.clientId)
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+    if (!client) return [];
+    const email = ((client as { email: string | null }).email ?? "").trim().toLowerCase();
+    const { data: rows } = await context.supabase
+      .from("membership_terms_acceptances")
+      .select("id, plan_name, terms_text, checkbox_items, accepted_at, patient_email, client_id")
+      .eq("clinic_profile_id", profile.id)
+      .order("accepted_at", { ascending: false });
+    return ((rows ?? []) as any[]).filter(
+      (r) => r.client_id === data.clientId || (email && String(r.patient_email ?? "").toLowerCase() === email),
+    );
+  });
