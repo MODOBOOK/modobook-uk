@@ -27,7 +27,7 @@ function AppearancePage() {
   const save = useServerFn(upsertMyTheme);
   const qc = useQueryClient();
 
-  const [follow, setFollow] = useState(false);
+  const [follow, setFollow] = useState(true);
   const [palette, setPalette] = useState<string>("modo-clinical");
   const [heading, setHeading] = useState<string>("Plus Jakarta Sans");
   const [body, setBody] = useState<string>("Plus Jakarta Sans");
@@ -36,7 +36,7 @@ function AppearancePage() {
   useEffect(() => {
     load().then((t: Record<string, unknown> | null) => {
       if (!t) return;
-      setFollow(t["dashboard_follow_brand"] === true);
+      setFollow(t["dashboard_follow_brand"] === true || !t["dashboard_palette"]);
       if (t["dashboard_palette"]) setPalette(String(t["dashboard_palette"]));
       if (t["dashboard_heading_font"]) setHeading(String(t["dashboard_heading_font"]));
       if (t["dashboard_body_font"]) setBody(String(t["dashboard_body_font"]));
