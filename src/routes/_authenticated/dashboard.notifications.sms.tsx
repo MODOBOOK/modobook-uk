@@ -69,21 +69,6 @@ return (
       </div>
       <SaveReminder />
 
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="space-y-1 p-4">
-          <p className="flex items-center gap-2 text-sm font-semibold">
-            SMS reminders
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-primary">
-              Coming soon
-            </span>
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Automatic text reminders sent ahead of each appointment are in final testing. They&rsquo;ll
-            switch on here shortly — no action needed from you.
-          </p>
-        </CardContent>
-      </Card>
-
       {!whatsappMessagingEnabled(profile.slug as string | null) ? (
         <Card>
           <CardHeader>
