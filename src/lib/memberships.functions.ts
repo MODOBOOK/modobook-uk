@@ -431,6 +431,57 @@ export const subscribeToMembershipPlan = createServerFn({ method: "POST" })
       .maybeSingle();
     if (existing) throw new Error("You're already subscribed to this plan.");
 
+    // ---- Terms & conditions -------------------------------------------------
+    const boxes = (plan.terms_checkboxes ?? []) as Array<{ label: string; required?: boolean }>;
+    const accepted = new Set((data.acceptedCheckboxes ?? []).map((l) => String(l)));
+    const missing = boxes.filter((b) => b.required !== false && !accepted.has(b.label));
+    const hasTerms = !!(plan.terms_text?.trim() || boxes.length);
+    if (hasTerms) {
+      if (missing.length) throw new Error("Please agree to all the required terms first.");
+      const email = (context.claims as { email?: string } | undefined)?.email ?? null;
+      const { data: client } = await supabase
+        .from("clinic_clients")
+        .select("id")
+        .eq("profile_id", p.id)
+        .ilike("email", email ?? "___none___")
+        .maybeSingle();
+      await supabase.from("membership_terms_acceptances").insert({
+        clinic_profile_id: p.id,
+        plan_id: plan.id,
+        patient_user_id: userId,
+        client_id: (client as { id: string } | null)?.id ?? null,
+        patient_email: email,
+        plan_name: plan.name,
+        terms_text: plan.terms_text,
+        checkbox_items: boxes.map((b) => ({
+          label: b.label,
+          required: b.required !== false,
+          agreed: accepted.has(b.label),
+        })),
+      } as never);
+
+      if (email) {
+        const { getPractitionerBranding, tryEnqueueAppEmail } = await import("./email/send.server");
+        const branding = await getPractitionerBranding(p.id);
+        await tryEnqueueAppEmail({
+          templateName: "membership-terms",
+          recipientEmail: email,
+          messageId: `membership-terms-${plan.id}-${userId}-${Date.now()}`,
+          templateData: {
+            profileId: p.id,
+            clinicName: p.clinic_name || branding.clinicName || p.full_name || "Your clinic",
+            planName: plan.name,
+            termsText: plan.terms_text,
+            checkboxes: boxes.map((b) => b.label),
+            acceptedAt: new Date().toLocaleString("en-GB", { timeZone: "Europe/London" }),
+            logoUrl: branding.logoUrl,
+            brandColor: branding.brandColor,
+          },
+        });
+      }
+    }
+
+
     let priceId = plan.stripe_price_id;
     if (!priceId) {
       const { ensureMembershipPrice } = await import("./stripe.server");
