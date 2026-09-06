@@ -46,7 +46,7 @@ import {
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { PrescriberBottomNav } from "@/components/prescriber/PrescriberBottomNav";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
