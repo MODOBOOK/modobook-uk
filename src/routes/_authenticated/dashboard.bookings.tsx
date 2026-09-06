@@ -619,7 +619,7 @@ function BookingsPage() {
                 minWidth: isStrip
                   ? "max-content"
                   : isMobile
-                  ? `calc(var(--gutter) + ${days.length * (view === "day" ? 0 : 112)}px)`
+                  ? `calc(var(--gutter) + ${days.length * 112}px)`
                   : undefined,
               }}
             >
