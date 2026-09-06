@@ -460,7 +460,7 @@ export function CourseOptionsEditor({
             type="button"
             variant="outline"
             size="sm"
-            disabled={savingServiceName || serviceName.trim() === dbGroupName}
+            disabled={savingServiceName || !serviceName.trim() || serviceName.trim() === courseGroupLabel(dbGroupName)}
             onClick={saveServiceName}
           >
             <Save className="mr-1.5 h-4 w-4" />
