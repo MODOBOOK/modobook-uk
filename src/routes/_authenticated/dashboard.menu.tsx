@@ -153,7 +153,7 @@ const groups: Group[] = [
     blurb: "Email & SMS marketing campaigns",
     items: [
 { label: "Marketing", description: "Send branded campaigns to opted-in patients", to: "/dashboard/marketing", icon: Megaphone, ...T.espresso },
-      { label: "SMS Marketing", description: "Promotional text campaigns to opted-in patients", to: "/dashboard/sms-marketing", icon: MessageCircle, ...T.cream },
+      { label: "SMS Marketing", description: "Paid text blasts to opted-in patients", to: "/dashboard/marketing/sms", icon: MessageCircle, ...T.cream },
     ],
   },
   {
@@ -185,8 +185,6 @@ function MenuPage() {
   const pilot = pilotFeaturesEnabled(profile.slug);
 
 function comingSoonFor(to: string): ComingSoonKey | null {
-    // Not-yet-built features: coming soon for everyone, including pilot clinics.
-    if (to === "/dashboard/sms-marketing") return "sms-marketing";
     // Pilot-rolled features: open for pilot clinics, coming soon for everyone else.
     if (pilot) return null;
     if (to === "/dashboard/associates") return "associates";
