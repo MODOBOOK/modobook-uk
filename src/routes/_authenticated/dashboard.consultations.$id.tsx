@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { getConsultation, updateConsultation, ensureConsultationPatient } from "@/lib/consultations.functions";
+import { getConsultation, updateConsultation, ensureConsultationPatient, saveConsultationMedicalToProfile, saveConsultationConsentToProfile } from "@/lib/consultations.functions";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { TreatmentPlansPanel } from "@/components/TreatmentPlansPanel";
 import { createPaymentLink } from "@/lib/payment-links.functions";
