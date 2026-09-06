@@ -86,12 +86,30 @@ function SmsBlastPage() {
   }, [search.blast, search.session_id])
 
   const count = useMemo(() => countSms(body), [body])
-  const recipients = audience?.count ?? 0
+  const allPatients = audience?.patients ?? []
+  const selected = useMemo(() => allPatients.filter((p) => !excluded.has(p.id)), [allPatients, excluded])
+  const recipients = selected.length
   const cost = blastCost(recipients, count.segments)
   const belowMin = cost.texts < SMS_MIN_TEXTS
 
+  const filteredPatients = useMemo(() => {
+    const q = pickerQuery.trim().toLowerCase()
+    if (!q) return allPatients
+    return allPatients.filter((p) => p.name.toLowerCase().includes(q) || p.phone.includes(q))
+  }, [allPatients, pickerQuery])
+
+  function togglePatient(id: string) {
+    setExcluded((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   async function pay() {
     if (!body.trim()) { toast.error('Write your message first'); return }
+    if (!recipients) { toast.error('Select at least one patient'); return }
     setBusy(true)
     try {
       const origin = window.location.origin
@@ -99,6 +117,7 @@ function SmsBlastPage() {
         data: {
           name: name.trim() || undefined,
           body: body.trim(),
+          recipientIds: selected.map((p) => p.id),
           successUrl: `${origin}/dashboard/marketing/sms`,
           cancelUrl: `${origin}/dashboard/marketing/sms`,
         },
