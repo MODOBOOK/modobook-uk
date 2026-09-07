@@ -82,6 +82,7 @@ import { Route as AuthenticatedHubVisitsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedHubVerificationRouteImport } from './routes/_authenticated/hub.verification'
 import { Route as AuthenticatedHubReferralsRouteImport } from './routes/_authenticated/hub.referrals'
 import { Route as AuthenticatedHubPrescribingRouteImport } from './routes/_authenticated/hub.prescribing'
+import { Route as AuthenticatedHubFindPrescriberRouteImport } from './routes/_authenticated/hub.find-prescriber'
 import { Route as AuthenticatedHubConnectionsRouteImport } from './routes/_authenticated/hub.connections'
 import { Route as AuthenticatedDashboardUpcomingRouteImport } from './routes/_authenticated/dashboard.upcoming'
 import { Route as AuthenticatedDashboardTreatmentsRouteImport } from './routes/_authenticated/dashboard.treatments'
@@ -572,6 +573,12 @@ const AuthenticatedHubPrescribingRoute =
   AuthenticatedHubPrescribingRouteImport.update({
     id: '/prescribing',
     path: '/prescribing',
+    getParentRoute: () => AuthenticatedHubRoute,
+  } as any)
+const AuthenticatedHubFindPrescriberRoute =
+  AuthenticatedHubFindPrescriberRouteImport.update({
+    id: '/find-prescriber',
+    path: '/find-prescriber',
     getParentRoute: () => AuthenticatedHubRoute,
   } as any)
 const AuthenticatedHubConnectionsRoute =
@@ -1329,6 +1336,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/dashboard/upcoming': typeof AuthenticatedDashboardUpcomingRoute
   '/hub/connections': typeof AuthenticatedHubConnectionsRoute
+  '/hub/find-prescriber': typeof AuthenticatedHubFindPrescriberRoute
   '/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
   '/hub/referrals': typeof AuthenticatedHubReferralsRoute
   '/hub/verification': typeof AuthenticatedHubVerificationRoute
@@ -1504,6 +1512,7 @@ export interface FileRoutesByTo {
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/dashboard/upcoming': typeof AuthenticatedDashboardUpcomingRoute
   '/hub/connections': typeof AuthenticatedHubConnectionsRoute
+  '/hub/find-prescriber': typeof AuthenticatedHubFindPrescriberRoute
   '/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
   '/hub/referrals': typeof AuthenticatedHubReferralsRoute
   '/hub/verification': typeof AuthenticatedHubVerificationRoute
@@ -1689,6 +1698,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/_authenticated/dashboard/upcoming': typeof AuthenticatedDashboardUpcomingRoute
   '/_authenticated/hub/connections': typeof AuthenticatedHubConnectionsRoute
+  '/_authenticated/hub/find-prescriber': typeof AuthenticatedHubFindPrescriberRoute
   '/_authenticated/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
   '/_authenticated/hub/referrals': typeof AuthenticatedHubReferralsRoute
   '/_authenticated/hub/verification': typeof AuthenticatedHubVerificationRoute
@@ -1876,6 +1886,7 @@ export interface FileRouteTypes {
     | '/dashboard/treatments'
     | '/dashboard/upcoming'
     | '/hub/connections'
+    | '/hub/find-prescriber'
     | '/hub/prescribing'
     | '/hub/referrals'
     | '/hub/verification'
@@ -2051,6 +2062,7 @@ export interface FileRouteTypes {
     | '/dashboard/treatments'
     | '/dashboard/upcoming'
     | '/hub/connections'
+    | '/hub/find-prescriber'
     | '/hub/prescribing'
     | '/hub/referrals'
     | '/hub/verification'
@@ -2235,6 +2247,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/treatments'
     | '/_authenticated/dashboard/upcoming'
     | '/_authenticated/hub/connections'
+    | '/_authenticated/hub/find-prescriber'
     | '/_authenticated/hub/prescribing'
     | '/_authenticated/hub/referrals'
     | '/_authenticated/hub/verification'
@@ -2885,6 +2898,13 @@ declare module '@tanstack/react-router' {
       path: '/prescribing'
       fullPath: '/hub/prescribing'
       preLoaderRoute: typeof AuthenticatedHubPrescribingRouteImport
+      parentRoute: typeof AuthenticatedHubRoute
+    }
+    '/_authenticated/hub/find-prescriber': {
+      id: '/_authenticated/hub/find-prescriber'
+      path: '/find-prescriber'
+      fullPath: '/hub/find-prescriber'
+      preLoaderRoute: typeof AuthenticatedHubFindPrescriberRouteImport
       parentRoute: typeof AuthenticatedHubRoute
     }
     '/_authenticated/hub/connections': {
@@ -3974,6 +3994,7 @@ const AuthenticatedDashboardRouteWithChildren =
 
 interface AuthenticatedHubRouteChildren {
   AuthenticatedHubConnectionsRoute: typeof AuthenticatedHubConnectionsRoute
+  AuthenticatedHubFindPrescriberRoute: typeof AuthenticatedHubFindPrescriberRoute
   AuthenticatedHubPrescribingRoute: typeof AuthenticatedHubPrescribingRoute
   AuthenticatedHubReferralsRoute: typeof AuthenticatedHubReferralsRoute
   AuthenticatedHubVerificationRoute: typeof AuthenticatedHubVerificationRoute
@@ -3983,6 +4004,7 @@ interface AuthenticatedHubRouteChildren {
 
 const AuthenticatedHubRouteChildren: AuthenticatedHubRouteChildren = {
   AuthenticatedHubConnectionsRoute: AuthenticatedHubConnectionsRoute,
+  AuthenticatedHubFindPrescriberRoute: AuthenticatedHubFindPrescriberRoute,
   AuthenticatedHubPrescribingRoute: AuthenticatedHubPrescribingRoute,
   AuthenticatedHubReferralsRoute: AuthenticatedHubReferralsRoute,
   AuthenticatedHubVerificationRoute: AuthenticatedHubVerificationRoute,
