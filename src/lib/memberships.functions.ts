@@ -5,6 +5,26 @@ import { membershipsEnabled } from "@/lib/feature-flags";
 
 const NOT_LIVE = "Memberships are not available for this clinic yet.";
 
+/**
+ * Patients can't read another clinic's `profiles` row under RLS, so patient-side
+ * lookups by public slug go through the admin client (read-only, narrow select).
+ */
+async function clinicBySlug(slug: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("profiles")
+    .select("id, slug, clinic_name, full_name, stripe_connect_account_id")
+    .ilike("slug", slug)
+    .maybeSingle();
+  return data as {
+    id: string;
+    slug: string | null;
+    clinic_name: string | null;
+    full_name: string | null;
+    stripe_connect_account_id: string | null;
+  } | null;
+}
+
 async function __activeProfileId(supabase: any, userId: string) {
   const { activeProfileId } = await import("./clinic-context.server");
   return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
@@ -370,11 +390,7 @@ export const getMyMembershipForClinic = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     if (!membershipsEnabled(data.slug)) return { memberships: [], balanceCents: 0 };
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("slug", data.slug)
-      .maybeSingle();
+    const profile = await clinicBySlug(data.slug);
     if (!profile) return { memberships: [], balanceCents: 0 };
     const profileId = (profile as { id: string }).id;
 
@@ -406,15 +422,7 @@ export const subscribeToMembershipPlan = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     if (!membershipsEnabled(data.slug)) throw new Error(NOT_LIVE);
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id, slug, clinic_name, full_name, stripe_connect_account_id")
-      .eq("slug", data.slug)
-      .maybeSingle();
-    const p = profile as {
-      id: string; slug: string | null; clinic_name: string | null;
-      full_name: string | null; stripe_connect_account_id: string | null;
-    } | null;
+    const p = await clinicBySlug(data.slug);
     if (!p?.stripe_connect_account_id) throw new Error("This clinic can't take memberships yet.");
 
     const { data: planRow } = await supabase
@@ -537,11 +545,7 @@ export const previewMembershipCredit = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("slug", data.slug)
-      .maybeSingle();
+    const profile = await clinicBySlug(data.slug);
     if (!profile) return { applicableCents: 0, balanceCents: 0, mode: null as string | null };
     const profileId = (profile as { id: string }).id;
 
@@ -606,11 +610,7 @@ export const redeemMembershipCredit = createServerFn({ method: "POST" })
     const amount = Math.round(data.amountCents);
     if (amount <= 0) return { ok: true, applied: 0 };
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("slug", data.slug)
-      .maybeSingle();
+    const profile = await clinicBySlug(data.slug);
     if (!profile) throw new Error("Clinic not found");
     const profileId = (profile as { id: string }).id;
 
