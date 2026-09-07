@@ -86,6 +86,7 @@ export const listMembershipPlans = createServerFn({ method: "GET" })
       .from("membership_plans")
       .select("*")
       .eq("profile_id", profile.id)
+      .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true });
     if (error) throw error;
     return data ?? [];
@@ -164,11 +165,37 @@ export const saveMembershipPlan = createServerFn({ method: "POST" })
 
 export const deleteMembershipPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string }) => input)
+  .inputValidator((input: { id: string; mode?: "hide" | "delete" }) => input)
   .handler(async ({ data, context }) => {
     const profile = await getProfile(context.supabase, context.userId);
     if (!profile) throw new Error("Profile not found");
     if (!membershipsEnabled(profile.slug)) throw new Error(NOT_LIVE);
+    const hide = data.mode === "hide";
+    if (!hide) {
+      // Permanent removal is only safe when nobody has ever been on the plan —
+      // otherwise we'd orphan billing history, so fall back to hiding it.
+      const { count } = await context.supabase
+        .from("patient_memberships")
+        .select("id", { count: "exact", head: true })
+        .eq("plan_id", data.id)
+        .eq("profile_id", profile.id);
+      if ((count ?? 0) > 0) {
+        const { error } = await context.supabase
+          .from("membership_plans")
+          .update({ active: false } as never)
+          .eq("id", data.id)
+          .eq("profile_id", profile.id);
+        if (error) throw error;
+        return { ok: true, deleted: false as const };
+      }
+      const { error } = await context.supabase
+        .from("membership_plans")
+        .delete()
+        .eq("id", data.id)
+        .eq("profile_id", profile.id);
+      if (error) throw error;
+      return { ok: true, deleted: true as const };
+    }
     // Soft-delete so existing subscribers keep their history; the plan just
     // stops being sold.
     const { error } = await context.supabase
@@ -177,6 +204,25 @@ export const deleteMembershipPlan = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .eq("profile_id", profile.id);
     if (error) throw error;
+    return { ok: true, deleted: false as const };
+  });
+
+export const reorderMembershipPlans = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { ids: string[] }) => input)
+  .handler(async ({ data, context }) => {
+    const profile = await getProfile(context.supabase, context.userId);
+    if (!profile) throw new Error("Profile not found");
+    if (!membershipsEnabled(profile.slug)) throw new Error(NOT_LIVE);
+    await Promise.all(
+      data.ids.map((id, i) =>
+        context.supabase
+          .from("membership_plans")
+          .update({ sort_order: i } as never)
+          .eq("id", id)
+          .eq("profile_id", profile.id),
+      ),
+    );
     return { ok: true };
   });
 
@@ -326,6 +372,7 @@ export const listPublicMembershipPlans = createServerFn({ method: "GET" })
       .select("id, name, description, price_cents, interval, credit_cents, spend_mode, discount_percent, perks, included_treatments, terms_text, terms_checkboxes, treatment_frequency_months, min_commitment_months, flexible_booking, rollover_included")
       .eq("profile_id", (profile as { id: string }).id)
       .eq("active", true)
+      .order("sort_order", { ascending: true })
       .order("price_cents", { ascending: true });
 
     // Resolve the names/prices of any treatments included in each plan so the
