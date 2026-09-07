@@ -207,6 +207,21 @@ function MembershipsPage() {
   }
 
   const plans = (plansQ.data ?? []) as unknown as Plan[];
+
+  async function movePlan(index: number, delta: number) {
+    const next = [...plans];
+    const target = index + delta;
+    if (target < 0 || target >= next.length) return;
+    const [moved] = next.splice(index, 1);
+    next.splice(target, 0, moved!);
+    qc.setQueryData(["membership-plans"], next);
+    try {
+      await reorderFn({ data: { ids: next.map((p) => p.id) } });
+    } catch {
+      toast.error("Could not save the new order");
+    }
+    qc.invalidateQueries({ queryKey: ["membership-plans"] });
+  }
   const members = (membersQ.data ?? []) as Member[];
   const treatments = ((treatmentsQ.data as { treatments?: Array<{ id: string; name: string }> } | undefined)?.treatments ??
     (Array.isArray(treatmentsQ.data) ? (treatmentsQ.data as Array<{ id: string; name: string }>) : [])) as Array<{ id: string; name: string }>;
