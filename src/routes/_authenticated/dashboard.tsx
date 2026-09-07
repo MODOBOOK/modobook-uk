@@ -234,7 +234,7 @@ function DashboardLayout() {
             const pilotOn = pilotFeaturesEnabled(profile?.slug);
             const clinicRole = ((profile as Record<string, unknown>)?.__clinic_role as ClinicRole) ?? "owner";
             const visible = navItems.filter((item) => {
-if (!canAccessRoute(clinicRole, item.to, { canManageRota: Boolean((profile as Record<string, unknown>)?.__can_manage_rota) })) return false;
+if (!canAccessRoute(clinicRole, item.to, { canManageRota: Boolean((profile as Record<string, unknown>)?.__can_manage_rota), canUsePrescribing: Boolean((profile as Record<string, unknown>)?.__can_use_prescribing) })) return false;
               if ((item as { referrals?: boolean }).referrals) return practitionerReferralsEnabled(profile?.slug);
               // Not-yet-built features (soon: true) stay visible for everyone as a "Soon" chip.
               if ((item as { soon?: boolean }).soon) return true;

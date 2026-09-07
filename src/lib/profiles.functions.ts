@@ -33,11 +33,13 @@ export const getMyProfile = createServerFn({ method: "GET" })
       __is_owner: access.isOwner,
       __data_scope: access.dataScope,
       __can_manage_rota: access.isOwner || access.canManageRota,
+      __can_use_prescribing: access.isOwner || access.canUsePrescribing,
     } as typeof data & {
       __clinic_role: string;
       __is_owner: boolean;
       __data_scope: string;
       __can_manage_rota: boolean;
+      __can_use_prescribing: boolean;
     };
   });
 
