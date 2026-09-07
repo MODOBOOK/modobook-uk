@@ -5,6 +5,26 @@ import { membershipsEnabled } from "@/lib/feature-flags";
 
 const NOT_LIVE = "Memberships are not available for this clinic yet.";
 
+/**
+ * Patients can't read another clinic's `profiles` row under RLS, so patient-side
+ * lookups by public slug go through the admin client (read-only, narrow select).
+ */
+async function clinicBySlug(slug: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("profiles")
+    .select("id, slug, clinic_name, full_name, stripe_connect_account_id")
+    .ilike("slug", slug)
+    .maybeSingle();
+  return data as {
+    id: string;
+    slug: string | null;
+    clinic_name: string | null;
+    full_name: string | null;
+    stripe_connect_account_id: string | null;
+  } | null;
+}
+
 async function __activeProfileId(supabase: any, userId: string) {
   const { activeProfileId } = await import("./clinic-context.server");
   return (await activeProfileId(supabase, userId)) ?? "00000000-0000-0000-0000-000000000000";
