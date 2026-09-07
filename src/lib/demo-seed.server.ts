@@ -493,7 +493,7 @@ export async function seedDemoClinic(admin: Admin) {
     ]);
   }
 
-  // Theme — hero + warm sand palette
+  // Theme — deep slate-teal + sand "premium medical" palette
   const themePayload = {
     profile_id: profileId!,
     logo_url: IMG.logo,
