@@ -10,6 +10,7 @@ export type ClinicAccess = {
   staffId: string | null;
   staffPractitionerId: string | null;
   canManageRota: boolean;
+  canUsePrescribing: boolean;
 };
 
 const NONE: ClinicAccess = {
@@ -20,6 +21,7 @@ const NONE: ClinicAccess = {
   staffId: null,
   staffPractitionerId: null,
   canManageRota: false,
+  canUsePrescribing: false,
 };
 
 function selectedClinicCookie(): string | null {
@@ -49,12 +51,13 @@ export async function resolveClinicAccess(
     data_scope: "clinic" | "own" | null;
     practitioner_id: string | null;
     can_manage_rota?: boolean | null;
+    can_use_prescribing?: boolean | null;
   }> = [];
 
   try {
     const { data: memberships } = await supabase
       .from("staff_members")
-      .select("id, profile_id, role, data_scope, practitioner_id, status, can_manage_rota")
+      .select("id, profile_id, role, data_scope, practitioner_id, status, can_manage_rota, can_use_prescribing")
       .eq("user_id", userId)
       .eq("status", "active");
     staff = memberships ?? [];
@@ -77,6 +80,7 @@ export async function resolveClinicAccess(
       staffId: chosen.id,
       staffPractitionerId: chosen.practitioner_id ?? null,
       canManageRota: Boolean(chosen.can_manage_rota),
+      canUsePrescribing: chosen.role === "admin" || Boolean(chosen.can_use_prescribing),
     };
   }
 
@@ -89,6 +93,7 @@ export async function resolveClinicAccess(
       staffId: null,
       staffPractitionerId: null,
       canManageRota: true,
+      canUsePrescribing: true,
     };
   }
 
@@ -102,6 +107,7 @@ export async function resolveClinicAccess(
       staffId: match.id,
       staffPractitionerId: match.practitioner_id ?? null,
       canManageRota: Boolean(match.can_manage_rota),
+      canUsePrescribing: match.role === "admin" || Boolean(match.can_use_prescribing),
     };
   }
 

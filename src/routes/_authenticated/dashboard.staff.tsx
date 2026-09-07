@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/staff")({
 
 type Staff = {
   id: string; name: string; invited_email: string | null; role: StaffRole;
-  data_scope: StaffScope; practitioner_id: string | null; status: StaffStatus; can_manage_rota?: boolean;
+  data_scope: StaffScope; practitioner_id: string | null; status: StaffStatus; can_manage_rota?: boolean; can_use_prescribing?: boolean;
   payout_mode?: "clinic" | "own_account" | null; commission_percent?: number | null;
   stripe_account_id?: string | null; stripe_account_status?: string | null;
   invited_at: string; accepted_at: string | null; last_active_at: string | null;
@@ -149,7 +149,7 @@ const [staff, setStaff] = useState<Staff[]>([]);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     name: "", email: "", role: "practitioner" as StaffRole,
-    data_scope: "clinic" as StaffScope, practitioner_id: "none", can_manage_rota: false,
+    data_scope: "clinic" as StaffScope, practitioner_id: "none", can_manage_rota: false, can_use_prescribing: false,
   });
 
   async function refresh() {
@@ -163,7 +163,7 @@ const [staff, setStaff] = useState<Staff[]>([]);
   function openInvite() {
     if (demo.blocked("Inviting staff is disabled in the demo account.")) return;
     setEditing(null);
-    setForm({ name: "", email: "", role: "practitioner", data_scope: "clinic", practitioner_id: "none", can_manage_rota: false });
+    setForm({ name: "", email: "", role: "practitioner", data_scope: "clinic", practitioner_id: "none", can_manage_rota: false, can_use_prescribing: false });
     setDlgOpen(true);
   }
   function openEdit(s: Staff) {
@@ -172,6 +172,7 @@ const [staff, setStaff] = useState<Staff[]>([]);
       name: s.name, email: s.invited_email ?? "", role: s.role,
       data_scope: s.data_scope, practitioner_id: s.practitioner_id ?? "none",
       can_manage_rota: Boolean(s.can_manage_rota),
+      can_use_prescribing: Boolean(s.can_use_prescribing),
     });
     setDlgOpen(true);
   }
@@ -183,6 +184,7 @@ const [staff, setStaff] = useState<Staff[]>([]);
         await update({ data: {
           id: editing.id, name: form.name, email: form.email, role: form.role, data_scope: form.data_scope,
           can_manage_rota: form.can_manage_rota,
+          can_use_prescribing: form.can_use_prescribing,
           practitioner_id: form.role === "practitioner" ? (form.practitioner_id === "none" ? null : form.practitioner_id) : null,
         } });
         toast.success("Staff updated");
@@ -190,6 +192,7 @@ const [staff, setStaff] = useState<Staff[]>([]);
         await invite({ data: {
           name: form.name, email: form.email, role: form.role, data_scope: form.data_scope,
           can_manage_rota: form.can_manage_rota,
+          can_use_prescribing: form.can_use_prescribing,
           practitioner_id: form.role === "practitioner" ? (form.practitioner_id === "none" ? null : form.practitioner_id) : null,
         } });
         toast.success(form.email.trim() ? "Invite sent" : "Team member added");
@@ -334,6 +337,9 @@ return (
                       </Badge>
                       {s.can_manage_rota && (
                         <Badge variant="outline" className="text-xs">Sets own rota</Badge>
+                      )}
+                      {s.can_use_prescribing && (
+                        <Badge variant="outline" className="text-xs">Prescribing</Badge>
                       )}
                       <Badge
                         variant={s.status === "active" ? "default" : s.status === "invited" ? "outline" : "destructive"}
