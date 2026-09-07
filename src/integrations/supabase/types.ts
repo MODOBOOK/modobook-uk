@@ -4390,6 +4390,7 @@ export type Database = {
           price_cents: number
           profile_id: string
           rollover_included: boolean
+          sort_order: number
           spend_mode: string
           stripe_price_id: string | null
           terms_checkboxes: Json
@@ -4414,6 +4415,7 @@ export type Database = {
           price_cents: number
           profile_id: string
           rollover_included?: boolean
+          sort_order?: number
           spend_mode?: string
           stripe_price_id?: string | null
           terms_checkboxes?: Json
@@ -4438,6 +4440,7 @@ export type Database = {
           price_cents?: number
           profile_id?: string
           rollover_included?: boolean
+          sort_order?: number
           spend_mode?: string
           stripe_price_id?: string | null
           terms_checkboxes?: Json

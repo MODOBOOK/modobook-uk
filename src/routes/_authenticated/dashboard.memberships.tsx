@@ -11,6 +11,7 @@ import {
   adjustPatientCredit,
   listMembershipInviteCandidates,
   inviteToMembershipPlan,
+  reorderMembershipPlans,
 } from "@/lib/memberships.functions";
 import { getMyTreatments } from "@/lib/treatments.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
@@ -25,7 +26,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Pencil, Pause, Play, XCircle, Crown, Wallet, Users, Mail, Search } from "lucide-react";
+import { Plus, Pencil, Pause, Play, XCircle, Crown, Wallet, Users, Mail, Search, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { membershipScheduleText } from "@/lib/membership-schedule";
 import { toast } from "sonner";
 import { membershipsEnabled } from "@/lib/feature-flags";
@@ -102,6 +103,7 @@ function MembershipsPage() {
   const fetchProfile = useServerFn(getMyProfile);
   const saveFn = useServerFn(saveMembershipPlan);
   const delFn = useServerFn(deleteMembershipPlan);
+  const reorderFn = useServerFn(reorderMembershipPlans);
   const statusFn = useServerFn(setMembershipStatus);
   const adjustFn = useServerFn(adjustPatientCredit);
   const candidatesFn = useServerFn(listMembershipInviteCandidates);
@@ -205,6 +207,21 @@ function MembershipsPage() {
   }
 
   const plans = (plansQ.data ?? []) as unknown as Plan[];
+
+  async function movePlan(index: number, delta: number) {
+    const next = [...plans];
+    const target = index + delta;
+    if (target < 0 || target >= next.length) return;
+    const [moved] = next.splice(index, 1);
+    next.splice(target, 0, moved!);
+    qc.setQueryData(["membership-plans"], next);
+    try {
+      await reorderFn({ data: { ids: next.map((p) => p.id) } });
+    } catch {
+      toast.error("Could not save the new order");
+    }
+    qc.invalidateQueries({ queryKey: ["membership-plans"] });
+  }
   const members = (membersQ.data ?? []) as Member[];
   const treatments = ((treatmentsQ.data as { treatments?: Array<{ id: string; name: string }> } | undefined)?.treatments ??
     (Array.isArray(treatmentsQ.data) ? (treatmentsQ.data as Array<{ id: string; name: string }>) : [])) as Array<{ id: string; name: string }>;
@@ -417,7 +434,12 @@ function MembershipsPage() {
               No plans yet. Create one — e.g. “£50/month Skin Club” that adds £55 of credit each month.
             </CardContent></Card>
           )}
-          {plans.map((p) => (
+          {plans.length > 1 && (
+            <p className="text-xs text-muted-foreground">
+              Use the arrows to set the order patients see your plans in.
+            </p>
+          )}
+          {plans.map((p, idx) => (
             <Card key={p.id}>
               <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center">
                 <div className="min-w-0 flex-1">
@@ -469,7 +491,7 @@ function MembershipsPage() {
                       size="sm"
                       onClick={async () => {
                         if (!confirm("Hide this plan? Existing members keep their membership.")) return;
-                        await delFn({ data: { id: p.id } });
+                        await delFn({ data: { id: p.id, mode: "hide" } });
                         toast.success("Plan hidden");
                         qc.invalidateQueries({ queryKey: ["membership-plans"] });
                       }}
@@ -477,6 +499,41 @@ function MembershipsPage() {
                       Hide
                     </Button>
                   )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={async () => {
+                      if (!confirm(`Delete “${p.name}” for good? If anyone has ever joined it, it will be hidden instead so their history stays intact.`)) return;
+                      const res = await delFn({ data: { id: p.id, mode: "delete" } });
+                      toast.success((res as { deleted?: boolean })?.deleted ? "Plan deleted" : "Plan has members — hidden instead");
+                      qc.invalidateQueries({ queryKey: ["membership-plans"] });
+                    }}
+                  >
+                    <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete
+                  </Button>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      aria-label="Move plan up"
+                      disabled={idx === 0}
+                      onClick={() => movePlan(idx, -1)}
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      aria-label="Move plan down"
+                      disabled={idx === plans.length - 1}
+                      onClick={() => movePlan(idx, 1)}
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
