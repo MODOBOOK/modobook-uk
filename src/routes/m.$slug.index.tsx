@@ -1531,7 +1531,16 @@ function BookPage() {
                 .filter((lp) => lp.location_id === loc.id)
                 .sort((a, b) => a.display_order - b.display_order)
                 .map((lp) => practitioners.find((p) => p.id === lp.practitioner_id))
-                .filter((p): p is NonNullable<typeof p> => !!p);
+                .filter((p): p is NonNullable<typeof p> => !!p)
+                // Hide anyone who can't do the services already chosen.
+                .filter((p) => {
+                  if (selectedIds.length === 0) return true;
+                  const theirs = practitionerTreatments
+                    .filter((l) => l.practitioner_id === p.id)
+                    .map((l) => l.treatment_id);
+                  if (theirs.length === 0) return true;
+                  return selectedIds.every((id) => theirs.includes(id));
+                });
               const cardInner = (
                 <>
                   {photo ? (
