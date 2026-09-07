@@ -41,6 +41,7 @@ const PRACTITIONER_ROUTES = [
   "/dashboard/menu",
   "/dashboard/help",
   "/hub",
+  "/dashboard/rx-requests",
 ];
 
 
@@ -81,7 +82,7 @@ export function canAccessRoute(
   if (to === "/dashboard/availability" && role !== "admin" && !opts?.canManageRota) return false;
   // The Prescribing Hub is opt-in per team member — the clinic owner decides
   // who can raise prescription requests for their patients.
-  if (to === "/hub" && role !== "admin" && !opts?.canUsePrescribing) return false;
+  if ((to === "/hub" || to === "/dashboard/rx-requests") && role !== "admin" && !opts?.canUsePrescribing) return false;
   if (role === "admin") return true;
   const allowed =
     role === "practitioner"
