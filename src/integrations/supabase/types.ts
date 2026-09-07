@@ -6235,6 +6235,52 @@ export type Database = {
           },
         ]
       }
+      practitioner_treatments: {
+        Row: {
+          created_at: string
+          id: string
+          practitioner_id: string
+          profile_id: string
+          treatment_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          practitioner_id: string
+          profile_id: string
+          treatment_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          practitioner_id?: string
+          profile_id?: string
+          treatment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practitioner_treatments_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "practitioners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practitioner_treatments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practitioner_treatments_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       practitioner_waitlist: {
         Row: {
           clinic_name: string | null
