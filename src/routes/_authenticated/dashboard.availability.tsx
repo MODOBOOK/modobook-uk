@@ -482,7 +482,7 @@ function AvailabilityPage() {
         toast.success(`${added} ${added === 1 ? "closure" : "closures"} added`);
       }
       setBlReason("");
-      setBlDays([]); setBlRange({}); setBlWeekDates([]);
+      setBlDays([]); setBlRange({}); setBlWeekDates([]); setBlPracts([]);
       await refresh();
     } catch (err: any) { toast.error(err?.message ?? "Failed"); }
     finally { setSavingBl(false); }
@@ -896,6 +896,12 @@ function AvailabilityPage() {
                   </div>
                 )}
 
+                {practitioners.length > 0 && (
+                  <div className="sm:col-span-2 md:col-span-5">
+                    <Label>Who works it</Label>
+                    <PractitionerPicker practitioners={practitioners} value={ovPracts} onChange={setOvPracts} />
+                  </div>
+                )}
                 <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add</Button>
               </form>
               {overrides.length === 0 ? (
@@ -909,6 +915,7 @@ function AvailabilityPage() {
                         <span className="font-mono ml-3">{o.start_time.slice(0,5)}–{o.end_time.slice(0,5)}</span>
                         <span className="text-muted-foreground ml-3">every {o.slot_interval} min</span>
                         {locName(o.location_id) && <span className="ml-3 text-xs rounded bg-muted px-2 py-0.5">{locName(o.location_id)}</span>}
+                        {o.practitioner_id && <span className="ml-2 text-xs rounded bg-muted px-2 py-0.5">{pracName(o.practitioner_id)}</span>}
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => removeOverride(o.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
