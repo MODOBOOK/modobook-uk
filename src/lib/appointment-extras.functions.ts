@@ -99,7 +99,7 @@ export const updateAppointmentExtra = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profileId = await clinicProfileId(context.supabase, context.userId);
     await assertOwnAppointment(context.supabase, data.appointmentId, profileId);
-    const patch: Record<string, unknown> = {};
+    const patch: { unit_price?: number; quantity?: number; name?: string } = {};
     if (data.unitPrice !== undefined) patch.unit_price = Math.max(0, Number(data.unitPrice) || 0);
     if (data.quantity !== undefined) patch.quantity = Math.max(1, Math.round(Number(data.quantity) || 1));
     if (data.name !== undefined && data.name.trim()) patch.name = data.name.trim();
