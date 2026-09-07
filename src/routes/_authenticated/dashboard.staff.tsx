@@ -447,6 +447,21 @@ return (
                 onCheckedChange={(v) => setForm({ ...form, can_manage_rota: v })}
               />
             </div>
+            <div className="flex items-start justify-between gap-3 rounded-lg border p-3">
+              <div>
+                <Label className="text-sm">Can use the Prescribing Hub</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Lets them send prescription requests for their own patients using your clinic's prescribing
+                  rules and connected prescribers. You still set the rules — they can't change them. Clinic
+                  admins always have this. If they prescribe themselves, they can get verified as a prescriber
+                  instead.
+                </p>
+              </div>
+              <Switch
+                checked={form.can_use_prescribing}
+                onCheckedChange={(v) => setForm({ ...form, can_use_prescribing: v })}
+              />
+            </div>
             {form.role === "practitioner" && !editing && (
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs">
                 <p className="font-medium">£9.99 a month</p>
