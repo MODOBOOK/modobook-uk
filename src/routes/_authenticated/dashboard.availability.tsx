@@ -228,10 +228,12 @@ function AvailabilityPage() {
   const [ovEnd, setOvEnd] = useState("13:00");
   const [ovInterval, setOvInterval] = useState("30");
   const [ovLocs, setOvLocs] = useState<string[]>([]);
+  const [ovPracts, setOvPracts] = useState<string[]>([]);
 
   
   const [blReason, setBlReason] = useState("");
   const [blLocs, setBlLocs] = useState<string[]>([]);
+  const [blPracts, setBlPracts] = useState<string[]>([]);
 
   const [blMode, setBlMode] = useState<"days" | "range" | "weeks" | "time">("days");
   const [blDays, setBlDays] = useState<Date[]>([]);
@@ -406,11 +408,14 @@ function AvailabilityPage() {
     e.preventDefault();
     if (ovStart >= ovEnd) { toast.error("End time must be after start"); return; }
     const targets: (string | null)[] = ovLocs.length ? ovLocs : [null];
+    const pracTargets: (string | null)[] = ovPracts.length ? ovPracts : [null];
     try {
       for (const loc of targets) {
-        await addOv({ data: { date: ovDate, start_time: ovStart, end_time: ovEnd, slot_interval: Number(ovInterval), location_id: loc } });
+        for (const prac of pracTargets) {
+          await addOv({ data: { date: ovDate, start_time: ovStart, end_time: ovEnd, slot_interval: Number(ovInterval), location_id: loc, practitioner_id: prac } });
+        }
       }
-      toast.success("One-off slot added");
+      toast.success(pracTargets.length > 1 ? `One-off slot added for ${pracTargets.length} people` : "One-off slot added");
       await refresh();
     } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
