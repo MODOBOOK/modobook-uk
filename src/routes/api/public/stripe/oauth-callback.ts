@@ -27,6 +27,60 @@ export const Route = createFileRoute("/api/public/stripe/oauth-callback")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+        // A team member connecting their own Stripe account (own-account payouts).
+        if (state.startsWith("staff_")) {
+          const staffUrl = new URL("/dashboard/staff", url.origin);
+          const { data: staff } = await supabaseAdmin
+            .from("staff_members")
+            .select("id, stripe_oauth_state_expires_at")
+            .eq("stripe_oauth_state", state)
+            .maybeSingle();
+          if (!staff) {
+            staffUrl.searchParams.set("stripe_error", "Connection link expired. Please try again.");
+            return Response.redirect(staffUrl.toString(), 302);
+          }
+          const staffExpires = (staff as { stripe_oauth_state_expires_at?: string | null })
+            .stripe_oauth_state_expires_at;
+          if (staffExpires && new Date(staffExpires).getTime() < Date.now()) {
+            await supabaseAdmin
+              .from("staff_members")
+              .update({ stripe_oauth_state: null, stripe_oauth_state_expires_at: null } as never)
+              .eq("id", staff.id);
+            staffUrl.searchParams.set("stripe_error", "Connection link expired. Please try again.");
+            return Response.redirect(staffUrl.toString(), 302);
+          }
+          try {
+            const { exchangeStripeOAuthCode, getAccount } = await import("@/lib/stripe.server");
+            const token = await exchangeStripeOAuthCode(code);
+            const accountId = token?.stripe_user_id;
+            if (!accountId) throw new Error("Stripe did not return an account id.");
+            let status = "pending";
+            try {
+              const account = await getAccount(accountId);
+              status = account?.charges_enabled ? "active" : account?.details_submitted ? "pending" : "incomplete";
+            } catch { /* best effort */ }
+            await supabaseAdmin
+              .from("staff_members")
+              .update({
+                stripe_account_id: accountId,
+                stripe_account_status: status,
+                payout_mode: "own_account",
+                stripe_oauth_state: null,
+                stripe_oauth_state_expires_at: null,
+              } as never)
+              .eq("id", staff.id);
+            staffUrl.searchParams.set("connected", "1");
+            return Response.redirect(staffUrl.toString(), 302);
+          } catch (e) {
+            await supabaseAdmin
+              .from("staff_members")
+              .update({ stripe_oauth_state: null, stripe_oauth_state_expires_at: null } as never)
+              .eq("id", staff.id);
+            staffUrl.searchParams.set("stripe_error", e instanceof Error ? e.message : "Stripe connection failed.");
+            return Response.redirect(staffUrl.toString(), 302);
+          }
+        }
+
         // Look up the profile that started this OAuth flow via the state token.
         const { data: profile } = await supabaseAdmin
           .from("profiles")

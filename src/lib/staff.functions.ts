@@ -50,7 +50,7 @@ export const listStaff = createServerFn({ method: "GET" })
     if (!profileId) return [];
     const { data, error } = await context.supabase
       .from("staff_members")
-      .select("id, name, invited_email, role, data_scope, practitioner_id, status, can_manage_rota, invited_at, accepted_at, last_active_at, invite_expires_at")
+      .select("id, name, invited_email, role, data_scope, practitioner_id, status, can_manage_rota, payout_mode, commission_percent, stripe_account_id, stripe_account_status, invited_at, accepted_at, last_active_at, invite_expires_at")
       .eq("profile_id", profileId)
       .order("created_at", { ascending: false });
     if (error) throw error;
