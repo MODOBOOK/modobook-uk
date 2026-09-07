@@ -151,7 +151,7 @@ export const inviteStaff = createServerFn({ method: "POST" })
 
 export const updateStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; name?: string; email?: string; role?: StaffRole; data_scope?: StaffScope; practitioner_id?: string | null; status?: StaffStatus; can_manage_rota?: boolean; can_use_prescribing?: boolean; can_use_prescribing?: boolean }) => d)
+  .inputValidator((d: { id: string; name?: string; email?: string; role?: StaffRole; data_scope?: StaffScope; practitioner_id?: string | null; status?: StaffStatus; can_manage_rota?: boolean; can_use_prescribing?: boolean }) => d)
   .handler(async ({ data, context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
