@@ -433,8 +433,19 @@ function MembershipsPage() {
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Credit spend: {p.spend_mode === "any" ? "any booking" : p.spend_mode === "restricted" ? `${(p.eligible_treatment_ids ?? []).length} selected treatments` : "manual — you apply it in clinic"}
-                    {p.included_treatments.length > 0 && ` · Includes ${p.included_treatments.reduce((s, t) => s + t.quantity, 0)} treatment${p.included_treatments.length === 1 && p.included_treatments[0].quantity === 1 ? "" : "s"}/cycle`}
                   </p>
+                  {p.included_treatments.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {p.included_treatments.map((it) => {
+                        const t = (treatmentsQ.data as Array<{ id: string; name: string }> | undefined)?.find((x) => x.id === it.treatment_id);
+                        return (
+                          <Badge key={it.treatment_id} variant="secondary" className="text-xs font-normal">
+                            {it.quantity}× {t?.name ?? "Treatment"} per cycle
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  )}
                   {p.description && <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{p.description}</p>}
                 </div>
                 <div className="flex shrink-0 flex-wrap gap-2">
