@@ -243,7 +243,7 @@ function WelcomeIntroBlock({
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
 function BookPage() {
-  const { profile, treatments, packages, packageBuilders = [], locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], aboutPage, careGuides = [], pretreatment = [], bookingCounts = [] } =
+  const { profile, treatments, packages, packageBuilders = [], locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], practitionerTreatments = [], aboutPage, careGuides = [], pretreatment = [], bookingCounts = [] } =
     Route.useLoaderData() as {
       profile: {
         id: string;
@@ -308,6 +308,7 @@ function BookPage() {
       addonLinks?: { treatment_id: string; addon_id: string; discount_percent: number | null; discount_amount: number | null }[];
       practitioners?: { id: string; name: string; professional_title: string | null; photo_url: string | null; bio: string | null; display_order: number }[];
       locationPractitioners?: { location_id: string; practitioner_id: string; display_order: number }[];
+      practitionerTreatments?: { practitioner_id: string; treatment_id: string }[];
       aboutPage?: {
         intro_heading?: string | null;
         intro_body?: string | null;
@@ -927,14 +928,26 @@ function BookPage() {
   };
 
 
+  // Services can be assigned to specific practitioners. A practitioner with no
+  // assignments offers everything; once a patient picks a practitioner who has
+  // a list, only their services show.
+  const practitionerTreatmentIds = useMemo(() => {
+    if (!practitionerId) return null;
+    const ids = practitionerTreatments
+      .filter((l) => l.practitioner_id === practitionerId)
+      .map((l) => l.treatment_id);
+    return ids.length > 0 ? new Set(ids) : null;
+  }, [practitionerId, practitionerTreatments]);
+
   const visibleTreatments = useMemo(
     () =>
       treatments.filter(
         (t) =>
-          isAvailableAtLocation(t) && catWindowLive(t.category_id) && !staleClinicTreatmentIds.has(t.id),
+          isAvailableAtLocation(t) && catWindowLive(t.category_id) && !staleClinicTreatmentIds.has(t.id)
+          && (!practitionerTreatmentIds || practitionerTreatmentIds.has(t.id)),
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [treatments, locationId, pricing, categories, nowTs, staleClinicTreatmentIds],
+    [treatments, locationId, pricing, categories, nowTs, staleClinicTreatmentIds, practitionerTreatmentIds],
   );
 
   const treatmentCategories = useMemo(
@@ -1518,7 +1531,16 @@ function BookPage() {
                 .filter((lp) => lp.location_id === loc.id)
                 .sort((a, b) => a.display_order - b.display_order)
                 .map((lp) => practitioners.find((p) => p.id === lp.practitioner_id))
-                .filter((p): p is NonNullable<typeof p> => !!p);
+                .filter((p): p is NonNullable<typeof p> => !!p)
+                // Hide anyone who can't do the services already chosen.
+                .filter((p) => {
+                  if (selectedIds.length === 0) return true;
+                  const theirs = practitionerTreatments
+                    .filter((l) => l.practitioner_id === p.id)
+                    .map((l) => l.treatment_id);
+                  if (theirs.length === 0) return true;
+                  return selectedIds.every((id) => theirs.includes(id));
+                });
               const cardInner = (
                 <>
                   {photo ? (

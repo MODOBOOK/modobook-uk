@@ -12,16 +12,19 @@ export const listMyPractitioners = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data: profile } = await supabase
       .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).maybeSingle();
-    if (!profile) return { practitioners: [], links: [] };
-    const [{ data: practitioners }, { data: links }] = await Promise.all([
+    if (!profile) return { practitioners: [], links: [], treatmentLinks: [] };
+    const [{ data: practitioners }, { data: links }, { data: treatmentLinks }] = await Promise.all([
       supabase.from("practitioners").select("*").eq("profile_id", profile.id)
         .order("display_order").order("created_at"),
       supabase.from("location_practitioners").select("*"),
+      supabase.from("practitioner_treatments").select("practitioner_id, treatment_id")
+        .eq("profile_id", profile.id),
     ]);
     const ids = new Set((practitioners ?? []).map((p) => p.id));
     return {
       practitioners: practitioners ?? [],
       links: (links ?? []).filter((l) => ids.has(l.practitioner_id)),
+      treatmentLinks: treatmentLinks ?? [],
     };
   });
 
@@ -34,6 +37,7 @@ type PractitionerInput = {
   active?: boolean;
   display_order?: number;
   location_ids?: string[];
+  treatment_ids?: string[] | null;
 };
 
 export const upsertPractitioner = createServerFn({ method: "POST" })
@@ -87,6 +91,15 @@ export const upsertPractitioner = createServerFn({ method: "POST" })
             location_id: lid,
             display_order: i,
           })),
+        );
+      }
+    }
+    if (data.treatment_ids !== undefined) {
+      await supabase.from("practitioner_treatments").delete().eq("practitioner_id", row.id);
+      const ids = data.treatment_ids ?? [];
+      if (ids.length > 0) {
+        await supabase.from("practitioner_treatments").insert(
+          ids.map((tid) => ({ profile_id: profile.id, practitioner_id: row.id, treatment_id: tid })),
         );
       }
     }
