@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight, ArrowUpRight, CalendarCheck, ExternalLink, HeartPulse, Loader2, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarCheck, ExternalLink, HeartPulse, Loader2, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { SiteHeader, SiteFooter } from "./index";
@@ -116,6 +116,59 @@ function DemoPage() {
             />
           </div>
         </section>
+
+        {/* Team & roles */}
+        <section className="mx-auto max-w-6xl px-6 py-10">
+          <div className="eyebrow mb-5">§ Your team</div>
+          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+            <div>
+              <h2 className="text-2xl font-semibold tracking-tight text-[color:var(--ink)] sm:text-3xl">
+                Built for clinics with more than one pair of hands
+              </h2>
+              <p className="mt-4 text-sm leading-relaxed text-[color:var(--ink-soft)] sm:text-base">
+                The demo clinic comes with a full team already set up. Sign in as the owner and you'll see every
+                diary; each practitioner only sees their own. Front-of-house staff can take bookings and payments
+                without ever opening a medical record.
+              </p>
+              <ul className="mt-6 space-y-3 text-sm text-[color:var(--ink-soft)]">
+                <li className="flex gap-3">
+                  <Users className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--accent)]" />
+                  Separate calendars and rotas per practitioner, with shared clinic opening hours.
+                </li>
+                <li className="flex gap-3">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--accent)]" />
+                  Role-based access — the owner decides who sees money, records and settings.
+                </li>
+                <li className="flex gap-3">
+                  <CalendarCheck className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--accent)]" />
+                  Clients can book with a named team member from the same booking page.
+                </li>
+              </ul>
+              <p className="mt-6 text-xs text-[color:var(--ink-soft)]">
+                In the demo dashboard, open <span className="font-medium text-[color:var(--ink)]">Team</span> to see
+                the roles below, and use the practitioner filter on the calendar to switch diaries.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                { name: "Nurse Amelia Hart", role: "Practitioner", blurb: "Own diary and own patients. Clinical notes, consent and consultations — no billing or settings." },
+                { name: "Dr Priya Raman", role: "Practitioner", blurb: "Second diary with a different rota, so Thursdays run late without touching anyone else's hours." },
+                { name: "Jess Okoro", role: "Receptionist", blurb: "Front of house: books, reschedules, takes payments and gift cards. Medical records stay closed." },
+                { name: "Marta Kowal", role: "Clinic admin", blurb: "Everything except owner-only areas like billing, branding and the team list itself." },
+              ].map((m) => (
+                <div key={m.name} className="tile p-5 shadow-sm">
+                  <p className="text-sm font-semibold text-[color:var(--ink)]">{m.name}</p>
+                  <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-[color:var(--accent)]">
+                    {m.role}
+                  </p>
+                  <p className="mt-3 text-sm leading-relaxed text-[color:var(--ink-soft)]">{m.blurb}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+
 
         {/* Booking page shortcut */}
         <section className="mx-auto max-w-6xl px-6 py-8">
