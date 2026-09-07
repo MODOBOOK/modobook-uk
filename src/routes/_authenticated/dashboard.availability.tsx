@@ -92,6 +92,48 @@ function LocationPicker({
 }
 
 
+/** Pick one, several, or no practitioners. Empty selection = anyone / whole clinic. */
+function PractitionerPicker({
+  practitioners,
+  value,
+  onChange,
+}: {
+  practitioners: { id: string; name: string }[];
+  value: string[];
+  onChange: (v: string[]) => void;
+}) {
+  if (practitioners.length === 0) return null;
+  const toggle = (id: string) =>
+    onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
+  return (
+    <div className="flex flex-wrap gap-2">
+      <button
+        type="button"
+        onClick={() => onChange([])}
+        className={cn(
+          "rounded-full border px-3 py-1 text-xs",
+          value.length === 0 ? "bg-primary text-primary-foreground border-primary" : "bg-background",
+        )}
+      >
+        Anyone
+      </button>
+      {practitioners.map((p) => (
+        <button
+          key={p.id}
+          type="button"
+          onClick={() => toggle(p.id)}
+          className={cn(
+            "rounded-full border px-3 py-1 text-xs",
+            value.includes(p.id) ? "bg-primary text-primary-foreground border-primary" : "bg-background",
+          )}
+        >
+          {p.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 type Rule = {
   id: string;
   day_of_week: number;
@@ -109,10 +151,10 @@ type Location = { id: string; name: string };
 type Practitioner = { id: string; name: string };
 type Override = {
   id: string; date: string; start_time: string; end_time: string;
-  slot_interval: number; location_id: string | null;
+  slot_interval: number; location_id: string | null; practitioner_id?: string | null;
 };
-type Blocked = { id: string; date: string; reason: string | null; location_id: string | null };
-type BlockedTime = { id: string; date: string; start_time: string; end_time: string; reason: string | null; location_id: string | null };
+type Blocked = { id: string; date: string; reason: string | null; location_id: string | null; practitioner_id?: string | null };
+type BlockedTime = { id: string; date: string; start_time: string; end_time: string; reason: string | null; location_id: string | null; practitioner_id?: string | null };
 
 function AvailabilityPage() {
   const list = useServerFn(listAvailabilityRules);
@@ -174,7 +216,7 @@ function AvailabilityPage() {
     interval: "30",
     location_ids: [] as string[],
 
-    practitioner_id: "none",
+    practitioner_ids: [] as string[], // empty = anyone / whole clinic
     weeks: [true, false, false, false] as boolean[], // A,B,C,D
     effective_from: "",
     effective_to: "",
@@ -186,10 +228,12 @@ function AvailabilityPage() {
   const [ovEnd, setOvEnd] = useState("13:00");
   const [ovInterval, setOvInterval] = useState("30");
   const [ovLocs, setOvLocs] = useState<string[]>([]);
+  const [ovPracts, setOvPracts] = useState<string[]>([]);
 
   
   const [blReason, setBlReason] = useState("");
   const [blLocs, setBlLocs] = useState<string[]>([]);
+  const [blPracts, setBlPracts] = useState<string[]>([]);
 
   const [blMode, setBlMode] = useState<"days" | "range" | "weeks" | "time">("days");
   const [blDays, setBlDays] = useState<Date[]>([]);
@@ -276,7 +320,7 @@ function AvailabilityPage() {
     const weeks = Array.from({ length: 4 }, (_, i) => i === weekIdx);
     setForm({
       day_of_week: day, start: "09:00", end: "17:00", interval: "30",
-      location_ids: [], practitioner_id: "none", weeks,
+      location_ids: [], practitioner_ids: [], weeks,
       effective_from: periodStart || activePeriod?.start || "",
       effective_to: draft && activePeriod?.key === draft.start
         ? draft.end
@@ -294,7 +338,7 @@ function AvailabilityPage() {
       end: r.end_time.slice(0, 5),
       interval: String(r.slot_interval),
       location_ids: r.location_id ? [r.location_id] : [],
-      practitioner_id: r.practitioner_id ?? "none",
+      practitioner_ids: r.practitioner_id ? [r.practitioner_id] : [],
       weeks,
       effective_from: r.effective_from ?? "",
       effective_to: r.effective_to ?? "",
@@ -312,27 +356,34 @@ function AvailabilityPage() {
     if (mask === 0) { toast.error("Pick at least one week"); return; }
     // Empty selection = every location (single row with location_id null).
     const targets: (string | null)[] = form.location_ids.length ? form.location_ids : [null];
+    // Empty selection = anyone; otherwise one shift row per person, so several
+    // team members can share the same day/time or be split across days.
+    const pracTargets: (string | null)[] = form.practitioner_ids.length ? form.practitioner_ids : [null];
     try {
-      for (let i = 0; i < targets.length; i++) {
-        await upsert({
-          data: {
-            // Only the first target reuses the row being edited; extra
-            // locations become their own shift rows.
-            id: i === 0 ? editing?.id : undefined,
-            day_of_week: form.day_of_week,
-            start_time: form.start,
-            end_time: form.end,
-            slot_interval: Number(form.interval),
-            location_id: targets[i],
-            practitioner_id: form.practitioner_id === "none" ? null : form.practitioner_id,
-            cycle_length: cycleLength,
-            weeks_mask: mask,
-            effective_from: form.effective_from || null,
-            effective_to: form.effective_to || null,
-          },
-        });
+      let first = true;
+      for (const loc of targets) {
+        for (const prac of pracTargets) {
+          await upsert({
+            data: {
+              // Only the very first combination reuses the row being edited;
+              // the rest become their own shift rows.
+              id: first ? editing?.id : undefined,
+              day_of_week: form.day_of_week,
+              start_time: form.start,
+              end_time: form.end,
+              slot_interval: Number(form.interval),
+              location_id: loc,
+              practitioner_id: prac,
+              cycle_length: cycleLength,
+              weeks_mask: mask,
+              effective_from: form.effective_from || null,
+              effective_to: form.effective_to || null,
+            },
+          });
+          first = false;
+        }
       }
-      toast.success(editing ? "Shift updated" : "Shift added");
+      toast.success(editing ? "Shift updated" : pracTargets.length > 1 ? `Shift added for ${pracTargets.length} people` : "Shift added");
       setDlgOpen(false);
       if (draft && form.effective_from === draft.start) setDraft(null);
       await refresh();
@@ -357,11 +408,14 @@ function AvailabilityPage() {
     e.preventDefault();
     if (ovStart >= ovEnd) { toast.error("End time must be after start"); return; }
     const targets: (string | null)[] = ovLocs.length ? ovLocs : [null];
+    const pracTargets: (string | null)[] = ovPracts.length ? ovPracts : [null];
     try {
       for (const loc of targets) {
-        await addOv({ data: { date: ovDate, start_time: ovStart, end_time: ovEnd, slot_interval: Number(ovInterval), location_id: loc } });
+        for (const prac of pracTargets) {
+          await addOv({ data: { date: ovDate, start_time: ovStart, end_time: ovEnd, slot_interval: Number(ovInterval), location_id: loc, practitioner_id: prac } });
+        }
       }
-      toast.success("One-off slot added");
+      toast.success(pracTargets.length > 1 ? `One-off slot added for ${pracTargets.length} people` : "One-off slot added");
       await refresh();
     } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
@@ -391,6 +445,7 @@ function AvailabilityPage() {
   async function submitTimeOff() {
     // Empty selection = close every location; otherwise one row per chosen location.
     const targets: (string | null)[] = blLocs.length ? blLocs : [null];
+    const pracTargets: (string | null)[] = blPracts.length ? blPracts : [null];
     const reason = blReason || undefined;
     setSavingBl(true);
     try {
@@ -398,7 +453,9 @@ function AvailabilityPage() {
         if (!blTimeDate) { toast.error("Pick a date"); return; }
         if (blTimeStart >= blTimeEnd) { toast.error("End time must be after start"); return; }
         for (const locId of targets) {
-          await addBlT({ data: { date: fmtISO(blTimeDate), start_time: blTimeStart, end_time: blTimeEnd, reason, location_id: locId } });
+          for (const prac of pracTargets) {
+            await addBlT({ data: { date: fmtISO(blTimeDate), start_time: blTimeStart, end_time: blTimeEnd, reason, location_id: locId, practitioner_id: prac } });
+          }
         }
         toast.success("Time block added");
       } else {
@@ -410,16 +467,22 @@ function AvailabilityPage() {
         if (dates.length === 0) { toast.error("Pick at least one date"); return; }
         let added = 0;
         for (const locId of targets) {
-          const existing = new Set(blocked.filter((b) => (b.location_id ?? null) === (locId ?? null)).map((b) => b.date));
-          const toAdd = dates.filter((d) => !existing.has(d));
-          await Promise.all(toAdd.map((date) => addBl({ data: { date, reason, location_id: locId } })));
-          added += toAdd.length;
+          for (const prac of pracTargets) {
+            const existing = new Set(
+              blocked
+                .filter((b) => (b.location_id ?? null) === (locId ?? null) && (b.practitioner_id ?? null) === (prac ?? null))
+                .map((b) => b.date),
+            );
+            const toAdd = dates.filter((d) => !existing.has(d));
+            await Promise.all(toAdd.map((date) => addBl({ data: { date, reason, location_id: locId, practitioner_id: prac } })));
+            added += toAdd.length;
+          }
         }
         if (added === 0) { toast.info("Those dates are already closed"); return; }
         toast.success(`${added} ${added === 1 ? "closure" : "closures"} added`);
       }
       setBlReason("");
-      setBlDays([]); setBlRange({}); setBlWeekDates([]);
+      setBlDays([]); setBlRange({}); setBlWeekDates([]); setBlPracts([]);
       await refresh();
     } catch (err: any) { toast.error(err?.message ?? "Failed"); }
     finally { setSavingBl(false); }
@@ -833,6 +896,12 @@ function AvailabilityPage() {
                   </div>
                 )}
 
+                {practitioners.length > 0 && (
+                  <div className="sm:col-span-2 md:col-span-5">
+                    <Label>Who works it</Label>
+                    <PractitionerPicker practitioners={practitioners} value={ovPracts} onChange={setOvPracts} />
+                  </div>
+                )}
                 <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add</Button>
               </form>
               {overrides.length === 0 ? (
@@ -846,6 +915,7 @@ function AvailabilityPage() {
                         <span className="font-mono ml-3">{o.start_time.slice(0,5)}–{o.end_time.slice(0,5)}</span>
                         <span className="text-muted-foreground ml-3">every {o.slot_interval} min</span>
                         {locName(o.location_id) && <span className="ml-3 text-xs rounded bg-muted px-2 py-0.5">{locName(o.location_id)}</span>}
+                        {o.practitioner_id && <span className="ml-2 text-xs rounded bg-muted px-2 py-0.5">{pracName(o.practitioner_id)}</span>}
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => removeOverride(o.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
@@ -966,6 +1036,13 @@ function AvailabilityPage() {
                     />
                   </div>
                 )}
+                {practitioners.length > 0 && (
+                  <div>
+                    <Label>Who's off</Label>
+                    <PractitionerPicker practitioners={practitioners} value={blPracts} onChange={setBlPracts} />
+                    <p className="mt-1 text-xs text-muted-foreground">"Anyone" closes it for the whole clinic; pick names to block only those diaries.</p>
+                  </div>
+                )}
 
               </div>
               <div className="flex justify-end">
@@ -995,6 +1072,7 @@ function AvailabilityPage() {
                         <Badge variant="outline" className="text-xs">All day</Badge>
                         {b.reason && <span className="text-muted-foreground">· {b.reason}</span>}
                         <span className="text-xs rounded-full bg-muted px-2 py-0.5">{locName(b.location_id) ?? "All locations"}</span>
+                        {b.practitioner_id && <span className="text-xs rounded-full bg-muted px-2 py-0.5">{pracName(b.practitioner_id)}</span>}
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => removeBlock(b.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
@@ -1007,6 +1085,7 @@ function AvailabilityPage() {
                         <Badge variant="outline" className="text-xs">{b.start_time.slice(0,5)}–{b.end_time.slice(0,5)}</Badge>
                         {b.reason && <span className="text-muted-foreground">· {b.reason}</span>}
                         <span className="text-xs rounded-full bg-muted px-2 py-0.5">{locName(b.location_id) ?? "All locations"}</span>
+                        {b.practitioner_id && <span className="text-xs rounded-full bg-muted px-2 py-0.5">{pracName(b.practitioner_id)}</span>}
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => removeBlockTime(b.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
@@ -1064,14 +1143,15 @@ function AvailabilityPage() {
 
             {practitioners.length > 0 && (
               <div>
-                <Label>Practitioner</Label>
-                <Select value={form.practitioner_id} onValueChange={(v) => setForm({ ...form, practitioner_id: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Any practitioner</SelectItem>
-                    {practitioners.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Label>Who works this shift</Label>
+                <p className="mb-1 text-xs text-muted-foreground">
+                  Pick one or several people — each gets their own shift, so multiple team members can work the same hours. "Anyone" leaves it open to the whole clinic.
+                </p>
+                <PractitionerPicker
+                  practitioners={practitioners}
+                  value={form.practitioner_ids}
+                  onChange={(v) => setForm({ ...form, practitioner_ids: v })}
+                />
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
