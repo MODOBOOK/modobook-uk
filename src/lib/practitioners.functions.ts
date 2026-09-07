@@ -37,6 +37,7 @@ type PractitionerInput = {
   active?: boolean;
   display_order?: number;
   location_ids?: string[];
+  treatment_ids?: string[] | null;
 };
 
 export const upsertPractitioner = createServerFn({ method: "POST" })
@@ -90,6 +91,15 @@ export const upsertPractitioner = createServerFn({ method: "POST" })
             location_id: lid,
             display_order: i,
           })),
+        );
+      }
+    }
+    if (data.treatment_ids !== undefined) {
+      await supabase.from("practitioner_treatments").delete().eq("practitioner_id", row.id);
+      const ids = data.treatment_ids ?? [];
+      if (ids.length > 0) {
+        await supabase.from("practitioner_treatments").insert(
+          ids.map((tid) => ({ profile_id: profile.id, practitioner_id: row.id, treatment_id: tid })),
         );
       }
     }
