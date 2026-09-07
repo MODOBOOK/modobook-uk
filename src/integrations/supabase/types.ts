@@ -1161,6 +1161,7 @@ export type Database = {
           end_time: string
           id: string
           location_id: string | null
+          practitioner_id: string | null
           profile_id: string
           slot_interval: number
           start_time: string
@@ -1172,6 +1173,7 @@ export type Database = {
           end_time: string
           id?: string
           location_id?: string | null
+          practitioner_id?: string | null
           profile_id: string
           slot_interval?: number
           start_time: string
@@ -1183,6 +1185,7 @@ export type Database = {
           end_time?: string
           id?: string
           location_id?: string | null
+          practitioner_id?: string | null
           profile_id?: string
           slot_interval?: number
           start_time?: string
@@ -1194,6 +1197,13 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "availability_overrides_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "practitioners"
             referencedColumns: ["id"]
           },
           {
@@ -1284,6 +1294,7 @@ export type Database = {
           date: string
           id: string
           location_id: string | null
+          practitioner_id: string | null
           profile_id: string
           reason: string | null
           updated_at: string
@@ -1293,6 +1304,7 @@ export type Database = {
           date: string
           id?: string
           location_id?: string | null
+          practitioner_id?: string | null
           profile_id: string
           reason?: string | null
           updated_at?: string
@@ -1302,6 +1314,7 @@ export type Database = {
           date?: string
           id?: string
           location_id?: string | null
+          practitioner_id?: string | null
           profile_id?: string
           reason?: string | null
           updated_at?: string
@@ -1312,6 +1325,13 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocked_dates_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "practitioners"
             referencedColumns: ["id"]
           },
           {
@@ -1330,6 +1350,7 @@ export type Database = {
           end_time: string
           id: string
           location_id: string | null
+          practitioner_id: string | null
           profile_id: string
           reason: string | null
           start_time: string
@@ -1341,6 +1362,7 @@ export type Database = {
           end_time: string
           id?: string
           location_id?: string | null
+          practitioner_id?: string | null
           profile_id: string
           reason?: string | null
           start_time: string
@@ -1352,6 +1374,7 @@ export type Database = {
           end_time?: string
           id?: string
           location_id?: string | null
+          practitioner_id?: string | null
           profile_id?: string
           reason?: string | null
           start_time?: string
@@ -1363,6 +1386,13 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blocked_times_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "practitioners"
             referencedColumns: ["id"]
           },
           {
