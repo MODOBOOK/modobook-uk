@@ -143,3 +143,17 @@ export const setAppointmentBasePrice = createServerFn({ method: "POST" })
     if (error) throw error;
     return recalcTotal(context.supabase, data.appointmentId, profileId);
   });
+
+/** Services this clinic offers, for the "add a treatment" picker. */
+export const listTreatmentsForExtras = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profileId = await clinicProfileId(context.supabase, context.userId);
+    const { data, error } = await context.supabase
+      .from("treatments")
+      .select("id, name, price")
+      .eq("profile_id", profileId)
+      .order("name");
+    if (error) throw error;
+    return (data ?? []) as { id: string; name: string; price: number | null }[];
+  });
