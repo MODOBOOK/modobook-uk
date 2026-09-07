@@ -897,7 +897,7 @@ export const requestBooking = createServerFn({ method: "POST" })
     let payment: BookingPaymentResult | null = null;
     try {
       payment = await maybeCreateBookingCheckout({
-        profile: prof,
+        profile: await resolvePayoutProfile(prof, data.profileId, data.practitionerId ?? null),
         appointmentIds: [id],
         totalAmount: data.basePrice,
         patientEmail: data.patientEmail,
@@ -983,6 +983,38 @@ export const requestBooking = createServerFn({ method: "POST" })
 // Build a Checkout Session on the practitioner's Connect account for a deposit
 // (or full amount) when the clinic has payments configured. Returns the hosted URL
 // or null if payments aren't set up / not required.
+// When the clinic owner has set a team member to be paid into their OWN Stripe
+// account, patient payments for that practitioner's treatments are taken on
+// that account instead of the clinic's. Commission owed back to the owner is
+// tracked in the clinic's commission report.
+async function resolvePayoutProfile<T extends { stripe_connect_account_id?: string | null; stripe_connect_onboarding_status?: string | null } | null>(
+  profile: T,
+  profileId: string,
+  practitionerId: string | null | undefined,
+): Promise<T> {
+  if (!profile || !practitionerId) return profile;
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("staff_members")
+      .select("payout_mode, stripe_account_id, stripe_account_status")
+      .eq("profile_id", profileId)
+      .eq("practitioner_id", practitionerId)
+      .maybeSingle();
+    const staff = data as { payout_mode?: string | null; stripe_account_id?: string | null; stripe_account_status?: string | null } | null;
+    if (staff?.payout_mode === "own_account" && staff.stripe_account_id) {
+      return {
+        ...profile,
+        stripe_connect_account_id: staff.stripe_account_id,
+        stripe_connect_onboarding_status: staff.stripe_account_status ?? "active",
+      };
+    }
+  } catch (e) {
+    console.error("[resolvePayoutProfile] failed", e);
+  }
+  return profile;
+}
+
 async function maybeCreateBookingCheckout(args: {
   profile: {
     slug?: string | null;
@@ -1727,7 +1759,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     try {
       const totalAmount = data.bookings.reduce((sum, b) => sum + b.priceCents / 100, 0);
       payment = await maybeCreateBookingCheckout({
-        profile: prof,
+        profile: await resolvePayoutProfile(prof, data.profileId, data.practitionerId ?? null),
         appointmentIds: created.map((c) => c.id),
         totalAmount,
         patientEmail: data.patientEmail,

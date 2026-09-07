@@ -11,11 +11,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Trash2, Plus, Mail, RefreshCw, ShieldCheck, Stethoscope, UserRound, Eye, AlertTriangle } from "lucide-react";
+import { Trash2, Plus, Mail, RefreshCw, ShieldCheck, Stethoscope, UserRound, Eye, AlertTriangle, Banknote } from "lucide-react";
 import { useDemoGuard } from "@/hooks/use-demo-mode";
 import { listStaff, inviteStaff, updateStaff, revokeStaff, resendStaffInvite, type StaffRole, type StaffScope, type StaffStatus } from "@/lib/staff.functions";
 import { listPractitioners } from "@/lib/availability.functions";
 import { getSeatSummary } from "@/lib/practitioner-billing.functions";
+import { updateStaffPayout, startStaffStripeConnect, disconnectStaffStripe } from "@/lib/staff-payments.functions";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/dashboard/staff")({
@@ -26,6 +27,8 @@ export const Route = createFileRoute("/_authenticated/dashboard/staff")({
 type Staff = {
   id: string; name: string; invited_email: string | null; role: StaffRole;
   data_scope: StaffScope; practitioner_id: string | null; status: StaffStatus; can_manage_rota?: boolean;
+  payout_mode?: "clinic" | "own_account" | null; commission_percent?: number | null;
+  stripe_account_id?: string | null; stripe_account_status?: string | null;
   invited_at: string; accepted_at: string | null; last_active_at: string | null;
   invite_expires_at: string | null;
 };
@@ -37,6 +40,93 @@ const ROLES: { value: StaffRole; label: string; desc: string; icon: any }[] = [
   { value: "receptionist", label: "Receptionist", desc: "Bookings & patients · not bookable", icon: UserRound },
   { value: "viewer", label: "Viewer", desc: "Read-only access", icon: Eye },
 ];
+
+function PayoutControls({ member, onSaved }: { member: Staff; onSaved: () => void }) {
+  const savePayout = useServerFn(updateStaffPayout);
+  const startConnect = useServerFn(startStaffStripeConnect);
+  const disconnect = useServerFn(disconnectStaffStripe);
+  const [mode, setMode] = useState<"clinic" | "own_account">(member.payout_mode === "own_account" ? "own_account" : "clinic");
+  const [pct, setPct] = useState(String(member.commission_percent ?? 0));
+  const [busy, setBusy] = useState(false);
+  const connected = !!member.stripe_account_id;
+
+  const save = async (nextMode?: "clinic" | "own_account") => {
+    setBusy(true);
+    try {
+      await savePayout({ data: { id: member.id, payout_mode: nextMode ?? mode, commission_percent: Number(pct) || 0 } });
+      toast.success("Payout settings saved");
+      onSaved();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not save");
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <div className="mt-3 w-full rounded-md border bg-muted/30 p-3 space-y-3">
+      <div className="flex items-center gap-2 text-xs font-medium">
+        <Banknote className="h-4 w-4" /> Payments &amp; commission
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <Label className="text-xs">Card payments go to</Label>
+          <Select
+            value={mode}
+            onValueChange={(v) => { const m = v as "clinic" | "own_account"; setMode(m); void save(m); }}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="clinic">Clinic account (you)</SelectItem>
+              <SelectItem value="own_account">Their own account</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs">Their share of each treatment (%)</Label>
+          <div className="flex gap-2">
+            <Input type="number" min={0} max={100} value={pct} onChange={(e) => setPct(e.target.value)} />
+            <Button size="sm" variant="outline" disabled={busy} onClick={() => void save()}>Save</Button>
+          </div>
+        </div>
+      </div>
+      {mode === "own_account" && (
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          {connected ? (
+            <>
+              <Badge variant="outline">Connected · {member.stripe_account_status ?? "active"}</Badge>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={busy}
+                onClick={async () => { setBusy(true); try { await disconnect({ data: { id: member.id } }); toast.success("Disconnected"); onSaved(); } finally { setBusy(false); } }}
+              >
+                Disconnect
+              </Button>
+            </>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  const r: any = await startConnect({ data: { id: member.id } });
+                  if (r?.ok && r.url) window.location.href = r.url;
+                  else toast.error(r?.message ?? "Could not start the connection");
+                } finally { setBusy(false); }
+              }}
+            >
+              Connect their card account
+            </Button>
+          )}
+          <span className="text-muted-foreground">
+            You keep {Math.max(0, 100 - (Number(pct) || 0))}% commission — they owe it back to you, shown in your commission report.
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function StaffPage() {
   const list = useServerFn(listStaff);
@@ -264,6 +354,9 @@ return (
                         <Button variant="ghost" size="icon" onClick={() => remove(s.id)}><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </div>
+                    {s.role === "practitioner" && s.practitioner_id && (
+                      <PayoutControls member={s} onSaved={() => void refresh()} />
+                    )}
                   </div>
                 );
               })}

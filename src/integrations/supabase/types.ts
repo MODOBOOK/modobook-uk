@@ -8282,6 +8282,7 @@ export type Database = {
         Row: {
           accepted_at: string | null
           can_manage_rota: boolean
+          commission_percent: number
           created_at: string
           data_scope: Database["public"]["Enums"]["staff_scope"]
           id: string
@@ -8291,16 +8292,22 @@ export type Database = {
           invited_email: string | null
           last_active_at: string | null
           name: string
+          payout_mode: string
           practitioner_id: string | null
           profile_id: string
           role: Database["public"]["Enums"]["staff_role"]
           status: Database["public"]["Enums"]["staff_status"]
+          stripe_account_id: string | null
+          stripe_account_status: string | null
+          stripe_oauth_state: string | null
+          stripe_oauth_state_expires_at: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
           accepted_at?: string | null
           can_manage_rota?: boolean
+          commission_percent?: number
           created_at?: string
           data_scope?: Database["public"]["Enums"]["staff_scope"]
           id?: string
@@ -8310,16 +8317,22 @@ export type Database = {
           invited_email?: string | null
           last_active_at?: string | null
           name: string
+          payout_mode?: string
           practitioner_id?: string | null
           profile_id: string
           role: Database["public"]["Enums"]["staff_role"]
           status?: Database["public"]["Enums"]["staff_status"]
+          stripe_account_id?: string | null
+          stripe_account_status?: string | null
+          stripe_oauth_state?: string | null
+          stripe_oauth_state_expires_at?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
           accepted_at?: string | null
           can_manage_rota?: boolean
+          commission_percent?: number
           created_at?: string
           data_scope?: Database["public"]["Enums"]["staff_scope"]
           id?: string
@@ -8329,10 +8342,15 @@ export type Database = {
           invited_email?: string | null
           last_active_at?: string | null
           name?: string
+          payout_mode?: string
           practitioner_id?: string | null
           profile_id?: string
           role?: Database["public"]["Enums"]["staff_role"]
           status?: Database["public"]["Enums"]["staff_status"]
+          stripe_account_id?: string | null
+          stripe_account_status?: string | null
+          stripe_oauth_state?: string | null
+          stripe_oauth_state_expires_at?: string | null
           updated_at?: string
           user_id?: string | null
         }
