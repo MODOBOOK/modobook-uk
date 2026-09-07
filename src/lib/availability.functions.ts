@@ -132,12 +132,11 @@ export const deleteAvailabilityRule = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const profileId = await getProfileId(supabase, userId);
     if (!profileId) throw new Error("Profile not found");
-    const { error } = await supabase
-      .from("availability_rules")
-      .delete()
-      .eq("id", data.id)
-      .eq("profile_id", profileId)
-      .$SCOPE$;
+    // Staff limited to their own diary can only remove their own entries.
+    const { ownPractitionerId } = await getScope(supabase, userId);
+    let q = supabase.from("availability_rules").delete().eq("id", data.id).eq("profile_id", profileId);
+    if (ownPractitionerId) q = q.eq("practitioner_id", ownPractitionerId);
+    const { error } = await q;
     if (error) throw error;
     return { ok: true };
   });
@@ -345,12 +344,11 @@ export const deleteAvailabilityOverride = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const profileId = await getProfileId(supabase, userId);
     if (!profileId) throw new Error("Profile not found");
-    const { error } = await supabase
-      .from("availability_overrides")
-      .delete()
-      .eq("id", data.id)
-      .eq("profile_id", profileId)
-      .$SCOPE$;
+    // Staff limited to their own diary can only remove their own entries.
+    const { ownPractitionerId } = await getScope(supabase, userId);
+    let q = supabase.from("availability_overrides").delete().eq("id", data.id).eq("profile_id", profileId);
+    if (ownPractitionerId) q = q.eq("practitioner_id", ownPractitionerId);
+    const { error } = await q;
     if (error) throw error;
     return { ok: true };
   });
@@ -401,12 +399,11 @@ export const deleteBlockedDate = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const profileId = await getProfileId(supabase, userId);
     if (!profileId) throw new Error("Profile not found");
-    const { error } = await supabase
-      .from("blocked_dates")
-      .delete()
-      .eq("id", data.id)
-      .eq("profile_id", profileId)
-      .$SCOPE$;
+    // Staff limited to their own diary can only remove their own entries.
+    const { ownPractitionerId } = await getScope(supabase, userId);
+    let q = supabase.from("blocked_dates").delete().eq("id", data.id).eq("profile_id", profileId);
+    if (ownPractitionerId) q = q.eq("practitioner_id", ownPractitionerId);
+    const { error } = await q;
     if (error) throw error;
     return { ok: true };
   });
@@ -461,12 +458,11 @@ export const deleteBlockedTime = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
-    const { error } = await context.supabase
-      .from("blocked_times")
-      .delete()
-      .eq("id", data.id)
-      .eq("profile_id", profileId)
-      .$SCOPE$;
+    // Staff limited to their own diary can only remove their own entries.
+    const { ownPractitionerId } = await getScope(context.supabase, context.userId);
+    let q = context.supabase.from("blocked_times").delete().eq("id", data.id).eq("profile_id", profileId);
+    if (ownPractitionerId) q = q.eq("practitioner_id", ownPractitionerId);
+    const { error } = await q;
     if (error) throw error;
     return { ok: true };
   });
