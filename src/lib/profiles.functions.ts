@@ -32,10 +32,12 @@ export const getMyProfile = createServerFn({ method: "GET" })
       __clinic_role: access.role,
       __is_owner: access.isOwner,
       __data_scope: access.dataScope,
+      __can_manage_rota: access.isOwner || access.canManageRota,
     } as typeof data & {
       __clinic_role: string;
       __is_owner: boolean;
       __data_scope: string;
+      __can_manage_rota: boolean;
     };
   });
 
