@@ -315,7 +315,7 @@ export const respondToConnectRequest = createServerFn({ method: "POST" })
             ? `${presc?.full_name ?? "The prescriber"} accepted your request — their contact details are now available.`
             : `${presc?.full_name ?? "The prescriber"} isn't able to connect right now.`,
         p_emoji: data.action === "accept" ? "🤝" : "ℹ️",
-        p_link: "/dashboard/find-prescriber",
+        p_link: "/hub/find-prescriber",
         p_entity_id: null as unknown as string,
         p_entity_type: "prescriber_connect_request",
       });
