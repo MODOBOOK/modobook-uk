@@ -869,11 +869,13 @@ function BookingsPage() {
       <BlockTimeDialog
         open={showBlock}
         onOpenChange={setShowBlock}
+        practitionerId={practitionerFilter === "all" ? null : practitionerFilter}
         onAdded={(b) => setBlocks((p) => [...p, b])}
       />
       <UnblockDialog
         open={showUnblock}
         onOpenChange={setShowUnblock}
+        practitionerId={practitionerFilter === "all" ? null : practitionerFilter}
         blocks={blocks}
         onRemoved={(id) => setBlocks((p) => p.filter((b) => b.id !== id))}
         onOpened={refresh}
@@ -1111,8 +1113,8 @@ function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange
 }
 
 function BlockTimeDialog({
-  open, onOpenChange, onAdded,
-}: { open: boolean; onOpenChange: (v: boolean) => void; onAdded: (b: BlockedTime) => void }) {
+  open, onOpenChange, onAdded, practitionerId,
+}: { open: boolean; onOpenChange: (v: boolean) => void; onAdded: (b: BlockedTime) => void; practitionerId?: string | null }) {
   const add = useServerFn(addBlockedTime);
   const [date, setDate] = useState(ymd(new Date()));
   const [endDate, setEndDate] = useState("");
@@ -1135,7 +1137,7 @@ function BlockTimeDialog({
       }
       for (const day of days) {
         const row = await add({
-          data: { date: day, start_time: s + ":00", end_time: e + ":00", reason: reason || null },
+          data: { date: day, start_time: s + ":00", end_time: e + ":00", reason: reason || null, practitioner_id: practitionerId ?? null },
         });
         onAdded(row as BlockedTime);
       }
@@ -1192,11 +1194,12 @@ function BlockTimeDialog({
 }
 
 function UnblockDialog({
-  open, onOpenChange, blocks, onRemoved, onOpened,
+  open, onOpenChange, blocks, onRemoved, onOpened, practitionerId,
 }: {
   open: boolean; onOpenChange: (v: boolean) => void;
   blocks: BlockedTime[]; onRemoved: (id: string) => void;
   onOpened?: () => void | Promise<void>;
+  practitionerId?: string | null;
 }) {
   const del = useServerFn(deleteBlockedTime);
   const addOverride = useServerFn(addAvailabilityOverride);
@@ -1223,7 +1226,7 @@ function UnblockDialog({
     setBusy(true);
     try {
       for (const date of dates) {
-        await addOverride({ data: { date, start_time: start, end_time: end, slot_interval: interval } });
+        await addOverride({ data: { date, start_time: start, end_time: end, slot_interval: interval, practitioner_id: practitionerId ?? null } });
       }
       toast.success(`Opened ${dates.length} day${dates.length === 1 ? "" : "s"} · ${start}–${end}`);
       await onOpened?.();
