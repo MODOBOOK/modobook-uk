@@ -639,6 +639,80 @@ export async function seedDemoClinic(admin: Admin) {
     ] as never);
   }
 
+  // Membership plans — a credit-style pot, a treatment-inclusive plan and a
+  // discount-only club, so the demo shows all three membership styles.
+  async function ensurePlan(name: string, payload: Record<string, unknown>) {
+    const { data: existing } = await admin
+      .from("membership_plans")
+      .select("id")
+      .eq("profile_id", profileId!)
+      .eq("name", name)
+      .maybeSingle();
+    if (existing?.id) {
+      await admin.from("membership_plans").update(payload as never).eq("id", existing.id);
+      return existing.id as string;
+    }
+    const { data, error } = await admin
+      .from("membership_plans")
+      .insert({ profile_id: profileId!, name, ...payload } as never)
+      .select("id")
+      .single();
+    if (error) throw error;
+    return data!.id as string;
+  }
+
+  const planSaver = await ensurePlan("Skin Savings Club", {
+    description:
+      "Put a little aside each month and spend it on whatever you fancy — treatments, skincare or a course.",
+    price_cents: 4000,
+    interval: "month",
+    credit_cents: 4500,
+    spend_mode: "credit",
+    discount_percent: 0,
+    perks: "£45 of clinic credit for £40 · rolls over · cancel after 3 months",
+    included_treatments: [],
+    min_commitment_months: 3,
+    rollover_included: true,
+    flexible_booking: true,
+    active: true,
+  });
+
+  await ensurePlan("Glow Membership", {
+    description:
+      "A signature facial every month plus a skin booster review each quarter, with 10% off everything else.",
+    price_cents: 9500,
+    interval: "month",
+    credit_cents: 0,
+    spend_mode: "treatments",
+    discount_percent: 10,
+    perks: "Monthly facial · quarterly skin review · 10% off all other treatments · priority booking",
+    included_treatments: [
+      { treatment_id: t8, quantity: 1 },
+      { treatment_id: t3, quantity: 1 },
+    ],
+    treatment_frequency_months: 1,
+    min_commitment_months: 6,
+    flexible_booking: true,
+    active: true,
+  });
+
+  await ensurePlan("MODO VIP", {
+    description:
+      "For regulars — 15% off every treatment, early access to offers and a complimentary review appointment.",
+    price_cents: 2500,
+    interval: "month",
+    credit_cents: 0,
+    spend_mode: "discount",
+    discount_percent: 15,
+    perks: "15% off everything · early access to limited offers · free review appointments",
+    included_treatments: [],
+    min_commitment_months: 1,
+    flexible_booking: true,
+    active: true,
+  });
+
+
+
 
   // Demo patient clinic-side record
   const { data: existingClient } = await admin
