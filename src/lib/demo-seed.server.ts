@@ -20,6 +20,7 @@ const IMG = {
   t3: "/__l5e/assets-v1/baf3572c-2869-431f-872a-c4e0f9e2e248/demo-t3.jpg",
   gallery1: "/__l5e/assets-v1/2fd0e57d-cf1d-4e4c-8f15-0fbf357b3ab7/demo-g1.jpg",
   logo: "/__l5e/assets-v1/a087508a-6366-4786-99f0-eea05a33c8a3/demo-clinic-logo.png",
+  avatar: "/__l5e/assets-v1/cf090eae-710f-470c-af1c-298d6c706503/demo-practitioner.jpg",
 };
 
 async function findOrCreateAuthUser(
@@ -119,7 +120,8 @@ export async function seedDemoClinic(admin: Admin) {
     bio: "A boutique aesthetics studio pairing clinical rigour with a slow, considered treatment experience.",
     about:
       "We're a small, women-led team creating an unhurried environment for consultations, treatments and reviews. Every visit begins with a proper conversation.",
-    brand_color: "#8b7355",
+    brand_color: "#2F4349",
+    avatar_url: IMG.avatar,
     specialties: ["Anti-wrinkle", "Lip filler", "Skin boosters", "Polynucleotides", "Skin health"],
     qualifications: [
       { label: "BSc (Hons) Adult Nursing — King's College London", year: "2012" },
@@ -491,7 +493,7 @@ export async function seedDemoClinic(admin: Admin) {
     ]);
   }
 
-  // Theme — hero + warm sand palette
+  // Theme — deep slate-teal + sand "premium medical" palette
   const themePayload = {
     profile_id: profileId!,
     logo_url: IMG.logo,
@@ -503,18 +505,18 @@ export async function seedDemoClinic(admin: Admin) {
     hero_subheading: "Considered aesthetics, without the rush.",
     hero_show_text: true,
     hero_text_color: "#ffffff",
-    hero_overlay_color: "#1a1a1a",
-    hero_overlay_opacity: 0.35,
+    hero_overlay_color: "#2F4349",
+    hero_overlay_opacity: 0.45,
     hero_height: "tall",
-    primary_color: "#8b7355",
-    accent_color: "#c9b99a",
-    background_color: "#faf8f5",
-    text_color: "#2d2d2d",
-    button_color: "#8b7355",
-    button_text_color: "#ffffff",
+    primary_color: "#2F4349",
+    accent_color: "#4FB3BD",
+    background_color: "#F3F0E8",
+    text_color: "#22333A",
+    button_color: "#3F7F7C",
+    button_text_color: "#FFFFFF",
     heading_font: "Syne",
     body_font: "Plus Jakarta Sans",
-    preset_key: "warm-sand",
+    preset_key: "custom",
   };
   const { data: existingTheme } = await admin
     .from("clinic_theme")
