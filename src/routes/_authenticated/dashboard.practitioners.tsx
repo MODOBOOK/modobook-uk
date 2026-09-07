@@ -10,6 +10,7 @@ import { getSeatSummary, reserveExtraSeat } from "@/lib/practitioner-billing.fun
 import { SeatCostWarning, seatWillCharge, type SeatSummary } from "@/components/SeatCostWarning";
 
 import { listMyLocations } from "@/lib/locations.functions";
+import { getMyTreatments } from "@/lib/treatments.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
 import { Button } from "@/components/ui/button";
@@ -37,15 +38,16 @@ export const Route = createFileRoute("/_authenticated/dashboard/practitioners")(
   component: PractitionersPage,
 });
 
-type Draft = Partial<Pract> & { location_ids?: string[] };
+type Draft = Partial<Pract> & { location_ids?: string[]; treatment_ids?: string[] };
 
 function emptyDraft(): Draft {
-  return { name: "", professional_title: "", photo_url: null, bio: "", active: true, location_ids: [] };
+  return { name: "", professional_title: "", photo_url: null, bio: "", active: true, location_ids: [], treatment_ids: [] };
 }
 
 function PractitionersPage() {
   const fetchList = useServerFn(listMyPractitioners);
   const fetchLocs = useServerFn(listMyLocations);
+  const fetchTreatments = useServerFn(getMyTreatments);
   const fetchProfile = useServerFn(getMyProfile);
   const save = useServerFn(upsertPractitioner);
   const remove = useServerFn(deletePractitioner);
@@ -55,6 +57,8 @@ function PractitionersPage() {
 
   const [practitioners, setPractitioners] = useState<Pract[]>([]);
   const [links, setLinks] = useState<{ location_id: string; practitioner_id: string }[]>([]);
+  const [treatmentLinks, setTreatmentLinks] = useState<{ practitioner_id: string; treatment_id: string }[]>([]);
+  const [treatments, setTreatments] = useState<{ id: string; name: string }[]>([]);
   const [locations, setLocations] = useState<Loc[]>([]);
   const [profileId, setProfileId] = useState<string>("");
   const [selectionMode, setSelectionMode] = useState<"required" | "optional" | "first_available">("optional");
@@ -70,14 +74,17 @@ function PractitionersPage() {
   async function refresh() {
     setLoading(true);
     try {
-      const [list, locs, profile, seatInfo] = await Promise.all([
+      const [list, locs, profile, seatInfo, treats] = await Promise.all([
         fetchList(),
         fetchLocs(),
         fetchProfile(),
         fetchSeats().catch(() => null),
+        fetchTreatments().catch(() => [] as any[]),
       ]);
       setPractitioners(list.practitioners);
       setLinks(list.links);
+      setTreatmentLinks((list as { treatmentLinks?: { practitioner_id: string; treatment_id: string }[] }).treatmentLinks ?? []);
+      setTreatments(((treats ?? []) as { id: string; name: string; active?: boolean | null }[]).filter((t) => t.active !== false).map((t) => ({ id: t.id, name: t.name })));
       setLocations(locs);
       setSeats(seatInfo);
       if (profile && "id" in profile) {
@@ -133,6 +140,7 @@ function PractitionersPage() {
     setDraft({
       ...p,
       location_ids: links.filter((l) => l.practitioner_id === p.id).map((l) => l.location_id),
+      treatment_ids: treatmentLinks.filter((l) => l.practitioner_id === p.id).map((l) => l.treatment_id),
     });
     setOpen(true);
   }
@@ -153,6 +161,7 @@ function PractitionersPage() {
           bio: draft.bio ?? null,
           active: draft.active !== false,
           location_ids: draft.location_ids ?? [],
+          treatment_ids: draft.treatment_ids ?? [],
         },
       });
       toast.success("Practitioner saved");
@@ -290,6 +299,14 @@ function PractitionersPage() {
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         {locNames.length > 0 ? locNames.join(" · ") : "No locations assigned"}
                       </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {(() => {
+                          const n = treatmentLinks.filter((l) => l.practitioner_id === p.id).length;
+                          return n === 0
+                            ? "Offers all services"
+                            : `${n} ${n === 1 ? "service" : "services"} assigned`;
+                        })()}
+                      </p>
                     </div>
                   </div>
                   <div className="flex gap-1">
@@ -354,6 +371,48 @@ function PractitionersPage() {
                           }}
                         />
                         {loc.name}
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            <div className="space-y-2 rounded-md border p-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">Services they offer</p>
+                {(draft.treatment_ids ?? []).length > 0 && (
+                  <button
+                    type="button"
+                    className="text-xs underline text-muted-foreground"
+                    onClick={() => setDraft((d) => ({ ...d, treatment_ids: [] }))}
+                  >
+                    Clear (offer all)
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Leave everything unticked and they can be booked for any service. Tick some and patients
+                only see those services when they pick this practitioner.
+              </p>
+              {treatments.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Add a service first.</p>
+              ) : (
+                <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+                  {treatments.map((t) => {
+                    const checked = (draft.treatment_ids ?? []).includes(t.id);
+                    return (
+                      <label key={t.id} className="flex items-center gap-2 text-sm">
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(v) => {
+                            setDraft((d) => {
+                              const cur = new Set(d.treatment_ids ?? []);
+                              if (v) cur.add(t.id); else cur.delete(t.id);
+                              return { ...d, treatment_ids: Array.from(cur) };
+                            });
+                          }}
+                        />
+                        {t.name}
                       </label>
                     );
                   })}
