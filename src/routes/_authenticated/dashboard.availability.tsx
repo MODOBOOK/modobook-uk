@@ -445,6 +445,7 @@ function AvailabilityPage() {
   async function submitTimeOff() {
     // Empty selection = close every location; otherwise one row per chosen location.
     const targets: (string | null)[] = blLocs.length ? blLocs : [null];
+    const pracTargets: (string | null)[] = blPracts.length ? blPracts : [null];
     const reason = blReason || undefined;
     setSavingBl(true);
     try {
@@ -452,7 +453,9 @@ function AvailabilityPage() {
         if (!blTimeDate) { toast.error("Pick a date"); return; }
         if (blTimeStart >= blTimeEnd) { toast.error("End time must be after start"); return; }
         for (const locId of targets) {
-          await addBlT({ data: { date: fmtISO(blTimeDate), start_time: blTimeStart, end_time: blTimeEnd, reason, location_id: locId } });
+          for (const prac of pracTargets) {
+            await addBlT({ data: { date: fmtISO(blTimeDate), start_time: blTimeStart, end_time: blTimeEnd, reason, location_id: locId, practitioner_id: prac } });
+          }
         }
         toast.success("Time block added");
       } else {
@@ -464,10 +467,16 @@ function AvailabilityPage() {
         if (dates.length === 0) { toast.error("Pick at least one date"); return; }
         let added = 0;
         for (const locId of targets) {
-          const existing = new Set(blocked.filter((b) => (b.location_id ?? null) === (locId ?? null)).map((b) => b.date));
-          const toAdd = dates.filter((d) => !existing.has(d));
-          await Promise.all(toAdd.map((date) => addBl({ data: { date, reason, location_id: locId } })));
-          added += toAdd.length;
+          for (const prac of pracTargets) {
+            const existing = new Set(
+              blocked
+                .filter((b) => (b.location_id ?? null) === (locId ?? null) && (b.practitioner_id ?? null) === (prac ?? null))
+                .map((b) => b.date),
+            );
+            const toAdd = dates.filter((d) => !existing.has(d));
+            await Promise.all(toAdd.map((date) => addBl({ data: { date, reason, location_id: locId, practitioner_id: prac } })));
+            added += toAdd.length;
+          }
         }
         if (added === 0) { toast.info("Those dates are already closed"); return; }
         toast.success(`${added} ${added === 1 ? "closure" : "closures"} added`);
