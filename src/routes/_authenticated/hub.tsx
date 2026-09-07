@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   LayoutDashboard,
   CalendarDays,
+  Search,
   Send,
   Network,
   ShieldCheck,
