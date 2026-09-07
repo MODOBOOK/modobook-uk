@@ -32,6 +32,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { RescheduleAppointmentDialog } from "@/components/RescheduleAppointmentDialog";
+import { AppointmentExtrasPanel } from "@/components/AppointmentExtrasPanel";
 import {
   listMyAppointments,
   updateAppointmentNotes,
@@ -1532,6 +1533,13 @@ function CheckoutSheet({
           </div>
         );
       })()}
+
+      <AppointmentExtrasPanel
+        appointmentId={a.id}
+        bookedName={a.treatments?.name ?? "Treatment"}
+        disabled={cancelled}
+        onTotalChange={(t) => onPatch({ total_amount: t })}
+      />
 
       {a.card_capture_agreed_at && (
         <div className="rounded-lg border bg-muted/40 p-3 text-xs">
