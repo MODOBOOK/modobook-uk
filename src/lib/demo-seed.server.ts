@@ -120,7 +120,8 @@ export async function seedDemoClinic(admin: Admin) {
     bio: "A boutique aesthetics studio pairing clinical rigour with a slow, considered treatment experience.",
     about:
       "We're a small, women-led team creating an unhurried environment for consultations, treatments and reviews. Every visit begins with a proper conversation.",
-    brand_color: "#8b7355",
+    brand_color: "#2F4349",
+    avatar_url: IMG.avatar,
     specialties: ["Anti-wrinkle", "Lip filler", "Skin boosters", "Polynucleotides", "Skin health"],
     qualifications: [
       { label: "BSc (Hons) Adult Nursing — King's College London", year: "2012" },
