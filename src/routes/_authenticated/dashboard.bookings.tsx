@@ -45,6 +45,8 @@ import {
   listAvailabilityOverrides,
   listBlockedDates,
   getRotaSettings,
+  listPractitioners,
+  getCalendarScope,
 } from "@/lib/availability.functions";
 import { ruleAppliesOnDate } from "@/lib/rota";
 import {
@@ -92,6 +94,7 @@ type Appt = {
   aftercare_html: string | null;
   has_allergies: boolean | null;
   allergies_text: string | null;
+  practitioner_id?: string | null;
   treatments: { name: string; color?: string | null } | null;
   locations: { name: string } | null;
   location_id?: string | null;
@@ -104,6 +107,7 @@ type BlockedTime = {
   end_time: string;
   reason: string | null;
   location_id: string | null;
+  practitioner_id?: string | null;
 };
 
 const HOUR_HEIGHT = 60;
@@ -112,9 +116,9 @@ const END_HOUR = 23;
 const HOURS = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
 
 type ViewMode = "day" | "3day" | "week" | "month";
-type AvailRule = { day_of_week: number; start_time: string; end_time: string; location_id?: string | null; cycle_length?: number; weeks_mask?: number };
-type Override = { date: string; start_time: string; end_time: string; location_id: string | null };
-type BlockedDate = { date: string; location_id: string | null };
+type AvailRule = { day_of_week: number; start_time: string; end_time: string; location_id?: string | null; cycle_length?: number; weeks_mask?: number; practitioner_id?: string | null };
+type Override = { date: string; start_time: string; end_time: string; location_id: string | null; practitioner_id?: string | null };
+type BlockedDate = { date: string; location_id: string | null; practitioner_id?: string | null };
 
 function startOfWeek(d: Date) {
   const c = new Date(d);
@@ -206,6 +210,8 @@ function BookingsPage() {
   const listBlockedDatesFn = useServerFn(listBlockedDates);
   const getRota = useServerFn(getRotaSettings);
   const listLocations = useServerFn(listMyLocations);
+  const listPracts = useServerFn(listPractitioners);
+  const getScopeFn = useServerFn(getCalendarScope);
   const [appts, setAppts] = useState<Appt[]>([]);
   const [blocks, setBlocks] = useState<BlockedTime[]>([]);
   const [rules, setRules] = useState<AvailRule[]>([]);
@@ -214,6 +220,9 @@ function BookingsPage() {
   const [rotaAnchor, setRotaAnchor] = useState<string | null>(null);
   const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
   const [locationFilter, setLocationFilter] = useState<string>("all");
+  // Team calendars: owners/managers can flick between each person's diary.
+  const [practitioners, setPractitioners] = useState<{ id: string; name: string }[]>([]);
+  const [practitionerFilter, setPractitionerFilter] = useState<string>("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [anchor, setAnchor] = useState(new Date());
@@ -235,7 +244,7 @@ function BookingsPage() {
 
 
   async function refresh() {
-    const [a, b, r, o, bd, l, rota] = await Promise.all([list(), listBlocks(), listRules(), listOverrides(), listBlockedDatesFn(), listLocations(), getRota()]);
+    const [a, b, r, o, bd, l, rota, pracs, scope] = await Promise.all([list(), listBlocks(), listRules(), listOverrides(), listBlockedDatesFn(), listLocations(), getRota(), listPracts(), getScopeFn()]);
     setAppts(a as Appt[]);
     setBlocks(b as BlockedTime[]);
     setRules((r as AvailRule[]) ?? []);
@@ -243,6 +252,9 @@ function BookingsPage() {
     setBlockedDates((bd as BlockedDate[]) ?? []);
     setLocations(((l as any[]) ?? []).map((x) => ({ id: x.id, name: x.name })));
     setRotaAnchor((rota as { rota_anchor_date?: string | null } | null)?.rota_anchor_date ?? null);
+    setPractitioners(((pracs as any[]) ?? []).map((x) => ({ id: x.id, name: x.name })));
+    const own = (scope as { ownPractitionerId?: string | null } | null)?.ownPractitionerId ?? null;
+    if (own) setPractitionerFilter(own);
   }
 
 
@@ -294,13 +306,27 @@ function BookingsPage() {
     : `var(--gutter) repeat(${days.length}, minmax(0, 1fr))`;
 
 
+  /** A row belongs on this calendar if it's clinic-wide or for the chosen person. */
+  const matchesPractitioner = (pid?: string | null) =>
+    practitionerFilter === "all" || pid == null || pid === practitionerFilter;
+
   const filteredAppts = useMemo(
-    () => (locationFilter === "all" ? appts : appts.filter((a) => (a.location_id ?? null) === locationFilter)),
-    [appts, locationFilter]
+    () =>
+      appts.filter(
+        (a) =>
+          (locationFilter === "all" || (a.location_id ?? null) === locationFilter) &&
+          (practitionerFilter === "all" || (a.practitioner_id ?? null) === practitionerFilter),
+      ),
+    [appts, locationFilter, practitionerFilter]
   );
   const filteredBlocks = useMemo(
-    () => (locationFilter === "all" ? blocks : blocks.filter((b) => (b.location_id ?? null) === locationFilter || b.location_id == null)),
-    [blocks, locationFilter]
+    () =>
+      blocks.filter(
+        (b) =>
+          (locationFilter === "all" || (b.location_id ?? null) === locationFilter || b.location_id == null) &&
+          matchesPractitioner(b.practitioner_id),
+      ),
+    [blocks, locationFilter, practitionerFilter]
   );
 
   const apptsByDate = useMemo(() => {
@@ -336,7 +362,8 @@ function BookingsPage() {
     const isBlockedDay = blockedDates.some(
       (bd) =>
         bd.date === iso &&
-        (locationFilter === "all" || bd.location_id == null || bd.location_id === locationFilter)
+        (locationFilter === "all" || bd.location_id == null || bd.location_id === locationFilter) &&
+        matchesPractitioner(bd.practitioner_id)
     );
     if (isBlockedDay) {
       return [{ top: 0, height: (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT }];
@@ -344,12 +371,14 @@ function BookingsPage() {
     const dayRules = (rulesByDow.get(dow) ?? []).filter(
       (r) =>
         (locationFilter === "all" || r.location_id == null || r.location_id === locationFilter) &&
+        matchesPractitioner(r.practitioner_id) &&
         ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number; effective_from?: string | null; effective_to?: string | null }, iso, rotaAnchor),
     );
     const dayOverrides = overrides.filter(
       (o) =>
         o.date === iso &&
-        (locationFilter === "all" || o.location_id == null || o.location_id === locationFilter),
+        (locationFilter === "all" || o.location_id == null || o.location_id === locationFilter) &&
+        matchesPractitioner(o.practitioner_id),
     );
     const windows: [number, number][] = [
       ...dayRules.map((r) => [parseTime(r.start_time), parseTime(r.end_time)] as [number, number]),
@@ -481,6 +510,34 @@ function BookingsPage() {
     </div>
   );
 
+  const practitionerChips = practitioners.length > 1 && (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        onClick={() => setPractitionerFilter("all")}
+        className={`rounded-full border px-3.5 py-1.5 text-xs transition active:scale-95 sm:px-3 sm:py-1 ${
+          practitionerFilter === "all"
+            ? "bg-foreground text-background border-foreground"
+            : "bg-background text-muted-foreground hover:bg-muted"
+        }`}
+      >
+        Whole team
+      </button>
+      {practitioners.map((p) => (
+        <button
+          key={p.id}
+          onClick={() => setPractitionerFilter(p.id)}
+          className={`rounded-full border px-3.5 py-1.5 text-xs transition active:scale-95 sm:px-3 sm:py-1 ${
+            practitionerFilter === p.id
+              ? "bg-foreground text-background border-foreground"
+              : "bg-background text-muted-foreground hover:bg-muted"
+          }`}
+        >
+          {p.name}
+        </button>
+      ))}
+    </div>
+  );
+
   const actionsMenu = (
     <div className="relative">
       <Button size="icon" onClick={() => setActionsOpen((v) => !v)} aria-label="Calendar actions">
@@ -533,7 +590,7 @@ function BookingsPage() {
           <ChevronRight className="h-5 w-5" />
         </Button>
         <Button
-          variant={filtersOpen || locationFilter !== "all" ? "default" : "outline"}
+          variant={filtersOpen || locationFilter !== "all" || practitionerFilter !== "all" ? "default" : "outline"}
           size="icon"
           className="relative h-10 w-10 shrink-0"
           onClick={() => setFiltersOpen((v) => !v)}
@@ -557,6 +614,7 @@ function BookingsPage() {
             </Button>
           </div>
           {locationChips}
+          {practitionerChips}
         </div>
       )}
 
@@ -581,14 +639,21 @@ function BookingsPage() {
         </div>
       </div>
 
-      {/* Desktop location chips */}
-      <div className="hidden sm:block">{locationChips}</div>
+      {/* Desktop location + team chips */}
+      <div className="hidden sm:block space-y-2">
+        {locationChips}
+        {practitionerChips}
+      </div>
 
       <p className="text-xs text-muted-foreground">
         {loading
           ? "Loading…"
           : `${filteredAppts.filter((a) => a.status !== "cancelled").length} bookings · ${filteredBlocks.length} blocked${
               locationFilter !== "all" ? ` · ${locations.find((l) => l.id === locationFilter)?.name ?? ""}` : ""
+            }${
+              practitionerFilter !== "all"
+                ? ` · ${practitioners.find((p) => p.id === practitionerFilter)?.name ?? ""}`
+                : ""
             }`}
       </p>
 
@@ -602,6 +667,7 @@ function BookingsPage() {
           overrides={overrides}
           rotaAnchor={rotaAnchor}
           locationFilter={locationFilter}
+          practitionerFilter={practitionerFilter}
           todayStr={todayStr}
           onPickDay={(d) => { setAnchor(d); setView("day"); }}
         />
@@ -803,11 +869,13 @@ function BookingsPage() {
       <BlockTimeDialog
         open={showBlock}
         onOpenChange={setShowBlock}
+        practitionerId={practitionerFilter === "all" ? null : practitionerFilter}
         onAdded={(b) => setBlocks((p) => [...p, b])}
       />
       <UnblockDialog
         open={showUnblock}
         onOpenChange={setShowUnblock}
+        practitionerId={practitionerFilter === "all" ? null : practitionerFilter}
         blocks={blocks}
         onRemoved={(id) => setBlocks((p) => p.filter((b) => b.id !== id))}
         onOpened={refresh}
@@ -827,6 +895,7 @@ function MonthView({
   overrides,
   rotaAnchor,
   locationFilter,
+  practitionerFilter,
   todayStr,
   onPickDay,
 }: {
@@ -838,6 +907,7 @@ function MonthView({
   overrides: Override[];
   rotaAnchor: string | null;
   locationFilter: string;
+  practitionerFilter: string;
   todayStr: string;
   onPickDay: (d: Date) => void;
 }) {
@@ -866,13 +936,15 @@ function MonthView({
           const dayBlocks = blocksByDate.get(key) ?? [];
           const matchLoc = (locId: string | null | undefined) =>
             locationFilter === "all" || locId == null || locId === locationFilter;
+          const matchesPrac = (pid?: string | null) =>
+            practitionerFilter === "all" || pid == null || pid === practitionerFilter;
           const activeRules = (rulesByDow.get(d.getDay()) ?? []).filter(
-            (r) => matchLoc(r.location_id) && ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number; effective_from?: string | null; effective_to?: string | null }, key, rotaAnchor),
+            (r) => matchLoc(r.location_id) && matchesPrac(r.practitioner_id) && ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number; effective_from?: string | null; effective_to?: string | null }, key, rotaAnchor),
           );
-          const hasOverride = overrides.some((o) => o.date === key && matchLoc(o.location_id));
+          const hasOverride = overrides.some((o) => o.date === key && matchLoc(o.location_id) && matchesPrac(o.practitioner_id));
           const hasAvail = activeRules.length > 0 || hasOverride;
           const isPast = key < todayStr;
-          const isBlockedDay = blockedDates.some((bd) => bd.date === key && matchLoc(bd.location_id));
+          const isBlockedDay = blockedDates.some((bd) => bd.date === key && matchLoc(bd.location_id) && matchesPrac(bd.practitioner_id));
           const fullyBlocked = isBlockedDay || dayBlocks.some(
             (b: any) => matchLoc(b.location_id) && (!b.start_time || (b.start_time <= "00:00" && b.end_time >= "23:59")),
           );
@@ -1041,8 +1113,8 @@ function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange
 }
 
 function BlockTimeDialog({
-  open, onOpenChange, onAdded,
-}: { open: boolean; onOpenChange: (v: boolean) => void; onAdded: (b: BlockedTime) => void }) {
+  open, onOpenChange, onAdded, practitionerId,
+}: { open: boolean; onOpenChange: (v: boolean) => void; onAdded: (b: BlockedTime) => void; practitionerId?: string | null }) {
   const add = useServerFn(addBlockedTime);
   const [date, setDate] = useState(ymd(new Date()));
   const [endDate, setEndDate] = useState("");
@@ -1065,7 +1137,7 @@ function BlockTimeDialog({
       }
       for (const day of days) {
         const row = await add({
-          data: { date: day, start_time: s + ":00", end_time: e + ":00", reason: reason || null },
+          data: { date: day, start_time: s + ":00", end_time: e + ":00", reason: reason || null, practitioner_id: practitionerId ?? null },
         });
         onAdded(row as BlockedTime);
       }
@@ -1122,11 +1194,12 @@ function BlockTimeDialog({
 }
 
 function UnblockDialog({
-  open, onOpenChange, blocks, onRemoved, onOpened,
+  open, onOpenChange, blocks, onRemoved, onOpened, practitionerId,
 }: {
   open: boolean; onOpenChange: (v: boolean) => void;
   blocks: BlockedTime[]; onRemoved: (id: string) => void;
   onOpened?: () => void | Promise<void>;
+  practitionerId?: string | null;
 }) {
   const del = useServerFn(deleteBlockedTime);
   const addOverride = useServerFn(addAvailabilityOverride);
@@ -1153,7 +1226,7 @@ function UnblockDialog({
     setBusy(true);
     try {
       for (const date of dates) {
-        await addOverride({ data: { date, start_time: start, end_time: end, slot_interval: interval } });
+        await addOverride({ data: { date, start_time: start, end_time: end, slot_interval: interval, practitioner_id: practitionerId ?? null } });
       }
       toast.success(`Opened ${dates.length} day${dates.length === 1 ? "" : "s"} · ${start}–${end}`);
       await onOpened?.();
