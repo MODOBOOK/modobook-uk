@@ -810,6 +810,98 @@ export async function seedDemoClinic(admin: Admin) {
     }
   }
 
+  // Team — a small staff list so the demo shows how multi-person clinics work:
+  // each practitioner has their own calendar, receptionists see front-of-house
+  // only, viewers are read-only.
+  {
+    const team: Array<{
+      name: string;
+      email: string;
+      role: "admin" | "practitioner" | "receptionist" | "viewer";
+      scope: "clinic" | "own";
+      rota?: { day: number; start: string; end: string };
+    }> = [
+      { name: "Nurse Amelia Hart", email: "amelia+staff@modo.demo", role: "practitioner", scope: "own", rota: { day: 2, start: "09:00:00", end: "17:00:00" } },
+      { name: "Dr Priya Raman", email: "priya+staff@modo.demo", role: "practitioner", scope: "own", rota: { day: 4, start: "10:00:00", end: "19:00:00" } },
+      { name: "Jess Okoro", email: "jess+staff@modo.demo", role: "receptionist", scope: "clinic" },
+      { name: "Marta Kowal", email: "marta+staff@modo.demo", role: "admin", scope: "clinic" },
+    ];
+
+    for (const member of team) {
+      const { data: existingStaff } = await admin
+        .from("staff_members")
+        .select("id, practitioner_id")
+        .eq("profile_id", profileId!)
+        .eq("invited_email", member.email)
+        .maybeSingle();
+
+      let practitionerId = (existingStaff as any)?.practitioner_id as string | null | undefined;
+
+      if (member.role === "practitioner" && !practitionerId) {
+        const { data: existingPr } = await admin
+          .from("practitioners")
+          .select("id")
+          .eq("profile_id", profileId!)
+          .eq("name", member.name)
+          .maybeSingle();
+        if (existingPr?.id) {
+          practitionerId = existingPr.id as string;
+          await admin.from("practitioners").update({ active: true }).eq("id", practitionerId);
+        } else {
+          const { data: createdPr } = await admin
+            .from("practitioners")
+            .insert({ profile_id: profileId!, name: member.name, active: true })
+            .select("id")
+            .single();
+          practitionerId = createdPr?.id as string | undefined;
+        }
+      }
+
+      const staffFields = {
+        name: member.name,
+        role: member.role,
+        data_scope: member.scope,
+        status: "active" as const,
+        practitioner_id: practitionerId ?? null,
+        accepted_at: new Date().toISOString(),
+      };
+
+      if (existingStaff?.id) {
+        await admin.from("staff_members").update(staffFields).eq("id", existingStaff.id);
+      } else {
+        await admin.from("staff_members").insert({
+          profile_id: profileId!,
+          invited_email: member.email,
+          ...staffFields,
+        });
+      }
+
+      // A rota line each so the calendar's practitioner filter has real shifts.
+      if (member.rota && practitionerId) {
+        const { data: existingRule } = await admin
+          .from("availability_rules")
+          .select("id")
+          .eq("profile_id", profileId!)
+          .eq("practitioner_id", practitionerId)
+          .eq("day_of_week", member.rota.day)
+          .maybeSingle();
+        if (!existingRule?.id) {
+          await admin.from("availability_rules").insert({
+            profile_id: profileId!,
+            practitioner_id: practitionerId,
+            location_id: locationId!,
+            day_of_week: member.rota.day,
+            start_time: member.rota.start,
+            end_time: member.rota.end,
+            slot_interval: 30,
+          });
+        }
+      }
+    }
+  }
+
+
+
 
   return {
     ok: true,
