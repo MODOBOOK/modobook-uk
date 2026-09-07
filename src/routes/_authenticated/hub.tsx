@@ -50,6 +50,7 @@ const nav = [
   { to: "/dashboard/rx-requests", label: "Rx", icon: Send, key: "rx-requests" as const, primary: true },
   { to: "/hub/visits", label: "Clinic days", icon: CalendarDays, key: "visits" as const, primary: true },
   { to: "/hub/referrals", label: "Referrals", icon: Send, key: "referrals" as const, primary: true },
+  { to: "/hub/find-prescriber", label: "Find a prescriber", icon: Search, key: "find" as const },
   { to: "/hub/prescribing", label: "Rules", icon: Pill, key: "prescribing" as const },
   { to: "/hub/connections", label: "Prescribers", icon: Network, key: "connections" as const },
   { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" as const },
