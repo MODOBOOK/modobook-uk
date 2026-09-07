@@ -738,6 +738,36 @@ export async function seedDemoClinic(admin: Admin) {
     clientId = data!.id as string;
   }
 
+  // The demo patient is already a member, so both sides of memberships show
+  // real data (clinic member list + "your membership" in the patient account).
+  {
+    const { data: existingMembership } = await admin
+      .from("patient_memberships")
+      .select("id")
+      .eq("profile_id", profileId)
+      .eq("patient_email", DEMO_PATIENT_EMAIL)
+      .maybeSingle();
+    const periodEnd = new Date();
+    periodEnd.setMonth(periodEnd.getMonth() + 1);
+    const membershipRow = {
+      profile_id: profileId,
+      plan_id: planSaver,
+      clinic_client_id: clientId!,
+      patient_user_id: patientUserId,
+      patient_email: DEMO_PATIENT_EMAIL,
+      patient_name: DEMO_PATIENT_NAME,
+      status: "active",
+      current_period_end: periodEnd.toISOString(),
+    };
+    if (existingMembership?.id) {
+      await admin.from("patient_memberships").update(membershipRow as never).eq("id", existingMembership.id);
+    } else {
+      await admin.from("patient_memberships").insert(membershipRow as never);
+    }
+  }
+
+
+
   // Appointments — a past one and an upcoming one.
   // NOTE: times must be deterministic (fixed clock times, local date parts) or
   // every seed run creates a fresh "duplicate" booking at the current time.
