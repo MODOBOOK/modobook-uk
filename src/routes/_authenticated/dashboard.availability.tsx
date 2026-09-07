@@ -318,7 +318,7 @@ function AvailabilityPage() {
     const weeks = Array.from({ length: 4 }, (_, i) => i === weekIdx);
     setForm({
       day_of_week: day, start: "09:00", end: "17:00", interval: "30",
-      location_ids: [], practitioner_id: "none", weeks,
+      location_ids: [], practitioner_ids: [], weeks,
       effective_from: periodStart || activePeriod?.start || "",
       effective_to: draft && activePeriod?.key === draft.start
         ? draft.end
@@ -336,7 +336,7 @@ function AvailabilityPage() {
       end: r.end_time.slice(0, 5),
       interval: String(r.slot_interval),
       location_ids: r.location_id ? [r.location_id] : [],
-      practitioner_id: r.practitioner_id ?? "none",
+      practitioner_ids: r.practitioner_id ? [r.practitioner_id] : [],
       weeks,
       effective_from: r.effective_from ?? "",
       effective_to: r.effective_to ?? "",
