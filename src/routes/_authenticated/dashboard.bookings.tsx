@@ -937,12 +937,12 @@ function MonthView({
           const matchesPrac = (pid?: string | null) =>
             practitionerFilter === "all" || pid == null || pid === practitionerFilter;
           const activeRules = (rulesByDow.get(d.getDay()) ?? []).filter(
-            (r) => matchLoc(r.location_id) && ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number; effective_from?: string | null; effective_to?: string | null }, key, rotaAnchor),
+            (r) => matchLoc(r.location_id) && matchesPrac(r.practitioner_id) && ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number; effective_from?: string | null; effective_to?: string | null }, key, rotaAnchor),
           );
-          const hasOverride = overrides.some((o) => o.date === key && matchLoc(o.location_id));
+          const hasOverride = overrides.some((o) => o.date === key && matchLoc(o.location_id) && matchesPrac(o.practitioner_id));
           const hasAvail = activeRules.length > 0 || hasOverride;
           const isPast = key < todayStr;
-          const isBlockedDay = blockedDates.some((bd) => bd.date === key && matchLoc(bd.location_id));
+          const isBlockedDay = blockedDates.some((bd) => bd.date === key && matchLoc(bd.location_id) && matchesPrac(bd.practitioner_id));
           const fullyBlocked = isBlockedDay || dayBlocks.some(
             (b: any) => matchLoc(b.location_id) && (!b.start_time || (b.start_time <= "00:00" && b.end_time >= "23:59")),
           );
