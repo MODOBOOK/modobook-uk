@@ -56,6 +56,8 @@ type Plan = {
   perks: string | null;
   terms_text: string | null;
   terms_checkboxes: Array<{ label: string; required?: boolean }>;
+  flexible_booking: boolean;
+  rollover_included: boolean;
   active: boolean;
 };
 
@@ -87,6 +89,8 @@ const emptyPlan: Omit<Plan, "id"> = {
   perks: "",
   terms_text: "",
   terms_checkboxes: [],
+  flexible_booking: false,
+  rollover_included: false,
   active: true,
 };
 
@@ -252,6 +256,8 @@ function MembershipsPage() {
           termsCheckboxes: (editing.terms_checkboxes ?? [])
             .filter((b) => b.label.trim())
             .map((b) => ({ label: b.label.trim(), required: b.required !== false })),
+          flexibleBooking: editing.flexible_booking,
+          rolloverIncluded: editing.rollover_included,
           active: editing.active,
         },
       });
@@ -430,6 +436,8 @@ function MembershipsPage() {
                         {membershipScheduleText(p.treatment_frequency_months, p.min_commitment_months)}
                       </Badge>
                     )}
+                    {p.flexible_booking && <Badge variant="outline">Book any time</Badge>}
+                    {p.rollover_included && <Badge variant="outline">Rollover</Badge>}
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Credit spend: {p.spend_mode === "any" ? "any booking" : p.spend_mode === "restricted" ? `${(p.eligible_treatment_ids ?? []).length} selected treatments` : "manual — you apply it in clinic"}
@@ -611,6 +619,32 @@ function MembershipsPage() {
                 Example: £50 a month, treatment due every 4 months with a 4 month minimum — they pay for 4 months, then
                 have their treatment.
               </p>
+              <div className="space-y-3 rounded-md border p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <Label className="cursor-pointer">Members can book any time</Label>
+                    <p className="text-xs text-muted-foreground">
+                      They can book their included treatment whenever they like — not just when it's due.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={editing.flexible_booking}
+                    onCheckedChange={(v) => setEditing({ ...editing, flexible_booking: v })}
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-3 border-t pt-3">
+                  <div>
+                    <Label className="cursor-pointer">Rollover unused treatments</Label>
+                    <p className="text-xs text-muted-foreground">
+                      If they skip a cycle, the unused treatment carries over so they can use it later.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={editing.rollover_included}
+                    onCheckedChange={(v) => setEditing({ ...editing, rollover_included: v })}
+                  />
+                </div>
+              </div>
               <div className="space-y-1.5">
                 <Label>Credit added to their pot each cycle (£)</Label>
                 <Input
