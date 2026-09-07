@@ -27,6 +27,7 @@ const PRACTITIONER_ROUTES = [
   "/dashboard/patients",
   "/dashboard/consultations",
   "/dashboard/availability",
+  "/dashboard/income-report",
   "/dashboard/services",
   "/dashboard/packages",
   "/dashboard/addons",
@@ -40,6 +41,7 @@ const PRACTITIONER_ROUTES = [
   "/dashboard/menu",
   "/dashboard/help",
 ];
+
 
 const RECEPTIONIST_ROUTES = [
   "/dashboard",
