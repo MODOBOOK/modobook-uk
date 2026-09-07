@@ -50,7 +50,7 @@ export const listStaff = createServerFn({ method: "GET" })
     if (!profileId) return [];
     const { data, error } = await context.supabase
       .from("staff_members")
-      .select("id, name, invited_email, role, data_scope, practitioner_id, status, invited_at, accepted_at, last_active_at, invite_expires_at")
+      .select("id, name, invited_email, role, data_scope, practitioner_id, status, can_manage_rota, invited_at, accepted_at, last_active_at, invite_expires_at")
       .eq("profile_id", profileId)
       .order("created_at", { ascending: false });
     if (error) throw error;
@@ -64,6 +64,8 @@ type InviteInput = {
   role: StaffRole;
   data_scope?: StaffScope;
   practitioner_id?: string | null;
+  /** Can this person set their own rota (working hours & time off)? */
+  can_manage_rota?: boolean;
 };
 
 export const inviteStaff = createServerFn({ method: "POST" })
@@ -97,6 +99,7 @@ export const inviteStaff = createServerFn({ method: "POST" })
           name: data.name.trim(),
           role: data.role,
           data_scope: data.data_scope ?? "clinic",
+          can_manage_rota: Boolean(data.can_manage_rota),
           practitioner_id: data.role === "practitioner" ? data.practitioner_id ?? null : null,
           status: "invited",
           invite_token: email ? token : null,
@@ -145,13 +148,13 @@ export const inviteStaff = createServerFn({ method: "POST" })
 
 export const updateStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; name?: string; email?: string; role?: StaffRole; data_scope?: StaffScope; practitioner_id?: string | null; status?: StaffStatus }) => d)
+  .inputValidator((d: { id: string; name?: string; email?: string; role?: StaffRole; data_scope?: StaffScope; practitioner_id?: string | null; status?: StaffStatus; can_manage_rota?: boolean }) => d)
   .handler(async ({ data, context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
     const patch: {
       name?: string; invited_email?: string | null; role?: StaffRole; data_scope?: StaffScope;
-      practitioner_id?: string | null; status?: StaffStatus;
+      practitioner_id?: string | null; status?: StaffStatus; can_manage_rota?: boolean;
     } = {};
     if (data.name !== undefined) patch.name = data.name;
     if (data.email !== undefined) {
@@ -163,6 +166,7 @@ export const updateStaff = createServerFn({ method: "POST" })
     if (data.data_scope !== undefined) patch.data_scope = data.data_scope;
     if (data.practitioner_id !== undefined) patch.practitioner_id = data.practitioner_id;
     if (data.status !== undefined) patch.status = data.status;
+    if (data.can_manage_rota !== undefined) patch.can_manage_rota = data.can_manage_rota;
 
     const { data: existing } = await context.supabase
       .from("staff_members")
