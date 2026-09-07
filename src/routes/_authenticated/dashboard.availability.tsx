@@ -151,10 +151,10 @@ type Location = { id: string; name: string };
 type Practitioner = { id: string; name: string };
 type Override = {
   id: string; date: string; start_time: string; end_time: string;
-  slot_interval: number; location_id: string | null;
+  slot_interval: number; location_id: string | null; practitioner_id?: string | null;
 };
-type Blocked = { id: string; date: string; reason: string | null; location_id: string | null };
-type BlockedTime = { id: string; date: string; start_time: string; end_time: string; reason: string | null; location_id: string | null };
+type Blocked = { id: string; date: string; reason: string | null; location_id: string | null; practitioner_id?: string | null };
+type BlockedTime = { id: string; date: string; start_time: string; end_time: string; reason: string | null; location_id: string | null; practitioner_id?: string | null };
 
 function AvailabilityPage() {
   const list = useServerFn(listAvailabilityRules);
