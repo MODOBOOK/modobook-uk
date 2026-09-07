@@ -1036,6 +1036,13 @@ function AvailabilityPage() {
                     />
                   </div>
                 )}
+                {practitioners.length > 0 && (
+                  <div>
+                    <Label>Who's off</Label>
+                    <PractitionerPicker practitioners={practitioners} value={blPracts} onChange={setBlPracts} />
+                    <p className="mt-1 text-xs text-muted-foreground">"Anyone" closes it for the whole clinic; pick names to block only those diaries.</p>
+                  </div>
+                )}
 
               </div>
               <div className="flex justify-end">
@@ -1065,6 +1072,7 @@ function AvailabilityPage() {
                         <Badge variant="outline" className="text-xs">All day</Badge>
                         {b.reason && <span className="text-muted-foreground">· {b.reason}</span>}
                         <span className="text-xs rounded-full bg-muted px-2 py-0.5">{locName(b.location_id) ?? "All locations"}</span>
+                        {b.practitioner_id && <span className="text-xs rounded-full bg-muted px-2 py-0.5">{pracName(b.practitioner_id)}</span>}
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => removeBlock(b.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
@@ -1077,6 +1085,7 @@ function AvailabilityPage() {
                         <Badge variant="outline" className="text-xs">{b.start_time.slice(0,5)}–{b.end_time.slice(0,5)}</Badge>
                         {b.reason && <span className="text-muted-foreground">· {b.reason}</span>}
                         <span className="text-xs rounded-full bg-muted px-2 py-0.5">{locName(b.location_id) ?? "All locations"}</span>
+                        {b.practitioner_id && <span className="text-xs rounded-full bg-muted px-2 py-0.5">{pracName(b.practitioner_id)}</span>}
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => removeBlockTime(b.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
