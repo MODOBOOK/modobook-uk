@@ -68,9 +68,16 @@ const VIEWER_ROUTES = [
   "/dashboard/help",
 ];
 
-export function canAccessRoute(role: ClinicRole, to: string): boolean {
+export function canAccessRoute(
+  role: ClinicRole,
+  to: string,
+  opts?: { canManageRota?: boolean },
+): boolean {
   if (role === "owner") return true;
   if (OWNER_ONLY_ROUTES.includes(to)) return false;
+  // Rota editing is opt-in per team member — the clinic decides who can change
+  // their own working hours and time off.
+  if (to === "/dashboard/availability" && role !== "admin" && !opts?.canManageRota) return false;
   if (role === "admin") return true;
   const allowed =
     role === "practitioner"
@@ -80,6 +87,7 @@ export function canAccessRoute(role: ClinicRole, to: string): boolean {
         : VIEWER_ROUTES;
   return allowed.includes(to);
 }
+
 
 export const ROLE_LABEL: Record<ClinicRole, string> = {
   owner: "Owner",
