@@ -120,6 +120,7 @@ import { Route as AuthenticatedDashboardDiscountsRouteImport } from './routes/_a
 import { Route as AuthenticatedDashboardDesignStudioRouteImport } from './routes/_authenticated/dashboard.design-studio'
 import { Route as AuthenticatedDashboardConsentFormsRouteImport } from './routes/_authenticated/dashboard.consent-forms'
 import { Route as AuthenticatedDashboardComplianceRouteImport } from './routes/_authenticated/dashboard.compliance'
+import { Route as AuthenticatedDashboardCommissionReportRouteImport } from './routes/_authenticated/dashboard.commission-report'
 import { Route as AuthenticatedDashboardComingSoonRouteImport } from './routes/_authenticated/dashboard.coming-soon'
 import { Route as AuthenticatedDashboardClinicRouteImport } from './routes/_authenticated/dashboard.clinic'
 import { Route as AuthenticatedDashboardCategoriesRouteImport } from './routes/_authenticated/dashboard.categories'
@@ -803,6 +804,12 @@ const AuthenticatedDashboardComplianceRoute =
     path: '/compliance',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardCommissionReportRoute =
+  AuthenticatedDashboardCommissionReportRouteImport.update({
+    id: '/commission-report',
+    path: '/commission-report',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardComingSoonRoute =
   AuthenticatedDashboardComingSoonRouteImport.update({
     id: '/coming-soon',
@@ -1299,6 +1306,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
   '/dashboard/clinic': typeof AuthenticatedDashboardClinicRoute
   '/dashboard/coming-soon': typeof AuthenticatedDashboardComingSoonRoute
+  '/dashboard/commission-report': typeof AuthenticatedDashboardCommissionReportRoute
   '/dashboard/compliance': typeof AuthenticatedDashboardComplianceRoute
   '/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/dashboard/design-studio': typeof AuthenticatedDashboardDesignStudioRoute
@@ -1478,6 +1486,7 @@ export interface FileRoutesByTo {
   '/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
   '/dashboard/clinic': typeof AuthenticatedDashboardClinicRoute
   '/dashboard/coming-soon': typeof AuthenticatedDashboardComingSoonRoute
+  '/dashboard/commission-report': typeof AuthenticatedDashboardCommissionReportRoute
   '/dashboard/compliance': typeof AuthenticatedDashboardComplianceRoute
   '/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/dashboard/design-studio': typeof AuthenticatedDashboardDesignStudioRoute
@@ -1661,6 +1670,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/categories': typeof AuthenticatedDashboardCategoriesRoute
   '/_authenticated/dashboard/clinic': typeof AuthenticatedDashboardClinicRoute
   '/_authenticated/dashboard/coming-soon': typeof AuthenticatedDashboardComingSoonRoute
+  '/_authenticated/dashboard/commission-report': typeof AuthenticatedDashboardCommissionReportRoute
   '/_authenticated/dashboard/compliance': typeof AuthenticatedDashboardComplianceRoute
   '/_authenticated/dashboard/consent-forms': typeof AuthenticatedDashboardConsentFormsRoute
   '/_authenticated/dashboard/design-studio': typeof AuthenticatedDashboardDesignStudioRoute
@@ -1849,6 +1859,7 @@ export interface FileRouteTypes {
     | '/dashboard/categories'
     | '/dashboard/clinic'
     | '/dashboard/coming-soon'
+    | '/dashboard/commission-report'
     | '/dashboard/compliance'
     | '/dashboard/consent-forms'
     | '/dashboard/design-studio'
@@ -2028,6 +2039,7 @@ export interface FileRouteTypes {
     | '/dashboard/categories'
     | '/dashboard/clinic'
     | '/dashboard/coming-soon'
+    | '/dashboard/commission-report'
     | '/dashboard/compliance'
     | '/dashboard/consent-forms'
     | '/dashboard/design-studio'
@@ -2210,6 +2222,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/categories'
     | '/_authenticated/dashboard/clinic'
     | '/_authenticated/dashboard/coming-soon'
+    | '/_authenticated/dashboard/commission-report'
     | '/_authenticated/dashboard/compliance'
     | '/_authenticated/dashboard/consent-forms'
     | '/_authenticated/dashboard/design-studio'
@@ -3166,6 +3179,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardComplianceRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/commission-report': {
+      id: '/_authenticated/dashboard/commission-report'
+      path: '/commission-report'
+      fullPath: '/dashboard/commission-report'
+      preLoaderRoute: typeof AuthenticatedDashboardCommissionReportRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/coming-soon': {
       id: '/_authenticated/dashboard/coming-soon'
       path: '/coming-soon'
@@ -3842,6 +3862,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardCategoriesRoute: typeof AuthenticatedDashboardCategoriesRoute
   AuthenticatedDashboardClinicRoute: typeof AuthenticatedDashboardClinicRoute
   AuthenticatedDashboardComingSoonRoute: typeof AuthenticatedDashboardComingSoonRoute
+  AuthenticatedDashboardCommissionReportRoute: typeof AuthenticatedDashboardCommissionReportRoute
   AuthenticatedDashboardComplianceRoute: typeof AuthenticatedDashboardComplianceRoute
   AuthenticatedDashboardConsentFormsRoute: typeof AuthenticatedDashboardConsentFormsRoute
   AuthenticatedDashboardDesignStudioRoute: typeof AuthenticatedDashboardDesignStudioRoute
@@ -3912,6 +3933,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardClinicRoute: AuthenticatedDashboardClinicRoute,
     AuthenticatedDashboardComingSoonRoute:
       AuthenticatedDashboardComingSoonRoute,
+    AuthenticatedDashboardCommissionReportRoute:
+      AuthenticatedDashboardCommissionReportRoute,
     AuthenticatedDashboardComplianceRoute:
       AuthenticatedDashboardComplianceRoute,
     AuthenticatedDashboardConsentFormsRoute:
