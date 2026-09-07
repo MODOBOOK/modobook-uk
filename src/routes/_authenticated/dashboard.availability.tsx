@@ -92,6 +92,48 @@ function LocationPicker({
 }
 
 
+/** Pick one, several, or no practitioners. Empty selection = anyone / whole clinic. */
+function PractitionerPicker({
+  practitioners,
+  value,
+  onChange,
+}: {
+  practitioners: { id: string; name: string }[];
+  value: string[];
+  onChange: (v: string[]) => void;
+}) {
+  if (practitioners.length === 0) return null;
+  const toggle = (id: string) =>
+    onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
+  return (
+    <div className="flex flex-wrap gap-2">
+      <button
+        type="button"
+        onClick={() => onChange([])}
+        className={cn(
+          "rounded-full border px-3 py-1 text-xs",
+          value.length === 0 ? "bg-primary text-primary-foreground border-primary" : "bg-background",
+        )}
+      >
+        Anyone
+      </button>
+      {practitioners.map((p) => (
+        <button
+          key={p.id}
+          type="button"
+          onClick={() => toggle(p.id)}
+          className={cn(
+            "rounded-full border px-3 py-1 text-xs",
+            value.includes(p.id) ? "bg-primary text-primary-foreground border-primary" : "bg-background",
+          )}
+        >
+          {p.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 type Rule = {
   id: string;
   day_of_week: number;
