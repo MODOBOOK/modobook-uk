@@ -91,6 +91,7 @@ const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
   { label: "Analytics", to: "/dashboard/analytics", icon: TrendingUp },
   { label: "Income report", to: "/dashboard/income-report", icon: TrendingUp },
+  { label: "Commission", to: "/dashboard/commission-report", icon: TrendingUp },
   { label: "Import with AI", to: "/dashboard/ai-import", icon: Sparkles },
   { label: "Clinic page", to: "/dashboard/clinic", icon: Store },
   { label: "Welcome & policies", to: "/dashboard/policies", icon: Shield },
