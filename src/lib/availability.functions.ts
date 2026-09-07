@@ -136,7 +136,8 @@ export const deleteAvailabilityRule = createServerFn({ method: "POST" })
       .from("availability_rules")
       .delete()
       .eq("id", data.id)
-      .eq("profile_id", profileId);
+      .eq("profile_id", profileId)
+      .$SCOPE$;
     if (error) throw error;
     return { ok: true };
   });
@@ -348,7 +349,8 @@ export const deleteAvailabilityOverride = createServerFn({ method: "POST" })
       .from("availability_overrides")
       .delete()
       .eq("id", data.id)
-      .eq("profile_id", profileId);
+      .eq("profile_id", profileId)
+      .$SCOPE$;
     if (error) throw error;
     return { ok: true };
   });
@@ -403,7 +405,8 @@ export const deleteBlockedDate = createServerFn({ method: "POST" })
       .from("blocked_dates")
       .delete()
       .eq("id", data.id)
-      .eq("profile_id", profileId);
+      .eq("profile_id", profileId)
+      .$SCOPE$;
     if (error) throw error;
     return { ok: true };
   });
@@ -462,7 +465,8 @@ export const deleteBlockedTime = createServerFn({ method: "POST" })
       .from("blocked_times")
       .delete()
       .eq("id", data.id)
-      .eq("profile_id", profileId);
+      .eq("profile_id", profileId)
+      .$SCOPE$;
     if (error) throw error;
     return { ok: true };
   });
