@@ -216,7 +216,7 @@ function AvailabilityPage() {
     interval: "30",
     location_ids: [] as string[],
 
-    practitioner_id: "none",
+    practitioner_ids: [] as string[], // empty = anyone / whole clinic
     weeks: [true, false, false, false] as boolean[], // A,B,C,D
     effective_from: "",
     effective_to: "",
