@@ -429,6 +429,64 @@ export type Database = {
           },
         ]
       }
+      appointment_extras: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          id: string
+          name: string
+          profile_id: string
+          quantity: number
+          treatment_id: string | null
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          id?: string
+          name: string
+          profile_id: string
+          quantity?: number
+          treatment_id?: string | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          profile_id?: string
+          quantity?: number
+          treatment_id?: string | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_extras_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_extras_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_extras_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_medical_forms: {
         Row: {
           appointment_id: string | null
