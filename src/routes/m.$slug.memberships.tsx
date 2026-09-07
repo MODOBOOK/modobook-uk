@@ -39,6 +39,8 @@ type PublicPlan = {
   interval: "month" | "year";
   treatment_frequency_months?: number | null;
   min_commitment_months?: number | null;
+  flexible_booking?: boolean;
+  rollover_included?: boolean;
   credit_cents: number;
   spend_mode: "any" | "restricted" | "manual";
   discount_percent: number | null;
@@ -272,6 +274,12 @@ function MembershipsPublicInner({ slug }: { slug: string }) {
                       <CalendarClock className="h-3 w-3" />
                       {membershipScheduleText(p.treatment_frequency_months, p.min_commitment_months)}
                     </Badge>
+                  )}
+                  {p.flexible_booking && (
+                    <Badge variant="secondary" className="rounded-full font-normal">Book any time</Badge>
+                  )}
+                  {p.rollover_included && (
+                    <Badge variant="secondary" className="rounded-full font-normal">Unused treatments roll over</Badge>
                   )}
                 </div>
               </div>

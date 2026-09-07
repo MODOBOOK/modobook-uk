@@ -4292,6 +4292,7 @@ export type Database = {
           description: string | null
           discount_percent: number | null
           eligible_treatment_ids: string[] | null
+          flexible_booking: boolean
           id: string
           included_treatments: Json
           interval: string
@@ -4300,6 +4301,7 @@ export type Database = {
           perks: string | null
           price_cents: number
           profile_id: string
+          rollover_included: boolean
           spend_mode: string
           stripe_price_id: string | null
           terms_checkboxes: Json
@@ -4314,6 +4316,7 @@ export type Database = {
           description?: string | null
           discount_percent?: number | null
           eligible_treatment_ids?: string[] | null
+          flexible_booking?: boolean
           id?: string
           included_treatments?: Json
           interval?: string
@@ -4322,6 +4325,7 @@ export type Database = {
           perks?: string | null
           price_cents: number
           profile_id: string
+          rollover_included?: boolean
           spend_mode?: string
           stripe_price_id?: string | null
           terms_checkboxes?: Json
@@ -4336,6 +4340,7 @@ export type Database = {
           description?: string | null
           discount_percent?: number | null
           eligible_treatment_ids?: string[] | null
+          flexible_booking?: boolean
           id?: string
           included_treatments?: Json
           interval?: string
@@ -4344,6 +4349,7 @@ export type Database = {
           perks?: string | null
           price_cents?: number
           profile_id?: string
+          rollover_included?: boolean
           spend_mode?: string
           stripe_price_id?: string | null
           terms_checkboxes?: Json

@@ -50,6 +50,8 @@ const planSchema = z.object({
   termsCheckboxes: z
     .array(z.object({ label: z.string().min(1).max(500), required: z.boolean().default(true) }))
     .default([]),
+  flexibleBooking: z.boolean().default(false),
+  rolloverIncluded: z.boolean().default(false),
   active: z.boolean().default(true),
 });
 
@@ -99,6 +101,8 @@ export const saveMembershipPlan = createServerFn({ method: "POST" })
       perks: data.perks?.trim() || null,
       terms_text: data.termsText?.trim() || null,
       terms_checkboxes: data.termsCheckboxes,
+      flexible_booking: data.flexibleBooking,
+      rollover_included: data.rolloverIncluded,
       active: data.active,
     };
 
@@ -299,7 +303,7 @@ export const listPublicMembershipPlans = createServerFn({ method: "GET" })
     if (profileError || !profile) return { clinicName: null as string | null, heroTitle: null as string | null, heroSubtitle: null as string | null, plans: [] as never[] };
     const { data: plans } = await pub
       .from("membership_plans")
-      .select("id, name, description, price_cents, interval, credit_cents, spend_mode, discount_percent, perks, included_treatments, terms_text, terms_checkboxes, treatment_frequency_months, min_commitment_months")
+      .select("id, name, description, price_cents, interval, credit_cents, spend_mode, discount_percent, perks, included_treatments, terms_text, terms_checkboxes, treatment_frequency_months, min_commitment_months, flexible_booking, rollover_included")
       .eq("profile_id", (profile as { id: string }).id)
       .eq("active", true)
       .order("price_cents", { ascending: true });
