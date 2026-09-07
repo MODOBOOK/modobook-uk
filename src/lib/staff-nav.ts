@@ -40,6 +40,8 @@ const PRACTITIONER_ROUTES = [
   "/dashboard/compliance",
   "/dashboard/menu",
   "/dashboard/help",
+  "/hub",
+  "/dashboard/rx-requests",
 ];
 
 
@@ -71,13 +73,16 @@ const VIEWER_ROUTES = [
 export function canAccessRoute(
   role: ClinicRole,
   to: string,
-  opts?: { canManageRota?: boolean },
+  opts?: { canManageRota?: boolean; canUsePrescribing?: boolean },
 ): boolean {
   if (role === "owner") return true;
   if (OWNER_ONLY_ROUTES.includes(to)) return false;
   // Rota editing is opt-in per team member — the clinic decides who can change
   // their own working hours and time off.
   if (to === "/dashboard/availability" && role !== "admin" && !opts?.canManageRota) return false;
+  // The Prescribing Hub is opt-in per team member — the clinic owner decides
+  // who can raise prescription requests for their patients.
+  if ((to === "/hub" || to === "/dashboard/rx-requests") && role !== "admin" && !opts?.canUsePrescribing) return false;
   if (role === "admin") return true;
   const allowed =
     role === "practitioner"

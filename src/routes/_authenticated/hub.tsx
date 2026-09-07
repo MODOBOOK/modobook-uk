@@ -57,8 +57,10 @@ const nav = [
   { to: "/hub/verification", label: "Verification", icon: ShieldCheck, key: "verification" as const },
 ];
 
-const primaryNav = nav.filter((n) => n.primary);
-const moreNav = nav.filter((n) => !n.primary);
+// Clinic setup lives with the owner (or a clinic admin). A team member with
+// prescribing switched on works with their own patients but never changes the
+// clinic's prescribing rules, connected prescribers or verification.
+const CLINIC_SETUP_KEYS = new Set(["prescribing", "connections"]);
 
 function HubLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -103,8 +105,15 @@ function HubLayout() {
     referrals: pendingRefs,
   };
 
+  const isStaff = ctxQ.data?.isStaff ?? false;
+  const canManagePrescribing = ctxQ.data?.canManagePrescribing ?? true;
+  const canUseHub = ctxQ.data?.canUseHub ?? true;
+  const visibleNav = nav.filter((n) => canManagePrescribing || !CLINIC_SETUP_KEYS.has(n.key));
+  const primaryNav = visibleNav.filter((n) => n.primary);
+  const moreNav = visibleNav.filter((n) => !n.primary);
+
   const name = ctxQ.data?.displayName ?? "Prescriber Hub";
-  const activeLabel = nav.find((n) => (n.exact ? pathname === n.to : pathname.startsWith(n.to)))?.label ?? "Overview";
+  const activeLabel = visibleNav.find((n) => (n.exact ? pathname === n.to : pathname.startsWith(n.to)))?.label ?? "Overview";
 
   return (
     <div className="rx-theme flex min-h-screen bg-background text-foreground">
@@ -119,7 +128,7 @@ function HubLayout() {
           </div>
         </div>
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {nav.map((item) => {
+          {visibleNav.map((item) => {
             const active = item.exact ? pathname === item.to : pathname.startsWith(item.to);
             const count = badges[item.key] ?? 0;
             return (
@@ -193,7 +202,29 @@ function HubLayout() {
 
         <main className="min-w-0 flex-1 overflow-x-hidden px-4 py-5 pb-32 sm:px-6 lg:px-10 lg:py-8">
           <div className="mx-auto w-full min-w-0 max-w-5xl space-y-5">
-            <Outlet />
+            {!ctxQ.isLoading && isStaff && !canUseHub ? (
+              <div className="rounded-2xl border bg-card p-8 text-center">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <Pill className="h-6 w-6" />
+                </div>
+                <h2 className="text-lg font-semibold">Prescribing isn't switched on for you yet</h2>
+                <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+                  Your clinic decides who can send prescription requests for their patients. Ask the clinic
+                  owner to turn on prescribing for you on their team page. If you prescribe yourself, you can
+                  get verified as a prescriber instead and work from your own prescriber view.
+                </p>
+                <div className="mt-5 flex flex-wrap justify-center gap-2">
+                  <Link to="/hub/verification">
+                    <Button size="sm" className="rounded-full">Join as a prescriber</Button>
+                  </Link>
+                  <Link to="/dashboard">
+                    <Button size="sm" variant="outline" className="rounded-full">Back to dashboard</Button>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <Outlet />
+            )}
           </div>
         </main>
 

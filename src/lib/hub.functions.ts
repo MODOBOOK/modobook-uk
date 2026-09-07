@@ -24,11 +24,29 @@ export const getHubContext = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
 
-    const [{ data: profile }, { data: prescriber }, { data: code }] = await Promise.all([
+    const { resolveClinicAccess } = await import("./clinic-context.server");
+    const [access, { data: ownProfile }, { data: prescriber }, { data: code }] = await Promise.all([
+      resolveClinicAccess(supabase, userId),
       supabase.from("profiles").select("id, full_name, clinic_name").eq("user_id", userId).maybeSingle(),
       supabase.from("prescriber_profiles").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("hub_codes").select("code, owner_kind, display_name").eq("user_id", userId).maybeSingle(),
     ]);
+
+    // Team members work inside their clinic's Hub. The clinic owner (or a
+    // clinic admin) owns the rules and the connected prescribers; everyone
+    // else only gets in when the owner has switched prescribing on for them.
+    let profile = ownProfile ?? null;
+    if (!profile && access.profileId) {
+      const { data: clinic } = await supabase
+        .from("profiles")
+        .select("id, full_name, clinic_name")
+        .eq("id", access.profileId)
+        .maybeSingle();
+      profile = clinic ?? null;
+    }
+    const isStaff = !access.isOwner && !!access.staffId;
+    const canManagePrescribing = access.isOwner || access.role === "admin";
+    const canUseHub = access.isOwner || access.canUsePrescribing;
 
     // Dual-role users (a practitioner who has also been approved as a
     // prescriber) get BOTH surfaces. `role` is kept as an exclusive value for
@@ -48,6 +66,10 @@ export const getHubContext = createServerFn({ method: "GET" })
       role,
       isPractitioner,
       isPrescriber,
+      isStaff,
+      clinicRole: access.role,
+      canManagePrescribing,
+      canUseHub,
       profile: profile ?? null,
       prescriber: prescriber ?? null,
       code: code?.code ?? null,

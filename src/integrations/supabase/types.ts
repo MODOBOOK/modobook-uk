@@ -8282,6 +8282,7 @@ export type Database = {
         Row: {
           accepted_at: string | null
           can_manage_rota: boolean
+          can_use_prescribing: boolean
           commission_percent: number
           created_at: string
           data_scope: Database["public"]["Enums"]["staff_scope"]
@@ -8307,6 +8308,7 @@ export type Database = {
         Insert: {
           accepted_at?: string | null
           can_manage_rota?: boolean
+          can_use_prescribing?: boolean
           commission_percent?: number
           created_at?: string
           data_scope?: Database["public"]["Enums"]["staff_scope"]
@@ -8332,6 +8334,7 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           can_manage_rota?: boolean
+          can_use_prescribing?: boolean
           commission_percent?: number
           created_at?: string
           data_scope?: Database["public"]["Enums"]["staff_scope"]
