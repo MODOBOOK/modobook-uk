@@ -77,6 +77,11 @@ export const getIncomeReport = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const profileId = await getProfileId(supabase, userId);
+    // Team members limited to their own patients only see their own takings.
+    const { resolveClinicAccess } = await import("./clinic-context.server");
+    const access = await resolveClinicAccess(supabase, userId);
+    const ownPractitionerId =
+      !access.isOwner && access.dataScope === "own" ? access.staffPractitionerId : null;
     const empty = {
       clinicName: "",
       brandColor: null as string | null,
@@ -96,17 +101,20 @@ export const getIncomeReport = createServerFn({ method: "GET" })
       .eq("id", profileId)
       .maybeSingle();
 
-    const { data: appts, error } = await supabase
+    let apptQuery = supabase
       .from("appointments")
       .select(
         "id, scheduled_date, start_time, status, payment_status, payment_method, checkout_method, total_amount, amount_paid_cents, amount_refunded_cents, checkout_discount_cents, discount_amount, treatment_name_snapshot, treatments(name)",
       )
       .eq("profile_id", profileId)
       .gte("scheduled_date", data.from)
-      .lte("scheduled_date", data.to)
+      .lte("scheduled_date", data.to);
+    if (ownPractitionerId) apptQuery = apptQuery.eq("practitioner_id", ownPractitionerId);
+    const { data: appts, error } = await apptQuery
       .order("scheduled_date", { ascending: true })
       .range(0, 9999);
     if (error) throw error;
+
 
     const rows: IncomeReportRow[] = [];
     const methodMap = new Map<string, { amount: number; count: number }>();

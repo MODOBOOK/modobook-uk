@@ -204,7 +204,7 @@ function comingSoonFor(to: string): ComingSoonKey | null {
     return groups.map((g) => ({
       ...g,
       items: g.items
-        .filter((i) => canAccessRoute(clinicRole, i.to))
+        .filter((i) => canAccessRoute(clinicRole, i.to, { canManageRota: Boolean((profile as Record<string, unknown>)?.["__can_manage_rota"]) }))
         .filter((i) => (i.to === "/dashboard/compliance" ? pilot : true))
         .filter((i) => (i.to === "/dashboard/memberships" ? memberships : true))
         .filter((i) => (i.to === "/dashboard/marketing/sms" ? smsMarketing : true))

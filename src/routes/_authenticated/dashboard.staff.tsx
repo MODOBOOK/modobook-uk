@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Trash2, Plus, Mail, RefreshCw, ShieldCheck, Stethoscope, UserRound, Eye, AlertTriangle } from "lucide-react";
 import { useDemoGuard } from "@/hooks/use-demo-mode";
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/staff")({
 
 type Staff = {
   id: string; name: string; invited_email: string | null; role: StaffRole;
-  data_scope: StaffScope; practitioner_id: string | null; status: StaffStatus;
+  data_scope: StaffScope; practitioner_id: string | null; status: StaffStatus; can_manage_rota?: boolean;
   invited_at: string; accepted_at: string | null; last_active_at: string | null;
   invite_expires_at: string | null;
 };
@@ -32,7 +33,7 @@ type Practitioner = { id: string; name: string };
 
 const ROLES: { value: StaffRole; label: string; desc: string; icon: any }[] = [
   { value: "admin", label: "Admin", desc: "Full access · not bookable", icon: ShieldCheck },
-  { value: "practitioner", label: "Practitioner", desc: "Bookable clinician · uses a paid seat", icon: Stethoscope },
+  { value: "practitioner", label: "Practitioner", desc: "Bookable clinician · £9.99/mo seat", icon: Stethoscope },
   { value: "receptionist", label: "Receptionist", desc: "Bookings & patients · not bookable", icon: UserRound },
   { value: "viewer", label: "Viewer", desc: "Read-only access", icon: Eye },
 ];
@@ -58,7 +59,7 @@ const [staff, setStaff] = useState<Staff[]>([]);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     name: "", email: "", role: "practitioner" as StaffRole,
-    data_scope: "clinic" as StaffScope, practitioner_id: "none",
+    data_scope: "clinic" as StaffScope, practitioner_id: "none", can_manage_rota: false,
   });
 
   async function refresh() {
@@ -72,7 +73,7 @@ const [staff, setStaff] = useState<Staff[]>([]);
   function openInvite() {
     if (demo.blocked("Inviting staff is disabled in the demo account.")) return;
     setEditing(null);
-    setForm({ name: "", email: "", role: "practitioner", data_scope: "clinic", practitioner_id: "none" });
+    setForm({ name: "", email: "", role: "practitioner", data_scope: "clinic", practitioner_id: "none", can_manage_rota: false });
     setDlgOpen(true);
   }
   function openEdit(s: Staff) {
@@ -80,6 +81,7 @@ const [staff, setStaff] = useState<Staff[]>([]);
     setForm({
       name: s.name, email: s.invited_email ?? "", role: s.role,
       data_scope: s.data_scope, practitioner_id: s.practitioner_id ?? "none",
+      can_manage_rota: Boolean(s.can_manage_rota),
     });
     setDlgOpen(true);
   }
@@ -90,12 +92,14 @@ const [staff, setStaff] = useState<Staff[]>([]);
       if (editing) {
         await update({ data: {
           id: editing.id, name: form.name, email: form.email, role: form.role, data_scope: form.data_scope,
+          can_manage_rota: form.can_manage_rota,
           practitioner_id: form.role === "practitioner" ? (form.practitioner_id === "none" ? null : form.practitioner_id) : null,
         } });
         toast.success("Staff updated");
       } else {
         await invite({ data: {
           name: form.name, email: form.email, role: form.role, data_scope: form.data_scope,
+          can_manage_rota: form.can_manage_rota,
           practitioner_id: form.role === "practitioner" ? (form.practitioner_id === "none" ? null : form.practitioner_id) : null,
         } });
         toast.success(form.email.trim() ? "Invite sent" : "Team member added");
@@ -191,8 +195,9 @@ return (
                   {seats.practitioners.used} of {seats.practitioners.allowed} treating {seats.practitioners.allowed === 1 ? "seat" : "seats"} used
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Admins, receptionists and viewers are free. Adding another Practitioner adds a seat to your
-                  plan automatically from your next billing date.
+                  Admins, receptionists and viewers are free. Each extra practitioner is £9.99 a month, added
+                  to your plan automatically from your next billing date, and they get their own login with a
+                  limited view — diary, bookings, patients, notes and their own takings.
                 </p>
               </div>
               <Button asChild variant="outline" size="sm"><Link to="/dashboard/billing">Billing</Link></Button>
@@ -237,6 +242,9 @@ return (
                       <Badge variant="outline" className="text-xs">
                         {s.data_scope === "own" ? "Own patients" : "Whole clinic"}
                       </Badge>
+                      {s.can_manage_rota && (
+                        <Badge variant="outline" className="text-xs">Sets own rota</Badge>
+                      )}
                       <Badge
                         variant={s.status === "active" ? "default" : s.status === "invited" ? "outline" : "destructive"}
                         className="text-xs"
@@ -328,6 +336,27 @@ return (
                 </SelectContent>
               </Select>
             </div>
+            <div className="flex items-start justify-between gap-3 rounded-lg border p-3">
+              <div>
+                <Label className="text-sm">Can set their own rota</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Lets them add their own working hours, extra slots and time off. Leave off and only you set their rota.
+                </p>
+              </div>
+              <Switch
+                checked={form.can_manage_rota}
+                onCheckedChange={(v) => setForm({ ...form, can_manage_rota: v })}
+              />
+            </div>
+            {form.role === "practitioner" && !editing && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs">
+                <p className="font-medium">£9.99 a month</p>
+                <p className="text-muted-foreground mt-0.5">
+                  Adding a practitioner adds a £9.99 monthly seat to your plan from your next billing date. They'll get
+                  an email link to join your clinic with their own diary, bookings, patients, notes and takings.
+                </p>
+              </div>
+            )}
             {form.role === "practitioner" && practitioners.length > 0 && (
               <div>
                 <Label>Link to practitioner</Label>

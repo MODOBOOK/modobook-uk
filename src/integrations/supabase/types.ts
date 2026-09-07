@@ -8281,6 +8281,7 @@ export type Database = {
       staff_members: {
         Row: {
           accepted_at: string | null
+          can_manage_rota: boolean
           created_at: string
           data_scope: Database["public"]["Enums"]["staff_scope"]
           id: string
@@ -8299,6 +8300,7 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          can_manage_rota?: boolean
           created_at?: string
           data_scope?: Database["public"]["Enums"]["staff_scope"]
           id?: string
@@ -8317,6 +8319,7 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          can_manage_rota?: boolean
           created_at?: string
           data_scope?: Database["public"]["Enums"]["staff_scope"]
           id?: string
