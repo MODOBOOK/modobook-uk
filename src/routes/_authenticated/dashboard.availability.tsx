@@ -354,27 +354,34 @@ function AvailabilityPage() {
     if (mask === 0) { toast.error("Pick at least one week"); return; }
     // Empty selection = every location (single row with location_id null).
     const targets: (string | null)[] = form.location_ids.length ? form.location_ids : [null];
+    // Empty selection = anyone; otherwise one shift row per person, so several
+    // team members can share the same day/time or be split across days.
+    const pracTargets: (string | null)[] = form.practitioner_ids.length ? form.practitioner_ids : [null];
     try {
-      for (let i = 0; i < targets.length; i++) {
-        await upsert({
-          data: {
-            // Only the first target reuses the row being edited; extra
-            // locations become their own shift rows.
-            id: i === 0 ? editing?.id : undefined,
-            day_of_week: form.day_of_week,
-            start_time: form.start,
-            end_time: form.end,
-            slot_interval: Number(form.interval),
-            location_id: targets[i],
-            practitioner_id: form.practitioner_id === "none" ? null : form.practitioner_id,
-            cycle_length: cycleLength,
-            weeks_mask: mask,
-            effective_from: form.effective_from || null,
-            effective_to: form.effective_to || null,
-          },
-        });
+      let first = true;
+      for (const loc of targets) {
+        for (const prac of pracTargets) {
+          await upsert({
+            data: {
+              // Only the very first combination reuses the row being edited;
+              // the rest become their own shift rows.
+              id: first ? editing?.id : undefined,
+              day_of_week: form.day_of_week,
+              start_time: form.start,
+              end_time: form.end,
+              slot_interval: Number(form.interval),
+              location_id: loc,
+              practitioner_id: prac,
+              cycle_length: cycleLength,
+              weeks_mask: mask,
+              effective_from: form.effective_from || null,
+              effective_to: form.effective_to || null,
+            },
+          });
+          first = false;
+        }
       }
-      toast.success(editing ? "Shift updated" : "Shift added");
+      toast.success(editing ? "Shift updated" : pracTargets.length > 1 ? `Shift added for ${pracTargets.length} people` : "Shift added");
       setDlgOpen(false);
       if (draft && form.effective_from === draft.start) setDraft(null);
       await refresh();
@@ -1106,14 +1113,15 @@ function AvailabilityPage() {
 
             {practitioners.length > 0 && (
               <div>
-                <Label>Practitioner</Label>
-                <Select value={form.practitioner_id} onValueChange={(v) => setForm({ ...form, practitioner_id: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Any practitioner</SelectItem>
-                    {practitioners.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Label>Who works this shift</Label>
+                <p className="mb-1 text-xs text-muted-foreground">
+                  Pick one or several people — each gets their own shift, so multiple team members can work the same hours. "Anyone" leaves it open to the whole clinic.
+                </p>
+                <PractitionerPicker
+                  practitioners={practitioners}
+                  value={form.practitioner_ids}
+                  onChange={(v) => setForm({ ...form, practitioner_ids: v })}
+                />
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
