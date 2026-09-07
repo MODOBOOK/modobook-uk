@@ -15,16 +15,49 @@ async function getProfileId(supabase: any, userId: string) {
   return data?.id as string | undefined;
 }
 
+
+/**
+ * Team calendars: a staff member whose access is limited to "own" only ever
+ * sees and edits their own diary + anything set for the whole clinic. Owners
+ * and clinic-wide staff see everything and can pick who a shift belongs to.
+ */
+async function getScope(supabase: any, userId: string) {
+  const { resolveClinicAccess } = await import("./clinic-context.server");
+  const a = await resolveClinicAccess(supabase, userId);
+  const ownPractitionerId =
+    a.dataScope === "own" && a.staffPractitionerId ? a.staffPractitionerId : null;
+  return { profileId: a.profileId, ownPractitionerId, isOwner: a.isOwner, role: a.role };
+}
+
+/** Restrict a query to a staff member's own diary (plus clinic-wide rows). */
+function scopeToPractitioner(q: any, practitionerId: string | null) {
+  if (!practitionerId) return q;
+  return q.or(`practitioner_id.eq.${practitionerId},practitioner_id.is.null`);
+}
+
+export const getCalendarScope = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const s = await getScope(context.supabase, context.userId);
+    return {
+      ownPractitionerId: s.ownPractitionerId,
+      canSeeWholeClinic: !s.ownPractitionerId,
+      isOwner: s.isOwner,
+      role: s.role,
+    };
+  });
+
 export const listAvailabilityRules = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const profileId = await getProfileId(supabase, userId);
     if (!profileId) return [];
-    const { data, error } = await supabase
-      .from("availability_rules")
-      .select("*")
-      .eq("profile_id", profileId)
+    const { ownPractitionerId } = await getScope(supabase, userId);
+    const { data, error } = await scopeToPractitioner(
+      supabase.from("availability_rules").select("*").eq("profile_id", profileId),
+      ownPractitionerId,
+    )
       .order("day_of_week")
       .order("start_time");
     if (error) throw error;
@@ -54,6 +87,7 @@ export const upsertAvailabilityRule = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const profileId = await getProfileId(supabase, userId);
     if (!profileId) throw new Error("Profile not found");
+    const { ownPractitionerId } = await getScope(supabase, userId);
     const cycle = data.cycle_length && [1, 2, 4].includes(data.cycle_length) ? data.cycle_length : 1;
     const maxMask = (1 << cycle) - 1;
     const mask = Math.max(1, Math.min(maxMask, data.weeks_mask ?? 1));
@@ -66,7 +100,7 @@ export const upsertAvailabilityRule = createServerFn({ method: "POST" })
       location_id: data.location_id ?? null,
       cycle_length: cycle,
       weeks_mask: mask,
-      practitioner_id: data.practitioner_id ?? null,
+      practitioner_id: ownPractitionerId ?? data.practitioner_id ?? null,
       effective_from: data.effective_from || null,
       effective_to: data.effective_to || null,
     };
@@ -119,12 +153,15 @@ export const listMyAppointments = createServerFn({ method: "GET" })
     // Slot availability release for abandoned checkouts is handled in
     // getDayAvailability (public-booking.functions.ts) based on the payment
     // hold window; the appointment row itself remains for the practitioner.
-    const { data, error } = await supabase
+    const { ownPractitionerId } = await getScope(supabase, userId);
+    let q = supabase
       .from("appointments")
-      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, status, payment_status, total_amount, amount_paid_cents, amount_refunded_cents, checkout_discount_cents, stripe_payment_intent_id, card_capture_agreed_at, card_captured_at, card_capture_policy_text, notes, practitioner_notes, aftercare_html, has_allergies, allergies_text, treatment_id, location_id, payment_hold_expires_at, treatments(name, color), locations(name)")
+      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, status, payment_status, total_amount, amount_paid_cents, amount_refunded_cents, checkout_discount_cents, stripe_payment_intent_id, card_capture_agreed_at, card_captured_at, card_capture_policy_text, notes, practitioner_notes, aftercare_html, has_allergies, allergies_text, treatment_id, location_id, payment_hold_expires_at, practitioner_id, treatments(name, color), locations(name)")
       .eq("profile_id", profileId)
       .order("scheduled_date", { ascending: true })
       .order("start_time", { ascending: true });
+    if (ownPractitionerId) q = q.eq("practitioner_id", ownPractitionerId);
+    const { data, error } = await q;
     if (error) throw error;
     return data ?? [];
   });
@@ -256,6 +293,7 @@ type OverrideInput = {
   end_time: string;
   slot_interval?: number;
   location_id?: string | null;
+  practitioner_id?: string | null;
 };
 
 export const listAvailabilityOverrides = createServerFn({ method: "GET" })
@@ -264,10 +302,11 @@ export const listAvailabilityOverrides = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const profileId = await getProfileId(supabase, userId);
     if (!profileId) return [];
-    const { data, error } = await supabase
-      .from("availability_overrides")
-      .select("*")
-      .eq("profile_id", profileId)
+    const { ownPractitionerId } = await getScope(supabase, userId);
+    const { data, error } = await scopeToPractitioner(
+      supabase.from("availability_overrides").select("*").eq("profile_id", profileId),
+      ownPractitionerId,
+    )
       .order("date")
       .order("start_time");
     if (error) throw error;
@@ -290,6 +329,7 @@ export const addAvailabilityOverride = createServerFn({ method: "POST" })
         end_time: data.end_time,
         slot_interval: data.slot_interval ?? 30,
         location_id: data.location_id ?? null,
+        practitioner_id: (await getScope(supabase, userId)).ownPractitionerId ?? data.practitioner_id ?? null,
       })
       .select()
       .single();
@@ -321,18 +361,18 @@ export const listBlockedDates = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const profileId = await getProfileId(supabase, userId);
     if (!profileId) return [];
-    const { data, error } = await supabase
-      .from("blocked_dates")
-      .select("*")
-      .eq("profile_id", profileId)
-      .order("date");
+    const { ownPractitionerId } = await getScope(supabase, userId);
+    const { data, error } = await scopeToPractitioner(
+      supabase.from("blocked_dates").select("*").eq("profile_id", profileId),
+      ownPractitionerId,
+    ).order("date");
     if (error) throw error;
     return data ?? [];
   });
 
 export const addBlockedDate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { date: string; reason?: string; location_id?: string | null }) => input)
+  .inputValidator((input: { date: string; reason?: string; location_id?: string | null; practitioner_id?: string | null }) => input)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const profileId = await getProfileId(supabase, userId);
@@ -344,6 +384,7 @@ export const addBlockedDate = createServerFn({ method: "POST" })
         date: data.date,
         reason: data.reason ?? null,
         location_id: data.location_id ?? null,
+        practitioner_id: (await getScope(supabase, userId)).ownPractitionerId ?? data.practitioner_id ?? null,
       })
       .select()
       .single();
@@ -374,10 +415,11 @@ export const listBlockedTimes = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) return [];
-    const { data, error } = await context.supabase
-      .from("blocked_times")
-      .select("*")
-      .eq("profile_id", profileId)
+    const { ownPractitionerId } = await getScope(context.supabase, context.userId);
+    const { data, error } = await scopeToPractitioner(
+      context.supabase.from("blocked_times").select("*").eq("profile_id", profileId),
+      ownPractitionerId,
+    )
       .order("date")
       .order("start_time");
     if (error) throw error;
@@ -387,7 +429,7 @@ export const listBlockedTimes = createServerFn({ method: "GET" })
 export const addBlockedTime = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: { date: string; start_time: string; end_time: string; reason?: string | null; location_id?: string | null }) => d,
+    (d: { date: string; start_time: string; end_time: string; reason?: string | null; location_id?: string | null; practitioner_id?: string | null }) => d,
   )
   .handler(async ({ data, context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
@@ -401,6 +443,8 @@ export const addBlockedTime = createServerFn({ method: "POST" })
         end_time: data.end_time,
         reason: data.reason ?? null,
         location_id: data.location_id ?? null,
+        practitioner_id:
+          (await getScope(context.supabase, context.userId)).ownPractitionerId ?? data.practitioner_id ?? null,
       })
       .select()
       .single();
@@ -459,11 +503,14 @@ export const listPractitioners = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) return [];
-    const { data } = await context.supabase
+    const { ownPractitionerId } = await getScope(context.supabase, context.userId);
+    let q = context.supabase
       .from("practitioners")
       .select("id, name")
       .eq("profile_id", profileId)
       .order("name");
+    if (ownPractitionerId) q = q.eq("id", ownPractitionerId);
+    const { data } = await q;
     return data ?? [];
   });
 
