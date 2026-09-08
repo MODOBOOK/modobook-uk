@@ -4,19 +4,12 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 
-/** Clinic profile id for the signed-in user (profiles.id != auth user id). */
-async function clinicId(supabase: any, userId: string): Promise<string> {
-  const { activeProfileId } = await import("./clinic-context.server");
-  return (await activeProfileId(supabase, userId)) ?? userId;
-}
-
 // -------------------- Practitioner: settings --------------------
 
 export const getMyReferralSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const clinicProfileId = await clinicId(supabase, userId);
     const { data, error } = await supabase
       .from("clinic_referral_settings")
       .select("*")
@@ -50,7 +43,6 @@ export const saveReferralSettings = createServerFn({ method: "POST" })
   .inputValidator((data: z.infer<typeof SaveSchema>) => SaveSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const clinicProfileId = await clinicId(supabase, userId);
     const { error } = await supabase
       .from("clinic_referral_settings")
       .upsert(
@@ -98,7 +90,6 @@ export const listMyRewardTiers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const clinicProfileId = await clinicId(supabase, userId);
     const { data, error } = await (supabase as any)
       .from("clinic_reward_tiers")
       .select("*")
@@ -125,7 +116,6 @@ export const upsertRewardTier = createServerFn({ method: "POST" })
   .inputValidator((data: z.infer<typeof TierSchema>) => TierSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const clinicProfileId = await clinicId(supabase, userId);
     const row = {
       ...(data.id ? { id: data.id } : {}),
       clinic_profile_id: clinicProfileId,
@@ -149,7 +139,6 @@ export const deleteRewardTier = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const clinicProfileId = await clinicId(supabase, userId);
     const { error } = await (supabase as any)
       .from("clinic_reward_tiers")
       .delete()
@@ -165,7 +154,6 @@ export const getMyClinicReferrals = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const clinicProfileId = await clinicId(supabase, userId);
     const { data, error } = await supabase
       .from("patient_referrals")
       .select(
@@ -218,10 +206,10 @@ export const linkReferralToAppointment = createServerFn({ method: "POST" })
     // A referral code only works at the clinic the referrer is registered with.
     const { data: apptClinic } = await supabase
       .from("profiles")
-      .select("id")
+      .select("user_id")
       .eq("id", appt.profile_id)
       .maybeSingle();
-    if (!apptClinic || apptClinic.id !== codeRow.clinic_profile_id) {
+    if (!apptClinic || apptClinic.user_id !== codeRow.clinic_profile_id) {
       return { ok: false, reason: "wrong_clinic" };
     }
 
@@ -282,7 +270,7 @@ export const getMyRewardsForClinic = createServerFn({ method: "POST" })
       .maybeSingle();
     if (profErr) throw profErr;
     if (!profile) throw new Error("Clinic not found");
-    const clinicProfileId = profile.id as string;
+    const clinicProfileId = profile.user_id as string;
 
     const { data: settings } = await supabase
       .from("clinic_referral_settings")
@@ -382,11 +370,11 @@ export const previewPointsRedemption = createServerFn({ method: "POST" })
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id, user_id")
+      .select("user_id")
       .eq("slug", data.slug)
       .maybeSingle();
     if (!profile) return { ok: false as const, reason: "clinic_not_found" };
-    const clinicProfileId = profile.id as string;
+    const clinicProfileId = profile.user_id as string;
 
     const { data: codeRow } = await supabase
       .from("patient_referral_codes")
@@ -454,11 +442,11 @@ export const consumePointsRedemption = createServerFn({ method: "POST" })
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id, user_id")
+      .select("user_id")
       .eq("slug", data.slug)
       .maybeSingle();
     if (!profile) return { ok: false, reason: "clinic_not_found" as const };
-    const clinicProfileId = profile.id as string;
+    const clinicProfileId = profile.user_id as string;
 
     const { data: codeRow } = await supabase
       .from("patient_referral_codes")
@@ -578,7 +566,6 @@ export const getClientPoints = createServerFn({ method: "POST" })
   .inputValidator((data: z.infer<typeof ClientIdSchema>) => ClientIdSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const clinicProfileId = await clinicId(supabase, userId);
 
     const { data: account } = await supabase
       .from("patient_accounts")
@@ -630,7 +617,6 @@ export const adjustClientPoints = createServerFn({ method: "POST" })
   .inputValidator((data: z.infer<typeof AdjustPointsSchema>) => AdjustPointsSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const clinicProfileId = await clinicId(supabase, userId);
     if (data.delta === 0) return { ok: false as const, reason: "zero" };
 
     const { data: account } = await supabase
