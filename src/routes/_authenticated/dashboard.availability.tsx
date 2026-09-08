@@ -1190,7 +1190,10 @@ function AvailabilityPage() {
             {locations.length > 0 && (
               <div>
                 <Label>Locations</Label>
-                <p className="mb-1 text-xs text-muted-foreground">Pick one or several — this shift only opens at the locations you select.</p>
+                <p className="mb-1 text-xs text-muted-foreground">
+                  Pick one or several — you get a separate shift for each location, so the same day can run at two places.
+                  {editing ? " Changing the location here moves this shift; use “Save as extra shift” to keep the original and add another." : ""}
+                </p>
                 <LocationPicker
                   locations={locations}
                   value={form.location_ids}
