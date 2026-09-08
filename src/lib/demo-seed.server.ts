@@ -113,6 +113,8 @@ export async function seedDemoClinic(admin: Admin) {
   const profileFields = {
     is_demo: true,
     active: true,
+    associates_enabled: true,
+
     slug: DEMO_SLUG,
     clinic_name: DEMO_CLINIC_NAME,
     hero_url: IMG.hero,
