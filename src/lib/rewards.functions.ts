@@ -382,7 +382,7 @@ export const previewPointsRedemption = createServerFn({ method: "POST" })
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("user_id")
+      .select("id, user_id")
       .eq("slug", data.slug)
       .maybeSingle();
     if (!profile) return { ok: false as const, reason: "clinic_not_found" };
@@ -454,7 +454,7 @@ export const consumePointsRedemption = createServerFn({ method: "POST" })
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("user_id")
+      .select("id, user_id")
       .eq("slug", data.slug)
       .maybeSingle();
     if (!profile) return { ok: false, reason: "clinic_not_found" as const };
