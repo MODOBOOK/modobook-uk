@@ -1209,12 +1209,14 @@ function BlockTimeDialog({
 }
 
 function UnblockDialog({
-  open, onOpenChange, blocks, onRemoved, onOpened, practitionerId,
+  open, onOpenChange, blocks, onRemoved, onOpened, practitionerId, locations = [], defaultLocationId = "all",
 }: {
   open: boolean; onOpenChange: (v: boolean) => void;
   blocks: BlockedTime[]; onRemoved: (id: string) => void;
   onOpened?: () => void | Promise<void>;
   practitionerId?: string | null;
+  locations?: { id: string; name: string }[];
+  defaultLocationId?: string;
 }) {
   const del = useServerFn(deleteBlockedTime);
   const addOverride = useServerFn(addAvailabilityOverride);
