@@ -218,10 +218,10 @@ export const linkReferralToAppointment = createServerFn({ method: "POST" })
     // A referral code only works at the clinic the referrer is registered with.
     const { data: apptClinic } = await supabase
       .from("profiles")
-      .select("user_id")
+      .select("id")
       .eq("id", appt.profile_id)
       .maybeSingle();
-    if (!apptClinic || apptClinic.user_id !== codeRow.clinic_profile_id) {
+    if (!apptClinic || apptClinic.id !== codeRow.clinic_profile_id) {
       return { ok: false, reason: "wrong_clinic" };
     }
 
