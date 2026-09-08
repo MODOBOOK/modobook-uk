@@ -942,6 +942,7 @@ function ServiceCard({
   onDelete: () => void;
   onMoveTo?: () => void;
 }) {
+  const editService = useContext(EditServiceCtx);
   return (
     <div
       draggable={draggable}
