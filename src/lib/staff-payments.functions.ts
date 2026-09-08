@@ -204,3 +204,151 @@ export const getCommissionReport = createServerFn({ method: "GET" })
       unassignedRevenue: Math.round(unassignedRevenue * 100) / 100,
     };
   });
+
+export type StaffPerformanceRow = {
+  staffId: string;
+  name: string;
+  role: string;
+  bookings: number;
+  completed: number;
+  cancelled: number;
+  noShows: number;
+  revenue: number;
+  averageValue: number;
+  uniquePatients: number;
+  newPatients: number;
+  returningPatients: number;
+  topTreatments: { label: string; count: number; amount: number }[];
+  busiestDay: string | null;
+};
+
+/** Per team member performance over a date range. Owner-only. */
+export const getStaffAnalytics = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { from: string; to: string }) => d)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    const empty = {
+      from: data.from,
+      to: data.to,
+      staff: [] as StaffPerformanceRow[],
+      totals: { bookings: 0, revenue: 0, completed: 0, cancelled: 0, noShows: 0 },
+      unassignedBookings: 0,
+    };
+    if (!profileId) return empty;
+
+    const { data: staffRows } = await supabase
+      .from("staff_members")
+      .select("id, name, role, practitioner_id")
+      .eq("profile_id", profileId);
+
+    const { data: appts, error } = await supabase
+      .from("appointments")
+      .select(
+        "id, practitioner_id, status, scheduled_date, patient_email, total_amount, amount_paid_cents, amount_refunded_cents, treatment_name_snapshot, treatments(name)",
+      )
+      .eq("profile_id", profileId)
+      .gte("scheduled_date", data.from)
+      .lte("scheduled_date", data.to)
+      .range(0, 9999);
+    if (error) throw error;
+
+    // First-ever booking date per patient, to split new vs returning.
+    const { data: history } = await supabase
+      .from("appointments")
+      .select("patient_email, scheduled_date")
+      .eq("profile_id", profileId)
+      .not("patient_email", "is", null)
+      .range(0, 9999);
+    const firstSeen = new Map<string, string>();
+    for (const h of (history ?? []) as any[]) {
+      const email = String(h.patient_email).toLowerCase();
+      const cur = firstSeen.get(email);
+      if (!cur || String(h.scheduled_date) < cur) firstSeen.set(email, String(h.scheduled_date));
+    }
+
+    type Agg = {
+      bookings: number; completed: number; cancelled: number; noShows: number;
+      revenue: number; patients: Set<string>; newPatients: Set<string>;
+      treatments: Map<string, { count: number; amount: number }>;
+      days: Map<string, number>;
+    };
+    const mk = (): Agg => ({
+      bookings: 0, completed: 0, cancelled: 0, noShows: 0, revenue: 0,
+      patients: new Set(), newPatients: new Set(), treatments: new Map(), days: new Map(),
+    });
+    const byPractitioner = new Map<string, Agg>();
+    let unassignedBookings = 0;
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    for (const a of (appts ?? []) as any[]) {
+      if (!a.practitioner_id) { unassignedBookings += 1; continue; }
+      const agg = byPractitioner.get(a.practitioner_id) ?? mk();
+      const cancelled = a.status === "cancelled";
+      const paid = (a.amount_paid_cents ?? 0) > 0;
+      agg.bookings += 1;
+      if (a.status === "completed") agg.completed += 1;
+      if (cancelled) agg.cancelled += 1;
+      if (a.status === "no_show") agg.noShows += 1;
+
+      if (!cancelled || paid) {
+        const total = Number(a.total_amount ?? 0) || (a.amount_paid_cents ?? 0) / 100;
+        const net = total - (a.amount_refunded_cents ?? 0) / 100;
+        agg.revenue += net;
+        const label = a.treatments?.name ?? a.treatment_name_snapshot ?? "Treatment";
+        const t = agg.treatments.get(label) ?? { count: 0, amount: 0 };
+        t.count += 1; t.amount += net; agg.treatments.set(label, t);
+      }
+
+      const email = a.patient_email ? String(a.patient_email).toLowerCase() : null;
+      if (email) {
+        agg.patients.add(email);
+        if (firstSeen.get(email) === String(a.scheduled_date)) agg.newPatients.add(email);
+      }
+      const dow = dayNames[new Date(String(a.scheduled_date) + "T00:00:00").getDay()] ?? "";
+      agg.days.set(dow, (agg.days.get(dow) ?? 0) + 1);
+      byPractitioner.set(a.practitioner_id, agg);
+    }
+
+    const rows: StaffPerformanceRow[] = [];
+    for (const s of (staffRows ?? []) as any[]) {
+      if (!s.practitioner_id) continue;
+      const agg = byPractitioner.get(s.practitioner_id) ?? mk();
+      const revenue = Math.round(agg.revenue * 100) / 100;
+      const busiest = [...agg.days.entries()].sort((a, b) => b[1] - a[1])[0];
+      rows.push({
+        staffId: s.id,
+        name: s.name,
+        role: s.role,
+        bookings: agg.bookings,
+        completed: agg.completed,
+        cancelled: agg.cancelled,
+        noShows: agg.noShows,
+        revenue,
+        averageValue: agg.bookings ? Math.round((revenue / agg.bookings) * 100) / 100 : 0,
+        uniquePatients: agg.patients.size,
+        newPatients: agg.newPatients.size,
+        returningPatients: Math.max(0, agg.patients.size - agg.newPatients.size),
+        topTreatments: [...agg.treatments.entries()]
+          .map(([label, v]) => ({ label, count: v.count, amount: Math.round(v.amount * 100) / 100 }))
+          .sort((a, b) => b.amount - a.amount)
+          .slice(0, 5),
+        busiestDay: busiest ? busiest[0] : null,
+      });
+    }
+    rows.sort((a, b) => b.revenue - a.revenue);
+
+    const totals = rows.reduce(
+      (t, r) => ({
+        bookings: t.bookings + r.bookings,
+        revenue: Math.round((t.revenue + r.revenue) * 100) / 100,
+        completed: t.completed + r.completed,
+        cancelled: t.cancelled + r.cancelled,
+        noShows: t.noShows + r.noShows,
+      }),
+      { bookings: 0, revenue: 0, completed: 0, cancelled: 0, noShows: 0 },
+    );
+
+    return { from: data.from, to: data.to, staff: rows, totals, unassignedBookings };
+  });
