@@ -4,6 +4,21 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 
+/**
+ * Patients cannot SELECT from `profiles` (no patient-facing RLS policy), so
+ * resolve the clinic by slug with a narrow privileged lookup.
+ */
+async function lookupClinicBySlug(slug: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("profiles")
+    .select("id, user_id, full_name, clinic_name, slug")
+    .eq("slug", slug)
+    .maybeSingle();
+  return data ?? null;
+}
+
+
 // -------------------- Practitioner: settings --------------------
 
 export const getMyReferralSettings = createServerFn({ method: "GET" })
