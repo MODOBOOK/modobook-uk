@@ -98,18 +98,24 @@ function MultiBookPage() {
   const search = Route.useSearch();
   const ids = (search.ids ?? "").split(",").filter(Boolean);
   const packageIds = (search.pkgs ?? "").split(",").filter(Boolean);
-  const selectedPackages = ((ctx as { selectedPackages?: Array<{ id: string; name: string; description?: string | null; is_custom?: boolean; compare_at_price?: number | null; price: number; session_count: number; allow_split_payment?: boolean; firstTreatmentId: string | null }> }).selectedPackages ?? [])
+  const selectedPackages = ((ctx as { selectedPackages?: Array<{ id: string; name: string; description?: string | null; is_custom?: boolean; compare_at_price?: number | null; price: number; session_count: number; allow_split_payment?: boolean; firstTreatmentId: string | null; treatmentIds?: string[] }> }).selectedPackages ?? [])
     .filter((p) => packageIds.includes(p.id));
   const redirectPath = `/m/${slug}/book-multi?ids=${encodeURIComponent(ids.join(","))}${packageIds.length ? `&pkgs=${encodeURIComponent(packageIds.join(","))}` : ""}`;
 
-  // Combine explicit treatment ids with each package's first treatment (auto-included, deduped)
+  const pkgTreatmentIds = (p: { firstTreatmentId: string | null; treatmentIds?: string[] }) =>
+    (p.treatmentIds && p.treatmentIds.length ? p.treatmentIds : p.firstTreatmentId ? [p.firstTreatmentId] : []).filter(Boolean);
+
+  // Combine explicit treatment ids with every treatment inside each package
+  // (auto-included, deduped) so multi-treatment packages book in full.
   const combinedIds = useMemo(() => {
     const out: string[] = [...ids];
     for (const p of selectedPackages) {
-      if (p.firstTreatmentId && !out.includes(p.firstTreatmentId)) out.push(p.firstTreatmentId);
+      for (const tid of pkgTreatmentIds(p)) if (!out.includes(tid)) out.push(tid);
     }
     return out;
-  }, [ids, selectedPackages]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ids.join(","), selectedPackages]);
+
 
   // Preserve user-selected order
   const treatments = useMemo<Treatment[]>(() => {
@@ -183,10 +189,12 @@ function MultiBookPage() {
   const packageCoveredIds = useMemo(() => {
     const set = new Set<string>();
     for (const p of selectedPackages) {
-      if (p.firstTreatmentId && !ids.includes(p.firstTreatmentId)) set.add(p.firstTreatmentId);
+      for (const tid of pkgTreatmentIds(p)) if (!ids.includes(tid)) set.add(tid);
     }
     return set;
-  }, [selectedPackages, ids]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPackages, ids.join(",")]);
+
 
   const totalDurationBase = treatments.reduce((s, t) => s + durationFor(t), 0);
   const packagesPrice = selectedPackages.reduce((s, p) => s + Number(p.price ?? 0), 0);
@@ -475,15 +483,20 @@ function MultiBookPage() {
           .filter((a) => addonPicks.has(a.id))
           .reduce((sum, a) => sum + addonNet(a), 0) * 100,
       );
-      // A package is paid as one price, not as the price of its first treatment.
-      // Map each package onto the booking line it belongs to.
+      // A package is paid as one price, not per treatment inside it. Attach the
+      // full package price to its first line and zero the other lines it covers.
       const pkgByTreatment = new Map<string, typeof selectedPackages[number]>();
+      const zeroPricedIds = new Set<string>();
       const leftoverPackages: typeof selectedPackages = [];
       for (const p of selectedPackages) {
-        if (p.firstTreatmentId && packageCoveredIds.has(p.firstTreatmentId) && !pkgByTreatment.has(p.firstTreatmentId)) {
-          pkgByTreatment.set(p.firstTreatmentId, p);
+        const covered = pkgTreatmentIds(p).filter((tid) => packageCoveredIds.has(tid));
+        const priceLine = covered.find((tid) => !pkgByTreatment.has(tid));
+        if (priceLine) {
+          pkgByTreatment.set(priceLine, p);
+          for (const tid of covered) if (tid !== priceLine) zeroPricedIds.add(tid);
         } else {
           leftoverPackages.push(p);
+          for (const tid of covered) zeroPricedIds.add(tid);
         }
       }
       const leftoverPackageCents = Math.round(
@@ -496,13 +509,14 @@ function MultiBookPage() {
 
       const bookings = treatments.map((t, index) => {
         const pkg = pkgByTreatment.get(t.id);
-        let price = pkg ? Number(pkg.price ?? 0) : priceFor(t);
-        if (!pkg && discount && applicableIds.has(t.id)) {
+        let price = pkg ? Number(pkg.price ?? 0) : zeroPricedIds.has(t.id) ? 0 : priceFor(t);
+        if (!pkg && !zeroPricedIds.has(t.id) && discount && applicableIds.has(t.id)) {
           const off = discount.kind === "percent"
             ? price * (discount.amount / 100)
             : discount.amount;
           price = Math.max(0, price - Math.min(off, price));
         }
+
         const priceCents =
           Math.round(price * 100)
           + (index === 0 ? pickedAddonTotalCents + leftoverPackageCents : 0);
