@@ -354,7 +354,7 @@ function AvailabilityPage() {
     setDlgOpen(true);
   }
 
-  async function saveShift() {
+  async function saveShift(asExtra = false) {
     if (form.start >= form.end) { toast.error("End time must be after start"); return; }
     if (form.effective_from && form.effective_to && form.effective_from > form.effective_to) {
       toast.error("Rota end date must be after the start date"); return;
@@ -374,8 +374,9 @@ function AvailabilityPage() {
           await upsert({
             data: {
               // Only the very first combination reuses the row being edited;
-              // the rest become their own shift rows.
-              id: first ? editing?.id : undefined,
+              // the rest become their own shift rows. "Save as extra shift"
+              // keeps the original shift untouched and adds new ones.
+              id: !asExtra && first ? editing?.id : undefined,
               day_of_week: form.day_of_week,
               start_time: form.start,
               end_time: form.end,
@@ -391,7 +392,15 @@ function AvailabilityPage() {
           first = false;
         }
       }
-      toast.success(editing ? "Shift updated" : pracTargets.length > 1 ? `Shift added for ${pracTargets.length} people` : "Shift added");
+      toast.success(
+        asExtra
+          ? `Extra shift added${targets.length > 1 ? ` at ${targets.length} locations` : ""}`
+          : editing
+            ? "Shift updated"
+            : pracTargets.length > 1
+              ? `Shift added for ${pracTargets.length} people`
+              : "Shift added",
+      );
       setDlgOpen(false);
       if (draft && form.effective_from === draft.start) setDraft(null);
       await refresh();
@@ -1181,7 +1190,10 @@ function AvailabilityPage() {
             {locations.length > 0 && (
               <div>
                 <Label>Locations</Label>
-                <p className="mb-1 text-xs text-muted-foreground">Pick one or several — this shift only opens at the locations you select.</p>
+                <p className="mb-1 text-xs text-muted-foreground">
+                  Pick one or several — you get a separate shift for each location, so the same day can run at two places.
+                  {editing ? " Changing the location here moves this shift; use “Save as extra shift” to keep the original and add another." : ""}
+                </p>
                 <LocationPicker
                   locations={locations}
                   value={form.location_ids}
@@ -1259,9 +1271,12 @@ function AvailabilityPage() {
                 <Trash2 className="h-4 w-4 mr-2" /> Delete
               </Button>
             ) : <span />}
-            <div className="flex gap-2 justify-end">
+            <div className="flex flex-wrap gap-2 justify-end">
               <Button variant="ghost" onClick={() => setDlgOpen(false)}>Cancel</Button>
-              <Button onClick={saveShift}>Save</Button>
+              {editing && locations.length > 1 && (
+                <Button variant="outline" onClick={() => saveShift(true)}>Save as extra shift</Button>
+              )}
+              <Button onClick={() => saveShift(false)}>Save</Button>
             </div>
           </DialogFooter>
         </DialogContent>
