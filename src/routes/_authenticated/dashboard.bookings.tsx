@@ -1261,10 +1261,17 @@ function UnblockDialog({
     if (!start || !end || start >= end) return toast.error("Pick a valid start/end time");
     setBusy(true);
     try {
-      for (const date of dates) {
-        await addOverride({ data: { date, start_time: start, end_time: end, slot_interval: interval, practitioner_id: practitionerId ?? null } });
+      const all = expandDates(dates);
+      const locIds: (string | null)[] =
+        locationId === "all"
+          ? (locations.length ? locations.map((l) => l.id) : [null])
+          : [locationId];
+      for (const date of all) {
+        for (const loc of locIds) {
+          await addOverride({ data: { date, start_time: start, end_time: end, slot_interval: interval, location_id: loc, practitioner_id: practitionerId ?? null } });
+        }
       }
-      toast.success(`Opened ${dates.length} day${dates.length === 1 ? "" : "s"} · ${start}–${end}`);
+      toast.success(`Opened ${all.length} day${all.length === 1 ? "" : "s"} · ${start}–${end}`);
       await onOpened?.();
       onOpenChange(false);
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
