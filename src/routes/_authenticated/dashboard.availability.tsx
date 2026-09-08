@@ -188,6 +188,11 @@ function AvailabilityPage() {
 
   const [cycleLength, setCycleLength] = useState<number>(1);
 
+  // Weekly grid filters: whole clinic rota, or one person / one location at a time.
+  const [viewPrac, setViewPrac] = useState<string>("all");
+  const [viewLoc, setViewLoc] = useState<string>("all");
+
+
   // End-rota flow
   const [endOpen, setEndOpen] = useState(false);
   const [endDate, setEndDate] = useState("");
@@ -320,7 +325,10 @@ function AvailabilityPage() {
     const weeks = Array.from({ length: 4 }, (_, i) => i === weekIdx);
     setForm({
       day_of_week: day, start: "09:00", end: "17:00", interval: "30",
-      location_ids: [], practitioner_ids: [], weeks,
+      location_ids: viewLoc !== "all" && viewLoc !== "none" ? [viewLoc] : [],
+      practitioner_ids: viewPrac !== "all" && viewPrac !== "none" ? [viewPrac] : [],
+      weeks,
+
       effective_from: periodStart || activePeriod?.start || "",
       effective_to: draft && activePeriod?.key === draft.start
         ? draft.end
@@ -622,12 +630,19 @@ function AvailabilityPage() {
   function rulesFor(day: number, weekIdx: number): Rule[] {
     return periodRules.filter((r) => {
       if (r.day_of_week !== day) return false;
+      if (viewPrac !== "all") {
+        if (viewPrac === "none" ? r.practitioner_id : (r.practitioner_id ?? null) !== viewPrac) return false;
+      }
+      if (viewLoc !== "all") {
+        if (viewLoc === "none" ? r.location_id : (r.location_id ?? null) !== viewLoc) return false;
+      }
       const cycle = r.cycle_length ?? 1;
       const mask = r.weeks_mask ?? 1;
       if (cycle === 1) return true; // applies every week → show in every row
       return (mask & (1 << weekIdx)) !== 0;
     });
   }
+
 
 
   function locName(id: string | null | undefined) {
@@ -781,13 +796,42 @@ function AvailabilityPage() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <CardTitle>{activePeriod?.label === "Current rota" ? "Weekly schedule" : `Weekly schedule · ${activePeriod?.label}`}</CardTitle>
-                  <CardDescription>Tap a cell to add or edit a shift.</CardDescription>
+                  <CardDescription>Each person's shift shows separately — tap a shift to edit it, or tap “Add” to put someone else on the same day.</CardDescription>
                 </div>
                 <div className="text-xs text-muted-foreground hidden sm:block">
                   {periodRules.length} shift{periodRules.length === 1 ? "" : "s"}
                 </div>
               </div>
+              {(practitioners.length > 0 || locations.length > 0) && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {practitioners.length > 0 && (
+                    <Select value={viewPrac} onValueChange={setViewPrac}>
+                      <SelectTrigger className="h-8 w-[200px] bg-background text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Whole clinic rota</SelectItem>
+                        <SelectItem value="none">Unassigned shifts</SelectItem>
+                        {practitioners.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {locations.length > 0 && (
+                    <Select value={viewLoc} onValueChange={setViewLoc}>
+                      <SelectTrigger className="h-8 w-[200px] bg-background text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All locations</SelectItem>
+                        <SelectItem value="none">No specific location</SelectItem>
+                        {locations.map((l) => (
+                          <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
             </CardHeader>
+
             <CardContent className="overflow-x-auto pb-6">
               <div className="min-w-[720px]">
                 <div className="grid gap-1" style={{ gridTemplateColumns: `56px repeat(7, minmax(90px, 1fr))` }}>
@@ -809,56 +853,62 @@ function AvailabilityPage() {
                         const cell = rulesFor(dow, weekIdx);
                         const isToday = new Date().getDay() === dow;
                         return (
-                          <button
-                            type="button"
-                            onClick={() => (cell.length === 0 ? openAdd(dow, weekIdx) : openEdit(cell[0]))}
+                          <div
                             className={
                               "group relative min-h-[80px] w-full rounded-xl p-1.5 text-left transition-all flex flex-col gap-1 " +
                               (cell.length === 0
                                 ? "border border-dashed border-border/70 hover:border-primary/50 hover:bg-primary/5"
-                                : "border border-transparent bg-gradient-to-br from-primary/10 to-primary/5 hover:shadow-md hover:from-primary/15") +
+                                : "border border-transparent bg-gradient-to-br from-primary/10 to-primary/5") +
                               (isToday ? " ring-1 ring-primary/30" : "")
                             }
                           >
-                            {cell.length === 0 ? (
-                              <span className="text-[11px] text-muted-foreground/70 flex items-center gap-1 m-auto opacity-0 group-hover:opacity-100 transition">
-                                <Plus className="h-3 w-3" /> Add
-                              </span>
-                            ) : (
-                              cell.slice(0, 2).map((r) => (
-                                <div key={r.id} className="text-[11px] leading-tight rounded-lg bg-background/80 backdrop-blur px-2 py-1.5 shadow-sm">
-                                  <div className="font-mono font-medium tabular-nums">{r.start_time.slice(0,5)}–{r.end_time.slice(0,5)}</div>
-                                  {locName(r.location_id) && (
-                                    <div className="flex items-center gap-1 mt-0.5 text-muted-foreground truncate">
-                                      <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                                      <span className="truncate">{locName(r.location_id)}</span>
-                                    </div>
-                                  )}
-                                  {(r.effective_from || r.effective_to) && (
-                                    <div className="truncate text-[10px] text-muted-foreground/80">
-                                      {r.effective_from ? `from ${r.effective_from.slice(5)}` : ""}
-                                      {r.effective_to ? ` to ${r.effective_to.slice(5)}` : ""}
-                                    </div>
-                                  )}
-                                  {pracName(r.practitioner_id) && (
-                                    <div className="truncate text-[10px] text-muted-foreground/80">{pracName(r.practitioner_id)}</div>
-                                  )}
-                                </div>
-                              ))
-                            )}
-                            {cell.length > 2 && <div className="text-[10px] text-muted-foreground pl-1">+{cell.length - 2} more</div>}
-                            {cell.length > 0 && (
-                              <span
+                            {cell.map((r) => (
+                              <div
+                                key={r.id}
                                 role="button"
-                                aria-label="Delete shift"
-                                onClick={(e) => { e.stopPropagation(); removeRule(cell[0].id); }}
-                                className="absolute top-1 right-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition p-1 rounded-md bg-background/70 hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-
+                                tabIndex={0}
+                                onClick={() => openEdit(r)}
+                                onKeyDown={(e) => { if (e.key === "Enter") openEdit(r); }}
+                                className="relative text-[11px] leading-tight rounded-lg bg-background/80 backdrop-blur px-2 py-1.5 pr-6 shadow-sm cursor-pointer hover:shadow-md"
                               >
-                                <Trash2 className="h-3 w-3" />
-                              </span>
-                            )}
-                          </button>
+                                <div className="font-mono font-medium tabular-nums">{r.start_time.slice(0,5)}–{r.end_time.slice(0,5)}</div>
+                                {locName(r.location_id) && (
+                                  <div className="flex items-center gap-1 mt-0.5 text-muted-foreground truncate">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                                    <span className="truncate">{locName(r.location_id)}</span>
+                                  </div>
+                                )}
+                                {(r.effective_from || r.effective_to) && (
+                                  <div className="truncate text-[10px] text-muted-foreground/80">
+                                    {r.effective_from ? `from ${r.effective_from.slice(5)}` : ""}
+                                    {r.effective_to ? ` to ${r.effective_to.slice(5)}` : ""}
+                                  </div>
+                                )}
+                                <div className="truncate text-[10px] font-medium text-primary/80">
+                                  {pracName(r.practitioner_id) ?? "Anyone"}
+                                </div>
+                                <span
+                                  role="button"
+                                  aria-label="Delete shift"
+                                  onClick={(e) => { e.stopPropagation(); removeRule(r.id); }}
+                                  className="absolute top-1 right-1 p-0.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </span>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => openAdd(dow, weekIdx)}
+                              className={
+                                "flex items-center justify-center gap-1 rounded-lg py-1 text-[11px] text-muted-foreground/80 hover:bg-primary/10 hover:text-primary transition " +
+                                (cell.length === 0 ? "m-auto px-2" : "mt-0.5")
+                              }
+                            >
+                              <Plus className="h-3 w-3" /> Add
+                            </button>
+                          </div>
+
                         );
                       }}
                     />
