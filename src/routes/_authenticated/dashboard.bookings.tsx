@@ -151,7 +151,7 @@ function parseTime(t: string) {
  */
 function layoutOverlaps<T extends { start_time: string; end_time: string }>(
   items: T[],
-): { item: T; leftPct: number; widthPct: number; index: number; columns: number }[] {
+): { item: T; leftPct: number; widthPct: number; index: number; columns: number; startHr: number; endHr: number; maxEndHr: number }[] {
   const evts = items
     .map((item) => {
       const s = parseTime(item.start_time);
@@ -161,28 +161,42 @@ function layoutOverlaps<T extends { start_time: string; end_time: string }>(
     })
     .sort((a, b) => a.s - b.s || a.e - b.e);
 
-  const out: { item: T; leftPct: number; widthPct: number; index: number; columns: number }[] = [];
+  const out: { item: T; leftPct: number; widthPct: number; index: number; columns: number; startHr: number; endHr: number; maxEndHr: number }[] = [];
   let group: typeof evts = [];
   let groupEnd = -Infinity;
 
   const flush = () => {
     if (!group.length) return;
     const colEnds: number[] = [];
-    const placed = group.map((g) => {
+    const colItems: { s: number; e: number; idx: number }[][] = [];
+    const placed = group.map((g, i) => {
       let col = colEnds.findIndex((end) => end <= g.s + 1e-9);
-      if (col === -1) { col = colEnds.length; colEnds.push(g.e); } else { colEnds[col] = g.e; }
+      if (col === -1) { col = colEnds.length; colEnds.push(g.e); colItems.push([]); } else { colEnds[col] = g.e; }
+      colItems[col].push({ s: g.s, e: g.e, idx: i });
       return { ...g, col };
     });
     const columns = colEnds.length;
-    for (const p of placed) {
+    // How far an event may visually stretch (for readability) without ever
+    // touching the next event stacked below it in the same column.
+    const maxEndByIdx = new Map<number, number>();
+    colItems.forEach((list) => {
+      list.forEach((cur, i) => {
+        const next = list[i + 1];
+        maxEndByIdx.set(cur.idx, next ? next.s : cur.e + 4);
+      });
+    });
+    placed.forEach((p, i) => {
       out.push({
         item: p.item,
         leftPct: (p.col / columns) * 100,
         widthPct: 100 / columns,
         index: p.col,
         columns,
+        startHr: p.s,
+        endHr: p.e,
+        maxEndHr: Math.max(p.e, maxEndByIdx.get(i) ?? p.e),
       });
-    }
+    });
     group = [];
     groupEnd = -Infinity;
   };
@@ -195,6 +209,7 @@ function layoutOverlaps<T extends { start_time: string; end_time: string }>(
   flush();
   return out;
 }
+
 function hexToRgba(hex: string, a: number) {
   const h = hex.replace("#", "");
   const r = parseInt(h.slice(0, 2), 16);
