@@ -1127,7 +1127,105 @@ export async function seedDemoClinic(admin: Admin) {
           next_meeting_on: "2026-12-01",
         });
       }
+
+      // The associate's own patients + diary, so clinic oversight has
+      // something real to audit.
+      const assocPatients: Array<{ name: string; email: string; phone: string }> = [
+        { name: "Rosie Bennett", email: "rosie.bennett@modo.demo", phone: "+447700900311" },
+        { name: "Amara Nwosu", email: "amara.nwosu@modo.demo", phone: "+447700900312" },
+        { name: "Grace Fielding", email: "grace.fielding@modo.demo", phone: "+447700900313" },
+      ];
+      if (assocProfileId) {
+        for (const p of assocPatients) {
+          const { data: existingC } = await admin
+            .from("clinic_clients")
+            .select("id")
+            .eq("profile_id", assocProfileId)
+            .eq("email", p.email)
+            .maybeSingle();
+          if (!existingC?.id) {
+            await admin.from("clinic_clients").insert({
+              profile_id: assocProfileId,
+              full_name: p.name,
+              email: p.email,
+              phone: p.phone,
+              is_demo: true,
+            });
+          }
+        }
+
+        const day = 86400000;
+        const now = Date.now();
+        const assocAppts: Array<{ when: Date; treatment: string; status: string; amount: number; patient: number; mins: number }> = [
+          { when: new Date(now - 21 * day), treatment: "Anti-wrinkle — 3 areas", status: "completed", amount: 210, patient: 0, mins: 30 },
+          { when: new Date(now - 12 * day), treatment: "Lip filler — 1ml", status: "completed", amount: 220, patient: 1, mins: 45 },
+          { when: new Date(now - 4 * day), treatment: "Polynucleotides — under eye", status: "completed", amount: 250, patient: 2, mins: 45 },
+          { when: new Date(now + 3 * day), treatment: "Skin booster — session 2", status: "confirmed", amount: 180, patient: 0, mins: 45 },
+          { when: new Date(now + 9 * day), treatment: "Review appointment", status: "confirmed", amount: 0, patient: 1, mins: 15 },
+        ];
+        for (const a of assocAppts) {
+          const p = assocPatients[a.patient]!;
+          const start = new Date(a.when);
+          start.setHours(10 + (a.patient * 2), 0, 0, 0);
+          const date = ymd(start);
+          const { data: dupe } = await admin
+            .from("appointments")
+            .select("id")
+            .eq("profile_id", assocProfileId)
+            .eq("scheduled_date", date)
+            .eq("patient_email", p.email)
+            .maybeSingle();
+          if (dupe?.id) continue;
+          await admin.from("appointments").insert({
+            profile_id: assocProfileId,
+            patient_name: p.name,
+            patient_email: p.email,
+            treatment_name_snapshot: a.treatment,
+            scheduled_date: date,
+            start_time: hms(start),
+            end_time: hms(new Date(start.getTime() + a.mins * 60000)),
+            status: a.status,
+            base_amount: a.amount,
+            total_amount: a.amount,
+            payment_status: a.status === "completed" ? "paid" : "pending",
+            is_demo: true,
+          });
+        }
+      }
+
+      const { count: incCount } = await admin
+        .from("associate_incidents")
+        .select("id", { count: "exact", head: true })
+        .eq("link_id", linkId);
+      if (!incCount) {
+        await admin.from("associate_incidents").insert([
+          {
+            link_id: linkId,
+            clinic_profile_id: profileId!,
+            associate_profile_id: assocProfileId ?? null,
+            occurred_at: new Date(Date.now() - 12 * 86400000).toISOString(),
+            severity: "moderate",
+            title: "Vascular occlusion concern after lip filler",
+            description:
+              "Patient reported blanching and disproportionate pain two hours after a 1ml lip treatment. Associate reviewed same evening.",
+            action_taken:
+              "Hyaluronidase administered, aspirin protocol started, patient reviewed daily for three days. Full resolution, photos on file.",
+            resolved_at: new Date(Date.now() - 9 * 86400000).toISOString(),
+          },
+          {
+            link_id: linkId,
+            clinic_profile_id: profileId!,
+            associate_profile_id: assocProfileId ?? null,
+            occurred_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+            severity: "minor",
+            title: "Sharps bin overfilled in Room 1",
+            description: "Sharps container found above the fill line at end of clinic day.",
+            action_taken: "Replaced immediately; associate reminded of end-of-day checklist. Awaiting sign-off at next review.",
+          },
+        ]);
+      }
     }
+
   }
 
 
