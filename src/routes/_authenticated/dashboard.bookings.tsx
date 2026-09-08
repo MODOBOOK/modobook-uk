@@ -889,6 +889,8 @@ function BookingsPage() {
       <UnblockDialog
         open={showUnblock}
         onOpenChange={setShowUnblock}
+        locations={locations}
+        defaultLocationId={locationFilter === "all" ? "all" : locationFilter}
         practitionerId={practitionerFilter === "all" ? null : practitionerFilter}
         blocks={blocks}
         onRemoved={(id) => setBlocks((p) => p.filter((b) => b.id !== id))}
