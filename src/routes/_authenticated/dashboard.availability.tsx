@@ -354,7 +354,7 @@ function AvailabilityPage() {
     setDlgOpen(true);
   }
 
-  async function saveShift() {
+  async function saveShift(asExtra = false) {
     if (form.start >= form.end) { toast.error("End time must be after start"); return; }
     if (form.effective_from && form.effective_to && form.effective_from > form.effective_to) {
       toast.error("Rota end date must be after the start date"); return;
