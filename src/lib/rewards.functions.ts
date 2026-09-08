@@ -4,6 +4,12 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 
+/** Clinic profile id for the signed-in user (profiles.id != auth user id). */
+async function clinicId(supabase: any, userId: string): Promise<string> {
+  const { activeProfileId } = await import("./clinic-context.server");
+  return (await activeProfileId(supabase, userId)) ?? userId;
+}
+
 // -------------------- Practitioner: settings --------------------
 
 export const getMyReferralSettings = createServerFn({ method: "GET" })
