@@ -21,6 +21,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyRewardsForClinic } from "@/lib/rewards.functions";
 import { getMyClinicCredit } from "@/lib/patient-credit.functions";
+import { getMyMembershipForClinic } from "@/lib/memberships.functions";
 import { autoRefundCancelledAppointment } from "@/lib/refunds.functions";
 
 
