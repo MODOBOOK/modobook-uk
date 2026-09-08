@@ -16,10 +16,11 @@ export const getMyReferralSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    const clinicProfileId = await clinicId(supabase, userId);
     const { data, error } = await supabase
       .from("clinic_referral_settings")
       .select("*")
-      .eq("clinic_profile_id", userId)
+      .eq("clinic_profile_id", clinicProfileId)
       .maybeSingle();
     if (error) throw error;
     return data ?? null;
@@ -49,11 +50,12 @@ export const saveReferralSettings = createServerFn({ method: "POST" })
   .inputValidator((data: z.infer<typeof SaveSchema>) => SaveSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const clinicProfileId = await clinicId(supabase, userId);
     const { error } = await supabase
       .from("clinic_referral_settings")
       .upsert(
         {
-          clinic_profile_id: userId,
+          clinic_profile_id: clinicProfileId,
           enabled: data.enabled,
           show_on_public_page: data.show_on_public_page,
           referrer_credit_kind: data.referrer_credit_kind,
@@ -96,10 +98,11 @@ export const listMyRewardTiers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    const clinicProfileId = await clinicId(supabase, userId);
     const { data, error } = await (supabase as any)
       .from("clinic_reward_tiers")
       .select("*")
-      .eq("clinic_profile_id", userId)
+      .eq("clinic_profile_id", clinicProfileId)
       .order("sort_order", { ascending: true })
       .order("points_cost", { ascending: true });
     if (error) throw error;
@@ -122,9 +125,10 @@ export const upsertRewardTier = createServerFn({ method: "POST" })
   .inputValidator((data: z.infer<typeof TierSchema>) => TierSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const clinicProfileId = await clinicId(supabase, userId);
     const row = {
       ...(data.id ? { id: data.id } : {}),
-      clinic_profile_id: userId,
+      clinic_profile_id: clinicProfileId,
       label: data.label,
       points_cost: data.points_cost,
       reward_kind: data.reward_kind,
@@ -145,11 +149,12 @@ export const deleteRewardTier = createServerFn({ method: "POST" })
   .inputValidator((d: { id: string }) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const clinicProfileId = await clinicId(supabase, userId);
     const { error } = await (supabase as any)
       .from("clinic_reward_tiers")
       .delete()
       .eq("id", data.id)
-      .eq("clinic_profile_id", userId);
+      .eq("clinic_profile_id", clinicProfileId);
     if (error) throw error;
     return { ok: true };
   });
@@ -160,12 +165,13 @@ export const getMyClinicReferrals = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
+    const clinicProfileId = await clinicId(supabase, userId);
     const { data, error } = await supabase
       .from("patient_referrals")
       .select(
         "id, code, status, reward_credit_pennies, reward_points, friend_credit_pennies, rewarded_at, created_at, referred_email, referrer_user_id",
       )
-      .eq("clinic_profile_id", userId)
+      .eq("clinic_profile_id", clinicProfileId)
       .order("created_at", { ascending: false })
       .limit(100);
     if (error) throw error;
@@ -572,6 +578,7 @@ export const getClientPoints = createServerFn({ method: "POST" })
   .inputValidator((data: z.infer<typeof ClientIdSchema>) => ClientIdSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const clinicProfileId = await clinicId(supabase, userId);
 
     const { data: account } = await supabase
       .from("patient_accounts")
@@ -582,7 +589,7 @@ export const getClientPoints = createServerFn({ method: "POST" })
     const { data: settings } = await supabase
       .from("clinic_referral_settings")
       .select("enabled, points_redemption_enabled, points_per_pound_redeem, points_per_pound_earn, earn_on_spend_enabled")
-      .eq("clinic_profile_id", userId)
+      .eq("clinic_profile_id", clinicProfileId)
       .maybeSingle();
 
     if (!account?.user_id) {
@@ -593,7 +600,7 @@ export const getClientPoints = createServerFn({ method: "POST" })
       .from("patient_points_ledger")
       .select("id, delta, reason, note, created_at")
       .eq("patient_user_id", account.user_id)
-      .eq("clinic_profile_id", userId)
+      .eq("clinic_profile_id", clinicProfileId)
       .order("created_at", { ascending: false })
       .limit(25);
 
@@ -601,7 +608,7 @@ export const getClientPoints = createServerFn({ method: "POST" })
       .from("patient_points_ledger")
       .select("delta")
       .eq("patient_user_id", account.user_id)
-      .eq("clinic_profile_id", userId);
+      .eq("clinic_profile_id", clinicProfileId);
 
     return {
       linked: true as const,
@@ -623,6 +630,7 @@ export const adjustClientPoints = createServerFn({ method: "POST" })
   .inputValidator((data: z.infer<typeof AdjustPointsSchema>) => AdjustPointsSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const clinicProfileId = await clinicId(supabase, userId);
     if (data.delta === 0) return { ok: false as const, reason: "zero" };
 
     const { data: account } = await supabase
@@ -634,7 +642,7 @@ export const adjustClientPoints = createServerFn({ method: "POST" })
 
     const { error } = await supabase.from("patient_points_ledger").insert({
       patient_user_id: account.user_id,
-      clinic_profile_id: userId,
+      clinic_profile_id: clinicProfileId,
       delta: data.delta,
       reason: "manual",
       note: data.note || (data.delta > 0 ? "Added by clinic" : "Removed by clinic"),
