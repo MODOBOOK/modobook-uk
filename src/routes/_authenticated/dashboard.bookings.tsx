@@ -111,7 +111,7 @@ type BlockedTime = {
   practitioner_id?: string | null;
 };
 
-const HOUR_HEIGHT = 60;
+const HOUR_HEIGHT = 76;
 const START_HOUR = 0;
 const END_HOUR = 23;
 const HOURS = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
@@ -810,7 +810,7 @@ function BookingsPage() {
                                 toast.success("Unblocked — time now open");
                               } catch (e) { toast.error((e as Error).message); }
                             }}
-                            className="absolute overflow-hidden rounded-sm border border-foreground/20 bg-foreground px-1.5 py-0.5 text-left text-[11px] leading-tight text-background shadow-sm transition hover:z-30 hover:brightness-110"
+                            className="absolute overflow-hidden rounded-md border border-foreground/25 bg-foreground px-1.5 py-0.5 text-left text-[11px] leading-tight text-background shadow-sm transition hover:z-30 hover:brightness-110"
                             style={posStyle}
                             title="Tap to open this slot"
                           >
@@ -828,7 +828,7 @@ function BookingsPage() {
                         <button
                           key={`a-${a.id}`}
                           onClick={() => setSelectedAppt(a)}
-                          className="absolute cursor-pointer overflow-hidden rounded-sm border border-foreground/20 px-1.5 py-0.5 text-left text-[11px] leading-tight shadow-sm transition hover:z-30 hover:shadow-md"
+                          className="absolute cursor-pointer overflow-hidden rounded-md border border-foreground/25 px-1.5 py-0.5 text-left text-[11px] leading-tight shadow-sm transition hover:z-30 hover:shadow-md"
                           style={{
                             ...posStyle,
                             backgroundColor: hexToRgba(color, 0.45),
