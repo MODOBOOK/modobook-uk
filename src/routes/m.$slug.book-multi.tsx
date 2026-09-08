@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Clock, MapPin, CheckCircle2, LogIn, UserPlus, UserCheck, ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { DiscountCodeBox, type AppliedDiscount } from "@/components/DiscountCodeBox";
+import { PointsRedeemBox } from "@/components/PointsRedeemBox";
 import { ReferralCodeInput } from "@/components/ReferralCodeInput";
 import { linkReferralToAppointment, consumePointsRedemption } from "@/lib/rewards.functions";
 import { redeemGiftCardCode } from "@/lib/gift-cards.functions";
@@ -1342,6 +1343,18 @@ function MultiBookPage() {
                         value={discount}
                         onChange={setDiscount}
                       />
+                      {patientUserId && (
+                        <div className="mt-3">
+                          <PointsRedeemBox
+                            slug={slug}
+                            patientUserId={patientUserId}
+                            totalPennies={Math.max(0, Math.round(totalPrice * 100))}
+                            treatmentIds={treatments.map((t) => t.id)}
+                            value={discount}
+                            onChange={setDiscount}
+                          />
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 )}

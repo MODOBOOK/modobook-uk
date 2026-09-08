@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Clock, MapPin, CheckCircle2, LogIn, UserPlus, UserCheck } from "lucide-react";
 import { DiscountCodeBox, type AppliedDiscount } from "@/components/DiscountCodeBox";
+import { PointsRedeemBox } from "@/components/PointsRedeemBox";
 import { ReferralCodeInput } from "@/components/ReferralCodeInput";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 
@@ -1096,6 +1097,18 @@ function BookTreatmentPage() {
                 treatmentIds={[treatment.id]}
                 total={price}
                 brand={brand}
+                value={discount}
+                onChange={setDiscount}
+              />
+            </div>
+          )}
+          {showPrices && patientUserId && (
+            <div className="sm:col-span-2">
+              <PointsRedeemBox
+                slug={slug}
+                patientUserId={patientUserId}
+                totalPennies={Math.max(0, Math.round(price * 100))}
+                treatmentIds={[treatment.id]}
                 value={discount}
                 onChange={setDiscount}
               />
