@@ -1338,6 +1338,48 @@ function UnblockDialog({
               </select>
             </div>
 
+            {locations.length > 0 && (
+              <div>
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Location</Label>
+                <select
+                  value={locationId}
+                  onChange={(e) => setLocationId(e.target.value)}
+                  className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                >
+                  <option value="all">All locations</option>
+                  {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                </select>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Repeat</Label>
+                <select
+                  value={repeat}
+                  onChange={(e) => setRepeat(e.target.value as typeof repeat)}
+                  className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                >
+                  <option value="none">Doesn't repeat</option>
+                  <option value="weekly">Every week</option>
+                  <option value="fortnightly">Every 2 weeks</option>
+                  <option value="monthly">Every month</option>
+                </select>
+              </div>
+              {repeat !== "none" && (
+                <div>
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">How many times</Label>
+                  <select
+                    value={repeatCount}
+                    onChange={(e) => setRepeatCount(parseInt(e.target.value, 10))}
+                    className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                  >
+                    {[2, 3, 4, 6, 8, 12, 26, 52].map((n) => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
+
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button onClick={openSlots} disabled={busy} className="gap-1">
