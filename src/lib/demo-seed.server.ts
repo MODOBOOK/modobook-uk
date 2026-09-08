@@ -113,6 +113,8 @@ export async function seedDemoClinic(admin: Admin) {
   const profileFields = {
     is_demo: true,
     active: true,
+    associates_enabled: true,
+
     slug: DEMO_SLUG,
     clinic_name: DEMO_CLINIC_NAME,
     hero_url: IMG.hero,
@@ -1004,7 +1006,129 @@ export async function seedDemoClinic(admin: Admin) {
     }
   }
 
+  // Associates — one fully-set-up associate so the demo shows clinic
+  // oversight (records, appointments, incidents) plus a room allocation.
+  {
+    const ASSOC_EMAIL = "harriet+associate@modo.demo";
+    const ASSOC_NAME = "Harriet Vance";
+    const ASSOC_SLUG = "modo-demo-associate";
 
+    const assocUserId = await findOrCreateAuthUser(admin, ASSOC_EMAIL, {
+      full_name: ASSOC_NAME,
+      clinic_name: "Vance Aesthetics",
+    });
+
+    const { data: existingAssocProfile } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("user_id", assocUserId)
+      .maybeSingle();
+
+    let assocProfileId = existingAssocProfile?.id as string | undefined;
+    const assocFields = {
+      is_demo: true,
+      active: true,
+      slug: ASSOC_SLUG,
+      clinic_name: "Vance Aesthetics",
+      full_name: ASSOC_NAME,
+      tagline: "Associate practitioner at MODO Demo Clinic.",
+      brand_color: "#3F7F7C",
+    };
+    if (!assocProfileId) {
+      const { data: createdAssoc } = await admin
+        .from("profiles")
+        .insert({ user_id: assocUserId, ...assocFields })
+        .select("id")
+        .single();
+      assocProfileId = createdAssoc?.id as string | undefined;
+    } else {
+      await admin.from("profiles").update(assocFields).eq("id", assocProfileId);
+    }
+
+    const { data: existingLink } = await admin
+      .from("clinic_associates")
+      .select("id")
+      .eq("clinic_profile_id", profileId!)
+      .eq("invited_email", ASSOC_EMAIL)
+      .maybeSingle();
+
+    const linkFields = {
+      associate_profile_id: assocProfileId ?? null,
+      invited_name: ASSOC_NAME,
+      status: "active" as const,
+      accepted_at: new Date().toISOString(),
+      oversight_records: true,
+      oversight_appointments: true,
+      oversight_incidents: true,
+      room_allocation_enabled: true,
+      location_id: locationId ?? null,
+      block_when_no_room: false,
+      charge_room_rent: true,
+      seat_sponsored: true,
+      notes: "Independent prescriber renting Room 1 two days a week. Oversight reviewed monthly.",
+    };
+
+    let linkId = existingLink?.id as string | undefined;
+    if (linkId) {
+      await admin.from("clinic_associates").update(linkFields).eq("id", linkId);
+    } else {
+      const { data: createdLink } = await admin
+        .from("clinic_associates")
+        .insert({ clinic_profile_id: profileId!, invited_email: ASSOC_EMAIL, ...linkFields })
+        .select("id")
+        .single();
+      linkId = createdLink?.id as string | undefined;
+    }
+
+    if (linkId) {
+      const { count: docCount } = await admin
+        .from("associate_documents")
+        .select("id", { count: "exact", head: true })
+        .eq("link_id", linkId);
+      if (!docCount) {
+        await admin.from("associate_documents").insert([
+          {
+            link_id: linkId,
+            clinic_profile_id: profileId!,
+            associate_profile_id: assocProfileId ?? null,
+            kind: "insurance",
+            title: "Medical malpractice insurance",
+            reference_number: "HAM-4471902",
+            issued_on: "2026-01-05",
+            expires_on: "2027-01-04",
+            notes: "£5m cover, Hamilton Fraser.",
+          },
+          {
+            link_id: linkId,
+            clinic_profile_id: profileId!,
+            associate_profile_id: assocProfileId ?? null,
+            kind: "registration",
+            title: "NMC registration (Independent Prescriber)",
+            reference_number: "NMC 20B1234E",
+            issued_on: "2025-09-01",
+            expires_on: "2026-08-31",
+          },
+        ]);
+      }
+
+      const { count: meetCount } = await admin
+        .from("associate_meetings")
+        .select("id", { count: "exact", head: true })
+        .eq("link_id", linkId);
+      if (!meetCount) {
+        await admin.from("associate_meetings").insert({
+          link_id: linkId,
+          clinic_profile_id: profileId!,
+          associate_profile_id: assocProfileId ?? null,
+          title: "Quarterly oversight review",
+          attendees: `${DEMO_PRACTITIONER_NAME}, ${ASSOC_NAME}`,
+          notes: "Reviewed 42 treatments, complication log clear, aftercare audit passed.",
+          actions: "Refresh polynucleotide consent wording before next quarter.",
+          next_meeting_on: "2026-12-01",
+        });
+      }
+    }
+  }
 
 
   return {
