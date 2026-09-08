@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { SaveReminder } from "@/components/SaveReminder";
 import { PLATFORM_FEE_LABEL, PLATFORM_FEE_DESCRIPTION, PLATFORM_FEE_PERCENT, PLATFORM_FEE_FIXED_CENTS } from "@/lib/platform-fee";
@@ -35,6 +36,10 @@ function SettingsPage() {
     booking_buffer_after_minutes: (profile.booking_buffer_after_minutes as number) ?? 0,
     booking_daily_cap: (profile.booking_daily_cap as number | null) ?? null,
     booking_smart_times_enabled: !!profile.booking_smart_times_enabled,
+    practitioner_selection_mode: (((profile as { practitioner_selection_mode?: string | null }).practitioner_selection_mode ?? "optional") as
+      | "required"
+      | "optional"
+      | "first_available"),
     // payments
     payment_card_full_enabled: profile.payment_card_full_enabled !== false,
     payment_deposit_enabled: !!profile.payment_deposit_enabled,
