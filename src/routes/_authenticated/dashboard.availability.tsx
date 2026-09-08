@@ -392,7 +392,15 @@ function AvailabilityPage() {
           first = false;
         }
       }
-      toast.success(editing ? "Shift updated" : pracTargets.length > 1 ? `Shift added for ${pracTargets.length} people` : "Shift added");
+      toast.success(
+        asExtra
+          ? `Extra shift added${targets.length > 1 ? ` at ${targets.length} locations` : ""}`
+          : editing
+            ? "Shift updated"
+            : pracTargets.length > 1
+              ? `Shift added for ${pracTargets.length} people`
+              : "Shift added",
+      );
       setDlgOpen(false);
       if (draft && form.effective_from === draft.start) setDraft(null);
       await refresh();
