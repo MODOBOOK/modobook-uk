@@ -209,15 +209,16 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       packagesRows = (pkgs ?? []) as Array<Record<string, unknown>>;
     }
 
-    const pkgFirstTreatmentIds = packagesRows
-      .map((p) => {
+    const pkgAllTreatmentIds = packagesRows
+      .flatMap((p) => {
         const ids = (p.treatment_ids as string[] | null) ?? [];
         const single = p.treatment_id as string | null;
-        return ids[0] ?? single ?? null;
+        return ids.length ? ids : single ? [single] : [];
       })
       .filter((v): v is string => Boolean(v));
 
-    const treatmentIds = Array.from(new Set([...(data.treatmentIds ?? []), ...pkgFirstTreatmentIds]));
+    const treatmentIds = Array.from(new Set([...(data.treatmentIds ?? []), ...pkgAllTreatmentIds]));
+
 
     const treatmentsRes = await sb
       .from("treatments")
