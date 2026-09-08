@@ -2593,6 +2593,13 @@ function BookPage() {
             </p>
           </section>
         )
+      ) : !practitionerGateOpen ? (
+        <section className="mx-auto mt-8 max-w-3xl px-4">
+          <p className="rounded-2xl border border-dashed p-6 text-center text-sm opacity-70"
+             style={{ borderColor: `${brand}33` }}>
+            Choose who you'd like to see above to view their treatment menu.
+          </p>
+        </section>
       ) : null}
 
 
