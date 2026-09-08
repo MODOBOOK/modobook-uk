@@ -282,6 +282,7 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
         price: Number(p.price ?? 0),
         compare_at_price: p.compare_at_price == null ? null : Number(p.compare_at_price),
         session_count: Number(p.session_count ?? 1),
+        duration_minutes: p.duration_minutes == null ? null : Number(p.duration_minutes),
         expiry_days: (p.expiry_days as number | null) ?? null,
         allow_split_payment: Boolean(p.allow_split_payment),
         firstTreatmentId,
