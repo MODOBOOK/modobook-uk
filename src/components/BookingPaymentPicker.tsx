@@ -95,9 +95,15 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     // effectively IS the full payment — hide the deposit option and only
     // offer "Pay in full".
     const depositMakesSense = !depositWaived && o.depositEnabled && effectiveDepositCents >= 100 && effectiveDepositCents < treatmentTotalCents;
+    // When the deposit is the same as (or more than) the treatment price, the
+    // "deposit" and "full" amounts are identical — we show "Pay in full", but
+    // it must still be payable by card even if the clinic only turned on
+    // Klarna/Clearpay for full payments.
+    const depositCoversFull = !depositWaived && o.depositEnabled && o.cardEnabled
+      && effectiveDepositCents >= 100 && effectiveDepositCents >= treatmentTotalCents;
     if (o.requireDepositToConfirm && !depositWaived) {
       if (depositMakesSense) arr.push("deposit");
-      if (o.fullCardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
+      if (o.fullCardEnabled || o.klarnaEnabled || o.clearpayEnabled || depositCoversFull) arr.push("full");
       // Card on file secures the booking without charging now — a valid
       // alternative to a deposit when the clinic offers it.
       if (o.cardCaptureEnabled && o.cardEnabled) arr.push("card_capture");
@@ -107,7 +113,7 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
       return arr;
     }
     if (depositMakesSense) arr.push("deposit");
-    if (o.fullCardEnabled || o.klarnaEnabled || o.clearpayEnabled) arr.push("full");
+    if (o.fullCardEnabled || o.klarnaEnabled || o.clearpayEnabled || depositCoversFull) arr.push("full");
     if (o.cardCaptureEnabled && o.cardEnabled) arr.push("card_capture");
     // Respect the clinic's "Allow pay in clinic" setting. A waived deposit no
     // longer forces the cash option on — it's only used as a last resort when
@@ -144,11 +150,13 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
     const arr: Array<"card" | "klarna" | "clearpay"> = [];
     // Card in "pay in full" mode is governed by its own toggle — a clinic can
     // take card deposits while keeping full payments Klarna/Clearpay only.
-    if (o.fullCardEnabled) arr.push("card");
+    const depositCoversFull = !depositWaived && o.depositEnabled && o.cardEnabled
+      && effectiveDepositCents >= 100 && effectiveDepositCents >= treatmentTotalCents;
+    if (o.fullCardEnabled || depositCoversFull) arr.push("card");
     if (o.klarnaEnabled) arr.push("klarna");
     if (o.clearpayEnabled) arr.push("clearpay");
     return arr;
-  }, [configured, opts, value?.mode, availableModes]);
+  }, [configured, opts, value?.mode, availableModes, depositWaived, effectiveDepositCents, treatmentTotalCents]);
 
   // If the externally controlled value is no longer valid, coerce it. Required
   // deposits are always deposit + card so the server can take payment and save
