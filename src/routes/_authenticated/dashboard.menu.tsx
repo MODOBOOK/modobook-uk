@@ -82,7 +82,7 @@ const groups: Group[] = [
       { label: "Workspace appearance", description: "Colours & fonts for your own dashboard only", to: "/dashboard/appearance", icon: Palette, ...T.ivory },
       { label: "Welcome & policies", description: "Intro heading, welcome message, deposits, cancellation, T&Cs", to: "/dashboard/policies", icon: Shield, ...T.mocha },
       { label: "Locations", description: "Manage your clinic addresses", to: "/dashboard/locations", icon: MapPin, ...T.cream },
-      { label: "Booking profiles", description: "Photos, titles & locations for treating staff", to: "/dashboard/practitioners", icon: Users, ...T.taupe },
+      { label: "Practitioners", description: "Photos, titles & locations for treating staff", to: "/dashboard/practitioners", icon: Users, ...T.taupe },
 { label: "Staff", description: "Invite team members, individual rotas & staff payments", to: "/dashboard/staff", icon: ShieldCheck, ...T.espresso },
     ],
   },
