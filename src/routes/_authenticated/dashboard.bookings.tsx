@@ -778,16 +778,17 @@ function BookingsPage() {
                     {layoutOverlaps<any>([
                       ...dayBlocks.map((b) => ({ ...b, __kind: "block" as const })),
                       ...dayAppts.map((a) => ({ ...a, __kind: "appt" as const })),
-                    ]).map(({ item, leftPct, widthPct, index, columns }) => {
-                      const start = parseTime(item.start_time);
-                      const end = parseTime(item.end_time);
-                      const top = (start - START_HOUR) * HOUR_HEIGHT;
-                      // Never make an event taller than its real time slot. A minimum
-                      // height caused consecutive 15-minute bookings to cover each other.
-                      const height = Math.max(6, (end - start) * HOUR_HEIGHT - 1);
-                      const showTreatment = height >= 27;
-                      const showTime = height >= 18;
+                    ]).map(({ item, leftPct, widthPct, index, columns, startHr, endHr, maxEndHr }) => {
+                      const top = (startHr - START_HOUR) * HOUR_HEIGHT;
+                      // Grow short bookings so the name stays readable, but never past
+                      // the start of the next booking in the same column: zero overlap.
+                      const naturalH = (endHr - startHr) * HOUR_HEIGHT;
+                      const ceilingH = (maxEndHr - startHr) * HOUR_HEIGHT;
+                      const height = Math.max(14, Math.min(Math.max(naturalH, 30), ceilingH) - 2);
+                      const showTreatment = height >= 30;
+                      const showTime = height >= 20;
                       const narrow = columns > 2;
+
                       const posStyle = {
                         top,
                         height,
