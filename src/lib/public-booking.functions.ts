@@ -272,7 +272,8 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
     const selectedPackages = packagesRows.map((p) => {
       const ids = (p.treatment_ids as string[] | null) ?? [];
       const single = p.treatment_id as string | null;
-      const firstTreatmentId = ids[0] ?? single ?? null;
+      const allTreatmentIds = (ids.length ? ids : single ? [single] : []).filter(Boolean);
+      const firstTreatmentId = allTreatmentIds[0] ?? null;
       return {
         id: p.id as string,
         name: p.name as string,
@@ -284,9 +285,10 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
         expiry_days: (p.expiry_days as number | null) ?? null,
         allow_split_payment: Boolean(p.allow_split_payment),
         firstTreatmentId,
-
+        treatmentIds: allTreatmentIds,
       };
     });
+
 
     return {
       profileId: profile.id,
