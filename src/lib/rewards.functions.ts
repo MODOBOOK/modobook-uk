@@ -13,7 +13,7 @@ export const getMyReferralSettings = createServerFn({ method: "GET" })
     const { data, error } = await supabase
       .from("clinic_referral_settings")
       .select("*")
-      .eq("clinic_profile_id", clinicProfileId)
+      .eq("clinic_profile_id", userId)
       .maybeSingle();
     if (error) throw error;
     return data ?? null;
@@ -47,7 +47,7 @@ export const saveReferralSettings = createServerFn({ method: "POST" })
       .from("clinic_referral_settings")
       .upsert(
         {
-          clinic_profile_id: clinicProfileId,
+          clinic_profile_id: userId,
           enabled: data.enabled,
           show_on_public_page: data.show_on_public_page,
           referrer_credit_kind: data.referrer_credit_kind,
@@ -93,7 +93,7 @@ export const listMyRewardTiers = createServerFn({ method: "GET" })
     const { data, error } = await (supabase as any)
       .from("clinic_reward_tiers")
       .select("*")
-      .eq("clinic_profile_id", clinicProfileId)
+      .eq("clinic_profile_id", userId)
       .order("sort_order", { ascending: true })
       .order("points_cost", { ascending: true });
     if (error) throw error;
@@ -118,7 +118,7 @@ export const upsertRewardTier = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const row = {
       ...(data.id ? { id: data.id } : {}),
-      clinic_profile_id: clinicProfileId,
+      clinic_profile_id: userId,
       label: data.label,
       points_cost: data.points_cost,
       reward_kind: data.reward_kind,
@@ -143,7 +143,7 @@ export const deleteRewardTier = createServerFn({ method: "POST" })
       .from("clinic_reward_tiers")
       .delete()
       .eq("id", data.id)
-      .eq("clinic_profile_id", clinicProfileId);
+      .eq("clinic_profile_id", userId);
     if (error) throw error;
     return { ok: true };
   });
@@ -159,7 +159,7 @@ export const getMyClinicReferrals = createServerFn({ method: "GET" })
       .select(
         "id, code, status, reward_credit_pennies, reward_points, friend_credit_pennies, rewarded_at, created_at, referred_email, referrer_user_id",
       )
-      .eq("clinic_profile_id", clinicProfileId)
+      .eq("clinic_profile_id", userId)
       .order("created_at", { ascending: false })
       .limit(100);
     if (error) throw error;
@@ -576,7 +576,7 @@ export const getClientPoints = createServerFn({ method: "POST" })
     const { data: settings } = await supabase
       .from("clinic_referral_settings")
       .select("enabled, points_redemption_enabled, points_per_pound_redeem, points_per_pound_earn, earn_on_spend_enabled")
-      .eq("clinic_profile_id", clinicProfileId)
+      .eq("clinic_profile_id", userId)
       .maybeSingle();
 
     if (!account?.user_id) {
@@ -587,7 +587,7 @@ export const getClientPoints = createServerFn({ method: "POST" })
       .from("patient_points_ledger")
       .select("id, delta, reason, note, created_at")
       .eq("patient_user_id", account.user_id)
-      .eq("clinic_profile_id", clinicProfileId)
+      .eq("clinic_profile_id", userId)
       .order("created_at", { ascending: false })
       .limit(25);
 
@@ -595,7 +595,7 @@ export const getClientPoints = createServerFn({ method: "POST" })
       .from("patient_points_ledger")
       .select("delta")
       .eq("patient_user_id", account.user_id)
-      .eq("clinic_profile_id", clinicProfileId);
+      .eq("clinic_profile_id", userId);
 
     return {
       linked: true as const,
@@ -628,7 +628,7 @@ export const adjustClientPoints = createServerFn({ method: "POST" })
 
     const { error } = await supabase.from("patient_points_ledger").insert({
       patient_user_id: account.user_id,
-      clinic_profile_id: clinicProfileId,
+      clinic_profile_id: userId,
       delta: data.delta,
       reason: "manual",
       note: data.note || (data.delta > 0 ? "Added by clinic" : "Removed by clinic"),
