@@ -889,6 +889,8 @@ function BookingsPage() {
       <UnblockDialog
         open={showUnblock}
         onOpenChange={setShowUnblock}
+        locations={locations}
+        defaultLocationId={locationFilter === "all" ? "all" : locationFilter}
         practitionerId={practitionerFilter === "all" ? null : practitionerFilter}
         blocks={blocks}
         onRemoved={(id) => setBlocks((p) => p.filter((b) => b.id !== id))}
@@ -1207,12 +1209,14 @@ function BlockTimeDialog({
 }
 
 function UnblockDialog({
-  open, onOpenChange, blocks, onRemoved, onOpened, practitionerId,
+  open, onOpenChange, blocks, onRemoved, onOpened, practitionerId, locations = [], defaultLocationId = "all",
 }: {
   open: boolean; onOpenChange: (v: boolean) => void;
   blocks: BlockedTime[]; onRemoved: (id: string) => void;
   onOpened?: () => void | Promise<void>;
   practitionerId?: string | null;
+  locations?: { id: string; name: string }[];
+  defaultLocationId?: string;
 }) {
   const del = useServerFn(deleteBlockedTime);
   const addOverride = useServerFn(addAvailabilityOverride);
@@ -1223,7 +1227,26 @@ function UnblockDialog({
   const [start, setStart] = useState("09:00");
   const [end, setEnd] = useState("17:00");
   const [interval, setInterval] = useState(30);
+  const [locationId, setLocationId] = useState<string>(defaultLocationId);
+  const [repeat, setRepeat] = useState<"none" | "weekly" | "fortnightly" | "monthly">("none");
+  const [repeatCount, setRepeatCount] = useState(4);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => { if (open) setLocationId(defaultLocationId); }, [open, defaultLocationId]);
+
+  function expandDates(base: string[]) {
+    if (repeat === "none") return Array.from(new Set(base));
+    const out: string[] = [];
+    for (const d of base) {
+      for (let i = 0; i < repeatCount; i++) {
+        const dt = new Date(d + "T00:00:00");
+        if (repeat === "monthly") dt.setMonth(dt.getMonth() + i);
+        else dt.setDate(dt.getDate() + i * (repeat === "weekly" ? 7 : 14));
+        out.push(ymd(dt));
+      }
+    }
+    return Array.from(new Set(out)).sort();
+  }
 
   const upcoming = blocks
     .filter((b) => b.date >= todayIso)
@@ -1238,10 +1261,17 @@ function UnblockDialog({
     if (!start || !end || start >= end) return toast.error("Pick a valid start/end time");
     setBusy(true);
     try {
-      for (const date of dates) {
-        await addOverride({ data: { date, start_time: start, end_time: end, slot_interval: interval, practitioner_id: practitionerId ?? null } });
+      const all = expandDates(dates);
+      const locIds: (string | null)[] =
+        locationId === "all"
+          ? (locations.length ? locations.map((l) => l.id) : [null])
+          : [locationId];
+      for (const date of all) {
+        for (const loc of locIds) {
+          await addOverride({ data: { date, start_time: start, end_time: end, slot_interval: interval, location_id: loc, practitioner_id: practitionerId ?? null } });
+        }
       }
-      toast.success(`Opened ${dates.length} day${dates.length === 1 ? "" : "s"} · ${start}–${end}`);
+      toast.success(`Opened ${all.length} day${all.length === 1 ? "" : "s"} · ${start}–${end}`);
       await onOpened?.();
       onOpenChange(false);
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
@@ -1306,6 +1336,48 @@ function UnblockDialog({
               >
                 {[15, 20, 30, 45, 60].map((m) => <option key={m} value={m}>{m} min</option>)}
               </select>
+            </div>
+
+            {locations.length > 0 && (
+              <div>
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Location</Label>
+                <select
+                  value={locationId}
+                  onChange={(e) => setLocationId(e.target.value)}
+                  className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                >
+                  <option value="all">All locations</option>
+                  {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                </select>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Repeat</Label>
+                <select
+                  value={repeat}
+                  onChange={(e) => setRepeat(e.target.value as typeof repeat)}
+                  className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                >
+                  <option value="none">Doesn't repeat</option>
+                  <option value="weekly">Every week</option>
+                  <option value="fortnightly">Every 2 weeks</option>
+                  <option value="monthly">Every month</option>
+                </select>
+              </div>
+              {repeat !== "none" && (
+                <div>
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">How many times</Label>
+                  <select
+                    value={repeatCount}
+                    onChange={(e) => setRepeatCount(parseInt(e.target.value, 10))}
+                    className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
+                  >
+                    {[2, 3, 4, 6, 8, 12, 26, 52].map((n) => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+              )}
             </div>
 
             <DialogFooter>
