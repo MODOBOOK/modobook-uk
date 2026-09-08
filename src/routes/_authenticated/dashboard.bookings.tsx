@@ -1227,7 +1227,26 @@ function UnblockDialog({
   const [start, setStart] = useState("09:00");
   const [end, setEnd] = useState("17:00");
   const [interval, setInterval] = useState(30);
+  const [locationId, setLocationId] = useState<string>(defaultLocationId);
+  const [repeat, setRepeat] = useState<"none" | "weekly" | "fortnightly" | "monthly">("none");
+  const [repeatCount, setRepeatCount] = useState(4);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => { if (open) setLocationId(defaultLocationId); }, [open, defaultLocationId]);
+
+  function expandDates(base: string[]) {
+    if (repeat === "none") return Array.from(new Set(base));
+    const out: string[] = [];
+    for (const d of base) {
+      for (let i = 0; i < repeatCount; i++) {
+        const dt = new Date(d + "T00:00:00");
+        if (repeat === "monthly") dt.setMonth(dt.getMonth() + i);
+        else dt.setDate(dt.getDate() + i * (repeat === "weekly" ? 7 : 14));
+        out.push(ymd(dt));
+      }
+    }
+    return Array.from(new Set(out)).sort();
+  }
 
   const upcoming = blocks
     .filter((b) => b.date >= todayIso)
