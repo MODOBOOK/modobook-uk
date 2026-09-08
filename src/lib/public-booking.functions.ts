@@ -1227,8 +1227,12 @@ async function maybeCreateBookingCheckout(args: {
 
   // Build allowed methods. When the patient picked one, restrict Stripe to
   // just that method so the fee we add matches the chosen rail exactly.
+  // Card is always a valid rail for a deposit (and for a "full" payment that
+  // is really just the deposit amount) — Klarna/Clearpay can't save a card,
+  // so a clinic that only enabled BNPL for full payments must still take card
+  // here, otherwise the patient has no way to pay a deposit.
   const enabled = {
-    card: p.payment_card_full_enabled !== false,
+    card: p.payment_card_full_enabled !== false || (kind === "deposit" && depositEnabled),
     klarna: !!p.payment_klarna_enabled,
     clearpay: !!p.payment_clearpay_enabled,
   };
