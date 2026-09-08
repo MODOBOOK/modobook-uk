@@ -372,6 +372,7 @@ function ServicesPage() {
 
 
   return (
+    <EditServiceCtx.Provider value={(t) => setSvcDialog({ defaultCatId: t.category_id ?? null, treat: t })}>
     <div className="services-page font-body space-y-6">
       <div className="flex flex-col gap-1">
         <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">Services</h1>
@@ -608,6 +609,7 @@ function ServicesPage() {
         }}
       />
     </div>
+    </EditServiceCtx.Provider>
   );
 }
 
