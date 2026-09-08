@@ -774,80 +774,73 @@ function BookingsPage() {
                     )}
 
 
-                    {/* Blocked times + appointments share one layout so nothing ever overlaps */}
-                    {layoutOverlaps<any>([
-                      ...dayBlocks.map((b) => ({ ...b, __kind: "block" as const })),
-                      ...dayAppts.map((a) => ({ ...a, __kind: "appt" as const })),
-                    ]).map(({ item, leftPct, widthPct, index, columns, startHr, endHr, maxEndHr }) => {
+                    {/* Blocked periods sit behind as full-width bands so they
+                        never squeeze the bookings into slivers. */}
+                    {dayBlocks.map((b) => {
+                      const s = parseTime(b.start_time);
+                      const e = Math.max(parseTime(b.end_time), s + 0.25);
+                      return (
+                        <button
+                          key={`b-${b.id}`}
+                          onClick={async () => {
+                            if (!confirm(`Unblock ${b.start_time.slice(0,5)}–${b.end_time.slice(0,5)}?`)) return;
+                            try {
+                              await deleteBlockedTime({ data: { id: b.id } });
+                              setBlocks((p) => p.filter((x) => x.id !== b.id));
+                              toast.success("Unblocked — time now open");
+                            } catch (err) { toast.error((err as Error).message); }
+                          }}
+                          className="absolute left-0 right-0 z-0 overflow-hidden border-y border-foreground/15 bg-foreground/10 px-1.5 py-0.5 text-left text-[10px] leading-tight text-foreground/70"
+                          style={{ top: (s - START_HOUR) * HOUR_HEIGHT, height: (e - s) * HOUR_HEIGHT }}
+                          title="Tap to open this slot"
+                        >
+                          <span className="inline-flex items-center gap-1 font-semibold"><Ban className="h-3 w-3 shrink-0" /> Blocked {b.start_time.slice(0,5)}–{b.end_time.slice(0,5)}</span>
+                        </button>
+                      );
+                    })}
+
+                    {/* Appointments: same-time bookings split into side-by-side
+                        columns; every card ends before the next one starts. */}
+                    {layoutOverlaps<any>(dayAppts).map(({ item: a, leftPct, widthPct, index, columns, startHr, endHr, maxEndHr }) => {
                       const top = (startHr - START_HOUR) * HOUR_HEIGHT;
-                      // Grow short bookings so the name stays readable, but never past
-                      // the start of the next booking in the same column: zero overlap.
-                      const naturalH = (endHr - startHr) * HOUR_HEIGHT;
-                      const ceilingH = (maxEndHr - startHr) * HOUR_HEIGHT;
-                      const height = Math.max(14, Math.min(Math.max(naturalH, 30), ceilingH) - 2);
-                      const showTreatment = height >= 30;
-                      const showTime = height >= 20;
+                      const ceiling = (maxEndHr - startHr) * HOUR_HEIGHT - 2;
+                      const height = Math.max(11, Math.min(Math.max((endHr - startHr) * HOUR_HEIGHT - 2, 13), ceiling));
+                      
+                      const tall = height >= 34;
                       const narrow = columns > 2;
-
-                      const posStyle = {
-                        top,
-                        height,
-                        left: `calc(${leftPct}% + 2px)`,
-                        width: `calc(${widthPct}% - 4px)`,
-                        zIndex: 5 + index,
-                      } as const;
-
-                      if (item.__kind === "block") {
-                        const b = item;
-                        return (
-                          <button
-                            key={`b-${b.id}`}
-                            onClick={async () => {
-                              if (!confirm(`Unblock ${b.start_time.slice(0,5)}–${b.end_time.slice(0,5)}?`)) return;
-                              try {
-                                await deleteBlockedTime({ data: { id: b.id } });
-                                setBlocks((p) => p.filter((x) => x.id !== b.id));
-                                toast.success("Unblocked — time now open");
-                              } catch (e) { toast.error((e as Error).message); }
-                            }}
-                            className="absolute overflow-hidden rounded-md border border-foreground/25 bg-foreground px-1.5 py-0.5 text-left text-[11px] leading-tight text-background shadow-sm transition hover:z-30 hover:brightness-110"
-                            style={posStyle}
-                            title="Tap to open this slot"
-                          >
-                            <div className="truncate font-semibold flex items-center gap-1"><Ban className="h-3 w-3 shrink-0" /> Blocked</div>
-                            {showTime && (
-                              <div className="truncate opacity-80">{b.start_time.slice(0,5)}–{b.end_time.slice(0,5)}{b.reason ? ` · ${b.reason}` : ""}</div>
-                            )}
-                          </button>
-                        );
-                      }
-
-                      const a = item;
                       const color = a.treatments?.color || "#3b82f6";
                       return (
                         <button
                           key={`a-${a.id}`}
                           onClick={() => setSelectedAppt(a)}
-                          className="absolute cursor-pointer overflow-hidden rounded-md border border-foreground/25 px-1.5 py-0.5 text-left text-[11px] leading-tight shadow-sm transition hover:z-30 hover:shadow-md"
+                          className="absolute cursor-pointer overflow-hidden rounded-md border border-foreground/25 px-1 py-px text-left text-[10.5px] leading-[1.15] shadow-sm transition hover:z-30 hover:shadow-md sm:px-1.5"
                           style={{
-                            ...posStyle,
+                            top,
+                            height,
+                            left: `calc(${leftPct}% + 1px)`,
+                            width: `calc(${widthPct}% - 2px)`,
+                            zIndex: 5 + index,
                             backgroundColor: hexToRgba(color, 0.45),
                             color: "#0f172a",
                           }}
                           title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"}`}
                         >
-                          <div className="flex min-w-0 items-baseline gap-1">
-                            <span className="min-w-0 truncate font-bold">{a.patient_name}</span>
-                            {showTime && !narrow && (
-                              <span className="shrink-0 text-[10px] opacity-70">
-                                {a.start_time.slice(0, 5)}–{a.end_time.slice(0, 5)}
-                              </span>
-                            )}
-                          </div>
-                          {showTreatment && (
-                            <div className="truncate font-medium opacity-85">{a.treatments?.name ?? "Treatment"}</div>
+                          {tall ? (
+                            <>
+                              <div className="truncate font-bold">{a.patient_name}</div>
+                              <div className="truncate text-[10px] tabular-nums opacity-75">
+                                {a.start_time.slice(0, 5)}
+                                {!narrow ? `–${a.end_time.slice(0, 5)}` : ""}
+                                {!narrow && a.treatments?.name ? ` · ${a.treatments.name}` : ""}
+                              </div>
+                            </>
+                          ) : (
+                            <div className="truncate">
+                              <span className="tabular-nums opacity-75">{a.start_time.slice(0, 5)} </span>
+                              <span className="font-bold">{a.patient_name}</span>
+                            </div>
                           )}
-                          {a.has_allergies && height >= 44 && !narrow && (
+                          {a.has_allergies && height >= 50 && !narrow && (
                             <div className="mt-0.5 flex items-center gap-1 text-[10px] font-medium text-red-700">
                               <AlertTriangle className="h-2.5 w-2.5" /> Allergies
                             </div>
@@ -855,6 +848,7 @@ function BookingsPage() {
                         </button>
                       );
                     })}
+
 
                   </div>
                 );
