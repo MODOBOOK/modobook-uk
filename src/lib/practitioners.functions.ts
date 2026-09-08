@@ -119,3 +119,61 @@ export const deletePractitioner = createServerFn({ method: "POST" })
     if (error) throw error;
     return { ok: true };
   });
+
+/** Which team members / practitioners can perform a given service. */
+export const getTreatmentPractitioners = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { treatment_id: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const profileId = await __activeProfileId(supabase, userId);
+    const { data: rows } = await supabase
+      .from("practitioner_treatments")
+      .select("practitioner_id")
+      .eq("profile_id", profileId)
+      .eq("treatment_id", data.treatment_id);
+    return (rows ?? []).map((r) => r.practitioner_id as string);
+  });
+
+export const setTreatmentPractitioners = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { treatment_id: string; practitioner_ids: string[] }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const profileId = await __activeProfileId(supabase, userId);
+
+    // Ownership check — the service must belong to this clinic.
+    const { data: treat } = await supabase
+      .from("treatments")
+      .select("id")
+      .eq("id", data.treatment_id)
+      .eq("profile_id", profileId)
+      .maybeSingle();
+    if (!treat) throw new Error("Service not found");
+
+    await supabase
+      .from("practitioner_treatments")
+      .delete()
+      .eq("profile_id", profileId)
+      .eq("treatment_id", data.treatment_id);
+
+    if (data.practitioner_ids.length > 0) {
+      const { data: valid } = await supabase
+        .from("practitioners")
+        .select("id")
+        .eq("profile_id", profileId)
+        .in("id", data.practitioner_ids);
+      const ids = (valid ?? []).map((p) => p.id as string);
+      if (ids.length > 0) {
+        const { error } = await supabase.from("practitioner_treatments").insert(
+          ids.map((practitioner_id) => ({
+            profile_id: profileId,
+            practitioner_id,
+            treatment_id: data.treatment_id,
+          })),
+        );
+        if (error) throw error;
+      }
+    }
+    return { ok: true };
+  });

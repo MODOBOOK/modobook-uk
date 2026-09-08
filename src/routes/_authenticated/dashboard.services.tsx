@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   getMyCategories,
   createCategory,
@@ -26,7 +26,13 @@ import {
   getTreatmentAftercareIds,
   setTreatmentAftercareIds,
 } from "@/lib/aftercare-templates.functions";
-import { listMyLocations, setTreatmentLocationPricing } from "@/lib/locations.functions";
+import { listMyLocations, setTreatmentLocationPricing, getTreatmentLocationPricing } from "@/lib/locations.functions";
+import {
+  listMyPractitioners,
+  getTreatmentPractitioners,
+  setTreatmentPractitioners,
+} from "@/lib/practitioners.functions";
+import { getTreatmentConsents } from "@/lib/treatment-consents.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
 import { PrescribingClinicCard } from "@/components/PrescribingClinicCard";
@@ -110,7 +116,12 @@ type Treat = {
   price: number;
   category_id: string | null;
   color?: string | null;
+  // the full row carries many more optional columns used by the editor
+  [key: string]: unknown;
 };
+
+/** Lets any service row open the full-screen service editor. */
+const EditServiceCtx = createContext<(t: Treat) => void>(() => {});
 
 type CatNode = Cat & { children: CatNode[]; treatments: Treat[] };
 
@@ -232,6 +243,7 @@ function ServicesPage() {
   const setConsents = useServerFn(setTreatmentConsents);
   const setAftercareTpls = useServerFn(setTreatmentAftercareIds);
   const saveLocPricing = useServerFn(setTreatmentLocationPricing);
+  const saveTreatPractitioners = useServerFn(setTreatmentPractitioners);
   const removeTreat = useServerFn(deleteTreatment);
   const reorderCats = useServerFn(reorderCategories);
   const reorderTreats = useServerFn(reorderTreatments);
@@ -251,7 +263,7 @@ function ServicesPage() {
   const [catDialog, setCatDialog] = useState<
     { mode: "create" | "edit"; parentId: string | null; cat?: Cat; limited?: boolean } | null
   >(null);
-  const [svcDialog, setSvcDialog] = useState<{ defaultCatId: string | null } | null>(null);
+  const [svcDialog, setSvcDialog] = useState<{ defaultCatId: string | null; treat?: Treat } | null>(null);
   const [moveTreatState, setMoveTreatState] = useState<Treat | null>(null);
   const [moveCatState, setMoveCatState] = useState<Cat | null>(null);
   const [reorderOpen, setReorderOpen] = useState(false);
@@ -361,6 +373,7 @@ function ServicesPage() {
 
 
   return (
+    <EditServiceCtx.Provider value={(t) => setSvcDialog({ defaultCatId: t.category_id ?? null, treat: t })}>
     <div className="services-page font-body space-y-6">
       <div className="flex flex-col gap-1">
         <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground">Services</h1>
@@ -535,7 +548,7 @@ function ServicesPage() {
         onClose={() => setSvcDialog(null)}
         onSubmit={async (values) => {
           try {
-            const { consent_ids, aftercare_template_ids, location_overrides, ...base } = values;
+            const { consent_ids, aftercare_template_ids, location_overrides, practitioner_ids, ...base } = values;
             const baseCreate = {
               name: base.name,
               duration: base.duration,
@@ -553,34 +566,40 @@ function ServicesPage() {
               deposit_amount: base.deposit_amount,
               active: base.active,
             };
-            const created = (await createTreat({ data: baseCreate })) as { id: string };
-            // patch extras not supported by createTreatment
-            await patchTreat({
-              data: {
-                id: created.id,
-                discount_percent: base.discount_percent,
-                discount_label: base.discount_label,
-                discount_show_was_now: base.discount_show_was_now,
-                aftercare_html: base.aftercare_html,
-                aftercare_delay_hours: base.aftercare_delay_hours,
-                auto_send_medical_forms: base.auto_send_medical_forms,
-                auto_send_aftercare: base.auto_send_aftercare,
-                price_mode: base.price_mode,
-                badge: base.badge,
-              },
-            });
-            if (consent_ids && consent_ids.length > 0) {
-              await setConsents({
-                data: { treatmentId: created.id, consentTemplateIds: consent_ids },
-              });
+            const editingId = svcDialog?.treat?.id ?? null;
+            const extras = {
+              discount_percent: base.discount_percent,
+              discount_label: base.discount_label,
+              discount_show_was_now: base.discount_show_was_now,
+              aftercare_html: base.aftercare_html,
+              aftercare_delay_hours: base.aftercare_delay_hours,
+              auto_send_medical_forms: base.auto_send_medical_forms,
+              auto_send_aftercare: base.auto_send_aftercare,
+              price_mode: base.price_mode,
+              badge: base.badge,
+            };
+            let targetId: string;
+            if (editingId) {
+              await patchTreat({ data: { id: editingId, ...baseCreate, ...extras } });
+              targetId = editingId;
+            } else {
+              const created = (await createTreat({ data: baseCreate })) as { id: string };
+              await patchTreat({ data: { id: created.id, ...extras } });
+              targetId = created.id;
             }
+            await setConsents({
+              data: { treatmentId: targetId, consentTemplateIds: consent_ids ?? [] },
+            });
             await setAftercareTpls({
-              data: { treatment_id: created.id, template_ids: aftercare_template_ids ?? [] },
+              data: { treatment_id: targetId, template_ids: aftercare_template_ids ?? [] },
+            });
+            await saveTreatPractitioners({
+              data: { treatment_id: targetId, practitioner_ids: practitioner_ids ?? [] },
             });
             for (const o of location_overrides ?? []) {
               await saveLocPricing({
                 data: {
-                  treatment_id: created.id,
+                  treatment_id: targetId,
                   location_id: o.location_id,
                   available: o.available,
                   price_cents: o.price_cents,
@@ -588,7 +607,7 @@ function ServicesPage() {
                 },
               });
             }
-            toast.success("Service created");
+            toast.success(svcDialog?.treat ? "Service updated" : "Service created");
             setSvcDialog(null);
             treats.refetch();
           } catch (e) {
@@ -597,6 +616,7 @@ function ServicesPage() {
         }}
       />
     </div>
+    </EditServiceCtx.Provider>
   );
 }
 
@@ -931,6 +951,7 @@ function ServiceCard({
   onDelete: () => void;
   onMoveTo?: () => void;
 }) {
+  const editService = useContext(EditServiceCtx);
   return (
     <div
       draggable={draggable}
@@ -978,9 +999,12 @@ function ServiceCard({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => editService(treat)}>
+            <Pencil className="mr-2 h-4 w-4" /> Edit
+          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to="/dashboard/treatments" search={{ edit: treat.id, back: "services" }}>
-              <Pencil className="mr-2 h-4 w-4" /> Edit
+              <ListOrdered className="mr-2 h-4 w-4" /> Advanced settings
             </Link>
           </DropdownMenuItem>
           {onMoveTo && (
@@ -1407,7 +1431,7 @@ function ServiceDialog({
   onClose,
   onSubmit,
 }: {
-  state: { defaultCatId: string | null } | null;
+  state: { defaultCatId: string | null; treat?: Treat } | null;
   categories: { id: string; label: string; depth: number }[];
   onClose: () => void;
   onSubmit: (v: {
@@ -1437,6 +1461,7 @@ function ServiceDialog({
     discount_show_was_now?: boolean;
     price_mode?: "fixed" | "from" | "poa" | "free";
     badge?: "recommended" | "popular" | "new" | "bestseller" | null;
+    practitioner_ids?: string[];
     location_overrides?: { location_id: string; available: boolean; price_cents: number | null; duration_minutes: number | null }[];
   }) => Promise<void>;
 }) {
@@ -1495,8 +1520,25 @@ function ServiceDialog({
   const [locOverrides, setLocOverrides] = useState<Record<string, LocOverride>>({});
   const [saving, setSaving] = useState(false);
   const [section, setSection] = useState<string>("basics");
+  const [practitionerIds, setPractitionerIds] = useState<string[]>([]);
 
-  useMemo(() => {
+  const editing = (state?.treat ?? null) as (Record<string, any> | null);
+  const editId = (editing?.id ?? null) as string | null;
+
+  const fetchPractitioners = useServerFn(listMyPractitioners);
+  const practitionersQ = useQuery({
+    queryKey: ["my-practitioners"],
+    queryFn: () => fetchPractitioners(),
+  });
+  const teamList = ((practitionersQ.data as { practitioners?: { id: string; name: string; professional_title?: string | null; active?: boolean }[] } | undefined)?.practitioners ?? [])
+    .filter((p) => p.active !== false);
+
+  const fetchTreatPractitioners = useServerFn(getTreatmentPractitioners);
+  const fetchTreatConsents = useServerFn(getTreatmentConsents);
+  const fetchTreatAftercare = useServerFn(getTreatmentAftercareIds);
+  const fetchTreatLocPricing = useServerFn(getTreatmentLocationPricing);
+
+  useEffect(() => {
     if (open) {
       setSection("basics");
       setName("");
@@ -1526,7 +1568,71 @@ function ServiceDialog({
       setPriceMode("fixed");
       setBadge("none");
       setLocOverrides({});
+      setPractitionerIds([]);
+
+      const t = state?.treat as Record<string, any> | undefined;
+      if (t) {
+        setName(String(t.name ?? ""));
+        setDuration(Number(t.duration ?? 30));
+        setPrice(Number(t.price ?? 0));
+        setDescription(String(t.description ?? ""));
+        setCategoryId((t.category_id as string) ?? "__none__");
+        setSessionCount(Math.max(1, Number(t.session_count ?? 1)));
+        setAllowSplit(!!t.allow_split_payment);
+        setRebookDays(t.rebook_reminder_days == null ? "" : String(t.rebook_reminder_days));
+        setTopupDays(t.topup_reminder_days == null ? "" : String(t.topup_reminder_days));
+        if (t.session_interval_days != null) {
+          const d = Number(t.session_interval_days);
+          if (d % 7 === 0) {
+            setIntervalUnit("weeks");
+            setIntervalDays(String(d / 7));
+          } else {
+            setIntervalUnit("days");
+            setIntervalDays(String(d));
+          }
+        }
+        if (t.color) setColor(String(t.color));
+        setActive(t.active !== false);
+        setPictureUrl((t.picture_url as string) ?? null);
+        setDepositAmount(t.deposit_amount == null ? "" : String(t.deposit_amount));
+        setAutoSendForms(t.auto_send_medical_forms !== false);
+        setAftercareHtml(String(t.aftercare_html ?? ""));
+        setAftercareDelay(Number(t.aftercare_delay_hours ?? 2));
+        setAutoSendAftercare(t.auto_send_aftercare !== false);
+        setDiscountPercent(t.discount_percent == null ? "" : String(t.discount_percent));
+        setDiscountLabel(String(t.discount_label ?? ""));
+        setDiscountShowWasNow(t.discount_show_was_now !== false);
+        setPriceMode(((t.price_mode as string) ?? "fixed") as typeof priceMode);
+        setBadge(((t.badge as string) ?? "none") as typeof badge);
+
+        const id = String(t.id);
+        void (async () => {
+          try {
+            const [cons, after, locs, prac] = await Promise.all([
+              fetchTreatConsents({ data: { treatmentId: id } }),
+              fetchTreatAftercare({ data: { treatment_id: id } }),
+              fetchTreatLocPricing({ data: { treatment_id: id } }),
+              fetchTreatPractitioners({ data: { treatment_id: id } }),
+            ]);
+            setConsentIds((cons ?? []) as string[]);
+            setAftercareIds((after ?? []) as string[]);
+            setPractitionerIds((prac ?? []) as string[]);
+            const map: Record<string, LocOverride> = {};
+            for (const row of (locs ?? []) as { location_id: string; price_cents: number | null; duration_minutes: number | null; available: boolean }[]) {
+              map[row.location_id] = {
+                available: row.available !== false,
+                price: row.price_cents == null ? "" : (row.price_cents / 100).toString(),
+                duration: row.duration_minutes == null ? "" : String(row.duration_minutes),
+              };
+            }
+            setLocOverrides(map);
+          } catch {
+            /* prefill is best-effort */
+          }
+        })();
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, state]);
 
   function toggleConsent(id: string) {
@@ -1543,7 +1649,7 @@ function ServiceDialog({
       <DialogContent className="flex h-dvh w-full max-w-full flex-col gap-0 overflow-hidden rounded-none p-0 sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-xl">
         <div className="border-b px-4 py-3">
           <DialogHeader className="space-y-0 p-0">
-            <DialogTitle className="text-lg">New service</DialogTitle>
+            <DialogTitle className="text-lg">{editId ? "Edit service" : "New service"}</DialogTitle>
           </DialogHeader>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Only the basics are needed — everything else can be added later.
@@ -1891,6 +1997,52 @@ function ServiceDialog({
             </div>
           </SvcSection>
 
+          {teamList.length > 0 && (
+            <SvcSection
+              title="Who can perform this?"
+              hint={
+                practitionerIds.length === 0
+                  ? "Anyone on the team"
+                  : `${practitionerIds.length} selected`
+              }
+              open={section === "team"}
+              onToggle={() => setSection(section === "team" ? "" : "team")}
+            >
+              <p className="text-xs text-muted-foreground">
+                Leave all unticked and anyone can be booked for this service. Tick people to limit
+                bookings to them only.
+              </p>
+              <div className="mt-2 space-y-2">
+                {teamList.map((p) => {
+                  const checked = practitionerIds.includes(p.id);
+                  return (
+                    <label
+                      key={p.id}
+                      className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium">{p.name}</span>
+                        {p.professional_title && (
+                          <span className="block truncate text-xs text-muted-foreground">
+                            {p.professional_title}
+                          </span>
+                        )}
+                      </span>
+                      <Switch
+                        checked={checked}
+                        onCheckedChange={(v) =>
+                          setPractitionerIds((prev) =>
+                            v ? [...prev, p.id] : prev.filter((x) => x !== p.id),
+                          )
+                        }
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+            </SvcSection>
+          )}
+
           {locationList.length > 0 && (
             <SvcSection
               title="Locations & pricing"
@@ -1985,6 +2137,7 @@ function ServiceDialog({
                   discount_show_was_now: discountShowWasNow,
                   price_mode: priceMode,
                   badge: badge === "none" ? null : badge,
+                  practitioner_ids: practitionerIds,
                   location_overrides: Object.entries(locOverrides).map(([location_id, ov]) => ({
                     location_id,
                     available: ov.available,
@@ -1995,7 +2148,7 @@ function ServiceDialog({
                 setSaving(false);
               }}
             >
-              {saving ? "Saving…" : "Create service"}
+              {saving ? "Saving…" : editId ? "Save changes" : "Create service"}
             </Button>
           </div>
         </div>
