@@ -111,7 +111,7 @@ type BlockedTime = {
   practitioner_id?: string | null;
 };
 
-const HOUR_HEIGHT = 60;
+const HOUR_HEIGHT = 76;
 const START_HOUR = 0;
 const END_HOUR = 23;
 const HOURS = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
@@ -151,7 +151,7 @@ function parseTime(t: string) {
  */
 function layoutOverlaps<T extends { start_time: string; end_time: string }>(
   items: T[],
-): { item: T; leftPct: number; widthPct: number; index: number; columns: number }[] {
+): { item: T; leftPct: number; widthPct: number; index: number; columns: number; startHr: number; endHr: number; maxEndHr: number }[] {
   const evts = items
     .map((item) => {
       const s = parseTime(item.start_time);
@@ -161,28 +161,42 @@ function layoutOverlaps<T extends { start_time: string; end_time: string }>(
     })
     .sort((a, b) => a.s - b.s || a.e - b.e);
 
-  const out: { item: T; leftPct: number; widthPct: number; index: number; columns: number }[] = [];
+  const out: { item: T; leftPct: number; widthPct: number; index: number; columns: number; startHr: number; endHr: number; maxEndHr: number }[] = [];
   let group: typeof evts = [];
   let groupEnd = -Infinity;
 
   const flush = () => {
     if (!group.length) return;
     const colEnds: number[] = [];
-    const placed = group.map((g) => {
+    const colItems: { s: number; e: number; idx: number }[][] = [];
+    const placed = group.map((g, i) => {
       let col = colEnds.findIndex((end) => end <= g.s + 1e-9);
-      if (col === -1) { col = colEnds.length; colEnds.push(g.e); } else { colEnds[col] = g.e; }
+      if (col === -1) { col = colEnds.length; colEnds.push(g.e); colItems.push([]); } else { colEnds[col] = g.e; }
+      colItems[col].push({ s: g.s, e: g.e, idx: i });
       return { ...g, col };
     });
     const columns = colEnds.length;
-    for (const p of placed) {
+    // How far an event may visually stretch (for readability) without ever
+    // touching the next event stacked below it in the same column.
+    const maxEndByIdx = new Map<number, number>();
+    colItems.forEach((list) => {
+      list.forEach((cur, i) => {
+        const next = list[i + 1];
+        maxEndByIdx.set(cur.idx, next ? next.s : cur.e + 4);
+      });
+    });
+    placed.forEach((p, i) => {
       out.push({
         item: p.item,
         leftPct: (p.col / columns) * 100,
         widthPct: 100 / columns,
         index: p.col,
         columns,
+        startHr: p.s,
+        endHr: p.e,
+        maxEndHr: Math.max(p.e, maxEndByIdx.get(i) ?? p.e),
       });
-    }
+    });
     group = [];
     groupEnd = -Infinity;
   };
@@ -195,6 +209,7 @@ function layoutOverlaps<T extends { start_time: string; end_time: string }>(
   flush();
   return out;
 }
+
 function hexToRgba(hex: string, a: number) {
   const h = hex.replace("#", "");
   const r = parseInt(h.slice(0, 2), 16);
@@ -763,16 +778,17 @@ function BookingsPage() {
                     {layoutOverlaps<any>([
                       ...dayBlocks.map((b) => ({ ...b, __kind: "block" as const })),
                       ...dayAppts.map((a) => ({ ...a, __kind: "appt" as const })),
-                    ]).map(({ item, leftPct, widthPct, index, columns }) => {
-                      const start = parseTime(item.start_time);
-                      const end = parseTime(item.end_time);
-                      const top = (start - START_HOUR) * HOUR_HEIGHT;
-                      // Never make an event taller than its real time slot. A minimum
-                      // height caused consecutive 15-minute bookings to cover each other.
-                      const height = Math.max(6, (end - start) * HOUR_HEIGHT - 1);
-                      const showTreatment = height >= 27;
-                      const showTime = height >= 18;
+                    ]).map(({ item, leftPct, widthPct, index, columns, startHr, endHr, maxEndHr }) => {
+                      const top = (startHr - START_HOUR) * HOUR_HEIGHT;
+                      // Grow short bookings so the name stays readable, but never past
+                      // the start of the next booking in the same column: zero overlap.
+                      const naturalH = (endHr - startHr) * HOUR_HEIGHT;
+                      const ceilingH = (maxEndHr - startHr) * HOUR_HEIGHT;
+                      const height = Math.max(14, Math.min(Math.max(naturalH, 30), ceilingH) - 2);
+                      const showTreatment = height >= 30;
+                      const showTime = height >= 20;
                       const narrow = columns > 2;
+
                       const posStyle = {
                         top,
                         height,
@@ -794,7 +810,7 @@ function BookingsPage() {
                                 toast.success("Unblocked — time now open");
                               } catch (e) { toast.error((e as Error).message); }
                             }}
-                            className="absolute overflow-hidden rounded-sm border border-foreground/20 bg-foreground px-1.5 py-0.5 text-left text-[11px] leading-tight text-background shadow-sm transition hover:z-30 hover:brightness-110"
+                            className="absolute overflow-hidden rounded-md border border-foreground/25 bg-foreground px-1.5 py-0.5 text-left text-[11px] leading-tight text-background shadow-sm transition hover:z-30 hover:brightness-110"
                             style={posStyle}
                             title="Tap to open this slot"
                           >
@@ -812,7 +828,7 @@ function BookingsPage() {
                         <button
                           key={`a-${a.id}`}
                           onClick={() => setSelectedAppt(a)}
-                          className="absolute cursor-pointer overflow-hidden rounded-sm border border-foreground/20 px-1.5 py-0.5 text-left text-[11px] leading-tight shadow-sm transition hover:z-30 hover:shadow-md"
+                          className="absolute cursor-pointer overflow-hidden rounded-md border border-foreground/25 px-1.5 py-0.5 text-left text-[11px] leading-tight shadow-sm transition hover:z-30 hover:shadow-md"
                           style={{
                             ...posStyle,
                             backgroundColor: hexToRgba(color, 0.45),
