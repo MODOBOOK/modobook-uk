@@ -196,7 +196,27 @@ function MultiBookPage() {
   }, [selectedPackages, ids.join(",")]);
 
 
-  const totalDurationBase = treatments.reduce((s, t) => s + durationFor(t), 0);
+  // A package books as one visit: use the package's own appointment length when
+  // the clinic set one, instead of stacking every treatment's duration (which
+  // could make the visit longer than any working shift and hide all times).
+  const packageDuration = useMemo(() => {
+    let mins = 0;
+    for (const p of selectedPackages) {
+      const covered = pkgTreatmentIds(p).filter((tid) => !ids.includes(tid));
+      const set = Number((p as { duration_minutes?: number | null }).duration_minutes ?? 0);
+      if (set > 0) mins += set;
+      else
+        mins += covered.reduce((s, tid) => {
+          const t = ctx.treatments.find((x: Treatment) => x.id === tid);
+          return s + (t ? durationFor(t) : 0);
+        }, 0);
+    }
+    return mins;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPackages, ids.join(","), ctx.treatments, locationId]);
+
+  const totalDurationBase =
+    treatments.reduce((s, t) => s + (packageCoveredIds.has(t.id) ? 0 : durationFor(t)), 0) + packageDuration;
   const packagesPrice = selectedPackages.reduce((s, p) => s + Number(p.price ?? 0), 0);
   const totalPriceBase =
     treatments.reduce((s, t) => s + (packageCoveredIds.has(t.id) ? 0 : priceFor(t)), 0) + packagesPrice;
