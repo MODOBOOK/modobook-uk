@@ -191,6 +191,30 @@ const [saving, setSaving] = useState(false);
         </CardContent>
       </Card>
 
+      {/* PRACTITIONER CHOICE */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Choosing a practitioner</CardTitle>
+          <CardDescription>How patients pick who they see on your booking page.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Select
+            value={s.practitioner_selection_mode}
+            onValueChange={(v) => set("practitioner_selection_mode", v as "required" | "optional" | "first_available")}
+          >
+            <SelectTrigger className="w-full sm:w-96"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="optional">Optional — patient can pick someone or skip</SelectItem>
+              <SelectItem value="required">Required — patient picks first, then sees that person's treatments</SelectItem>
+              <SelectItem value="first_available">First available — picker hidden, booking auto-assigned</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Only applies where you have added practitioners to a location.
+          </p>
+        </CardContent>
+      </Card>
+
       {/* PAYMENTS */}
       <Card>
         <CardHeader>
