@@ -1569,3 +1569,88 @@ function MyCreditHero({ slug, brand }: { slug: string; brand: string }) {
     </section>
   );
 }
+
+function MyMembershipCard({ slug, brand }: { slug: string; brand: string }) {
+  const fetchMembership = useServerFn(getMyMembershipForClinic);
+  const q = useQuery({
+    queryKey: ["portal-membership", slug],
+    queryFn: () => fetchMembership({ data: { slug } }),
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
+  });
+
+  const memberships = (q.data?.memberships ?? []) as Array<{
+    id: string;
+    status: string | null;
+    current_period_end: string | null;
+    membership_plans?: {
+      name: string | null;
+      price_cents: number | null;
+      interval: string | null;
+      credit_cents: number | null;
+      discount_percent: number | null;
+    } | null;
+  }>;
+  const active = memberships.find((m) => m.status === "active") ?? memberships[0];
+  if (!active) return null;
+
+  const plan = active.membership_plans;
+  const balance = q.data?.balanceCents ?? 0;
+  const nextDate = active.current_period_end
+    ? new Date(active.current_period_end).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : null;
+  const statusLabel =
+    active.status === "active"
+      ? "Active"
+      : active.status === "past_due"
+        ? "Payment failed"
+        : active.status === "cancelled" || active.status === "canceled"
+          ? "Cancelled"
+          : (active.status ?? "");
+
+  return (
+    <section className="mt-4">
+      <div
+        className="overflow-hidden rounded-2xl border shadow-sm"
+        style={{ background: `linear-gradient(135deg, ${brand}18, ${brand}05)`, borderColor: `${brand}30` }}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-4 p-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl" style={{ background: `${brand}20`, color: brand }}>
+              <Gift className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: brand }}>
+                Your membership
+              </div>
+              <div className="mt-0.5 flex flex-wrap items-baseline gap-x-3">
+                <span className="text-base font-semibold">{plan?.name ?? "Membership"}</span>
+                {statusLabel && (
+                  <Badge variant={active.status === "active" ? "secondary" : "destructive"}>{statusLabel}</Badge>
+                )}
+              </div>
+              <div className="mt-1 text-2xl font-semibold">{fmtRewardsGBP(balance)}</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Balance to spend at this clinic
+                {plan?.credit_cents
+                  ? ` · ${fmtRewardsGBP(plan.credit_cents)} added each ${plan.interval === "year" ? "year" : "month"}`
+                  : ""}
+                {nextDate ? ` · next payment ${nextDate}` : ""}
+                {plan?.discount_percent ? ` · ${plan.discount_percent}% off treatments` : ""}
+              </div>
+            </div>
+          </div>
+          <Link to="/m/$slug" params={{ slug }}>
+            <Button size="sm" style={{ background: brand, color: "white" }}>
+              Book <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
