@@ -4,6 +4,21 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 
+/**
+ * Patients cannot SELECT from `profiles` (no patient-facing RLS policy), so
+ * resolve the clinic by slug with a narrow privileged lookup.
+ */
+async function lookupClinicBySlug(slug: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
+    .from("profiles")
+    .select("id, user_id, full_name, clinic_name, slug")
+    .eq("slug", slug)
+    .maybeSingle();
+  return data ?? null;
+}
+
+
 // -------------------- Practitioner: settings --------------------
 
 export const getMyReferralSettings = createServerFn({ method: "GET" })
@@ -263,12 +278,7 @@ export const getMyRewardsForClinic = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    const { data: profile, error: profErr } = await supabase
-      .from("profiles")
-      .select("id, user_id, full_name, clinic_name, slug")
-      .eq("slug", data.slug)
-      .maybeSingle();
-    if (profErr) throw profErr;
+    const profile = await lookupClinicBySlug(data.slug);
     if (!profile) throw new Error("Clinic not found");
     const clinicProfileId = profile.user_id as string;
 
@@ -368,11 +378,7 @@ export const previewPointsRedemption = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const code = data.code.toUpperCase();
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("user_id")
-      .eq("slug", data.slug)
-      .maybeSingle();
+    const profile = await lookupClinicBySlug(data.slug);
     if (!profile) return { ok: false as const, reason: "clinic_not_found" };
     const clinicProfileId = profile.user_id as string;
 
@@ -439,11 +445,7 @@ export const previewMyPointsRedemption = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("user_id")
-      .eq("slug", data.slug)
-      .maybeSingle();
+    const profile = await lookupClinicBySlug(data.slug);
     if (!profile) return { ok: false as const, reason: "clinic_not_found" };
     const clinicProfileId = profile.user_id as string;
 
@@ -524,11 +526,7 @@ export const consumePointsRedemption = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("user_id")
-      .eq("slug", data.slug)
-      .maybeSingle();
+    const profile = await lookupClinicBySlug(data.slug);
     if (!profile) return { ok: false, reason: "clinic_not_found" as const };
     const clinicProfileId = profile.user_id as string;
 
