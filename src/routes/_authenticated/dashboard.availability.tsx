@@ -853,56 +853,62 @@ function AvailabilityPage() {
                         const cell = rulesFor(dow, weekIdx);
                         const isToday = new Date().getDay() === dow;
                         return (
-                          <button
-                            type="button"
-                            onClick={() => (cell.length === 0 ? openAdd(dow, weekIdx) : openEdit(cell[0]))}
+                          <div
                             className={
                               "group relative min-h-[80px] w-full rounded-xl p-1.5 text-left transition-all flex flex-col gap-1 " +
                               (cell.length === 0
                                 ? "border border-dashed border-border/70 hover:border-primary/50 hover:bg-primary/5"
-                                : "border border-transparent bg-gradient-to-br from-primary/10 to-primary/5 hover:shadow-md hover:from-primary/15") +
+                                : "border border-transparent bg-gradient-to-br from-primary/10 to-primary/5") +
                               (isToday ? " ring-1 ring-primary/30" : "")
                             }
                           >
-                            {cell.length === 0 ? (
-                              <span className="text-[11px] text-muted-foreground/70 flex items-center gap-1 m-auto opacity-0 group-hover:opacity-100 transition">
-                                <Plus className="h-3 w-3" /> Add
-                              </span>
-                            ) : (
-                              cell.slice(0, 2).map((r) => (
-                                <div key={r.id} className="text-[11px] leading-tight rounded-lg bg-background/80 backdrop-blur px-2 py-1.5 shadow-sm">
-                                  <div className="font-mono font-medium tabular-nums">{r.start_time.slice(0,5)}–{r.end_time.slice(0,5)}</div>
-                                  {locName(r.location_id) && (
-                                    <div className="flex items-center gap-1 mt-0.5 text-muted-foreground truncate">
-                                      <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                                      <span className="truncate">{locName(r.location_id)}</span>
-                                    </div>
-                                  )}
-                                  {(r.effective_from || r.effective_to) && (
-                                    <div className="truncate text-[10px] text-muted-foreground/80">
-                                      {r.effective_from ? `from ${r.effective_from.slice(5)}` : ""}
-                                      {r.effective_to ? ` to ${r.effective_to.slice(5)}` : ""}
-                                    </div>
-                                  )}
-                                  {pracName(r.practitioner_id) && (
-                                    <div className="truncate text-[10px] text-muted-foreground/80">{pracName(r.practitioner_id)}</div>
-                                  )}
-                                </div>
-                              ))
-                            )}
-                            {cell.length > 2 && <div className="text-[10px] text-muted-foreground pl-1">+{cell.length - 2} more</div>}
-                            {cell.length > 0 && (
-                              <span
+                            {cell.map((r) => (
+                              <div
+                                key={r.id}
                                 role="button"
-                                aria-label="Delete shift"
-                                onClick={(e) => { e.stopPropagation(); removeRule(cell[0].id); }}
-                                className="absolute top-1 right-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition p-1 rounded-md bg-background/70 hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-
+                                tabIndex={0}
+                                onClick={() => openEdit(r)}
+                                onKeyDown={(e) => { if (e.key === "Enter") openEdit(r); }}
+                                className="relative text-[11px] leading-tight rounded-lg bg-background/80 backdrop-blur px-2 py-1.5 pr-6 shadow-sm cursor-pointer hover:shadow-md"
                               >
-                                <Trash2 className="h-3 w-3" />
-                              </span>
-                            )}
-                          </button>
+                                <div className="font-mono font-medium tabular-nums">{r.start_time.slice(0,5)}–{r.end_time.slice(0,5)}</div>
+                                {locName(r.location_id) && (
+                                  <div className="flex items-center gap-1 mt-0.5 text-muted-foreground truncate">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                                    <span className="truncate">{locName(r.location_id)}</span>
+                                  </div>
+                                )}
+                                {(r.effective_from || r.effective_to) && (
+                                  <div className="truncate text-[10px] text-muted-foreground/80">
+                                    {r.effective_from ? `from ${r.effective_from.slice(5)}` : ""}
+                                    {r.effective_to ? ` to ${r.effective_to.slice(5)}` : ""}
+                                  </div>
+                                )}
+                                <div className="truncate text-[10px] font-medium text-primary/80">
+                                  {pracName(r.practitioner_id) ?? "Anyone"}
+                                </div>
+                                <span
+                                  role="button"
+                                  aria-label="Delete shift"
+                                  onClick={(e) => { e.stopPropagation(); removeRule(r.id); }}
+                                  className="absolute top-1 right-1 p-0.5 rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </span>
+                              </div>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => openAdd(dow, weekIdx)}
+                              className={
+                                "flex items-center justify-center gap-1 rounded-lg py-1 text-[11px] text-muted-foreground/80 hover:bg-primary/10 hover:text-primary transition " +
+                                (cell.length === 0 ? "m-auto px-2" : "mt-0.5")
+                              }
+                            >
+                              <Plus className="h-3 w-3" /> Add
+                            </button>
+                          </div>
+
                         );
                       }}
                     />
