@@ -767,8 +767,11 @@ function BookingsPage() {
                       const start = parseTime(item.start_time);
                       const end = parseTime(item.end_time);
                       const top = (start - START_HOUR) * HOUR_HEIGHT;
-                      const height = Math.max(20, (end - start) * HOUR_HEIGHT - 3);
-                      const tight = height < 40;
+                      // Never make an event taller than its real time slot. A minimum
+                      // height caused consecutive 15-minute bookings to cover each other.
+                      const height = Math.max(6, (end - start) * HOUR_HEIGHT - 1);
+                      const showTreatment = height >= 27;
+                      const showTime = height >= 18;
                       const narrow = columns > 2;
                       const posStyle = {
                         top,
@@ -791,12 +794,12 @@ function BookingsPage() {
                                 toast.success("Unblocked — time now open");
                               } catch (e) { toast.error((e as Error).message); }
                             }}
-                            className="absolute overflow-hidden rounded-lg bg-slate-800 px-2 py-1 text-left text-[11px] leading-tight text-white shadow-sm transition hover:z-30 hover:brightness-110"
+                            className="absolute overflow-hidden rounded-sm border border-foreground/20 bg-foreground px-1.5 py-0.5 text-left text-[11px] leading-tight text-background shadow-sm transition hover:z-30 hover:brightness-110"
                             style={posStyle}
                             title="Tap to open this slot"
                           >
                             <div className="truncate font-semibold flex items-center gap-1"><Ban className="h-3 w-3 shrink-0" /> Blocked</div>
-                            {!tight && (
+                            {showTime && (
                               <div className="truncate opacity-80">{b.start_time.slice(0,5)}–{b.end_time.slice(0,5)}{b.reason ? ` · ${b.reason}` : ""}</div>
                             )}
                           </button>
@@ -809,7 +812,7 @@ function BookingsPage() {
                         <button
                           key={`a-${a.id}`}
                           onClick={() => setSelectedAppt(a)}
-                          className="absolute cursor-pointer overflow-hidden rounded-lg px-2 py-1 text-left text-[11px] leading-tight shadow-sm ring-1 ring-black/5 transition hover:z-30 hover:shadow-md"
+                          className="absolute cursor-pointer overflow-hidden rounded-sm border border-foreground/20 px-1.5 py-0.5 text-left text-[11px] leading-tight shadow-sm transition hover:z-30 hover:shadow-md"
                           style={{
                             ...posStyle,
                             backgroundColor: hexToRgba(color, 0.45),
@@ -817,18 +820,18 @@ function BookingsPage() {
                           }}
                           title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"}`}
                         >
-                          <div className="flex items-baseline gap-1">
-                            <span className="truncate font-semibold">{a.patient_name}</span>
-                            {!narrow && (
+                          <div className="flex min-w-0 items-baseline gap-1">
+                            <span className="min-w-0 truncate font-bold">{a.patient_name}</span>
+                            {showTime && !narrow && (
                               <span className="shrink-0 text-[10px] opacity-70">
                                 {a.start_time.slice(0, 5)}–{a.end_time.slice(0, 5)}
                               </span>
                             )}
                           </div>
-                          {!tight && (
-                            <div className="truncate opacity-80">{a.treatments?.name ?? "Treatment"}</div>
+                          {showTreatment && (
+                            <div className="truncate font-medium opacity-85">{a.treatments?.name ?? "Treatment"}</div>
                           )}
-                          {a.has_allergies && !tight && !narrow && (
+                          {a.has_allergies && height >= 44 && !narrow && (
                             <div className="mt-0.5 flex items-center gap-1 text-[10px] font-medium text-red-700">
                               <AlertTriangle className="h-2.5 w-2.5" /> Allergies
                             </div>
