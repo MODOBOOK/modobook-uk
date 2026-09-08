@@ -189,10 +189,12 @@ function MultiBookPage() {
   const packageCoveredIds = useMemo(() => {
     const set = new Set<string>();
     for (const p of selectedPackages) {
-      if (p.firstTreatmentId && !ids.includes(p.firstTreatmentId)) set.add(p.firstTreatmentId);
+      for (const tid of pkgTreatmentIds(p)) if (!ids.includes(tid)) set.add(tid);
     }
     return set;
-  }, [selectedPackages, ids]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPackages, ids.join(",")]);
+
 
   const totalDurationBase = treatments.reduce((s, t) => s + durationFor(t), 0);
   const packagesPrice = selectedPackages.reduce((s, p) => s + Number(p.price ?? 0), 0);
