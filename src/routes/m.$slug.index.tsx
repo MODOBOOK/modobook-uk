@@ -635,6 +635,7 @@ function BookPage() {
   const practitionerGateOpen =
     practSelectionMode !== "required" || !!practitionerId || !locationHasPractitioners;
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedPackageIds, setSelectedPackageIds] = useState<string[]>([]);
   const pkgById = useMemo(() => new Map(packages.map((p) => [p.id, p])), [packages]);
   // Limited-time offers: tick so the countdown stays live
