@@ -801,8 +801,10 @@ function BookingsPage() {
 
                     {/* Appointments: same-time bookings split into side-by-side
                         columns; every card ends before the next one starts. */}
-                    {layoutOverlaps<any>(dayAppts).map(({ item: a, leftPct, widthPct, index, columns, startHr, endHr }) => {
+                    {layoutOverlaps<any>(dayAppts).map(({ item: a, leftPct, widthPct, index, columns, startHr, endHr, maxEndHr }) => {
                       const top = (startHr - START_HOUR) * HOUR_HEIGHT;
+                      const ceiling = (maxEndHr - startHr) * HOUR_HEIGHT - 2;
+                      const height = Math.max(11, Math.min(Math.max((endHr - startHr) * HOUR_HEIGHT - 2, 13), ceiling));
                       const height = Math.max(13, (endHr - startHr) * HOUR_HEIGHT - 2);
                       const tall = height >= 34;
                       const narrow = columns > 2;
