@@ -237,3 +237,15 @@ export const getLocationPriceList = createServerFn({ method: "GET" })
     });
   });
 
+
+/** Existing per-location overrides for one service (used to prefill the editor). */
+export const getTreatmentLocationPricing = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { treatment_id: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { data: rows } = await context.supabase
+      .from("treatment_location_pricing")
+      .select("location_id, price_cents, duration_minutes, available")
+      .eq("treatment_id", data.treatment_id);
+    return rows ?? [];
+  });
