@@ -1454,6 +1454,7 @@ function ServiceDialog({
     discount_show_was_now?: boolean;
     price_mode?: "fixed" | "from" | "poa" | "free";
     badge?: "recommended" | "popular" | "new" | "bestseller" | null;
+    practitioner_ids?: string[];
     location_overrides?: { location_id: string; available: boolean; price_cents: number | null; duration_minutes: number | null }[];
   }) => Promise<void>;
 }) {
@@ -1512,8 +1513,25 @@ function ServiceDialog({
   const [locOverrides, setLocOverrides] = useState<Record<string, LocOverride>>({});
   const [saving, setSaving] = useState(false);
   const [section, setSection] = useState<string>("basics");
+  const [practitionerIds, setPractitionerIds] = useState<string[]>([]);
 
-  useMemo(() => {
+  const editing = (state?.treat ?? null) as (Record<string, any> | null);
+  const editId = (editing?.id ?? null) as string | null;
+
+  const fetchPractitioners = useServerFn(listMyPractitioners);
+  const practitionersQ = useQuery({
+    queryKey: ["my-practitioners"],
+    queryFn: () => fetchPractitioners(),
+  });
+  const teamList = ((practitionersQ.data as { practitioners?: { id: string; name: string; professional_title?: string | null; active?: boolean }[] } | undefined)?.practitioners ?? [])
+    .filter((p) => p.active !== false);
+
+  const fetchTreatPractitioners = useServerFn(getTreatmentPractitioners);
+  const fetchTreatConsents = useServerFn(getTreatmentConsents);
+  const fetchTreatAftercare = useServerFn(getTreatmentAftercareIds);
+  const fetchTreatLocPricing = useServerFn(getTreatmentLocationPricing);
+
+  useEffect(() => {
     if (open) {
       setSection("basics");
       setName("");
@@ -1543,7 +1561,71 @@ function ServiceDialog({
       setPriceMode("fixed");
       setBadge("none");
       setLocOverrides({});
+      setPractitionerIds([]);
+
+      const t = state?.treat as Record<string, any> | undefined;
+      if (t) {
+        setName(String(t.name ?? ""));
+        setDuration(Number(t.duration ?? 30));
+        setPrice(Number(t.price ?? 0));
+        setDescription(String(t.description ?? ""));
+        setCategoryId((t.category_id as string) ?? "__none__");
+        setSessionCount(Math.max(1, Number(t.session_count ?? 1)));
+        setAllowSplit(!!t.allow_split_payment);
+        setRebookDays(t.rebook_reminder_days == null ? "" : String(t.rebook_reminder_days));
+        setTopupDays(t.topup_reminder_days == null ? "" : String(t.topup_reminder_days));
+        if (t.session_interval_days != null) {
+          const d = Number(t.session_interval_days);
+          if (d % 7 === 0) {
+            setIntervalUnit("weeks");
+            setIntervalDays(String(d / 7));
+          } else {
+            setIntervalUnit("days");
+            setIntervalDays(String(d));
+          }
+        }
+        if (t.color) setColor(String(t.color));
+        setActive(t.active !== false);
+        setPictureUrl((t.picture_url as string) ?? null);
+        setDepositAmount(t.deposit_amount == null ? "" : String(t.deposit_amount));
+        setAutoSendForms(t.auto_send_medical_forms !== false);
+        setAftercareHtml(String(t.aftercare_html ?? ""));
+        setAftercareDelay(Number(t.aftercare_delay_hours ?? 2));
+        setAutoSendAftercare(t.auto_send_aftercare !== false);
+        setDiscountPercent(t.discount_percent == null ? "" : String(t.discount_percent));
+        setDiscountLabel(String(t.discount_label ?? ""));
+        setDiscountShowWasNow(t.discount_show_was_now !== false);
+        setPriceMode(((t.price_mode as string) ?? "fixed") as typeof priceMode);
+        setBadge(((t.badge as string) ?? "none") as typeof badge);
+
+        const id = String(t.id);
+        void (async () => {
+          try {
+            const [cons, after, locs, prac] = await Promise.all([
+              fetchTreatConsents({ data: { treatmentId: id } }),
+              fetchTreatAftercare({ data: { treatment_id: id } }),
+              fetchTreatLocPricing({ data: { treatment_id: id } }),
+              fetchTreatPractitioners({ data: { treatment_id: id } }),
+            ]);
+            setConsentIds((cons ?? []) as string[]);
+            setAftercareIds((after ?? []) as string[]);
+            setPractitionerIds((prac ?? []) as string[]);
+            const map: Record<string, LocOverride> = {};
+            for (const row of (locs ?? []) as { location_id: string; price_cents: number | null; duration_minutes: number | null; available: boolean }[]) {
+              map[row.location_id] = {
+                available: row.available !== false,
+                price: row.price_cents == null ? "" : (row.price_cents / 100).toString(),
+                duration: row.duration_minutes == null ? "" : String(row.duration_minutes),
+              };
+            }
+            setLocOverrides(map);
+          } catch {
+            /* prefill is best-effort */
+          }
+        })();
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, state]);
 
   function toggleConsent(id: string) {
@@ -1560,7 +1642,7 @@ function ServiceDialog({
       <DialogContent className="flex h-dvh w-full max-w-full flex-col gap-0 overflow-hidden rounded-none p-0 sm:h-auto sm:max-h-[90vh] sm:max-w-lg sm:rounded-xl">
         <div className="border-b px-4 py-3">
           <DialogHeader className="space-y-0 p-0">
-            <DialogTitle className="text-lg">New service</DialogTitle>
+            <DialogTitle className="text-lg">{editId ? "Edit service" : "New service"}</DialogTitle>
           </DialogHeader>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Only the basics are needed — everything else can be added later.
@@ -2002,6 +2084,7 @@ function ServiceDialog({
                   discount_show_was_now: discountShowWasNow,
                   price_mode: priceMode,
                   badge: badge === "none" ? null : badge,
+                  practitioner_ids: practitionerIds,
                   location_overrides: Object.entries(locOverrides).map(([location_id, ov]) => ({
                     location_id,
                     available: ov.available,
@@ -2012,7 +2095,7 @@ function ServiceDialog({
                 setSaving(false);
               }}
             >
-              {saving ? "Saving…" : "Create service"}
+              {saving ? "Saving…" : editId ? "Save changes" : "Create service"}
             </Button>
           </div>
         </div>
