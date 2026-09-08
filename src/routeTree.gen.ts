@@ -87,6 +87,7 @@ import { Route as AuthenticatedHubConnectionsRouteImport } from './routes/_authe
 import { Route as AuthenticatedDashboardUpcomingRouteImport } from './routes/_authenticated/dashboard.upcoming'
 import { Route as AuthenticatedDashboardTreatmentsRouteImport } from './routes/_authenticated/dashboard.treatments'
 import { Route as AuthenticatedDashboardTrainingRouteImport } from './routes/_authenticated/dashboard.training'
+import { Route as AuthenticatedDashboardStaffAnalyticsRouteImport } from './routes/_authenticated/dashboard.staff-analytics'
 import { Route as AuthenticatedDashboardStaffRouteImport } from './routes/_authenticated/dashboard.staff'
 import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard.settings'
 import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
@@ -604,6 +605,12 @@ const AuthenticatedDashboardTrainingRoute =
   AuthenticatedDashboardTrainingRouteImport.update({
     id: '/training',
     path: '/training',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardStaffAnalyticsRoute =
+  AuthenticatedDashboardStaffAnalyticsRouteImport.update({
+    id: '/staff-analytics',
+    path: '/staff-analytics',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardStaffRoute =
@@ -1340,6 +1347,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
+  '/dashboard/staff-analytics': typeof AuthenticatedDashboardStaffAnalyticsRoute
   '/dashboard/training': typeof AuthenticatedDashboardTrainingRouteWithChildren
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/dashboard/upcoming': typeof AuthenticatedDashboardUpcomingRoute
@@ -1518,6 +1526,7 @@ export interface FileRoutesByTo {
   '/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
+  '/dashboard/staff-analytics': typeof AuthenticatedDashboardStaffAnalyticsRoute
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/dashboard/upcoming': typeof AuthenticatedDashboardUpcomingRoute
   '/hub/connections': typeof AuthenticatedHubConnectionsRoute
@@ -1704,6 +1713,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/services': typeof AuthenticatedDashboardServicesRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/staff': typeof AuthenticatedDashboardStaffRoute
+  '/_authenticated/dashboard/staff-analytics': typeof AuthenticatedDashboardStaffAnalyticsRoute
   '/_authenticated/dashboard/training': typeof AuthenticatedDashboardTrainingRouteWithChildren
   '/_authenticated/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/_authenticated/dashboard/upcoming': typeof AuthenticatedDashboardUpcomingRoute
@@ -1893,6 +1903,7 @@ export interface FileRouteTypes {
     | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/staff'
+    | '/dashboard/staff-analytics'
     | '/dashboard/training'
     | '/dashboard/treatments'
     | '/dashboard/upcoming'
@@ -2071,6 +2082,7 @@ export interface FileRouteTypes {
     | '/dashboard/services'
     | '/dashboard/settings'
     | '/dashboard/staff'
+    | '/dashboard/staff-analytics'
     | '/dashboard/treatments'
     | '/dashboard/upcoming'
     | '/hub/connections'
@@ -2256,6 +2268,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/services'
     | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/staff'
+    | '/_authenticated/dashboard/staff-analytics'
     | '/_authenticated/dashboard/training'
     | '/_authenticated/dashboard/treatments'
     | '/_authenticated/dashboard/upcoming'
@@ -2946,6 +2959,13 @@ declare module '@tanstack/react-router' {
       path: '/training'
       fullPath: '/dashboard/training'
       preLoaderRoute: typeof AuthenticatedDashboardTrainingRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/staff-analytics': {
+      id: '/_authenticated/dashboard/staff-analytics'
+      path: '/staff-analytics'
+      fullPath: '/dashboard/staff-analytics'
+      preLoaderRoute: typeof AuthenticatedDashboardStaffAnalyticsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/staff': {
@@ -3896,6 +3916,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardServicesRoute: typeof AuthenticatedDashboardServicesRoute
   AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
   AuthenticatedDashboardStaffRoute: typeof AuthenticatedDashboardStaffRoute
+  AuthenticatedDashboardStaffAnalyticsRoute: typeof AuthenticatedDashboardStaffAnalyticsRoute
   AuthenticatedDashboardTrainingRoute: typeof AuthenticatedDashboardTrainingRouteWithChildren
   AuthenticatedDashboardTreatmentsRoute: typeof AuthenticatedDashboardTreatmentsRoute
   AuthenticatedDashboardUpcomingRoute: typeof AuthenticatedDashboardUpcomingRoute
@@ -3984,6 +4005,8 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardServicesRoute: AuthenticatedDashboardServicesRoute,
     AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
     AuthenticatedDashboardStaffRoute: AuthenticatedDashboardStaffRoute,
+    AuthenticatedDashboardStaffAnalyticsRoute:
+      AuthenticatedDashboardStaffAnalyticsRoute,
     AuthenticatedDashboardTrainingRoute:
       AuthenticatedDashboardTrainingRouteWithChildren,
     AuthenticatedDashboardTreatmentsRoute:
