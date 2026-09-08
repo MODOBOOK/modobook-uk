@@ -423,6 +423,90 @@ export const previewPointsRedemption = createServerFn({ method: "POST" })
     };
   });
 
+const MyPointsSchema = z.object({
+  slug: z.string().trim().min(1).max(120),
+  totalPennies: z.number().int().min(0).max(10_000_000),
+});
+
+/**
+ * Same as previewPointsRedemption, but the patient doesn't have to know or
+ * type their own code — we resolve (and create) it for them so the checkout
+ * can simply offer "use my points".
+ */
+export const previewMyPointsRedemption = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: z.infer<typeof MyPointsSchema>) => MyPointsSchema.parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("slug", data.slug)
+      .maybeSingle();
+    if (!profile) return { ok: false as const, reason: "clinic_not_found" };
+    const clinicProfileId = profile.user_id as string;
+
+    const { data: settings } = await supabase
+      .from("clinic_referral_settings")
+      .select("enabled, points_redemption_enabled, points_per_pound_redeem")
+      .eq("clinic_profile_id", clinicProfileId)
+      .maybeSingle();
+    if (!settings?.enabled || !settings.points_redemption_enabled)
+      return { ok: false as const, reason: "redemption_off" };
+    const ppp = Number(settings.points_per_pound_redeem ?? 0);
+    if (!ppp || ppp <= 0) return { ok: false as const, reason: "redemption_off" };
+
+    const { data: pointsRows } = await supabase
+      .from("patient_points_ledger")
+      .select("delta")
+      .eq("patient_user_id", userId)
+      .eq("clinic_profile_id", clinicProfileId);
+    const balance = (pointsRows ?? []).reduce((s, r) => s + (r.delta ?? 0), 0);
+    if (balance <= 0) return { ok: false as const, reason: "no_points" };
+
+    // Resolve (or mint) this patient's own code at the clinic — it's what the
+    // redemption is recorded against.
+    let { data: codeRow } = await supabase
+      .from("patient_referral_codes")
+      .select("code")
+      .eq("patient_user_id", userId)
+      .eq("clinic_profile_id", clinicProfileId)
+      .maybeSingle();
+    if (!codeRow) {
+      const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const code = Array.from({ length: 6 }, () =>
+          alphabet.charAt(Math.floor(Math.random() * alphabet.length)),
+        ).join("");
+        const { data: inserted, error: insErr } = await supabase
+          .from("patient_referral_codes")
+          .insert({ patient_user_id: userId, clinic_profile_id: clinicProfileId, code })
+          .select("code")
+          .maybeSingle();
+        if (!insErr && inserted) {
+          codeRow = inserted;
+          break;
+        }
+      }
+    }
+    if (!codeRow?.code) return { ok: false as const, reason: "no_code" };
+
+    const maxPennies = Math.floor(balance / ppp) * 100;
+    const pennies = Math.max(0, Math.min(maxPennies, data.totalPennies));
+    if (pennies <= 0) return { ok: false as const, reason: "not_enough_points" };
+    const pointsToUse = Math.min(balance, Math.ceil(pennies / 100) * ppp);
+
+    return {
+      ok: true as const,
+      code: codeRow.code,
+      pennies,
+      pointsToUse,
+      pointsBalance: balance,
+      pointsPerPound: ppp,
+    };
+  });
+
 const PointsConsumeSchema = z.object({
   slug: z.string().trim().min(1).max(120),
   code: z.string().trim().min(3).max(32),
