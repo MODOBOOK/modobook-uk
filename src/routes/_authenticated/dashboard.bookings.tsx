@@ -960,8 +960,7 @@ function MonthView({
             <button
               key={key}
               onClick={() => onPickDay(d)}
-              disabled={isPast}
-              className={`relative flex min-h-[72px] flex-col border-b border-r p-1.5 text-left transition active:scale-[0.98] hover:bg-accent/40 disabled:cursor-not-allowed disabled:hover:bg-transparent sm:min-h-[88px] sm:p-1.5 ${
+              className={`relative flex min-h-[72px] flex-col border-b border-r p-1.5 text-left transition active:scale-[0.98] hover:bg-accent/40 sm:min-h-[88px] sm:p-1.5 ${
                 !inMonth ? "bg-muted/20 text-muted-foreground" : ""
               } ${unavailable && inMonth ? "bg-muted/50 text-muted-foreground" : ""} ${
                 isPast ? "opacity-60" : ""
