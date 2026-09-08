@@ -243,6 +243,7 @@ function ServicesPage() {
   const setConsents = useServerFn(setTreatmentConsents);
   const setAftercareTpls = useServerFn(setTreatmentAftercareIds);
   const saveLocPricing = useServerFn(setTreatmentLocationPricing);
+  const saveTreatPractitioners = useServerFn(setTreatmentPractitioners);
   const removeTreat = useServerFn(deleteTreatment);
   const reorderCats = useServerFn(reorderCategories);
   const reorderTreats = useServerFn(reorderTreatments);
@@ -547,7 +548,7 @@ function ServicesPage() {
         onClose={() => setSvcDialog(null)}
         onSubmit={async (values) => {
           try {
-            const { consent_ids, aftercare_template_ids, location_overrides, ...base } = values;
+            const { consent_ids, aftercare_template_ids, location_overrides, practitioner_ids, ...base } = values;
             const baseCreate = {
               name: base.name,
               duration: base.duration,
@@ -565,34 +566,40 @@ function ServicesPage() {
               deposit_amount: base.deposit_amount,
               active: base.active,
             };
-            const created = (await createTreat({ data: baseCreate })) as { id: string };
-            // patch extras not supported by createTreatment
-            await patchTreat({
-              data: {
-                id: created.id,
-                discount_percent: base.discount_percent,
-                discount_label: base.discount_label,
-                discount_show_was_now: base.discount_show_was_now,
-                aftercare_html: base.aftercare_html,
-                aftercare_delay_hours: base.aftercare_delay_hours,
-                auto_send_medical_forms: base.auto_send_medical_forms,
-                auto_send_aftercare: base.auto_send_aftercare,
-                price_mode: base.price_mode,
-                badge: base.badge,
-              },
-            });
-            if (consent_ids && consent_ids.length > 0) {
-              await setConsents({
-                data: { treatmentId: created.id, consentTemplateIds: consent_ids },
-              });
+            const editingId = svcDialog?.treat?.id ?? null;
+            const extras = {
+              discount_percent: base.discount_percent,
+              discount_label: base.discount_label,
+              discount_show_was_now: base.discount_show_was_now,
+              aftercare_html: base.aftercare_html,
+              aftercare_delay_hours: base.aftercare_delay_hours,
+              auto_send_medical_forms: base.auto_send_medical_forms,
+              auto_send_aftercare: base.auto_send_aftercare,
+              price_mode: base.price_mode,
+              badge: base.badge,
+            };
+            let targetId: string;
+            if (editingId) {
+              await patchTreat({ data: { id: editingId, ...baseCreate, ...extras } });
+              targetId = editingId;
+            } else {
+              const created = (await createTreat({ data: baseCreate })) as { id: string };
+              await patchTreat({ data: { id: created.id, ...extras } });
+              targetId = created.id;
             }
+            await setConsents({
+              data: { treatmentId: targetId, consentTemplateIds: consent_ids ?? [] },
+            });
             await setAftercareTpls({
-              data: { treatment_id: created.id, template_ids: aftercare_template_ids ?? [] },
+              data: { treatment_id: targetId, template_ids: aftercare_template_ids ?? [] },
+            });
+            await saveTreatPractitioners({
+              data: { treatment_id: targetId, practitioner_ids: practitioner_ids ?? [] },
             });
             for (const o of location_overrides ?? []) {
               await saveLocPricing({
                 data: {
-                  treatment_id: created.id,
+                  treatment_id: targetId,
                   location_id: o.location_id,
                   available: o.available,
                   price_cents: o.price_cents,
@@ -600,7 +607,7 @@ function ServicesPage() {
                 },
               });
             }
-            toast.success("Service created");
+            toast.success(svcDialog?.treat ? "Service updated" : "Service created");
             setSvcDialog(null);
             treats.refetch();
           } catch (e) {
