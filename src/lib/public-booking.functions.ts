@@ -107,7 +107,7 @@ export const getBookingContext = createServerFn({ method: "GET" })
       (treatment as { category_id: string | null }).category_id,
     ]);
 
-    const settings = extractBookingSettings(profile as Record<string, unknown>);
+    const settings = await loadBookingSettings(profile.id, profile as Record<string, unknown>);
 
     return {
       profileId: profile.id,
@@ -181,6 +181,37 @@ function extractBookingSettings(p: Record<string, unknown>): PublicBookingSettin
     auto_confirm_bookings: bo("auto_confirm_bookings", true),
     booking_smart_times_enabled: bo("booking_smart_times_enabled", false),
   };
+}
+
+/**
+ * The public profile lookup only returns display fields, so booking rules such
+ * as how far ahead patients may book were silently falling back to defaults.
+ * Read the real values with the admin client and merge them in.
+ */
+async function loadBookingSettings(
+  profileId: string,
+  base: Record<string, unknown>,
+): Promise<PublicBookingSettings> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("profiles")
+      .select(
+        "booking_min_notice_hours,booking_max_lead_days,booking_buffer_before_minutes,booking_buffer_after_minutes,booking_daily_cap,payment_card_full_enabled,payment_deposit_enabled,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,allow_pay_in_clinic,show_prices_on_booking,require_account_to_book,require_phone,require_dob,require_address,auto_confirm_bookings,booking_smart_times_enabled",
+      )
+      .eq("id", profileId)
+      .maybeSingle();
+    if (row) {
+      const merged: Record<string, unknown> = { ...base };
+      for (const [k, v] of Object.entries(row as Record<string, unknown>)) {
+        if (v !== null && v !== undefined) merged[k] = v;
+      }
+      return extractBookingSettings(merged);
+    }
+  } catch (e) {
+    console.error("[loadBookingSettings] failed", e);
+  }
+  return extractBookingSettings(base);
 }
 
 
@@ -303,7 +334,7 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       termsHtml: (profile as { terms_html?: string | null }).terms_html ?? null,
       termsRequired: (profile as { terms_required?: boolean | null }).terms_required ?? false,
       bookableFrom,
-      settings: extractBookingSettings(profile as Record<string, unknown>),
+      settings: await loadBookingSettings(profile.id, profile as Record<string, unknown>),
       selectedPackages,
       rotaAnchor,
     };
