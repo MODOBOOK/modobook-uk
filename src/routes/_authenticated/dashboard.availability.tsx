@@ -374,8 +374,9 @@ function AvailabilityPage() {
           await upsert({
             data: {
               // Only the very first combination reuses the row being edited;
-              // the rest become their own shift rows.
-              id: first ? editing?.id : undefined,
+              // the rest become their own shift rows. "Save as extra shift"
+              // keeps the original shift untouched and adds new ones.
+              id: !asExtra && first ? editing?.id : undefined,
               day_of_week: form.day_of_week,
               start_time: form.start,
               end_time: form.end,
