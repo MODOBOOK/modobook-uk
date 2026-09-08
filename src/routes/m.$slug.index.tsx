@@ -624,7 +624,17 @@ function BookPage() {
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
   }, [practSelectionMode, practitionerId]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  // When the clinic requires a choice, hold the menu back until one is made.
+  const locationHasPractitioners = useMemo(
+    () =>
+      locationPractitioners.some(
+        (lp) => lp.location_id === locationId && practitioners.some((p) => p.id === lp.practitioner_id),
+      ),
+    [locationPractitioners, practitioners, locationId],
+  );
+  const practitionerGateOpen =
+    practSelectionMode !== "required" || !!practitionerId || !locationHasPractitioners;
+
   const [selectedPackageIds, setSelectedPackageIds] = useState<string[]>([]);
   const pkgById = useMemo(() => new Map(packages.map((p) => [p.id, p])), [packages]);
   // Limited-time offers: tick so the countdown stays live
