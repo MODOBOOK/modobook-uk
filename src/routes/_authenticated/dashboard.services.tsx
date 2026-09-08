@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   getMyCategories,
   createCategory,
@@ -26,7 +26,13 @@ import {
   getTreatmentAftercareIds,
   setTreatmentAftercareIds,
 } from "@/lib/aftercare-templates.functions";
-import { listMyLocations, setTreatmentLocationPricing } from "@/lib/locations.functions";
+import { listMyLocations, setTreatmentLocationPricing, getTreatmentLocationPricing } from "@/lib/locations.functions";
+import {
+  listMyPractitioners,
+  getTreatmentPractitioners,
+  setTreatmentPractitioners,
+} from "@/lib/practitioners.functions";
+import { getTreatmentConsents } from "@/lib/treatment-consents.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
 import { PrescribingClinicCard } from "@/components/PrescribingClinicCard";
@@ -110,7 +116,12 @@ type Treat = {
   price: number;
   category_id: string | null;
   color?: string | null;
+  // the full row carries many more optional columns used by the editor
+  [key: string]: unknown;
 };
+
+/** Lets any service row open the full-screen service editor. */
+const EditServiceCtx = createContext<(t: Treat) => void>(() => {});
 
 type CatNode = Cat & { children: CatNode[]; treatments: Treat[] };
 
@@ -251,7 +262,7 @@ function ServicesPage() {
   const [catDialog, setCatDialog] = useState<
     { mode: "create" | "edit"; parentId: string | null; cat?: Cat; limited?: boolean } | null
   >(null);
-  const [svcDialog, setSvcDialog] = useState<{ defaultCatId: string | null } | null>(null);
+  const [svcDialog, setSvcDialog] = useState<{ defaultCatId: string | null; treat?: Treat } | null>(null);
   const [moveTreatState, setMoveTreatState] = useState<Treat | null>(null);
   const [moveCatState, setMoveCatState] = useState<Cat | null>(null);
   const [reorderOpen, setReorderOpen] = useState(false);
@@ -978,9 +989,12 @@ function ServiceCard({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => editService(treat)}>
+            <Pencil className="mr-2 h-4 w-4" /> Edit
+          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to="/dashboard/treatments" search={{ edit: treat.id, back: "services" }}>
-              <Pencil className="mr-2 h-4 w-4" /> Edit
+              <ListOrdered className="mr-2 h-4 w-4" /> Advanced settings
             </Link>
           </DropdownMenuItem>
           {onMoveTo && (
@@ -1407,7 +1421,7 @@ function ServiceDialog({
   onClose,
   onSubmit,
 }: {
-  state: { defaultCatId: string | null } | null;
+  state: { defaultCatId: string | null; treat?: Treat } | null;
   categories: { id: string; label: string; depth: number }[];
   onClose: () => void;
   onSubmit: (v: {
