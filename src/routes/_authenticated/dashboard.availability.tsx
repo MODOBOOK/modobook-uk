@@ -622,12 +622,19 @@ function AvailabilityPage() {
   function rulesFor(day: number, weekIdx: number): Rule[] {
     return periodRules.filter((r) => {
       if (r.day_of_week !== day) return false;
+      if (viewPrac !== "all") {
+        if (viewPrac === "none" ? r.practitioner_id : (r.practitioner_id ?? null) !== viewPrac) return false;
+      }
+      if (viewLoc !== "all") {
+        if (viewLoc === "none" ? r.location_id : (r.location_id ?? null) !== viewLoc) return false;
+      }
       const cycle = r.cycle_length ?? 1;
       const mask = r.weeks_mask ?? 1;
       if (cycle === 1) return true; // applies every week → show in every row
       return (mask & (1 << weekIdx)) !== 0;
     });
   }
+
 
 
   function locName(id: string | null | undefined) {
