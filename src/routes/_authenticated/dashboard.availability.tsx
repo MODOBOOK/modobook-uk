@@ -188,6 +188,11 @@ function AvailabilityPage() {
 
   const [cycleLength, setCycleLength] = useState<number>(1);
 
+  // Weekly grid filters: whole clinic rota, or one person / one location at a time.
+  const [viewPrac, setViewPrac] = useState<string>("all");
+  const [viewLoc, setViewLoc] = useState<string>("all");
+
+
   // End-rota flow
   const [endOpen, setEndOpen] = useState(false);
   const [endDate, setEndDate] = useState("");
