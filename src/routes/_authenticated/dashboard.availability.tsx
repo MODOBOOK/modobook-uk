@@ -796,13 +796,42 @@ function AvailabilityPage() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <CardTitle>{activePeriod?.label === "Current rota" ? "Weekly schedule" : `Weekly schedule · ${activePeriod?.label}`}</CardTitle>
-                  <CardDescription>Tap a cell to add or edit a shift.</CardDescription>
+                  <CardDescription>Each person's shift shows separately — tap a shift to edit it, or tap “Add” to put someone else on the same day.</CardDescription>
                 </div>
                 <div className="text-xs text-muted-foreground hidden sm:block">
                   {periodRules.length} shift{periodRules.length === 1 ? "" : "s"}
                 </div>
               </div>
+              {(practitioners.length > 0 || locations.length > 0) && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {practitioners.length > 0 && (
+                    <Select value={viewPrac} onValueChange={setViewPrac}>
+                      <SelectTrigger className="h-8 w-[200px] bg-background text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Whole clinic rota</SelectItem>
+                        <SelectItem value="none">Unassigned shifts</SelectItem>
+                        {practitioners.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {locations.length > 0 && (
+                    <Select value={viewLoc} onValueChange={setViewLoc}>
+                      <SelectTrigger className="h-8 w-[200px] bg-background text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All locations</SelectItem>
+                        <SelectItem value="none">No specific location</SelectItem>
+                        {locations.map((l) => (
+                          <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
             </CardHeader>
+
             <CardContent className="overflow-x-auto pb-6">
               <div className="min-w-[720px]">
                 <div className="grid gap-1" style={{ gridTemplateColumns: `56px repeat(7, minmax(90px, 1fr))` }}>
