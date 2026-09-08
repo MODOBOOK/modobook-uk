@@ -1990,6 +1990,52 @@ function ServiceDialog({
             </div>
           </SvcSection>
 
+          {teamList.length > 0 && (
+            <SvcSection
+              title="Who can perform this?"
+              hint={
+                practitionerIds.length === 0
+                  ? "Anyone on the team"
+                  : `${practitionerIds.length} selected`
+              }
+              open={section === "team"}
+              onToggle={() => setSection(section === "team" ? "" : "team")}
+            >
+              <p className="text-xs text-muted-foreground">
+                Leave all unticked and anyone can be booked for this service. Tick people to limit
+                bookings to them only.
+              </p>
+              <div className="mt-2 space-y-2">
+                {teamList.map((p) => {
+                  const checked = practitionerIds.includes(p.id);
+                  return (
+                    <label
+                      key={p.id}
+                      className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium">{p.name}</span>
+                        {p.professional_title && (
+                          <span className="block truncate text-xs text-muted-foreground">
+                            {p.professional_title}
+                          </span>
+                        )}
+                      </span>
+                      <Switch
+                        checked={checked}
+                        onCheckedChange={(v) =>
+                          setPractitionerIds((prev) =>
+                            v ? [...prev, p.id] : prev.filter((x) => x !== p.id),
+                          )
+                        }
+                      />
+                    </label>
+                  );
+                })}
+              </div>
+            </SvcSection>
+          )}
+
           {locationList.length > 0 && (
             <SvcSection
               title="Locations & pricing"
