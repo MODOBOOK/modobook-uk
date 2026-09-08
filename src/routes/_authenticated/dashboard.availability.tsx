@@ -1268,9 +1268,12 @@ function AvailabilityPage() {
                 <Trash2 className="h-4 w-4 mr-2" /> Delete
               </Button>
             ) : <span />}
-            <div className="flex gap-2 justify-end">
+            <div className="flex flex-wrap gap-2 justify-end">
               <Button variant="ghost" onClick={() => setDlgOpen(false)}>Cancel</Button>
-              <Button onClick={saveShift}>Save</Button>
+              {editing && locations.length > 1 && (
+                <Button variant="outline" onClick={() => saveShift(true)}>Save as extra shift</Button>
+              )}
+              <Button onClick={() => saveShift(false)}>Save</Button>
             </div>
           </DialogFooter>
         </DialogContent>
