@@ -483,15 +483,20 @@ function MultiBookPage() {
           .filter((a) => addonPicks.has(a.id))
           .reduce((sum, a) => sum + addonNet(a), 0) * 100,
       );
-      // A package is paid as one price, not as the price of its first treatment.
-      // Map each package onto the booking line it belongs to.
+      // A package is paid as one price, not per treatment inside it. Attach the
+      // full package price to its first line and zero the other lines it covers.
       const pkgByTreatment = new Map<string, typeof selectedPackages[number]>();
+      const zeroPricedIds = new Set<string>();
       const leftoverPackages: typeof selectedPackages = [];
       for (const p of selectedPackages) {
-        if (p.firstTreatmentId && packageCoveredIds.has(p.firstTreatmentId) && !pkgByTreatment.has(p.firstTreatmentId)) {
-          pkgByTreatment.set(p.firstTreatmentId, p);
+        const covered = pkgTreatmentIds(p).filter((tid) => packageCoveredIds.has(tid));
+        const priceLine = covered.find((tid) => !pkgByTreatment.has(tid));
+        if (priceLine) {
+          pkgByTreatment.set(priceLine, p);
+          for (const tid of covered) if (tid !== priceLine) zeroPricedIds.add(tid);
         } else {
           leftoverPackages.push(p);
+          for (const tid of covered) zeroPricedIds.add(tid);
         }
       }
       const leftoverPackageCents = Math.round(
@@ -504,13 +509,14 @@ function MultiBookPage() {
 
       const bookings = treatments.map((t, index) => {
         const pkg = pkgByTreatment.get(t.id);
-        let price = pkg ? Number(pkg.price ?? 0) : priceFor(t);
-        if (!pkg && discount && applicableIds.has(t.id)) {
+        let price = pkg ? Number(pkg.price ?? 0) : zeroPricedIds.has(t.id) ? 0 : priceFor(t);
+        if (!pkg && !zeroPricedIds.has(t.id) && discount && applicableIds.has(t.id)) {
           const off = discount.kind === "percent"
             ? price * (discount.amount / 100)
             : discount.amount;
           price = Math.max(0, price - Math.min(off, price));
         }
+
         const priceCents =
           Math.round(price * 100)
           + (index === 0 ? pickedAddonTotalCents + leftoverPackageCents : 0);
