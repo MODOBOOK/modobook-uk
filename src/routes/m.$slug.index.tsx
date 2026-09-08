@@ -1676,7 +1676,7 @@ function BookPage() {
 
       {/* Chooser gate */}
 
-      {locationId && chooserOn && !mode && (
+      {locationId && practitionerGateOpen && chooserOn && !mode && (
         <section className="mx-auto mt-10 max-w-3xl px-4">
           <h2 className="mb-1 text-center text-xl font-bold" style={headingStyle}>
             How can we help today?
@@ -1736,7 +1736,7 @@ function BookPage() {
       )}
 
       {/* Concerns picker (unsure path) */}
-      {locationId && chooserOn && mode === "unsure" && !concernsConfirmed && (
+      {locationId && practitionerGateOpen && chooserOn && mode === "unsure" && !concernsConfirmed && (
         <section className="mx-auto mt-10 max-w-3xl px-4">
           <div className="mb-4 flex items-center justify-between">
             <button onClick={() => setMode(null)} className="text-sm opacity-70 hover:opacity-100">
@@ -1977,7 +1977,7 @@ function BookPage() {
       })()}
       {/* Treatments + Packages */}
 
-      {locationId && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
+      {locationId && practitionerGateOpen && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
         <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
           {chooserOn && (
             <div className="mb-4 flex items-center justify-between">
