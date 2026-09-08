@@ -475,24 +475,51 @@ function MultiBookPage() {
           .filter((a) => addonPicks.has(a.id))
           .reduce((sum, a) => sum + addonNet(a), 0) * 100,
       );
+      // A package is paid as one price, not as the price of its first treatment.
+      // Map each package onto the booking line it belongs to.
+      const pkgByTreatment = new Map<string, typeof selectedPackages[number]>();
+      const leftoverPackages: typeof selectedPackages = [];
+      for (const p of selectedPackages) {
+        if (p.firstTreatmentId && packageCoveredIds.has(p.firstTreatmentId) && !pkgByTreatment.has(p.firstTreatmentId)) {
+          pkgByTreatment.set(p.firstTreatmentId, p);
+        } else {
+          leftoverPackages.push(p);
+        }
+      }
+      const leftoverPackageCents = Math.round(
+        leftoverPackages.reduce((s, p) => {
+          const sessions = Math.max(1, Number(p.session_count ?? 1));
+          const useSplit = !depositOverridesSplit && Boolean(p.allow_split_payment) && sessions > 1 && selectedPackagePlan(p.id) === "split";
+          return s + (useSplit ? Number(p.price ?? 0) / sessions : Number(p.price ?? 0));
+        }, 0) * 100,
+      );
+
       const bookings = treatments.map((t, index) => {
-        let price = priceFor(t);
-        if (discount && applicableIds.has(t.id)) {
+        const pkg = pkgByTreatment.get(t.id);
+        let price = pkg ? Number(pkg.price ?? 0) : priceFor(t);
+        if (!pkg && discount && applicableIds.has(t.id)) {
           const off = discount.kind === "percent"
             ? price * (discount.amount / 100)
             : discount.amount;
           price = Math.max(0, price - Math.min(off, price));
         }
-        const priceCents = Math.round(price * 100) + (index === 0 ? pickedAddonTotalCents : 0);
+        const priceCents =
+          Math.round(price * 100)
+          + (index === 0 ? pickedAddonTotalCents + leftoverPackageCents : 0);
+        const sessionCount = pkg
+          ? Math.max(1, Number(pkg.session_count ?? 1))
+          : Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
+        const plan = pkg ? selectedPackagePlan(pkg.id) : selectedPaymentPlan(t);
         return {
           treatmentId: t.id,
           durationMin: durationFor(t),
           priceCents,
-          sessionCount: Math.max(1, Number((t as { session_count?: number }).session_count ?? 1)),
-          paymentPlan: depositOverridesSplit ? ("full" as const) : selectedPaymentPlan(t),
+          sessionCount,
+          paymentPlan: depositOverridesSplit ? ("full" as const) : plan,
           clinicVisitId: visitSelections[t.id] ?? null,
         };
       });
+
 
       const res = await reqFn({
         data: {
