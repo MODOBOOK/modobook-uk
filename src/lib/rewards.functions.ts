@@ -282,7 +282,7 @@ export const getMyRewardsForClinic = createServerFn({ method: "POST" })
       .maybeSingle();
     if (profErr) throw profErr;
     if (!profile) throw new Error("Clinic not found");
-    const clinicProfileId = profile.user_id as string;
+    const clinicProfileId = profile.id as string;
 
     const { data: settings } = await supabase
       .from("clinic_referral_settings")
@@ -386,7 +386,7 @@ export const previewPointsRedemption = createServerFn({ method: "POST" })
       .eq("slug", data.slug)
       .maybeSingle();
     if (!profile) return { ok: false as const, reason: "clinic_not_found" };
-    const clinicProfileId = profile.user_id as string;
+    const clinicProfileId = profile.id as string;
 
     const { data: codeRow } = await supabase
       .from("patient_referral_codes")
@@ -458,7 +458,7 @@ export const consumePointsRedemption = createServerFn({ method: "POST" })
       .eq("slug", data.slug)
       .maybeSingle();
     if (!profile) return { ok: false, reason: "clinic_not_found" as const };
-    const clinicProfileId = profile.user_id as string;
+    const clinicProfileId = profile.id as string;
 
     const { data: codeRow } = await supabase
       .from("patient_referral_codes")
