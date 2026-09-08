@@ -325,7 +325,10 @@ function AvailabilityPage() {
     const weeks = Array.from({ length: 4 }, (_, i) => i === weekIdx);
     setForm({
       day_of_week: day, start: "09:00", end: "17:00", interval: "30",
-      location_ids: [], practitioner_ids: [], weeks,
+      location_ids: viewLoc !== "all" && viewLoc !== "none" ? [viewLoc] : [],
+      practitioner_ids: viewPrac !== "all" && viewPrac !== "none" ? [viewPrac] : [],
+      weeks,
+
       effective_from: periodStart || activePeriod?.start || "",
       effective_to: draft && activePeriod?.key === draft.start
         ? draft.end
