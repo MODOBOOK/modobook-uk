@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { SaveReminder } from "@/components/SaveReminder";
 import { PLATFORM_FEE_LABEL, PLATFORM_FEE_DESCRIPTION, PLATFORM_FEE_PERCENT, PLATFORM_FEE_FIXED_CENTS } from "@/lib/platform-fee";
@@ -35,6 +36,10 @@ function SettingsPage() {
     booking_buffer_after_minutes: (profile.booking_buffer_after_minutes as number) ?? 0,
     booking_daily_cap: (profile.booking_daily_cap as number | null) ?? null,
     booking_smart_times_enabled: !!profile.booking_smart_times_enabled,
+    practitioner_selection_mode: (((profile as { practitioner_selection_mode?: string | null }).practitioner_selection_mode ?? "optional") as
+      | "required"
+      | "optional"
+      | "first_available"),
     // payments
     payment_card_full_enabled: profile.payment_card_full_enabled !== false,
     payment_deposit_enabled: !!profile.payment_deposit_enabled,
@@ -183,6 +188,30 @@ const [saving, setSaving] = useState(false);
             checked={s.booking_smart_times_enabled}
             onChange={(v) => set("booking_smart_times_enabled", v)}
           />
+        </CardContent>
+      </Card>
+
+      {/* PRACTITIONER CHOICE */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Choosing a practitioner</CardTitle>
+          <CardDescription>How patients pick who they see on your booking page.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Select
+            value={s.practitioner_selection_mode}
+            onValueChange={(v) => set("practitioner_selection_mode", v as "required" | "optional" | "first_available")}
+          >
+            <SelectTrigger className="w-full sm:w-96"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="optional">Optional — patient can pick someone or skip</SelectItem>
+              <SelectItem value="required">Required — patient picks first, then sees that person's treatments</SelectItem>
+              <SelectItem value="first_available">First available — picker hidden, booking auto-assigned</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Only applies where you have added practitioners to a location.
+          </p>
         </CardContent>
       </Card>
 

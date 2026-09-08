@@ -232,34 +232,13 @@ function PractitionersPage() {
 
 
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Patient selection mode</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Controls how patients choose a practitioner on your booking page once they've picked a location.
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+          <p className="text-sm text-muted-foreground">
+            How patients choose a practitioner is now set in Booking settings.
           </p>
-        </CardHeader>
-        <CardContent>
-          <Select
-            value={selectionMode}
-            onValueChange={async (v) => {
-              const mode = v as "required" | "optional" | "first_available";
-              setSelectionMode(mode);
-              if (!profileId) return;
-              try {
-                await saveProfile({ data: { id: profileId, practitioner_selection_mode: mode } });
-                toast.success("Saved");
-              } catch (e) {
-                toast.error(e instanceof Error ? e.message : "Failed to save");
-              }
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-80"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="optional">Optional — patient can pick a practitioner or skip</SelectItem>
-              <SelectItem value="required">Required — patient must pick a practitioner</SelectItem>
-              <SelectItem value="first_available">First available — auto-assign, hide picker</SelectItem>
-            </SelectContent>
-          </Select>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/dashboard/settings">Booking settings</Link>
+          </Button>
         </CardContent>
       </Card>
 
