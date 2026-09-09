@@ -345,9 +345,17 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
 
 
 export const getDayAvailability = createServerFn({ method: "GET" })
-  .inputValidator((input: { profileId: string; date: string; locationId?: string | null }) => input)
+  .inputValidator(
+    (input: { profileId: string; date: string; locationId?: string | null; practitionerId?: string | null }) => input,
+  )
   .handler(async ({ data }) => {
     const sb = publicClient();
+    // When the patient has chosen a practitioner, only that person's hours,
+    // time off and bookings count. Rows with no practitioner are clinic-wide
+    // and always apply, which is also the fallback for clinics that never set
+    // anything up per person.
+    const pid = data.practitionerId ?? null;
+    const matchPract = (rowPract: string | null | undefined) => !pid || !rowPract || rowPract === pid;
     // Use admin client to read appointments — anon has no SELECT policy on appointments,
     // so without this booked slots would not appear as busy to public visitors.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -364,22 +372,28 @@ export const getDayAvailability = createServerFn({ method: "GET" })
 
     const { data: blockedRows } = await sb
       .from("blocked_dates")
-      .select("id,location_id")
+      .select("id,location_id,practitioner_id")
       .eq("profile_id", data.profileId)
       .eq("date", data.date);
     let isBlocked = (blockedRows ?? []).some(
-      (b) => !b.location_id || !data.locationId || b.location_id === data.locationId,
+      (b) =>
+        (!b.location_id || !data.locationId || b.location_id === data.locationId) &&
+        matchPract((b as { practitioner_id?: string | null }).practitioner_id),
     );
     // A closure set for THIS specific location can only be re-opened by an
     // ad-hoc slot that is also scoped to this location — an "all locations"
     // opening must not cancel a location-specific closure.
     const hasLocationSpecificBlock = (blockedRows ?? []).some(
-      (b) => !!b.location_id && !!data.locationId && b.location_id === data.locationId,
+      (b) =>
+        !!b.location_id &&
+        !!data.locationId &&
+        b.location_id === data.locationId &&
+        matchPract((b as { practitioner_id?: string | null }).practitioner_id),
     );
 
     const { data: appts } = await supabaseAdmin
       .from("appointments")
-      .select("id,start_time,end_time,location_id,status,payment_status,payment_hold_expires_at")
+      .select("id,start_time,end_time,location_id,practitioner_id,status,payment_status,payment_hold_expires_at")
       .eq("profile_id", data.profileId)
       .eq("scheduled_date", data.date)
       .neq("status", "cancelled");
@@ -391,6 +405,7 @@ export const getDayAvailability = createServerFn({ method: "GET" })
     const nowMs = Date.now();
     const expiredIds: string[] = [];
     const activeAppts = (appts ?? []).filter((a) => {
+      if (!matchPract((a as { practitioner_id?: string | null }).practitioner_id)) return false;
       const held = (a as { payment_hold_expires_at?: string | null; id?: string }).payment_hold_expires_at;
       const paid = (a as { payment_status?: string }).payment_status === "paid";
       const pending = a.status === "pending";
@@ -430,23 +445,24 @@ export const getDayAvailability = createServerFn({ method: "GET" })
 
     const { data: overrides } = await sb
       .from("availability_overrides")
-      .select("start_time,end_time,slot_interval,location_id")
+      .select("start_time,end_time,slot_interval,location_id,practitioner_id")
       .eq("profile_id", data.profileId)
       .eq("date", data.date);
 
     const { data: blockedTimes } = await sb
       .from("blocked_times")
-      .select("start_time,end_time,location_id")
+      .select("start_time,end_time,location_id,practitioner_id")
       .eq("profile_id", data.profileId)
       .eq("date", data.date);
     const blockedBusy = (blockedTimes ?? [])
       .filter((b) => !b.location_id || !data.locationId || b.location_id === data.locationId)
+      .filter((b) => matchPract((b as { practitioner_id?: string | null }).practitioner_id))
       .map((b) => ({ start_time: b.start_time, end_time: b.end_time, location_id: b.location_id, status: "blocked" }));
 
     // Overrides with a location only apply at that location; null = every location.
-    const scopedOverrides = (overrides ?? []).filter(
-      (o) => !o.location_id || !data.locationId || o.location_id === data.locationId,
-    );
+    const scopedOverrides = (overrides ?? [])
+      .filter((o) => !o.location_id || !data.locationId || o.location_id === data.locationId)
+      .filter((o) => matchPract((o as { practitioner_id?: string | null }).practitioner_id));
 
     // An ad-hoc slot added for this date is an explicit opening, so it beats a
     // closed/blocked day. The daily cap still applies.
@@ -476,9 +492,19 @@ export const getDayAvailability = createServerFn({ method: "GET" })
 
 
 export const getMonthAvailability = createServerFn({ method: "GET" })
-  .inputValidator((input: { profileId: string; year: number; month: number; locationId?: string | null }) => input)
+  .inputValidator(
+    (input: {
+      profileId: string;
+      year: number;
+      month: number;
+      locationId?: string | null;
+      practitionerId?: string | null;
+    }) => input,
+  )
   .handler(async ({ data }) => {
     const sb = publicClient();
+    const pid = data.practitionerId ?? null;
+    const matchPract = (rowPract: string | null | undefined) => !pid || !rowPract || rowPract === pid;
     const start = new Date(Date.UTC(data.year, data.month - 1, 1));
     const end = new Date(Date.UTC(data.year, data.month, 0));
     const startIso = start.toISOString().slice(0, 10);
@@ -486,17 +512,17 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
 
     const { data: rules } = await sb
       .from("availability_rules")
-      .select("day_of_week,location_id,cycle_length,weeks_mask,effective_from,effective_to,start_time,end_time")
+      .select("day_of_week,location_id,practitioner_id,cycle_length,weeks_mask,effective_from,effective_to,start_time,end_time")
       .eq("profile_id", data.profileId);
     const { data: blocked } = await sb
       .from("blocked_dates")
-      .select("date,location_id")
+      .select("date,location_id,practitioner_id")
       .eq("profile_id", data.profileId)
       .gte("date", startIso)
       .lte("date", endIso);
     const { data: overrides } = await sb
       .from("availability_overrides")
-      .select("date,location_id")
+      .select("date,location_id,practitioner_id")
       .eq("profile_id", data.profileId)
       .gte("date", startIso)
       .lte("date", endIso);
@@ -507,10 +533,16 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
 
     const matchLoc = (rowLoc: string | null) =>
       !data.locationId || !rowLoc || rowLoc === data.locationId;
-    const activeDays = Array.from(
-      new Set((rules ?? []).filter((r) => matchLoc(r.location_id)).map((r) => r.day_of_week)),
+    const scopedRules = (rules ?? []).filter((r) =>
+      matchPract((r as { practitioner_id?: string | null }).practitioner_id),
     );
-    const blockedDates = (blocked ?? []).filter((b) => matchLoc(b.location_id)).map((b) => b.date);
+    const activeDays = Array.from(
+      new Set(scopedRules.filter((r) => matchLoc(r.location_id)).map((r) => r.day_of_week)),
+    );
+    const blockedDates = (blocked ?? [])
+      .filter((b) => matchLoc(b.location_id))
+      .filter((b) => matchPract((b as { practitioner_id?: string | null }).practitioner_id))
+      .map((b) => b.date);
     // Dates closed specifically for the selected location: only an ad-hoc slot
     // scoped to that same location can re-open them.
     const locationBlockedDates = new Set(
@@ -520,6 +552,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
     );
     const overrideDates = (overrides ?? [])
       .filter((o) => matchLoc(o.location_id))
+      .filter((o) => matchPract((o as { practitioner_id?: string | null }).practitioner_id))
       .filter((o) => !locationBlockedDates.has(o.date) || o.location_id === data.locationId)
       .map((o) => o.date);
 
@@ -535,7 +568,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       const dt = new Date(Date.UTC(data.year, data.month - 1, d));
       const iso = dt.toISOString().slice(0, 10);
       const dow = dt.getUTCDay();
-      const applicable = (rules ?? []).filter(
+      const applicable = scopedRules.filter(
         (r) => r.day_of_week === dow && matchLoc(r.location_id) && ruleAppliesOnDate(r, iso, anchorIso),
       );
       if (applicable.length > 0) {
@@ -561,13 +594,14 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
 
       const { data: appts } = await supabaseAdmin
         .from("appointments")
-        .select("scheduled_date,start_time,end_time,location_id,status,payment_status,payment_hold_expires_at")
+        .select("scheduled_date,start_time,end_time,location_id,practitioner_id,status,payment_status,payment_hold_expires_at")
         .eq("profile_id", data.profileId)
         .gte("scheduled_date", startIso)
         .lte("scheduled_date", endIso)
         .neq("status", "cancelled");
       const nowMs = Date.now();
       const live = (appts ?? []).filter((a) => {
+        if (!matchPract((a as { practitioner_id?: string | null }).practitioner_id)) return false;
         const held = (a as { payment_hold_expires_at?: string | null }).payment_hold_expires_at;
         const paid = (a as { payment_status?: string }).payment_status === "paid";
         if (!held || paid || a.status !== "pending") return true;
@@ -576,7 +610,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
 
       const { data: bTimes } = await sb
         .from("blocked_times")
-        .select("date,start_time,end_time,location_id")
+        .select("date,start_time,end_time,location_id,practitioner_id")
         .eq("profile_id", data.profileId)
         .gte("date", startIso)
         .lte("date", endIso);
@@ -596,6 +630,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       }
       for (const b of bTimes ?? []) {
         if (!matchLoc(b.location_id)) continue;
+        if (!matchPract((b as { practitioner_id?: string | null }).practitioner_id)) continue;
         push(String(b.date), toMin(b.start_time as string), toMin(b.end_time as string));
       }
 
