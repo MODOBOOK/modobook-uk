@@ -594,7 +594,11 @@ function ServicesPage() {
               data: { treatment_id: targetId, template_ids: aftercare_template_ids ?? [] },
             });
             await saveTreatPractitioners({
-              data: { treatment_id: targetId, practitioner_ids: practitioner_ids ?? [] },
+              data: {
+                treatment_id: targetId,
+                practitioner_ids: practitioner_ids ?? [],
+                prices: (practitioner_prices ?? {}) as Record<string, number | null>,
+              },
             });
             for (const o of location_overrides ?? []) {
               await saveLocPricing({
@@ -1521,6 +1525,8 @@ function ServiceDialog({
   const [saving, setSaving] = useState(false);
   const [section, setSection] = useState<string>("basics");
   const [practitionerIds, setPractitionerIds] = useState<string[]>([]);
+  /** Per-team-member price for this service, keyed by practitioner id (blank = standard price). */
+  const [practitionerPrices, setPractitionerPrices] = useState<Record<string, string>>({});
 
   const editing = (state?.treat ?? null) as (Record<string, any> | null);
   const editId = (editing?.id ?? null) as string | null;
@@ -1569,6 +1575,7 @@ function ServiceDialog({
       setBadge("none");
       setLocOverrides({});
       setPractitionerIds([]);
+      setPractitionerPrices({});
 
       const t = state?.treat as Record<string, any> | undefined;
       if (t) {
@@ -1616,7 +1623,14 @@ function ServiceDialog({
             ]);
             setConsentIds((cons ?? []) as string[]);
             setAftercareIds((after ?? []) as string[]);
-            setPractitionerIds((prac ?? []) as string[]);
+            setPractitionerIds(((prac ?? []) as Array<{ practitioner_id: string }>).map((r) => r.practitioner_id));
+            setPractitionerPrices(
+              Object.fromEntries(
+                ((prac ?? []) as Array<{ practitioner_id: string; price_cents: number | null }>)
+                  .filter((r) => r.price_cents != null)
+                  .map((r) => [r.practitioner_id, String((r.price_cents as number) / 100)]),
+              ),
+            );
             const map: Record<string, LocOverride> = {};
             for (const row of (locs ?? []) as { location_id: string; price_cents: number | null; duration_minutes: number | null; available: boolean }[]) {
               map[row.location_id] = {
@@ -2138,6 +2152,12 @@ function ServiceDialog({
                   price_mode: priceMode,
                   badge: badge === "none" ? null : badge,
                   practitioner_ids: practitionerIds,
+                  practitioner_prices: Object.fromEntries(
+                    practitionerIds.map((id) => [
+                      id,
+                      practitionerPrices[id]?.trim() ? Math.round(Number(practitionerPrices[id]) * 100) : null,
+                    ]),
+                  ),
                   location_overrides: Object.entries(locOverrides).map(([location_id, ov]) => ({
                     location_id,
                     available: ov.available,
