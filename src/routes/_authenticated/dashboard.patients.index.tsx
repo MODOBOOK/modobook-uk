@@ -464,13 +464,23 @@ function PatientsPage() {
         onOpenChange={setImportOpen}
         onImport={async (rows) => {
           try {
-            const res: any = await importCsv({ data: { rows } });
-            const detail = res.skippedDetails?.length ? ` — first issue: ${res.skippedDetails[0]}` : "";
-            const total = (res.inserted || 0) + (res.updated || 0);
-            if (total === 0 && res.skipped) {
-              toast.error(`Import skipped all ${res.skipped} row(s)${detail}`);
+            // Chunk large files so no single request times out mid-import
+            const CHUNK = 400;
+            let inserted = 0, updated = 0, skipped = 0;
+            let firstDetail = "";
+            for (let i = 0; i < rows.length; i += CHUNK) {
+              const res: any = await importCsv({ data: { rows: rows.slice(i, i + CHUNK) } });
+              inserted += res.inserted || 0;
+              updated += res.updated || 0;
+              skipped += res.skipped || 0;
+              if (!firstDetail && res.skippedDetails?.length) firstDetail = res.skippedDetails[0];
+            }
+            const detail = firstDetail ? ` — first issue: ${firstDetail}` : "";
+            const total = inserted + updated;
+            if (total === 0 && skipped) {
+              toast.error(`Import skipped all ${skipped} row(s)${detail}`);
             } else {
-              toast.success(`Imported ${res.inserted}, updated ${res.updated}${res.skipped ? `, skipped ${res.skipped}${detail}` : ""}`);
+              toast.success(`Imported ${inserted}, updated ${updated}${skipped ? `, skipped ${skipped}${detail}` : ""}`);
             }
             setImportOpen(false);
             refresh();
