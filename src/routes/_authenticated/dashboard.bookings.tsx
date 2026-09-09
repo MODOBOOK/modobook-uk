@@ -902,22 +902,76 @@ function BookingsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Slot-click menu: same 4 calendar actions, seeded with the clicked slot */}
+      {slotMenu && (
+        <>
+          <button className="fixed inset-0 z-40" onClick={() => setSlotMenu(null)} aria-label="Close menu" />
+          <div
+            className="fixed z-50 flex w-60 flex-col gap-2 rounded-xl border bg-background/95 p-2 shadow-xl backdrop-blur"
+            style={{ left: slotMenu.x, top: slotMenu.y }}
+          >
+            <p className="px-2 pt-1 text-xs font-semibold text-muted-foreground">
+              {new Date(slotMenu.date + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })} · {slotMenu.time}
+            </p>
+            <Link
+              to="/dashboard/new-appointment"
+              search={{ date: slotMenu.date, time: slotMenu.time }}
+              onClick={() => setSlotMenu(null)}
+            >
+              <Button className="w-full justify-start gap-2 rounded-full bg-orange-200 text-orange-950 hover:bg-orange-300">
+                <CalendarDays className="h-4 w-4" /> New Appointment
+              </Button>
+            </Link>
+            <Button
+              onClick={() => { setSlotMenu(null); setShowPayLink(true); }}
+              className="w-full justify-start gap-2 rounded-full bg-slate-900 text-white hover:bg-slate-800"
+            >
+              <Link2 className="h-4 w-4" /> Payment Link
+            </Button>
+            <Button
+              onClick={() => {
+                const [h, m] = slotMenu.time.split(":").map(Number);
+                const endH = Math.min(h + 1, 23);
+                setBlockSeed({ date: slotMenu.date, start: slotMenu.time, end: `${String(endH).padStart(2, "0")}:${String(m).padStart(2, "0")}` });
+                setSlotMenu(null);
+                setShowBlock(true);
+              }}
+              className="w-full justify-start gap-2 rounded-full bg-rose-300 text-rose-950 hover:bg-rose-400"
+            >
+              <Ban className="h-4 w-4" /> Block a Time
+            </Button>
+            <Button
+              onClick={() => {
+                setUnblockSeed({ date: slotMenu.date, start: slotMenu.time, end: "17:00" });
+                setSlotMenu(null);
+                setShowUnblock(true);
+              }}
+              className="w-full justify-start gap-2 rounded-full bg-emerald-300 text-emerald-950 hover:bg-emerald-400"
+            >
+              <CircleCheck className="h-4 w-4" /> Open up appointments
+            </Button>
+          </div>
+        </>
+      )}
+
       <PaymentLinkDialog open={showPayLink} onOpenChange={setShowPayLink} />
       <BlockTimeDialog
         open={showBlock}
-        onOpenChange={setShowBlock}
+        onOpenChange={(v) => { setShowBlock(v); if (!v) setBlockSeed(undefined); }}
         practitionerId={practitionerFilter === "all" ? null : practitionerFilter}
         onAdded={(b) => setBlocks((p) => [...p, b])}
+        seed={blockSeed}
       />
       <UnblockDialog
         open={showUnblock}
-        onOpenChange={setShowUnblock}
+        onOpenChange={(v) => { setShowUnblock(v); if (!v) setUnblockSeed(undefined); }}
         locations={locations}
         defaultLocationId={locationFilter === "all" ? "all" : locationFilter}
         practitionerId={practitionerFilter === "all" ? null : practitionerFilter}
         blocks={blocks}
         onRemoved={(id) => setBlocks((p) => p.filter((b) => b.id !== id))}
         onOpened={refresh}
+        seed={unblockSeed}
       />
     </div>
   );
