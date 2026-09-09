@@ -128,6 +128,7 @@ function MultiBookPage() {
   const settings = (ctx as { settings?: import("@/lib/public-booking.functions").PublicBookingSettings }).settings;
   const showPrices = settings?.show_prices_on_booking !== false;
   const reqPhone = settings?.require_phone !== false;
+  const requireAccount = settings?.require_account_to_book === true;
   const reqDob = settings?.require_dob !== false;
   const reqAddress = settings?.require_address !== false;
   const maxLeadDays = settings?.booking_max_lead_days ?? 90;
