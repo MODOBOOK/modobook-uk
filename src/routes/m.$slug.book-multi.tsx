@@ -418,8 +418,8 @@ function MultiBookPage() {
 
 
   const monthQuery = useQuery({
-    queryKey: ["monthAvail", ctx.profileId, month.getFullYear(), month.getMonth() + 1, locationId, chosenPractitionerId],
-    queryFn: () => monthFn({ data: { profileId: ctx.profileId, year: month.getFullYear(), month: month.getMonth() + 1, locationId, practitionerId: chosenPractitionerId } }),
+    queryKey: ["monthAvail", ctx.profileId, month.getFullYear(), month.getMonth() + 1, locationId, chosenPractitionerId, totalDuration],
+    queryFn: () => monthFn({ data: { profileId: ctx.profileId, year: month.getFullYear(), month: month.getMonth() + 1, locationId, practitionerId: chosenPractitionerId, durationMinutes: totalDuration } }),
   });
 
   const isDateUnavailable = (d: Date) => {

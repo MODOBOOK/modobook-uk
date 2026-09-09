@@ -515,6 +515,8 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       month: number;
       locationId?: string | null;
       practitionerId?: string | null;
+      /** Total length of what's being booked; days with no gap this long are greyed out. */
+      durationMinutes?: number | null;
     }) => input,
   )
   .handler(async ({ data }) => {
@@ -650,7 +652,10 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
         push(String(b.date), toMin(b.start_time as string), toMin(b.end_time as string));
       }
 
-      const MIN_FREE = 15; // no usable gap left
+      // A day is only bookable if it still has ONE continuous gap long enough
+      // for the whole appointment. Fall back to a token 15 minutes when the
+      // caller hasn't told us how long the booking is.
+      const needed = Math.max(15, Math.round(Number(data.durationMinutes ?? 0)) || 15);
       for (const iso of openDates) {
         if (blockedDates.includes(iso)) continue;
         if (dailyCap != null && (countByDate.get(iso) ?? 0) >= Number(dailyCap)) {
@@ -659,19 +664,18 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
         }
         const windows = windowsByDate.get(iso) ?? [];
         const busy = (busyByDate.get(iso) ?? []).slice().sort((x, y) => x.start - y.start);
-        if (busy.length === 0) continue;
-        let free = 0;
+        let maxGap = 0;
         for (const w of windows) {
           let cursor = w.start;
           for (const b of busy) {
             if (b.end <= cursor || b.start >= w.end) continue;
-            if (b.start > cursor) free += b.start - cursor;
+            if (b.start > cursor) maxGap = Math.max(maxGap, b.start - cursor);
             cursor = Math.max(cursor, b.end);
             if (cursor >= w.end) break;
           }
-          if (cursor < w.end) free += w.end - cursor;
+          if (cursor < w.end) maxGap = Math.max(maxGap, w.end - cursor);
         }
-        if (free < MIN_FREE) fullDates.push(iso);
+        if (maxGap < needed) fullDates.push(iso);
       }
     } catch (e) {
       console.error("[getMonthAvailability] fully-booked check failed", e);
