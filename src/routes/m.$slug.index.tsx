@@ -1609,6 +1609,89 @@ function BookPage() {
         </section>
       )}
 
+      {/* Choose your practitioner — its own step, before the treatment menu */}
+      {showPractitionerStep && (
+        <section data-section="practitioners" className="mx-auto mt-8 max-w-3xl px-4">
+          <h2 className="mb-1 text-xl font-bold" style={headingStyle}>
+            {practSelectionMode === "required" ? "Choose your practitioner" : "Choose your practitioner (optional)"}
+          </h2>
+          <p className="mb-4 text-sm opacity-70">
+            {practSelectionMode === "required"
+              ? "Pick who you'd like to see — their menu and available times will load next."
+              : "Pick who you'd like to see, or continue with no preference."}
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {choosablePractitioners.map((p) => {
+              const isPicked = practitionerId === p.id;
+              return (
+                <button
+                  type="button"
+                  key={p.id}
+                  onClick={() => {
+                    setNoPreference(false);
+                    setPractitionerId(isPicked ? null : p.id);
+                  }}
+                  className="flex items-center gap-3 rounded-2xl border p-3 text-left transition"
+                  style={{
+                    borderColor: isPicked ? brand : `${brand}22`,
+                    backgroundColor: isPicked ? `${brand}14` : menuCardBg,
+                    boxShadow: isPicked ? `0 0 0 2px ${brand}` : undefined,
+                  }}
+                >
+                  {p.photo_url ? (
+                    <img src={p.photo_url} alt={p.name} className="h-14 w-14 shrink-0 rounded-full object-cover" />
+                  ) : (
+                    <div
+                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white"
+                      style={{ backgroundColor: brand }}
+                    >
+                      {p.name.charAt(0)}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-base font-semibold leading-tight" style={{ color: brand }}>
+                      {p.name}
+                    </div>
+                    {p.professional_title && (
+                      <div className="truncate text-xs leading-tight opacity-70">{p.professional_title}</div>
+                    )}
+                  </div>
+                  {isPicked && (
+                    <span className="text-[11px] font-semibold uppercase" style={{ color: brand }}>Selected</span>
+                  )}
+                </button>
+              );
+            })}
+            {practSelectionMode === "optional" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPractitionerId(null);
+                  setNoPreference(true);
+                }}
+                className="flex items-center gap-3 rounded-2xl border border-dashed p-3 text-left transition"
+                style={{
+                  borderColor: noPreference ? brand : `${brand}33`,
+                  backgroundColor: noPreference ? `${brand}0f` : "transparent",
+                }}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="text-base font-semibold leading-tight" style={{ color: brand }}>
+                    No preference
+                  </div>
+                  <div className="text-xs leading-tight opacity-70">Show me everything that's available</div>
+                </div>
+                {noPreference && (
+                  <span className="text-[11px] font-semibold uppercase" style={{ color: brand }}>Selected</span>
+                )}
+              </button>
+            )}
+          </div>
+          {practSelectionMode === "required" && !practitionerId && (
+            <p className="mt-3 text-sm opacity-70">Choose someone above to see their treatments and times.</p>
+          )}
+        </section>
+      )}
 
 
       {/* Chooser gate */}
