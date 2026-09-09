@@ -1,43 +1,77 @@
-## 1. Training tab (done in this turn)
-Moved the **Training** link into the public header next to Book / About / Rewards / Reviews on `/m/$slug`. It appears only when the practitioner has published courses.
+# Choosing a practitioner, and staff joining a clinic
 
-## 2. Gift cards — what I'll build
+Two things are broken for clinics with a team, plus one tidy-up you asked for.
 
-### Practitioner side (dashboard)
-- New page **`/dashboard/gift-cards`**, linked in the sidebar right next to Treatments and Packages.
-- Create/edit/delete gift-card products with:
-  - Type: **Monetary value** (fixed £ amount) or **Treatment/Package** (buyer gifts an existing service).
-  - Cover image (reusing `ImageUploader`).
-  - Optional expiry in months (blank = never).
-  - Active toggle.
-- Sold gift-cards list: code, buyer, recipient, initial value, remaining balance, status, delivery date.
+## 1. "Choose practitioner" with nowhere to choose
 
-### Public buyer flow
-- New public route **`/m/$slug/gift-cards`** (linked in the header next to Rewards/Training).
-- Card grid → checkout form:
-  - Buyer name/email, recipient name/email, personal message.
-  - Delivery choice: **Send to recipient now** or **Send to me**.
-  - Stripe Checkout for payment; on `payment_intent.succeeded` webhook we generate a unique code, mark the purchase active, and email the branded PDF-style gift card to whichever address was chosen.
+Right now the picker only appears tucked inside a location card, and only when
+the clinic has manually linked each team member to that location. Clinics that
+never did that linking see the "please choose a practitioner" message with no
+list to pick from — exactly what your client reported.
 
-### Redemption
-- New **Promo / gift card** input on the booking checkout (`m.$slug.book-multi.tsx`, `m.$slug.book.$treatmentId.tsx`) — reuses the pattern of the existing `DiscountCodeBox`.
-- Server fn `redeemGiftCard({slug, code, treatment_ids, total})`:
-  - Value cards: partial redemption supported — deducts up to `remaining_amount`, leftover stays on the code.
-  - Treatment/Package cards: only apply if the selected item matches; single-use.
-  - Expired/redeemed codes rejected.
-- On successful booking, decrement `remaining_amount` and log to `gift_card_redemptions`.
+What changes:
 
-### Database (new tables, all with GRANTs + RLS)
-- `gift_cards` — the product definitions per practitioner.
-- `gift_card_purchases` — one row per purchase, with unique code and running balance.
-- `gift_card_redemptions` — audit log linking purchase ↔ appointment ↔ amount.
+- The practitioner choice becomes its own clear step, shown **above** the
+  treatment menu, straight after the location (or immediately, when there is
+  only one location). Photos, names, job titles, big tap targets.
+- If nobody has been linked to a location, we fall back to showing all the
+  clinic's active team members instead of showing nothing.
+- When choosing is optional, there's a clear "No preference" option.
+- The treatment menu stays hidden until the choice is made when the clinic has
+  set it to required — with a message that now sits under a real list.
+- The old duplicate picker inside the location card is removed.
 
-### Email
-- New branded template `gift-card-delivery.tsx` with clinic logo, recipient name, code, value/service, expiry, personal message.
+The owner still controls this exactly as today in Settings: patients must
+choose, may choose, or it's picked automatically.
 
-### Out of scope for this pass
-- Physical/printed cards.
-- Bulk/corporate gift-card orders.
-- Refunds of partially-redeemed cards (manual for now).
+## 2. Times shown should belong to the chosen practitioner
 
-Shall I proceed with all of the above, or do you want to trim anything (e.g. skip the public purchase flow for now and just let practitioners issue codes manually)?
+Today the calendar shows the whole clinic's hours and the whole clinic's bookings
+even after a patient picks someone. So a patient can pick Callie and be offered
+a time that only Ryan works.
+
+What changes: once someone is chosen, the available dates and times are built
+from that person's working hours, their days off and their own bookings.
+Clinic-wide hours and closures still apply to everyone. If nothing specific has
+been set for that person, the clinic-wide hours are used as before, so no clinic
+loses slots overnight.
+
+## 3. Invited team member can't get in
+
+The invite page already offers "create account & accept", but the new account is
+made through the normal sign-up route, which waits for an email confirmation the
+person never gets — so the sign-in immediately after fails and it looks like the
+invite was rejected.
+
+What changes: because the invite was sent to that exact address, the account is
+created already confirmed on our side, then signed straight in and joined to the
+clinic. Wording on the page and in the invite email makes it obvious this is
+where you set your password for a brand-new account. If an account already
+exists for that email, they're sent to sign in and the invite links to it.
+
+## Technical notes
+
+- `src/routes/m.$slug.index.tsx`: extract a `practitionersForLocation()` helper
+  with an all-active fallback; new standalone practitioner section; remove the
+  in-card picker; keep the `modo:practitionerId:<slug>` session storage contract
+  used by both booking routes.
+- `src/lib/public-booking.functions.ts`: add optional `practitionerId` to
+  `getDayAvailability` / `getMonthAvailability`; filter `availability_rules`,
+  `availability_overrides`, `blocked_dates`, `blocked_times` and busy
+  appointments on `practitioner_id = X OR practitioner_id IS NULL`; if the
+  practitioner has zero own rules, fall back to clinic-wide rules.
+- `src/routes/m.$slug.book-multi.tsx` and `m.$slug.book.$treatmentId.tsx`: read
+  the stored practitioner id into state, pass it into both availability queries
+  and into the query keys, and filter `ctx.rules` by it client-side.
+- `src/lib/staff.functions.ts`: new `createStaffAccountFromInvite({token,
+  password})` — looks the invite up with the admin client, creates the auth user
+  with `email_confirm: true`, links `staff_members.user_id`, marks it active;
+  returns `{ email }` so the client signs in with password. Reuses the existing
+  demo guard and expiry checks.
+- `src/routes/staff-accept.$token.tsx`: call the new function instead of
+  `supabase.auth.signUp`, keep the existing already-registered branch.
+
+## Not included
+
+- Per-practitioner treatment durations or prices.
+- Letting patients switch practitioner mid-booking without reselecting a time.
