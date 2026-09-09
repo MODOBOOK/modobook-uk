@@ -19,24 +19,52 @@ export const startPublicDemo = createServerFn({ method: "POST" })
     const { seedDemoClinic } = await import("./demo-seed.server");
     const { DEMO_PRACTITIONER_EMAIL, DEMO_PATIENT_EMAIL, DEMO_SLUG } = await import("./demo.server");
 
+    const email = data.role === "practitioner" ? DEMO_PRACTITIONER_EMAIL : DEMO_PATIENT_EMAIL;
+
+    // Seeding is best-effort: if the demo accounts already exist we can still
+    // sign the visitor in, even when a single seed step fails.
+    let seedError: unknown = null;
     try {
       await seedDemoClinic(supabaseAdmin);
     } catch (error) {
+      seedError = error;
       console.error("Public demo seed failed", error);
-      throw new Error("The demo clinic is being rebuilt — please try again in a moment.");
     }
 
-    const email = data.role === "practitioner" ? DEMO_PRACTITIONER_EMAIL : DEMO_PATIENT_EMAIL;
-    const origin = (data.origin || "https://modobook.uk").replace(/\/$/, "");
+    const rawOrigin = (data.origin || "").replace(/\/$/, "");
+    // Supabase only redirects back to allow-listed public hosts; anything else
+    // (localhost, unknown preview host) silently bounces to the site root.
+    const origin = /^https:\/\/[a-z0-9.-]*(lovable\.app|modobook\.uk)$/i.test(rawOrigin)
+      ? rawOrigin
+      : "https://modobook.uk";
     const path = data.role === "practitioner" ? "/dashboard" : `/m/${DEMO_SLUG}/account`;
 
-    const { data: link, error } = await (supabaseAdmin as any).auth.admin.generateLink({
-      type: "magiclink",
-      email,
-      options: { redirectTo: `${origin}${path}` },
-    });
-    if (error) throw new Error(`Auth: ${error.message}`);
-    const url = (link as any)?.properties?.action_link as string | undefined;
-    if (!url) throw new Error("Could not open the demo right now — please try again.");
-    return { url, role: data.role };
+    async function mintLink() {
+      const { data: link, error } = await (supabaseAdmin as any).auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: { redirectTo: `${origin}${path}` },
+      });
+      if (error) throw new Error(error.message);
+      const url = (link as any)?.properties?.action_link as string | undefined;
+      if (!url) throw new Error("No sign-in link returned");
+      return url;
+    }
+
+    try {
+      return { url: await mintLink(), role: data.role };
+    } catch (first) {
+      console.error("Demo link attempt 1 failed", first);
+      await new Promise((r) => setTimeout(r, 800));
+      try {
+        return { url: await mintLink(), role: data.role };
+      } catch (second) {
+        console.error("Demo link attempt 2 failed", second);
+        throw new Error(
+          seedError
+            ? "The demo clinic is being rebuilt — please try again in a moment."
+            : "Could not open the demo right now — please try again.",
+        );
+      }
+    }
   });
