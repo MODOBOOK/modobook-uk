@@ -28,22 +28,37 @@ async function findOrCreateAuthUser(
   email: string,
   meta: Record<string, unknown>,
 ): Promise<string> {
-  const { data: existing } = await (admin as any).auth.admin.listUsers({
-    page: 1,
-    perPage: 200,
-  });
-  const found = (existing?.users ?? []).find(
-    (u: any) => (u.email || "").toLowerCase() === email.toLowerCase(),
-  );
-  if (found?.id) return found.id as string;
+  const target = email.toLowerCase();
+
+  // Create first. If the account already exists (422 email_exists), fall
+  // back to a paginated lookup — listing only page 1 misses the demo user
+  // once the project has more users than one page holds.
   const { data, error } = await (admin as any).auth.admin.createUser({
     email,
     email_confirm: true,
     password: crypto.randomUUID(),
     user_metadata: meta,
   });
-  if (error) throw error;
-  return data.user.id as string;
+  if (!error && data?.user?.id) return data.user.id as string;
+
+  const alreadyExists =
+    error &&
+    ((error as any).code === "email_exists" ||
+      /already been registered/i.test((error as any).message ?? ""));
+  if (!alreadyExists) throw error;
+
+  for (let page = 1; page <= 50; page += 1) {
+    const { data: existing, error: listError } = await (admin as any).auth.admin.listUsers({
+      page,
+      perPage: 200,
+    });
+    if (listError) throw listError;
+    const users = existing?.users ?? [];
+    const found = users.find((u: any) => (u.email || "").toLowerCase() === target);
+    if (found?.id) return found.id as string;
+    if (users.length < 200) break;
+  }
+  throw new Error(`Demo account ${email} exists but could not be located`);
 }
 
 /** Ensures the demo practitioner + patient exist. Returns their user ids and
