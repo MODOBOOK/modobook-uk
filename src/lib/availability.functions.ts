@@ -147,12 +147,10 @@ export const listMyAppointments = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const profileId = await getProfileId(supabase, userId);
     if (!profileId) return [];
-    // NOTE: we intentionally do NOT sweep or hide pending/unpaid appointments
-    // here. Practitioners need visibility of every booking — including ones
-    // still awaiting Stripe confirmation or manually created without payment.
-    // Slot availability release for abandoned checkouts is handled in
-    // getDayAvailability (public-booking.functions.ts) based on the payment
-    // hold window; the appointment row itself remains for the practitioner.
+    // Stripe checkout rows are temporary slot holds, not appointments. Keep
+    // them out of the practitioner diary until payment has actually completed.
+    // Pending appointments without a hold are legitimate manually-created or
+    // approval-pending bookings and remain visible.
     const { ownPractitionerId } = await getScope(supabase, userId);
     let q = supabase
       .from("appointments")
@@ -163,7 +161,14 @@ export const listMyAppointments = createServerFn({ method: "GET" })
     if (ownPractitionerId) q = q.eq("practitioner_id", ownPractitionerId);
     const { data, error } = await q;
     if (error) throw error;
-    return data ?? [];
+    return (data ?? []).filter((appointment) => {
+      const isUnpaidCheckoutHold =
+        appointment.status === "pending" &&
+        appointment.payment_status !== "paid" &&
+        Number(appointment.amount_paid_cents ?? 0) <= 0 &&
+        Boolean(appointment.payment_hold_expires_at);
+      return !isUnpaidCheckoutHold;
+    });
   });
 
 

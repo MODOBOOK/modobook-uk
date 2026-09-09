@@ -207,10 +207,8 @@ function Account() {
         if (a.status !== "pending") return true;
         // Pending + paid (or partial deposit) is a real booking.
         if (a.payment_status === "paid" || (a.amount_paid_cents ?? 0) > 0) return true;
-        // Pending + unpaid inside the hold window: not confirmed yet, hide.
-        // Pending + unpaid past the hold window: abandoned, hide.
-        if (!a.payment_hold_expires_at) return true; // legacy row with no hold — leave visible
-        return false;
+        // A Stripe hold is never a booking, whether it is active or expired.
+        return !a.payment_hold_expires_at;
       });
       setAppts(visibleAppts as any);
 
