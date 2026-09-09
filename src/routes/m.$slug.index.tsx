@@ -580,6 +580,18 @@ function BookPage() {
   const hasCareGuides = preItems.length > 0;
 
   const practSelectionMode = profile.practitioner_selection_mode ?? "optional";
+  // Who can a patient pick at this location? Clinics that never linked their
+  // team to a location must still show a list — otherwise the page asks for a
+  // choice with nothing to choose from.
+  const practitionersForLocation = (locId: string | null) => {
+    const linked = locationPractitioners
+      .filter((lp) => !locId || lp.location_id === locId)
+      .sort((a, b) => a.display_order - b.display_order)
+      .map((lp) => practitioners.find((p) => p.id === lp.practitioner_id))
+      .filter((p): p is NonNullable<typeof p> => !!p);
+    if (linked.length > 0) return linked;
+    return [...practitioners].sort((a, b) => a.display_order - b.display_order);
+  };
   const [practitionerId, setPractitionerIdState] = useState<string | null>(null);
   const setPractitionerId = (id: string | null) => {
     setPractitionerIdState(id);
@@ -589,22 +601,25 @@ function BookPage() {
       else window.sessionStorage.removeItem(key);
     }
   };
+  const [noPreference, setNoPreference] = useState(false);
   // Clear practitioner when location changes
   useEffect(() => {
     setPractitionerId(null);
+    setNoPreference(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locationId]);
+  const choosablePractitioners = useMemo(
+    () => practitionersForLocation(locationId),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [locationPractitioners, practitioners, locationId],
+  );
   // Auto-pick first available when configured
   useEffect(() => {
-    if (practSelectionMode !== "first_available" || !locationId) return;
-    const first = locationPractitioners
-      .filter((lp) => lp.location_id === locationId)
-      .sort((a, b) => a.display_order - b.display_order)
-      .map((lp) => practitioners.find((p) => p.id === lp.practitioner_id))
-      .filter((p): p is NonNullable<typeof p> => !!p)[0];
+    if (practSelectionMode !== "first_available") return;
+    const first = choosablePractitioners[0];
     if (first) setPractitionerId(first.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locationId, practSelectionMode]);
+  }, [choosablePractitioners, practSelectionMode]);
   // Block book links when practitioner required but not picked
   useEffect(() => {
     if (practSelectionMode !== "required") return;
@@ -618,22 +633,20 @@ function BookPage() {
         e.preventDefault();
         e.stopPropagation();
         toast.error("Please choose a practitioner first");
-        document.querySelector("[data-section='locations']")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document.querySelector("[data-section='practitioners']")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     }
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
   }, [practSelectionMode, practitionerId]);
-  // When the clinic requires a choice, hold the menu back until one is made.
-  const locationHasPractitioners = useMemo(
-    () =>
-      locationPractitioners.some(
-        (lp) => lp.location_id === locationId && practitioners.some((p) => p.id === lp.practitioner_id),
-      ),
-    [locationPractitioners, practitioners, locationId],
-  );
+  // Clinics with no locations set up still get the step — the choice is not
+  // about where, it's about who.
+  const showPractitionerStep =
+    practSelectionMode !== "first_available" &&
+    choosablePractitioners.length > 0 &&
+    (!!locationId || bookableLocations.length === 0);
   const practitionerGateOpen =
-    practSelectionMode !== "required" || !!practitionerId || !locationHasPractitioners;
+    practSelectionMode !== "required" || !!practitionerId || choosablePractitioners.length === 0;
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedPackageIds, setSelectedPackageIds] = useState<string[]>([]);
@@ -1538,20 +1551,6 @@ function BookPage() {
                 (loc as { coming_soon_label?: string | null }).coming_soon_label || "Coming soon";
               const singleLocation = bookableLocations.length === 1 && !comingSoon;
               const photo = loc.image_url || profile.avatar_url;
-              const locPracts = locationPractitioners
-                .filter((lp) => lp.location_id === loc.id)
-                .sort((a, b) => a.display_order - b.display_order)
-                .map((lp) => practitioners.find((p) => p.id === lp.practitioner_id))
-                .filter((p): p is NonNullable<typeof p> => !!p)
-                // Hide anyone who can't do the services already chosen.
-                .filter((p) => {
-                  if (selectedIds.length === 0) return true;
-                  const theirs = practitionerTreatments
-                    .filter((l) => l.practitioner_id === p.id)
-                    .map((l) => l.treatment_id);
-                  if (theirs.length === 0) return true;
-                  return selectedIds.every((id) => theirs.includes(id));
-                });
               const cardInner = (
                 <>
                   {photo ? (
@@ -1607,64 +1606,6 @@ function BookPage() {
                     </button>
                   )}
 
-                  {selected && locPracts.length > 0 && practSelectionMode !== "first_available" && (
-                    <div className="mt-3 border-t pt-3" style={{ borderColor: `${brand}1a` }}>
-                      <div className="mb-2 flex items-center justify-between">
-                        <div className="text-[10px] font-semibold uppercase tracking-wide opacity-55" style={{ color: brand }}>
-                          {practSelectionMode === "required" ? "Choose Practitioner *" : "Choose Practitioner (optional)"}
-                        </div>
-                        {practSelectionMode === "optional" && practitionerId && (
-                          <button
-                            type="button"
-                            onClick={() => setPractitionerId(null)}
-                            className="text-[10px] underline opacity-60 hover:opacity-100"
-                          >
-                            Clear
-                          </button>
-                        )}
-                      </div>
-                      <div className="grid gap-2">
-                        {locPracts.map((p) => {
-                          const isPicked = practitionerId === p.id;
-                          return (
-                            <button
-                              type="button"
-                              key={p.id}
-                              onClick={() => setPractitionerId(isPicked ? null : p.id)}
-                              className="flex items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition"
-                              style={{
-                                borderColor: isPicked ? brand : `${brand}22`,
-                                backgroundColor: isPicked ? `${brand}18` : `${brand}08`,
-                                boxShadow: isPicked ? `0 0 0 1px ${brand}` : undefined,
-                              }}
-                            >
-                              {p.photo_url ? (
-                                <img src={p.photo_url} alt={p.name} className="h-8 w-8 shrink-0 rounded-full object-cover" />
-                              ) : (
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: brand }}>
-                                  {p.name.charAt(0)}
-                                </div>
-                              )}
-                              <div className="min-w-0 flex-1">
-                                <div className="truncate text-xs font-semibold leading-tight" style={{ color: brand }}>
-                                  {p.name}
-                                </div>
-                                {p.professional_title && (
-                                  <div className="truncate text-[10px] leading-tight opacity-70">{p.professional_title}</div>
-                                )}
-                              </div>
-                              {isPicked && (
-                                <span className="text-[10px] font-semibold uppercase" style={{ color: brand }}>Selected</span>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {practSelectionMode === "required" && !practitionerId && (
-                        <p className="mt-2 text-[11px] opacity-70">Please choose a practitioner to continue.</p>
-                      )}
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -1672,6 +1613,89 @@ function BookPage() {
         </section>
       )}
 
+      {/* Choose your practitioner — its own step, before the treatment menu */}
+      {showPractitionerStep && (
+        <section data-section="practitioners" className="mx-auto mt-8 max-w-3xl px-4">
+          <h2 className="mb-1 text-xl font-bold" style={headingStyle}>
+            {practSelectionMode === "required" ? "Choose your practitioner" : "Choose your practitioner (optional)"}
+          </h2>
+          <p className="mb-4 text-sm opacity-70">
+            {practSelectionMode === "required"
+              ? "Pick who you'd like to see — their menu and available times will load next."
+              : "Pick who you'd like to see, or continue with no preference."}
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {choosablePractitioners.map((p) => {
+              const isPicked = practitionerId === p.id;
+              return (
+                <button
+                  type="button"
+                  key={p.id}
+                  onClick={() => {
+                    setNoPreference(false);
+                    setPractitionerId(isPicked ? null : p.id);
+                  }}
+                  className="flex items-center gap-3 rounded-2xl border p-3 text-left transition"
+                  style={{
+                    borderColor: isPicked ? brand : `${brand}22`,
+                    backgroundColor: isPicked ? `${brand}14` : menuCardBg,
+                    boxShadow: isPicked ? `0 0 0 2px ${brand}` : undefined,
+                  }}
+                >
+                  {p.photo_url ? (
+                    <img src={p.photo_url} alt={p.name} className="h-14 w-14 shrink-0 rounded-full object-cover" />
+                  ) : (
+                    <div
+                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white"
+                      style={{ backgroundColor: brand }}
+                    >
+                      {p.name.charAt(0)}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-base font-semibold leading-tight" style={{ color: brand }}>
+                      {p.name}
+                    </div>
+                    {p.professional_title && (
+                      <div className="truncate text-xs leading-tight opacity-70">{p.professional_title}</div>
+                    )}
+                  </div>
+                  {isPicked && (
+                    <span className="text-[11px] font-semibold uppercase" style={{ color: brand }}>Selected</span>
+                  )}
+                </button>
+              );
+            })}
+            {practSelectionMode === "optional" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPractitionerId(null);
+                  setNoPreference(true);
+                }}
+                className="flex items-center gap-3 rounded-2xl border border-dashed p-3 text-left transition"
+                style={{
+                  borderColor: noPreference ? brand : `${brand}33`,
+                  backgroundColor: noPreference ? `${brand}0f` : "transparent",
+                }}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="text-base font-semibold leading-tight" style={{ color: brand }}>
+                    No preference
+                  </div>
+                  <div className="text-xs leading-tight opacity-70">Show me everything that's available</div>
+                </div>
+                {noPreference && (
+                  <span className="text-[11px] font-semibold uppercase" style={{ color: brand }}>Selected</span>
+                )}
+              </button>
+            )}
+          </div>
+          {practSelectionMode === "required" && !practitionerId && (
+            <p className="mt-3 text-sm opacity-70">Choose someone above to see their treatments and times.</p>
+          )}
+        </section>
+      )}
 
 
       {/* Chooser gate */}

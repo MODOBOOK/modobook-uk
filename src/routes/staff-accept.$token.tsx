@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, Mail } from "lucide-react";
-import { getStaffInvite, acceptStaffInvite } from "@/lib/staff.functions";
+import { getStaffInvite, acceptStaffInvite, createStaffAccountFromInvite } from "@/lib/staff.functions";
 
 export const Route = createFileRoute("/staff-accept/$token")({
   ssr: false,
@@ -26,6 +26,7 @@ function AcceptInvitePage() {
   const navigate = useNavigate();
   const lookup = useServerFn(getStaffInvite);
   const accept = useServerFn(acceptStaffInvite);
+  const createAccount = useServerFn(createStaffAccountFromInvite);
 
   const [state, setState] = useState<InviteState>({ status: "loading" });
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
@@ -58,24 +59,16 @@ function AcceptInvitePage() {
     if (password !== confirm) { toast.error("Passwords don't match"); return; }
     setWorking(true);
     try {
-      const { error: signUpErr } = await supabase.auth.signUp({
-        email: state.email, password,
-        options: { emailRedirectTo: `${window.location.origin}/staff-accept/${token}` },
-      });
-      if (signUpErr) {
-        // If the address already has an account, do NOT silently sign them in —
-        // that has caused confusion (users think they made a fresh account and
-        // ended up back in their existing one). Send them through /auth instead.
-        if (/already|registered|exists/i.test(signUpErr.message)) {
-          toast.info("An account already exists for this email — sign in to link the invite.");
-          navigate({ to: "/auth", search: { next: `/staff-accept/${token}` } as any });
-          return;
-        }
-        throw signUpErr;
+      // Created server-side and confirmed straight away — the invite proves the
+      // address, so there is no confirmation email to wait for.
+      const res = await createAccount({ data: { token, password } });
+      if (!res.ok) {
+        toast.info("An account already exists for this email — sign in to link the invite.");
+        navigate({ to: "/auth", search: { next: `/staff-accept/${token}` } as any });
+        return;
       }
-      const { error: signInErr } = await supabase.auth.signInWithPassword({ email: state.email, password });
+      const { error: signInErr } = await supabase.auth.signInWithPassword({ email: res.email, password });
       if (signInErr) throw signInErr;
-      await accept({ data: { token } });
       toast.success(`Welcome to ${state.clinicName}!`);
       navigate({ to: "/dashboard" });
     } catch (e: any) { toast.error(e?.message ?? "Failed"); }
@@ -118,6 +111,7 @@ function AcceptInvitePage() {
           <CardTitle>Join {state.clinicName}</CardTitle>
           <CardDescription>
             You've been invited as <strong>{state.role}</strong> for <strong>{state.email}</strong>.
+            {" "}New to MODO? Choose a password below and your login is created right away — no confirmation email needed.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -158,7 +152,7 @@ function AcceptInvitePage() {
                 <Input value={state.email} disabled />
               </div>
               <div>
-                <Label>Set a password (new account)</Label>
+                <Label>Create a password</Label>
                 <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
               </div>
               <div>
@@ -166,7 +160,7 @@ function AcceptInvitePage() {
                 <Input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
               </div>
               <Button className="w-full" onClick={createAccountAndAccept} disabled={working}>
-                {working ? "Creating account…" : "Create account & accept"}
+                {working ? "Creating your account…" : "Create my account & join"}
               </Button>
             </>
           )}

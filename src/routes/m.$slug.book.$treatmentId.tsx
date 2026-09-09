@@ -294,8 +294,16 @@ function BookTreatmentPage() {
 
 
 
+  // Which practitioner the patient chose on the clinic page (if any) — their
+  // hours and diary drive the dates and times we offer.
+  const [chosenPractitionerId, setChosenPractitionerId] = useState<string | null>(null);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setChosenPractitionerId(window.sessionStorage.getItem(`modo:practitionerId:${slug}`) || null);
+  }, [slug]);
+
   const monthQuery = useQuery({
-    queryKey: ["monthAvail", ctx.profileId, month.getFullYear(), month.getMonth() + 1, locationId],
+    queryKey: ["monthAvail", ctx.profileId, month.getFullYear(), month.getMonth() + 1, locationId, chosenPractitionerId],
     queryFn: () =>
       monthFn({
         data: {
@@ -303,6 +311,7 @@ function BookTreatmentPage() {
           year: month.getFullYear(),
           month: month.getMonth() + 1,
           locationId,
+          practitionerId: chosenPractitionerId,
         },
       }),
   });
@@ -344,16 +353,19 @@ function BookTreatmentPage() {
         (r: Rule) =>
           r.day_of_week === dow &&
           (!locationId || !r.location_id || r.location_id === locationId) &&
+          (!chosenPractitionerId ||
+            !(r as { practitioner_id?: string | null }).practitioner_id ||
+            (r as { practitioner_id?: string | null }).practitioner_id === chosenPractitionerId) &&
           ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number; effective_from?: string | null; effective_to?: string | null }, date, anchor),
       );
     },
-    [ctx.rules, dow, locationId, date, (ctx as { rotaAnchor?: string | null }).rotaAnchor],
+    [ctx.rules, dow, locationId, chosenPractitionerId, date, (ctx as { rotaAnchor?: string | null }).rotaAnchor],
   );
 
 
   const dayQuery = useQuery({
-    queryKey: ["dayAvail", ctx.profileId, date, locationId],
-    queryFn: () => dayFn({ data: { profileId: ctx.profileId, date, locationId } }),
+    queryKey: ["dayAvail", ctx.profileId, date, locationId, chosenPractitionerId],
+    queryFn: () => dayFn({ data: { profileId: ctx.profileId, date, locationId, practitionerId: chosenPractitionerId } }),
   });
 
   const slots = useMemo(() => {
@@ -511,7 +523,7 @@ function BookTreatmentPage() {
           })(),
           basePrice: splitAllowed && paymentPlan === "split" ? effectivePrice / sessionCount : effectivePrice,
           patientUserId: patientUserId,
-          practitionerId: (typeof window !== "undefined" ? window.sessionStorage.getItem(`modo:practitionerId:${slug}`) : null) || null,
+          practitionerId: chosenPractitionerId,
           paymentChoice,
           modelSlotId: activeModelSlot?.id ?? null,
 
