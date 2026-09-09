@@ -294,6 +294,13 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       .in("treatment_id", treatmentIds.length > 0 ? treatmentIds : ["00000000-0000-0000-0000-000000000000"]);
     const pricing = pricingRes.data ?? [];
 
+    // Per-team-member price overrides for the selected services.
+    const practTreatRes = await sb
+      .from("practitioner_treatments")
+      .select("practitioner_id, treatment_id, price_cents")
+      .eq("profile_id", profile.id);
+    const practitionerTreatments = practTreatRes.data ?? [];
+
     const bookableFrom = await computeBookableFrom(
       sb,
       profile.id,
@@ -328,6 +335,7 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       clinicName: profile.clinic_name,
       treatments: treatments ?? [],
       pricing: pricing ?? [],
+      practitionerTreatments,
       locations: bookableLocations,
       rules: rules ?? [],
       theme: theme ?? null,

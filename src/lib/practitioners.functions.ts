@@ -17,7 +17,7 @@ export const listMyPractitioners = createServerFn({ method: "GET" })
       supabase.from("practitioners").select("*").eq("profile_id", profile.id)
         .order("display_order").order("created_at"),
       supabase.from("location_practitioners").select("*"),
-      supabase.from("practitioner_treatments").select("practitioner_id, treatment_id")
+      supabase.from("practitioner_treatments").select("practitioner_id, treatment_id, price_cents")
         .eq("profile_id", profile.id),
     ]);
     const ids = new Set((practitioners ?? []).map((p) => p.id));
@@ -95,11 +95,25 @@ export const upsertPractitioner = createServerFn({ method: "POST" })
       }
     }
     if (data.treatment_ids !== undefined) {
+      // Keep any per-person prices already set for these services — rebuilding
+      // the assignment list must not silently wipe someone's own pricing.
+      const { data: prevRows } = await supabase
+        .from("practitioner_treatments")
+        .select("treatment_id, price_cents")
+        .eq("practitioner_id", row.id);
+      const prevPrice = new Map<string, number | null>(
+        (prevRows ?? []).map((r: any) => [r.treatment_id as string, (r.price_cents ?? null) as number | null]),
+      );
       await supabase.from("practitioner_treatments").delete().eq("practitioner_id", row.id);
       const ids = data.treatment_ids ?? [];
       if (ids.length > 0) {
         await supabase.from("practitioner_treatments").insert(
-          ids.map((tid) => ({ profile_id: profile.id, practitioner_id: row.id, treatment_id: tid })),
+          ids.map((tid) => ({
+            profile_id: profile.id,
+            practitioner_id: row.id,
+            treatment_id: tid,
+            price_cents: prevPrice.get(tid) ?? null,
+          })),
         );
       }
     }
@@ -129,15 +143,25 @@ export const getTreatmentPractitioners = createServerFn({ method: "GET" })
     const profileId = await __activeProfileId(supabase, userId);
     const { data: rows } = await supabase
       .from("practitioner_treatments")
-      .select("practitioner_id")
+      .select("practitioner_id, price_cents")
       .eq("profile_id", profileId)
       .eq("treatment_id", data.treatment_id);
-    return (rows ?? []).map((r) => r.practitioner_id as string);
+    return (rows ?? []).map((r: any) => ({
+      practitioner_id: r.practitioner_id as string,
+      price_cents: (r.price_cents ?? null) as number | null,
+    }));
   });
 
 export const setTreatmentPractitioners = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { treatment_id: string; practitioner_ids: string[] }) => input)
+  .inputValidator(
+    (input: {
+      treatment_id: string;
+      practitioner_ids: string[];
+      /** Optional per-person price override, in pence, keyed by practitioner id. */
+      prices?: Record<string, number | null>;
+    }) => input,
+  )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const profileId = await __activeProfileId(supabase, userId);
@@ -170,6 +194,7 @@ export const setTreatmentPractitioners = createServerFn({ method: "POST" })
             profile_id: profileId,
             practitioner_id,
             treatment_id: data.treatment_id,
+            price_cents: data.prices?.[practitioner_id] ?? null,
           })),
         );
         if (error) throw error;
