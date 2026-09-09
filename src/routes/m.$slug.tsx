@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { UserCircle2 } from "lucide-react";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { buildThemeVars } from "@/lib/theme-vars";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Loader2 } from "lucide-react";
 
