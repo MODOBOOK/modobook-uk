@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { platformFeeCents } from "@/lib/platform-fee";
+import { isFullName, cleanPatientName, FULL_NAME_MESSAGE } from "@/lib/patient-name";
 
 function publicClient() {
   return createClient<Database>(
@@ -750,6 +751,8 @@ export const requestBooking = createServerFn({ method: "POST" })
   )
 
   .handler(async ({ data }) => {
+    if (!isFullName(data.patientName)) throw new Error(FULL_NAME_MESSAGE);
+    data.patientName = cleanPatientName(data.patientName);
     const sb = publicClient();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prof } = await supabaseAdmin
@@ -1569,6 +1572,8 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
   )
 
   .handler(async ({ data }) => {
+    if (!isFullName(data.patientName)) throw new Error(FULL_NAME_MESSAGE);
+    data.patientName = cleanPatientName(data.patientName);
     const sb = publicClient();
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prof } = await supabaseAdmin
