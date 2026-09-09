@@ -108,6 +108,13 @@ export const getBookingContext = createServerFn({ method: "GET" })
       (treatment as { category_id: string | null }).category_id,
     ]);
 
+    // Per-team-member price overrides, so a chosen practitioner's own price
+    // for this service shows on the booking page and at checkout.
+    const { data: practTreatRows } = await sb
+      .from("practitioner_treatments")
+      .select("practitioner_id, treatment_id, price_cents")
+      .eq("profile_id", profile.id);
+
     const settings = await loadBookingSettings(profile.id, profile as Record<string, unknown>);
 
     return {
@@ -133,6 +140,7 @@ export const getBookingContext = createServerFn({ method: "GET" })
       bookableFrom,
       settings,
       rotaAnchor,
+      practitionerTreatments: practTreatRows ?? [],
     };
   });
 
