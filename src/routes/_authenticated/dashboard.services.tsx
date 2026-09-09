@@ -548,7 +548,7 @@ function ServicesPage() {
         onClose={() => setSvcDialog(null)}
         onSubmit={async (values) => {
           try {
-            const { consent_ids, aftercare_template_ids, location_overrides, practitioner_ids, ...base } = values;
+            const { consent_ids, aftercare_template_ids, location_overrides, practitioner_ids, practitioner_prices, ...base } = values;
             const baseCreate = {
               name: base.name,
               duration: base.duration,
@@ -1466,6 +1466,7 @@ function ServiceDialog({
     price_mode?: "fixed" | "from" | "poa" | "free";
     badge?: "recommended" | "popular" | "new" | "bestseller" | null;
     practitioner_ids?: string[];
+    practitioner_prices?: Record<string, number | null>;
     location_overrides?: { location_id: string; available: boolean; price_cents: number | null; duration_minutes: number | null }[];
   }) => Promise<void>;
 }) {
@@ -2030,10 +2031,8 @@ function ServiceDialog({
                 {teamList.map((p) => {
                   const checked = practitionerIds.includes(p.id);
                   return (
-                    <label
-                      key={p.id}
-                      className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"
-                    >
+                    <div key={p.id} className="space-y-2">
+                      <label className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5">
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-medium">{p.name}</span>
                         {p.professional_title && (
@@ -2050,7 +2049,27 @@ function ServiceDialog({
                           )
                         }
                       />
-                    </label>
+                      </label>
+                      {checked && (
+                        <div className="flex items-center gap-2 rounded-lg border border-dashed px-3 py-2">
+                          <span className="text-xs text-muted-foreground">Their price</span>
+                          <span className="text-sm">£</span>
+                          <Input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            inputMode="decimal"
+                            className="h-9 w-28"
+                            placeholder={String(price ?? 0)}
+                            value={practitionerPrices[p.id] ?? ""}
+                            onChange={(e) =>
+                              setPractitionerPrices((prev) => ({ ...prev, [p.id]: e.target.value }))
+                            }
+                          />
+                          <span className="text-xs text-muted-foreground">Blank = standard price</span>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
