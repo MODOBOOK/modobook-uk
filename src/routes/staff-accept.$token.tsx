@@ -111,6 +111,7 @@ function AcceptInvitePage() {
           <CardTitle>Join {state.clinicName}</CardTitle>
           <CardDescription>
             You've been invited as <strong>{state.role}</strong> for <strong>{state.email}</strong>.
+            {" "}New to MODO? Choose a password below and your login is created right away — no confirmation email needed.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
