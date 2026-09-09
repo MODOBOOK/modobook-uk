@@ -65,7 +65,7 @@ export const listUpcomingAppointments = createServerFn({ method: "GET" })
     const { data: appts, error } = await sb
       .from("appointments")
       .select(
-        "id, patient_name, patient_email, patient_phone, patient_dob, scheduled_date, start_time, end_time, status, payment_status, payment_method, total_amount, amount_paid_cents, deposit_required_cents, notes, practitioner_notes, has_allergies, allergies_text, location_id, practitioner_id, treatments(name, color), locations(name), practitioners(name)",
+        "id, patient_name, patient_email, patient_phone, patient_dob, scheduled_date, start_time, end_time, status, payment_status, payment_method, payment_hold_expires_at, total_amount, amount_paid_cents, deposit_required_cents, notes, practitioner_notes, has_allergies, allergies_text, location_id, practitioner_id, treatments(name, color), locations(name), practitioners(name)",
       )
       .eq("profile_id", profileId)
       .gte("scheduled_date", from)
@@ -74,7 +74,14 @@ export const listUpcomingAppointments = createServerFn({ method: "GET" })
       .order("scheduled_date", { ascending: true })
       .order("start_time", { ascending: true });
     if (error) throw error;
-    const rows = (appts ?? []) as any[];
+    const rows = ((appts ?? []) as any[]).filter((appointment) => {
+      const isUnpaidCheckoutHold =
+        appointment.status === "pending" &&
+        appointment.payment_status !== "paid" &&
+        Number(appointment.amount_paid_cents ?? 0) <= 0 &&
+        Boolean(appointment.payment_hold_expires_at);
+      return !isUnpaidCheckoutHold;
+    });
     if (rows.length === 0) return [];
 
     const ids = rows.map((r) => r.id);
