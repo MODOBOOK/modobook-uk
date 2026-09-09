@@ -10,7 +10,7 @@ Goal: MODO runs in an app WebView; dashboard must feel native on phones.
 - [ ] User to review on phone and flag any screens still cramped
 # Supreme patient CSV import
 
-- [ ] Load all active and archived patients beyond 1,000
-- [ ] Prevent repeat imports recreating archived or duplicate patients
-- [ ] Verify Supreme list and import behavior
+- [x] Load all active and archived patients beyond 1,000
+- [x] Prevent repeat imports recreating archived or duplicate patients
+- [x] Verify Supreme list and import behavior
 
