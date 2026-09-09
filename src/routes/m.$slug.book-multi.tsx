@@ -164,6 +164,16 @@ function MultiBookPage() {
       : (ctx.locations[0]?.id ?? null);
   const [locationId, setLocationId] = useState<string | null>(initialLocationId);
 
+  // Which practitioner the patient chose on the clinic page (if any) — their
+  // hours and diary drive the dates and times we offer, and their own price
+  // wins where the clinic has set one. Declared before any use: reading it
+  // later in the component body crashed the whole booking page.
+  const [chosenPractitionerId, setChosenPractitionerId] = useState<string | null>(null);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setChosenPractitionerId(window.sessionStorage.getItem(`modo:practitionerId:${slug}`) || null);
+  }, [slug]);
+
   // Per-team-member price override (set by the clinic against the service).
   const practPriceFor = (t: Treatment) => {
     if (!chosenPractitionerId) return null;
