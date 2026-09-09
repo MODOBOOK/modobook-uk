@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { isFullName, FULL_NAME_MESSAGE, cleanPatientName } from "@/lib/patient-name";
 import { z } from "zod";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -490,6 +491,10 @@ function MultiBookPage() {
       toast.error("Please fill name, email and pick a time slot");
       return;
     }
+    if (!isFullName(form.name)) {
+      toast.error(FULL_NAME_MESSAGE);
+      return;
+    }
     if (termsRequired && !agreedToTerms) {
       toast.error("Please agree to the terms & conditions to continue");
       return;
@@ -563,7 +568,7 @@ function MultiBookPage() {
           locationId,
           date,
           startTime: slot,
-          patientName: form.name,
+          patientName: cleanPatientName(form.name),
           patientEmail: form.email,
           patientPhone: form.phone || undefined,
           patientDob: form.dob || null,
@@ -608,7 +613,7 @@ function MultiBookPage() {
       if (patientUserId && rememberMe) {
         try {
           await saveMyPatient({ data: {
-            full_name: form.name,
+            full_name: cleanPatientName(form.name),
             phone: form.phone,
             date_of_birth: form.dob || null,
             address_line1: form.addressLine1,
@@ -748,7 +753,7 @@ function MultiBookPage() {
   }
 
   const detailsDone = Boolean(
-    form.name && form.email &&
+    isFullName(form.name) && form.email &&
     (!reqPhone || form.phone) &&
     (!reqDob || form.dob) &&
     (!reqAddress || form.addressLine1),
@@ -1604,7 +1609,7 @@ function MultiBookPage() {
                   if (totalPrice > 0) dueToday = Math.max(0, dueToday - (dueToday / totalPrice) * discountTotal);
                   const missingDetail =
                     !slot ? "Please pick a time slot above"
-                    : !form.name ? "Please enter your name above"
+                    : !isFullName(form.name) ? FULL_NAME_MESSAGE
                     : !form.email ? "Please enter your email above"
                     : (reqPhone && !form.phone) ? "Please enter your phone number above"
                     : (reqDob && !form.dob) ? "Please enter your date of birth above"
@@ -1635,7 +1640,7 @@ function MultiBookPage() {
                       className="mt-4 w-full"
                       size="lg"
                       disabled={
-                        !slot || submitting || !form.name || !form.email || (reqPhone && !form.phone) || (reqDob && !form.dob) ||
+                        !slot || submitting || !isFullName(form.name) || !form.email || (reqPhone && !form.phone) || (reqDob && !form.dob) ||
                         (termsRequired && !agreedToTerms) || prescriberBlocks ||
                         (anySplit && !splitAgreed) ||
                         (totalAfterDiscount > 0 && !paymentChoice)

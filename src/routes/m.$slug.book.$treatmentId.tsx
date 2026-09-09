@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { isFullName, FULL_NAME_MESSAGE, cleanPatientName } from "@/lib/patient-name";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -441,6 +442,10 @@ function BookTreatmentPage() {
       toast.error("Please fill name, email and pick a time slot");
       return;
     }
+    if (!isFullName(form.name)) {
+      toast.error(FULL_NAME_MESSAGE);
+      return;
+    }
     submitLockRef.current = true;
     setSubmitting(true);
     try {
@@ -477,7 +482,7 @@ function BookTreatmentPage() {
           startTime: slot,
           endTime: endTimeStr,
 
-          patientName: form.name,
+          patientName: cleanPatientName(form.name),
           patientEmail: form.email,
           patientPhone: form.phone || undefined,
           patientDob: form.dob || null,
@@ -516,7 +521,7 @@ function BookTreatmentPage() {
       if (patientUserId && rememberMe) {
         try {
           await saveMyPatient({ data: {
-            full_name: form.name,
+            full_name: cleanPatientName(form.name),
             phone: form.phone,
             date_of_birth: form.dob || null,
             address_line1: form.addressLine1,
@@ -661,7 +666,7 @@ function BookTreatmentPage() {
 
       {(() => {
         const detailsDone = Boolean(
-          form.name && form.email &&
+          isFullName(form.name) && form.email &&
           (!reqPhone || form.phone) &&
           (!reqDob || form.dob) &&
           (!reqAddress || form.addressLine1),
@@ -1154,7 +1159,7 @@ function BookTreatmentPage() {
       {(() => {
         const missingRequirement =
           !slot ? "Please pick a time slot above"
-          : !form.name ? "Please enter your name above"
+          : !isFullName(form.name) ? FULL_NAME_MESSAGE
           : !form.email ? "Please enter your email above"
           : (reqPhone && !form.phone) ? "Please enter your phone number above"
           : (reqDob && !form.dob) ? "Please enter your date of birth above"
@@ -1167,7 +1172,7 @@ function BookTreatmentPage() {
         className="w-full"
         size="lg"
         disabled={
-          !slot || submitting || !form.name || !form.email ||
+          !slot || submitting || !isFullName(form.name) || !form.email ||
           (reqPhone && !form.phone) || (reqDob && !form.dob) ||
           (splitAllowed && paymentPlan === "split" && !splitAgreed) ||
           (totalAfterDiscount > 0 && !paymentChoice)
