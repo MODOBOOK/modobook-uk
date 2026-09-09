@@ -249,6 +249,11 @@ function BookingsPage() {
   const [showPayLink, setShowPayLink] = useState(false);
   const [showBlock, setShowBlock] = useState(false);
   const [showUnblock, setShowUnblock] = useState(false);
+  // Clicking empty calendar space opens the add menu with the clicked
+  // date/time remembered and passed into whichever action is chosen.
+  const [slotMenu, setSlotMenu] = useState<{ date: string; time: string; x: number; y: number } | null>(null);
+  const [blockSeed, setBlockSeed] = useState<{ date: string; start: string; end: string } | undefined>(undefined);
+  const [unblockSeed, setUnblockSeed] = useState<{ date: string; start: string; end: string } | undefined>(undefined);
   const [now, setNow] = useState(new Date());
   const isMobile = useIsMobile();
   const nowTop = (() => {
@@ -755,7 +760,25 @@ function BookingsPage() {
                 const dayBlocks = blocksByDate.get(key) ?? [];
                 const unavail = unavailableSegments(d);
                 return (
-                  <div key={key} className="relative border-r last:border-r-0">
+                  <div
+                    key={key}
+                    className="relative cursor-cell border-r last:border-r-0"
+                    onClick={(e) => {
+                      // Only empty space — appointment/block buttons handle their own clicks.
+                      if (e.target !== e.currentTarget) return;
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const hr = START_HOUR + (e.clientY - rect.top) / HOUR_HEIGHT;
+                      const snapped = Math.min(Math.max(Math.floor(hr * 2) / 2, START_HOUR), END_HOUR - 0.5);
+                      const hh = String(Math.floor(snapped)).padStart(2, "0");
+                      const mm = snapped % 1 ? "30" : "00";
+                      setSlotMenu({
+                        date: key,
+                        time: `${hh}:${mm}`,
+                        x: Math.min(e.clientX, window.innerWidth - 250),
+                        y: Math.min(e.clientY, window.innerHeight - 260),
+                      });
+                    }}
+                  >
                     {/* Grey-out: outside availability */}
                     {unavail.map((s, i) => (
                       <div
@@ -766,7 +789,7 @@ function BookingsPage() {
                       />
                     ))}
                     {HOURS.map((h) => (
-                      <div key={h} className="absolute left-0 right-0 border-t border-dashed border-muted"
+                      <div key={h} className="pointer-events-none absolute left-0 right-0 border-t border-dashed border-muted"
                         style={{ top: (h - START_HOUR) * HOUR_HEIGHT }} />
                     ))}
                     {isToday && nowTop != null && (
