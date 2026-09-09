@@ -310,7 +310,7 @@ function BookTreatmentPage() {
 
 
   const monthQuery = useQuery({
-    queryKey: ["monthAvail", ctx.profileId, month.getFullYear(), month.getMonth() + 1, locationId, chosenPractitionerId],
+    queryKey: ["monthAvail", ctx.profileId, month.getFullYear(), month.getMonth() + 1, locationId, chosenPractitionerId, duration],
     queryFn: () =>
       monthFn({
         data: {
@@ -319,6 +319,7 @@ function BookTreatmentPage() {
           month: month.getMonth() + 1,
           locationId,
           practitionerId: chosenPractitionerId,
+          durationMinutes: duration,
         },
       }),
   });
