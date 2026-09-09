@@ -515,6 +515,8 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       month: number;
       locationId?: string | null;
       practitionerId?: string | null;
+      /** Total length of what's being booked; days with no gap this long are greyed out. */
+      durationMinutes?: number | null;
     }) => input,
   )
   .handler(async ({ data }) => {
