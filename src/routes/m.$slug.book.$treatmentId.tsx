@@ -865,7 +865,7 @@ function BookTreatmentPage() {
             <p className="text-sm opacity-70">
               Create an account or sign in to track your appointments, leave reviews and view your notes after each visit.
             </p>
-            <div className="grid gap-2 sm:grid-cols-3">
+            <div className={`grid gap-2 ${requireAccount ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
               <Link
                 to="/m/$slug/auth"
                 params={{ slug }}
@@ -884,14 +884,16 @@ function BookTreatmentPage() {
                   <UserPlus className="mr-2 h-4 w-4" /> Sign up
                 </Button>
               </Link>
-              <Button
-                variant="ghost"
-                className="w-full"
-                style={{ color: brand }}
-                onClick={() => setAuthChoice("guest")}
-              >
-                Continue as guest
-              </Button>
+              {!requireAccount && (
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  style={{ color: brand }}
+                  onClick={() => setAuthChoice("guest")}
+                >
+                  Continue as guest
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
