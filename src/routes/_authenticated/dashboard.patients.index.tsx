@@ -462,7 +462,7 @@ function PatientsPage() {
       <ImportCsvDialog
         open={importOpen}
         onOpenChange={setImportOpen}
-        onImport={async (rows) => {
+        onImport={async (rows, onProgress) => {
           try {
             // Chunk large files so no single request times out mid-import
             const CHUNK = 400;
@@ -474,6 +474,7 @@ function PatientsPage() {
               updated += res.updated || 0;
               skipped += res.skipped || 0;
               if (!firstDetail && res.skippedDetails?.length) firstDetail = res.skippedDetails[0];
+              onProgress(Math.min(i + CHUNK, rows.length), rows.length);
             }
             const detail = firstDetail ? ` — first issue: ${firstDetail}` : "";
             const total = inserted + updated;
@@ -712,11 +713,13 @@ function downloadSampleCsv() {
 
 
 function ImportCsvDialog({ open, onOpenChange, onImport }: {
-  open: boolean; onOpenChange: (v: boolean) => void; onImport: (rows: Record<string, string>[]) => Promise<void>;
+  open: boolean; onOpenChange: (v: boolean) => void;
+  onImport: (rows: Record<string, string>[], onProgress: (done: number, total: number) => void) => Promise<void>;
 }) {
   const [rows, setRows] = useState<Record<string, string>[]>([]);
   const [busy, setBusy] = useState(false);
   const [filename, setFilename] = useState("");
+  const [progress, setProgress] = useState({ done: 0, total: 0 });
 
   function handleFile(f: File | null) {
     if (!f) return;
@@ -735,7 +738,7 @@ function ImportCsvDialog({ open, onOpenChange, onImport }: {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) { setRows([]); setFilename(""); } onOpenChange(v); }}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { setRows([]); setFilename(""); setProgress({ done: 0, total: 0 }); } onOpenChange(v); }}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader><DialogTitle>Import patients from CSV</DialogTitle></DialogHeader>
         <div className="space-y-3 text-sm">
@@ -748,6 +751,14 @@ function ImportCsvDialog({ open, onOpenChange, onImport }: {
           </button>
           <Input type="file" accept=".csv,text/csv,text/plain" onChange={(e) => handleFile(e.target.files?.[0] ?? null)} />
           {filename && <div className="text-xs text-muted-foreground">{filename} — {rows.length} row(s) detected</div>}
+          {busy && progress.total > 0 && (
+            <div className="space-y-1.5" aria-live="polite">
+              <div className="flex justify-between text-xs font-medium"><span>Importing patients</span><span>{progress.done} of {progress.total}</span></div>
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div className="h-full bg-primary transition-all" style={{ width: `${Math.round((progress.done / progress.total) * 100)}%` }} />
+              </div>
+            </div>
+          )}
 
           {rows.length > 0 && (
             <div className="max-h-40 overflow-auto rounded border text-xs">
@@ -766,7 +777,11 @@ function ImportCsvDialog({ open, onOpenChange, onImport }: {
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button disabled={!rows.length || busy} onClick={async () => {
             setBusy(true);
-            try { await onImport(rows); setRows([]); setFilename(""); }
+            try {
+              setProgress({ done: 0, total: rows.length });
+              await onImport(rows, (done, total) => setProgress({ done, total }));
+              setRows([]); setFilename(""); setProgress({ done: 0, total: 0 });
+            }
             catch (e) { toast.error(e instanceof Error ? e.message : "Import failed"); }
             finally { setBusy(false); }
           }}>{busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Import {rows.length || ""}</Button>

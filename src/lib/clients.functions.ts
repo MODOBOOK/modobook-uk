@@ -11,15 +11,39 @@ async function getProfileId(supabase: any, userId: string) {
   return data?.id ?? null;
 }
 
+const CLIENT_PAGE_SIZE = 1000;
+
+async function getAllClientRows(
+  supabase: any,
+  profileId: string,
+  columns: string,
+  archived?: boolean,
+) {
+  const rows: any[] = [];
+  for (let offset = 0; ; offset += CLIENT_PAGE_SIZE) {
+    let query = supabase
+      .from("clinic_clients")
+      .select(columns)
+      .eq("profile_id", profileId)
+      .order("full_name")
+      .order("id")
+      .range(offset, offset + CLIENT_PAGE_SIZE - 1);
+    if (typeof archived === "boolean") query = query.eq("archived", archived);
+    const { data, error } = await query;
+    if (error) throw error;
+    const page = data ?? [];
+    rows.push(...page);
+    if (page.length < CLIENT_PAGE_SIZE) break;
+  }
+  return rows;
+}
+
 export const listClients = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) return [];
-    const { data, error } = await context.supabase
-      .from("clinic_clients").select("*").eq("profile_id", profileId).eq("archived", false).order("full_name");
-    if (error) throw error;
-    return data ?? [];
+    return getAllClientRows(context.supabase, profileId, "*", false);
   });
 
 export const listArchivedClients = createServerFn({ method: "GET" })
@@ -27,10 +51,7 @@ export const listArchivedClients = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) return [];
-    const { data, error } = await context.supabase
-      .from("clinic_clients").select("*").eq("profile_id", profileId).eq("archived", true).order("full_name");
-    if (error) throw error;
-    return data ?? [];
+    return getAllClientRows(context.supabase, profileId, "*", true);
   });
 
 export const restoreClient = createServerFn({ method: "POST" })
@@ -332,6 +353,37 @@ export const importClientsCsv = createServerFn({ method: "POST" })
     const updated: string[] = [];
     const skipped: string[] = [];
 
+    const existingRows = await getAllClientRows(
+      context.supabase,
+      pid,
+      "id, full_name, email, phone, dob, archived",
+    );
+    const emailKey = (value?: string | null) => String(value ?? "").trim().toLowerCase();
+    const phoneKey = (value?: string | null) => {
+      const digits = String(value ?? "").replace(/\D/g, "");
+      return digits.length >= 7 ? digits.slice(-10) : "";
+    };
+    const nameDobKey = (name?: string | null, dob?: string | null) => {
+      if (!dob) return "";
+      const normalizedName = String(name ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+      return normalizedName ? `${normalizedName}|${dob}` : "";
+    };
+    const byEmail = new Map<string, any>();
+    const byPhone = new Map<string, any>();
+    const byNameDob = new Map<string, any>();
+    // Prefer active records, but retain archived records as matches so a repeat
+    // import cannot recreate a patient the practitioner intentionally archived.
+    existingRows.sort((a, b) => Number(a.archived) - Number(b.archived));
+    const remember = (row: any) => {
+      const ek = emailKey(row.email);
+      const pk = phoneKey(row.phone);
+      const nk = nameDobKey(row.full_name, row.dob);
+      if (ek && !byEmail.has(ek)) byEmail.set(ek, row);
+      if (pk && !byPhone.has(pk)) byPhone.set(pk, row);
+      if (nk && !byNameDob.has(nk)) byNameDob.set(nk, row);
+    };
+    existingRows.forEach(remember);
+
     for (const row of data.rows) {
       let full_name = pick(row, [
         "full_name", "fullname", "full name",
@@ -379,12 +431,11 @@ export const importClientsCsv = createServerFn({ method: "POST" })
       const rawOptIn = pick(row, ["marketing", "marketing opt in", "marketing_opt_in", "marketing consent", "email opt in"]).toLowerCase();
       const marketing_opt_in = rawOptIn ? ["yes", "y", "true", "1", "opted in", "opt in"].includes(rawOptIn) : null;
 
-      let existingId: string | null = null;
-      if (email) {
-        const { data: exist } = await context.supabase
-          .from("clinic_clients").select("id").eq("profile_id", pid).ilike("email", email).maybeSingle();
-        if (exist?.id) existingId = exist.id;
-      }
+      const existing =
+        (email ? byEmail.get(emailKey(email)) : null) ??
+        (phone ? byPhone.get(phoneKey(phone)) : null) ??
+        byNameDob.get(nameDobKey(full_name, dob)) ??
+        null;
       const payload: any = {
         full_name, email, phone, dob, address, address_line1, address_line2, postcode, city, county, country,
         gender, notes, group_name, allergies, emergency_contact_name, emergency_contact_phone,
@@ -394,15 +445,17 @@ export const importClientsCsv = createServerFn({ method: "POST" })
       Object.keys(payload).forEach((k) => payload[k] == null && delete payload[k]);
 
 
-      if (existingId) {
-        const { error } = await context.supabase.from("clinic_clients").update(payload).eq("id", existingId);
+      if (existing?.id) {
+        const { error } = await context.supabase.from("clinic_clients").update(payload).eq("id", existing.id).eq("profile_id", pid);
         if (error) { skipped.push(`${full_name}: ${error.message}`); continue; }
-        updated.push(existingId);
+        updated.push(existing.id);
+        remember({ ...existing, ...payload });
       } else {
         const { data: row2, error } = await context.supabase
-          .from("clinic_clients").insert({ profile_id: pid, ...payload }).select("id").single();
+          .from("clinic_clients").insert({ profile_id: pid, ...payload }).select("id, full_name, email, phone, dob, archived").single();
         if (error) { skipped.push(`${full_name}: ${error.message}`); continue; }
         inserted.push(row2.id);
+        remember(row2);
       }
     }
     return { inserted: inserted.length, updated: updated.length, skipped: skipped.length, skippedDetails: skipped.slice(0, 5) };
@@ -446,9 +499,11 @@ export const findDuplicateClients = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const pid = await getProfileId(context.supabase, context.userId);
     if (!pid) return [];
-    const { data } = await context.supabase
-      .from("clinic_clients").select("id, full_name, email, phone, created_at").eq("profile_id", pid);
-    const rows = (data ?? []) as any[];
+    const rows = await getAllClientRows(
+      context.supabase,
+      pid,
+      "id, full_name, email, phone, created_at",
+    );
     const groups = new Map<string, any[]>();
     for (const r of rows) {
       const keyEmail = r.email ? `e:${String(r.email).toLowerCase().trim()}` : null;
