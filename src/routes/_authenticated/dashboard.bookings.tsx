@@ -1205,8 +1205,8 @@ function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange
 }
 
 function BlockTimeDialog({
-  open, onOpenChange, onAdded, practitionerId,
-}: { open: boolean; onOpenChange: (v: boolean) => void; onAdded: (b: BlockedTime) => void; practitionerId?: string | null }) {
+  open, onOpenChange, onAdded, practitionerId, seed,
+}: { open: boolean; onOpenChange: (v: boolean) => void; onAdded: (b: BlockedTime) => void; practitionerId?: string | null; seed?: { date: string; start: string; end: string } }) {
   const add = useServerFn(addBlockedTime);
   const [date, setDate] = useState(ymd(new Date()));
   const [endDate, setEndDate] = useState("");
@@ -1215,6 +1215,16 @@ function BlockTimeDialog({
   const [endTime, setEndTime] = useState("17:00");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (open && seed) {
+      setDate(seed.date);
+      setStartTime(seed.start);
+      setEndTime(seed.end);
+      setEndDate("");
+      setAllDay(false);
+    }
+  }, [open, seed]);
 
   async function submit() {
     setBusy(true);
@@ -1286,7 +1296,7 @@ function BlockTimeDialog({
 }
 
 function UnblockDialog({
-  open, onOpenChange, blocks, onRemoved, onOpened, practitionerId, locations = [], defaultLocationId = "all",
+  open, onOpenChange, blocks, onRemoved, onOpened, practitionerId, locations = [], defaultLocationId = "all", seed,
 }: {
   open: boolean; onOpenChange: (v: boolean) => void;
   blocks: BlockedTime[]; onRemoved: (id: string) => void;
@@ -1294,6 +1304,7 @@ function UnblockDialog({
   practitionerId?: string | null;
   locations?: { id: string; name: string }[];
   defaultLocationId?: string;
+  seed?: { date: string; start: string; end: string };
 }) {
   const del = useServerFn(deleteBlockedTime);
   const addOverride = useServerFn(addAvailabilityOverride);
