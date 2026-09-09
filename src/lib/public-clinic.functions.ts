@@ -126,7 +126,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
         : Promise.resolve({ data: [] as { treatment_id: string; addon_id: string; discount_percent: number | null; discount_amount: number | null }[] }),
       supabase.from("practitioners").select("id, name, professional_title, photo_url, bio, display_order").eq("profile_id", profile.id).eq("active", true).order("display_order"),
       supabase.from("location_practitioners").select("location_id, practitioner_id, display_order"),
-      supabase.from("practitioner_treatments").select("practitioner_id, treatment_id").eq("profile_id", profile.id),
+      supabase.from("practitioner_treatments").select("practitioner_id, treatment_id, price_cents").eq("profile_id", profile.id),
       supabase.rpc("get_about_page_by_slug", { p_slug: data.slug.toLowerCase() }),
       supabase.from("aftercare_templates")
         .select("id, name, body_html, summary, category")

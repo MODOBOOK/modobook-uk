@@ -6301,6 +6301,7 @@ export type Database = {
           created_at: string
           id: string
           practitioner_id: string
+          price_cents: number | null
           profile_id: string
           treatment_id: string
         }
@@ -6308,6 +6309,7 @@ export type Database = {
           created_at?: string
           id?: string
           practitioner_id: string
+          price_cents?: number | null
           profile_id: string
           treatment_id: string
         }
@@ -6315,6 +6317,7 @@ export type Database = {
           created_at?: string
           id?: string
           practitioner_id?: string
+          price_cents?: number | null
           profile_id?: string
           treatment_id?: string
         }

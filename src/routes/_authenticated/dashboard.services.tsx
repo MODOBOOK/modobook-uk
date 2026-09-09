@@ -548,7 +548,7 @@ function ServicesPage() {
         onClose={() => setSvcDialog(null)}
         onSubmit={async (values) => {
           try {
-            const { consent_ids, aftercare_template_ids, location_overrides, practitioner_ids, ...base } = values;
+            const { consent_ids, aftercare_template_ids, location_overrides, practitioner_ids, practitioner_prices, ...base } = values;
             const baseCreate = {
               name: base.name,
               duration: base.duration,
@@ -594,7 +594,11 @@ function ServicesPage() {
               data: { treatment_id: targetId, template_ids: aftercare_template_ids ?? [] },
             });
             await saveTreatPractitioners({
-              data: { treatment_id: targetId, practitioner_ids: practitioner_ids ?? [] },
+              data: {
+                treatment_id: targetId,
+                practitioner_ids: practitioner_ids ?? [],
+                prices: (practitioner_prices ?? {}) as Record<string, number | null>,
+              },
             });
             for (const o of location_overrides ?? []) {
               await saveLocPricing({
@@ -1462,6 +1466,7 @@ function ServiceDialog({
     price_mode?: "fixed" | "from" | "poa" | "free";
     badge?: "recommended" | "popular" | "new" | "bestseller" | null;
     practitioner_ids?: string[];
+    practitioner_prices?: Record<string, number | null>;
     location_overrides?: { location_id: string; available: boolean; price_cents: number | null; duration_minutes: number | null }[];
   }) => Promise<void>;
 }) {
@@ -1521,6 +1526,8 @@ function ServiceDialog({
   const [saving, setSaving] = useState(false);
   const [section, setSection] = useState<string>("basics");
   const [practitionerIds, setPractitionerIds] = useState<string[]>([]);
+  /** Per-team-member price for this service, keyed by practitioner id (blank = standard price). */
+  const [practitionerPrices, setPractitionerPrices] = useState<Record<string, string>>({});
 
   const editing = (state?.treat ?? null) as (Record<string, any> | null);
   const editId = (editing?.id ?? null) as string | null;
@@ -1569,6 +1576,7 @@ function ServiceDialog({
       setBadge("none");
       setLocOverrides({});
       setPractitionerIds([]);
+      setPractitionerPrices({});
 
       const t = state?.treat as Record<string, any> | undefined;
       if (t) {
@@ -1616,7 +1624,14 @@ function ServiceDialog({
             ]);
             setConsentIds((cons ?? []) as string[]);
             setAftercareIds((after ?? []) as string[]);
-            setPractitionerIds((prac ?? []) as string[]);
+            setPractitionerIds(((prac ?? []) as Array<{ practitioner_id: string }>).map((r) => r.practitioner_id));
+            setPractitionerPrices(
+              Object.fromEntries(
+                ((prac ?? []) as Array<{ practitioner_id: string; price_cents: number | null }>)
+                  .filter((r) => r.price_cents != null)
+                  .map((r) => [r.practitioner_id, String((r.price_cents as number) / 100)]),
+              ),
+            );
             const map: Record<string, LocOverride> = {};
             for (const row of (locs ?? []) as { location_id: string; price_cents: number | null; duration_minutes: number | null; available: boolean }[]) {
               map[row.location_id] = {
@@ -2016,10 +2031,8 @@ function ServiceDialog({
                 {teamList.map((p) => {
                   const checked = practitionerIds.includes(p.id);
                   return (
-                    <label
-                      key={p.id}
-                      className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5"
-                    >
+                    <div key={p.id} className="space-y-2">
+                      <label className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5">
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-medium">{p.name}</span>
                         {p.professional_title && (
@@ -2036,7 +2049,27 @@ function ServiceDialog({
                           )
                         }
                       />
-                    </label>
+                      </label>
+                      {checked && (
+                        <div className="flex items-center gap-2 rounded-lg border border-dashed px-3 py-2">
+                          <span className="text-xs text-muted-foreground">Their price</span>
+                          <span className="text-sm">£</span>
+                          <Input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            inputMode="decimal"
+                            className="h-9 w-28"
+                            placeholder={String(price ?? 0)}
+                            value={practitionerPrices[p.id] ?? ""}
+                            onChange={(e) =>
+                              setPractitionerPrices((prev) => ({ ...prev, [p.id]: e.target.value }))
+                            }
+                          />
+                          <span className="text-xs text-muted-foreground">Blank = standard price</span>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -2138,6 +2171,12 @@ function ServiceDialog({
                   price_mode: priceMode,
                   badge: badge === "none" ? null : badge,
                   practitioner_ids: practitionerIds,
+                  practitioner_prices: Object.fromEntries(
+                    practitionerIds.map((id) => [
+                      id,
+                      practitionerPrices[id]?.trim() ? Math.round(Number(practitionerPrices[id]) * 100) : null,
+                    ]),
+                  ),
                   location_overrides: Object.entries(locOverrides).map(([location_id, ov]) => ({
                     location_id,
                     available: ov.available,

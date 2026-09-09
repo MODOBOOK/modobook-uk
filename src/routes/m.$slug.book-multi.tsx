@@ -164,15 +164,24 @@ function MultiBookPage() {
       : (ctx.locations[0]?.id ?? null);
   const [locationId, setLocationId] = useState<string | null>(initialLocationId);
 
+  // Per-team-member price override (set by the clinic against the service).
+  const practPriceFor = (t: Treatment) => {
+    if (!chosenPractitionerId) return null;
+    const rows = (ctx as { practitionerTreatments?: Array<{ practitioner_id: string; treatment_id: string; price_cents: number | null }> }).practitionerTreatments ?? [];
+    const row = rows.find((r) => r.practitioner_id === chosenPractitionerId && r.treatment_id === t.id);
+    return row?.price_cents != null ? row.price_cents / 100 : null;
+  };
   const priceFor = (t: Treatment) => {
-    let base = Number(t.price ?? 0);
-    if (locationId) {
+    let base = practPriceFor(t) ?? Number(t.price ?? 0);
+    if (practPriceFor(t) == null && locationId) {
       const o = ctx.pricing.find((p: Pricing) => p.treatment_id === t.id && p.location_id === locationId);
       if (o?.price_cents != null) base = o.price_cents / 100;
     }
     return treatmentPricing(t as never, base).price;
   };
   const basePriceFor = (t: Treatment) => {
+    const pp = practPriceFor(t);
+    if (pp != null) return pp;
     if (locationId) {
       const o = ctx.pricing.find((p: Pricing) => p.treatment_id === t.id && p.location_id === locationId);
       if (o?.price_cents != null) return o.price_cents / 100;

@@ -96,7 +96,22 @@ function BookTreatmentPage() {
   const smartTimes = settings?.booking_smart_times_enabled === true;
   const redirectPath = `/m/${slug}/book/${treatment.id}`;
   const duration = treatment.duration ?? 30;
-  const basePrice = Number(treatment.price ?? 0);
+  // Which practitioner the patient chose on the clinic page (if any) — their
+  // hours and diary drive the dates and times we offer.
+  const [chosenPractitionerId, setChosenPractitionerId] = useState<string | null>(null);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setChosenPractitionerId(window.sessionStorage.getItem(`modo:practitionerId:${slug}`) || null);
+  }, [slug]);
+
+  const practPriceCents = (() => {
+    if (!chosenPractitionerId) return null;
+    const rows = (ctx as { practitionerTreatments?: Array<{ practitioner_id: string; treatment_id: string; price_cents: number | null }> }).practitionerTreatments ?? [];
+    const row = rows.find((r) => r.practitioner_id === chosenPractitionerId && r.treatment_id === treatment.id);
+    return row?.price_cents ?? null;
+  })();
+  // The chosen team member's own price for this service, when the clinic set one.
+  const basePrice = practPriceCents != null ? practPriceCents / 100 : Number(treatment.price ?? 0);
   const pricing = treatmentPricing(treatment as never, basePrice);
   const listPrice = pricing.price;
 
@@ -293,14 +308,6 @@ function BookTreatmentPage() {
 
 
 
-
-  // Which practitioner the patient chose on the clinic page (if any) — their
-  // hours and diary drive the dates and times we offer.
-  const [chosenPractitionerId, setChosenPractitionerId] = useState<string | null>(null);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    setChosenPractitionerId(window.sessionStorage.getItem(`modo:practitionerId:${slug}`) || null);
-  }, [slug]);
 
   const monthQuery = useQuery({
     queryKey: ["monthAvail", ctx.profileId, month.getFullYear(), month.getMonth() + 1, locationId, chosenPractitionerId],

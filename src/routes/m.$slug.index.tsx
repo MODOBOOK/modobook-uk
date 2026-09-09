@@ -921,6 +921,14 @@ function BookPage() {
 
 
   const priceFor = (t: Treatment) => {
+    // A chosen practitioner's own price wins — clinics can charge differently
+    // depending on who performs the treatment.
+    if (practitionerId) {
+      const pt = practitionerTreatments.find(
+        (l: any) => l.practitioner_id === practitionerId && l.treatment_id === t.id,
+      ) as { price_cents?: number | null } | undefined;
+      if (pt?.price_cents != null) return pt.price_cents / 100;
+    }
     if (locationId) {
       const o = pricing.find((p) => p.treatment_id === t.id && p.location_id === locationId);
       if (o?.price_cents != null) return o.price_cents / 100;
@@ -971,7 +979,7 @@ function BookPage() {
           && (!practitionerTreatmentIds || practitionerTreatmentIds.has(t.id)),
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [treatments, locationId, pricing, categories, nowTs, staleClinicTreatmentIds, practitionerTreatmentIds],
+    [treatments, locationId, pricing, categories, nowTs, staleClinicTreatmentIds, practitionerTreatmentIds, practitionerId],
   );
 
   const treatmentCategories = useMemo(
