@@ -8,3 +8,9 @@ Goal: MODO runs in an app WebView; dashboard must feel native on phones.
 - [x] Dashboard home: tighter mobile spacing
 - [x] Month calendar: compact cells on phones (count badge only)
 - [ ] User to review on phone and flag any screens still cramped
+# Supreme patient CSV import
+
+- [ ] Load all active and archived patients beyond 1,000
+- [ ] Prevent repeat imports recreating archived or duplicate patients
+- [ ] Verify Supreme list and import behavior
+
