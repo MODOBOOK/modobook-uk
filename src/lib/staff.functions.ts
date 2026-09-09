@@ -293,6 +293,65 @@ export const getStaffInvite = createServerFn({ method: "GET" })
     };
   });
 
+// Public: create a brand-new login for an invited team member.
+// The invite was emailed to this exact address, so the address is already
+// proven — we create the account confirmed, otherwise Supabase waits for a
+// confirmation email and the immediate sign-in fails ("email not confirmed"),
+// which reads to the invitee as "my invite was rejected".
+export const createStaffAccountFromInvite = createServerFn({ method: "POST" })
+  .inputValidator((d: { token: string; password: string }) => d)
+  .handler(async ({ data }) => {
+    if (!data.password || data.password.length < 8) {
+      throw new Error("Password must be at least 8 characters");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("staff_members")
+      .select("id, name, invited_email, invite_expires_at, status, profile_id")
+      .eq("invite_token", data.token)
+      .maybeSingle();
+    if (!row) throw new Error("Invite not found");
+    {
+      const { assertNotDemoProfile } = await import("./demo-guard.server");
+      await assertNotDemoProfile((row as any).profile_id, "This invite is no longer valid.");
+    }
+    if (row.status !== "invited") throw new Error("Invite already used");
+    if (row.invite_expires_at && new Date(row.invite_expires_at) < new Date()) {
+      throw new Error("Invite expired");
+    }
+    const email = (row.invited_email ?? "").trim().toLowerCase();
+    if (!email) throw new Error("This invite has no email address. Ask the clinic to resend it.");
+
+    const { data: created, error: createErr } = await (supabaseAdmin as any).auth.admin.createUser({
+      email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: { full_name: row.name },
+    });
+    if (createErr) {
+      const exists =
+        (createErr as any).code === "email_exists" ||
+        /already been registered|already exists/i.test((createErr as any).message ?? "");
+      if (exists) return { ok: false as const, reason: "exists" as const, email };
+      throw createErr;
+    }
+    const userId = created?.user?.id as string | undefined;
+    if (!userId) throw new Error("Could not create the account");
+
+    const { error } = await supabaseAdmin
+      .from("staff_members")
+      .update({
+        user_id: userId,
+        status: "active",
+        accepted_at: new Date().toISOString(),
+        invite_token: null,
+        invite_expires_at: null,
+      })
+      .eq("id", row.id);
+    if (error) throw error;
+    return { ok: true as const, email };
+  });
+
 // Authenticated: accept invite — matches token to caller's email/user_id
 export const acceptStaffInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
