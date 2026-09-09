@@ -1547,12 +1547,6 @@ function BookPage() {
                 (loc as { coming_soon_label?: string | null }).coming_soon_label || "Coming soon";
               const singleLocation = bookableLocations.length === 1 && !comingSoon;
               const photo = loc.image_url || profile.avatar_url;
-                  const theirs = practitionerTreatments
-                    .filter((l) => l.practitioner_id === p.id)
-                    .map((l) => l.treatment_id);
-                  if (theirs.length === 0) return true;
-                  return selectedIds.every((id) => theirs.includes(id));
-                });
               const cardInner = (
                 <>
                   {photo ? (
