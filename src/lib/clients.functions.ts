@@ -356,15 +356,28 @@ export const importClientsCsv = createServerFn({ method: "POST" })
         if (title) full_name = title;
       }
       if (!full_name) { skipped.push(`(missing name) columns: ${Object.keys(row).join(", ")}`); continue; }
-      const email = pick(row, ["email", "email address"]).toLowerCase() || null;
-      const phone = pick(row, ["phone", "mobile", "telephone", "contact number"]) || null;
-      const dob = parseDob(pick(row, ["dob", "date of birth", "birthday", "birth date"]));
-      const address = pick(row, ["address", "home address", "street address"]) || null;
-      const postcode = pick(row, ["postcode", "postal code", "zip", "zip code"]) || null;
-      const city = pick(row, ["city", "town"]) || null;
+      const email = pick(row, ["email", "email address", "e-mail", "email1", "primary email"]).toLowerCase() || null;
+      const phone = pick(row, ["phone", "mobile", "mobile number", "telephone", "tel", "contact number", "phone number", "cell"]) || null;
+      const dob = parseDob(pick(row, ["dob", "d.o.b", "date of birth", "birthday", "birth date", "dateofbirth"]));
+      const address_line1 = pick(row, ["address_line1", "address line 1", "address1", "addressline1", "street", "street address", "line 1"]) || null;
+      const address_line2 = pick(row, ["address_line2", "address line 2", "address2", "addressline2", "line 2"]) || null;
+      const address = pick(row, ["address", "home address", "full address"]) || [address_line1, address_line2].filter(Boolean).join(", ") || null;
+      const postcode = pick(row, ["postcode", "post code", "postal code", "zip", "zip code"]) || null;
+      const city = pick(row, ["city", "town", "town/city"]) || null;
+      const county = pick(row, ["county", "state", "region", "province"]) || null;
+      const country = pick(row, ["country"]) || null;
       const gender = pick(row, ["gender", "sex"]).toLowerCase() || null;
-      const notes = pick(row, ["notes", "note", "comments"]) || null;
-      const group_name = pick(row, ["group", "group name", "tag"]) || null;
+      const notes = pick(row, ["notes", "note", "comments", "comment", "client notes", "patient notes"]) || null;
+      const group_name = pick(row, ["group", "group name", "tag", "tags", "category"]) || null;
+      const allergies = pick(row, ["allergies", "allergy", "known allergies"]) || null;
+      const emergency_contact_name = pick(row, ["emergency contact", "emergency contact name", "emergency_contact_name", "next of kin"]) || null;
+      const emergency_contact_phone = pick(row, ["emergency contact phone", "emergency_contact_phone", "emergency phone", "next of kin phone"]) || null;
+      const gp_name = pick(row, ["gp", "gp name", "gp_name", "doctor", "doctor name"]) || null;
+      const gp_address = pick(row, ["gp address", "gp_address", "surgery address", "doctor address"]) || null;
+      const how_heard = pick(row, ["how heard", "how_heard", "how did you hear", "source", "referral source"]) || null;
+      const preferred_contact = pick(row, ["preferred contact", "preferred_contact", "contact preference"]).toLowerCase() || null;
+      const rawOptIn = pick(row, ["marketing", "marketing opt in", "marketing_opt_in", "marketing consent", "email opt in"]).toLowerCase();
+      const marketing_opt_in = rawOptIn ? ["yes", "y", "true", "1", "opted in", "opt in"].includes(rawOptIn) : null;
 
       let existingId: string | null = null;
       if (email) {
@@ -372,8 +385,14 @@ export const importClientsCsv = createServerFn({ method: "POST" })
           .from("clinic_clients").select("id").eq("profile_id", pid).ilike("email", email).maybeSingle();
         if (exist?.id) existingId = exist.id;
       }
-      const payload: any = { full_name, email, phone, dob, address, postcode, city, gender, notes, group_name };
+      const payload: any = {
+        full_name, email, phone, dob, address, address_line1, address_line2, postcode, city, county, country,
+        gender, notes, group_name, allergies, emergency_contact_name, emergency_contact_phone,
+        gp_name, gp_address, how_heard, preferred_contact, marketing_opt_in,
+      };
+      if (allergies) payload.has_allergies = true;
       Object.keys(payload).forEach((k) => payload[k] == null && delete payload[k]);
+
 
       if (existingId) {
         const { error } = await context.supabase.from("clinic_clients").update(payload).eq("id", existingId);

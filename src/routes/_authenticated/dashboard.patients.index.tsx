@@ -688,7 +688,10 @@ function parseCsv(text: string): Record<string, string>[] {
   });
 }
 
-const SAMPLE_CSV = "Full Name,Email,Phone,DOB,Address,Postcode,City,Gender,Notes,Group\nJane Doe,jane@example.com,07700 900123,15/04/1988,10 High Street,SW1A 1AA,London,female,Sample patient,VIP\n";
+const SAMPLE_CSV =
+  "Full Name,Email,Phone,DOB,Address Line 1,Address Line 2,City,County,Postcode,Country,Gender,Allergies,Emergency Contact Name,Emergency Contact Phone,GP Name,GP Address,How Heard,Preferred Contact,Marketing,Notes,Group\n" +
+  "Jane Doe,jane@example.com,07700 900123,15/04/1988,10 High Street,Flat 2,London,Greater London,SW1A 1AA,United Kingdom,female,Penicillin,John Doe,07700 900124,Dr Smith,1 Surgery Lane London,Instagram,email,yes,Sample patient,VIP\n";
+
 function downloadSampleCsv() {
   const blob = new Blob([SAMPLE_CSV], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
