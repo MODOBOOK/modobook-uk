@@ -1322,6 +1322,15 @@ function UnblockDialog({
 
   useEffect(() => { if (open) setLocationId(defaultLocationId); }, [open, defaultLocationId]);
 
+  useEffect(() => {
+    if (open && seed) {
+      setTab("new");
+      setDates([seed.date]);
+      setStart(seed.start);
+      setEnd(seed.end);
+    }
+  }, [open, seed]);
+
   function expandDates(base: string[]) {
     if (repeat === "none") return Array.from(new Set(base));
     const out: string[] = [];
