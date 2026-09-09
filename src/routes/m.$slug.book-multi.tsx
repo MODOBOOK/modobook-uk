@@ -128,6 +128,7 @@ function MultiBookPage() {
   const settings = (ctx as { settings?: import("@/lib/public-booking.functions").PublicBookingSettings }).settings;
   const showPrices = settings?.show_prices_on_booking !== false;
   const reqPhone = settings?.require_phone !== false;
+  const requireAccount = settings?.require_account_to_book === true;
   const reqDob = settings?.require_dob !== false;
   const reqAddress = settings?.require_address !== false;
   const maxLeadDays = settings?.booking_max_lead_days ?? 90;
@@ -1093,14 +1094,16 @@ function MultiBookPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <p className="text-sm opacity-70">Create an account or sign in to track your appointments.</p>
-                  <div className="grid gap-2 sm:grid-cols-3">
+                  <div className={`grid gap-2 ${requireAccount ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
                     <Link to="/m/$slug/auth" params={{ slug }} search={{ redirect: redirectPath }}>
                       <Button className="w-full" style={{ backgroundColor: brand, color: "#fff" }}><LogIn className="mr-2 h-4 w-4" />Sign in</Button>
                     </Link>
                     <Link to="/m/$slug/auth" params={{ slug }} search={{ tab: "signup", redirect: redirectPath }}>
                       <Button variant="outline" className="w-full" style={{ color: brand, borderColor: `${brand}55` }}><UserPlus className="mr-2 h-4 w-4" />Sign up</Button>
                     </Link>
-                    <Button variant="ghost" className="w-full" style={{ color: brand }} onClick={() => setAuthChoice("guest")}>Continue as guest</Button>
+                    {!requireAccount && (
+                      <Button variant="ghost" className="w-full" style={{ color: brand }} onClick={() => setAuthChoice("guest")}>Continue as guest</Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
