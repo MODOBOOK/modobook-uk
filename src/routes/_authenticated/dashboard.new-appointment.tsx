@@ -28,8 +28,10 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/new-appointment")({
   ssr: false,
-  validateSearch: (search: Record<string, unknown>): { clientId?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { clientId?: string; date?: string; time?: string } => ({
     clientId: typeof search.clientId === "string" ? search.clientId : undefined,
+    date: typeof search.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(search.date) ? search.date : undefined,
+    time: typeof search.time === "string" && /^\d{2}:\d{2}$/.test(search.time) ? search.time : undefined,
   }),
   loader: async () => {
     const profile = await getMyProfile();
@@ -105,13 +107,14 @@ function fromMin(n: number) { return `${String(Math.floor(n / 60)).padStart(2, "
 
 function NewAppointmentPage() {
   const { profile } = Route.useLoaderData();
-  const { clientId: preselectClientId } = Route.useSearch();
+  const { clientId: preselectClientId, date: prefillDate, time: prefillTime } = Route.useSearch();
+  const prefillTimeRef = useRef<string | undefined>(prefillTime);
   const navigate = useNavigate();
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [locationId, setLocationId] = useState<string>("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(prefillDate ?? "");
   const [items, setItems] = useState<BookingItem[]>([]);
   const [slots, setSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -315,7 +318,12 @@ function NewAppointmentPage() {
     if (!t) return;
     setItems((prev) => {
       const nextStart = (() => {
-        if (prev.length === 0) return "";
+        if (prev.length === 0) {
+          // Calendar slot click carries a chosen start time — apply it once.
+          const t = prefillTimeRef.current;
+          prefillTimeRef.current = undefined;
+          return t ?? "";
+        }
         const last = prev[prev.length - 1];
         if (!last.startTime) return "";
         return fromMin(toMin(last.startTime) + (last.duration || 0));
