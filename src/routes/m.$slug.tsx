@@ -38,19 +38,8 @@ export const Route = createFileRoute("/m/$slug")({
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
     </div>
   ),
-  errorComponent: ({ reset }) => (
-    <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
-      <h1 className="text-xl font-semibold">We couldn't load this page</h1>
-      <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-        Your connection dropped for a moment. Tap retry — if you're in the Instagram browser,
-        opening the link in Safari or Chrome is more reliable.
-      </p>
-      <div className="mt-6 flex flex-wrap justify-center gap-2">
-        <Button onClick={() => reset()}>Retry</Button>
-        <Button variant="outline" onClick={() => window.location.reload()}>Reload page</Button>
-      </div>
-    </div>
-  ),
+  errorComponent: ({ reset }) => <ClinicLoadError reset={reset} />,
+
   notFoundComponent: () => (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
       <h1 className="text-2xl font-bold">Page not found</h1>
