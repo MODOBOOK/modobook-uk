@@ -396,6 +396,14 @@ function MultiBookPage() {
   const consumePts = useServerFn(consumePointsRedemption);
   
 
+  // Which practitioner the patient chose on the clinic page (if any) — their
+  // hours and diary drive the dates and times we offer.
+  const [chosenPractitionerId, setChosenPractitionerId] = useState<string | null>(null);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setChosenPractitionerId(window.sessionStorage.getItem(`modo:practitionerId:${slug}`) || null);
+  }, [slug]);
+
   const monthQuery = useQuery({
     queryKey: ["monthAvail", ctx.profileId, month.getFullYear(), month.getMonth() + 1, locationId, chosenPractitionerId],
     queryFn: () => monthFn({ data: { profileId: ctx.profileId, year: month.getFullYear(), month: month.getMonth() + 1, locationId, practitionerId: chosenPractitionerId } }),
@@ -420,14 +428,6 @@ function MultiBookPage() {
     const [y, m, d] = date.split("-").map(Number);
     return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
   }, [date]);
-
-  // Which practitioner the patient chose on the clinic page (if any) — their
-  // hours and diary drive the dates and times we offer.
-  const [chosenPractitionerId, setChosenPractitionerId] = useState<string | null>(null);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    setChosenPractitionerId(window.sessionStorage.getItem(`modo:practitionerId:${slug}`) || null);
-  }, [slug]);
 
   const dayRules = useMemo(
     () => {
