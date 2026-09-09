@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { UserCircle2 } from "lucide-react";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { buildThemeVars } from "@/lib/theme-vars";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Loader2 } from "lucide-react";
 
@@ -38,19 +38,8 @@ export const Route = createFileRoute("/m/$slug")({
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
     </div>
   ),
-  errorComponent: ({ reset }) => (
-    <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
-      <h1 className="text-xl font-semibold">We couldn't load this page</h1>
-      <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-        Your connection dropped for a moment. Tap retry — if you're in the Instagram browser,
-        opening the link in Safari or Chrome is more reliable.
-      </p>
-      <div className="mt-6 flex flex-wrap justify-center gap-2">
-        <Button onClick={() => reset()}>Retry</Button>
-        <Button variant="outline" onClick={() => window.location.reload()}>Reload page</Button>
-      </div>
-    </div>
-  ),
+  errorComponent: ({ reset }) => <ClinicLoadError reset={reset} />,
+
   notFoundComponent: () => (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
       <h1 className="text-2xl font-bold">Page not found</h1>
@@ -384,4 +373,45 @@ function MembershipsTabLink({ slug }: { slug: string }) {
   });
   if (!q.data || (q.data.plans as unknown[]).length === 0) return null;
   return <TabLink slug={slug} to="/m/$slug/memberships" label="Memberships" />;
+}
+
+/**
+ * In-app browsers (Instagram, Facebook) and flaky mobile connections drop the
+ * occasional request. Rather than dead-ending patients on an error screen,
+ * quietly retry a few times before showing anything.
+ */
+function ClinicLoadError({ reset }: { reset: () => void }) {
+  const [attempt, setAttempt] = useState(0);
+  const MAX_AUTO_RETRIES = 3;
+
+  useEffect(() => {
+    if (attempt >= MAX_AUTO_RETRIES) return;
+    const t = setTimeout(() => {
+      setAttempt((a) => a + 1);
+      reset();
+    }, 600 * (attempt + 1));
+    return () => clearTimeout(t);
+  }, [attempt, reset]);
+
+  if (attempt < MAX_AUTO_RETRIES) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
+      <h1 className="text-xl font-semibold">We couldn't load this page</h1>
+      <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+        Your connection dropped for a moment. Tap retry — if you're in the Instagram browser,
+        opening the link in Safari or Chrome is more reliable.
+      </p>
+      <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <Button onClick={() => { setAttempt(0); reset(); }}>Retry</Button>
+        <Button variant="outline" onClick={() => window.location.reload()}>Reload page</Button>
+      </div>
+    </div>
+  );
 }
