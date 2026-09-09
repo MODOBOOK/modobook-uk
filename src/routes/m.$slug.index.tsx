@@ -639,8 +639,12 @@ function BookPage() {
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
   }, [practSelectionMode, practitionerId]);
+  // Clinics with no locations set up still get the step — the choice is not
+  // about where, it's about who.
   const showPractitionerStep =
-    practSelectionMode !== "first_available" && choosablePractitioners.length > 0 && !!locationId;
+    practSelectionMode !== "first_available" &&
+    choosablePractitioners.length > 0 &&
+    (!!locationId || bookableLocations.length === 0);
   const practitionerGateOpen =
     practSelectionMode !== "required" || !!practitionerId || choosablePractitioners.length === 0;
 
