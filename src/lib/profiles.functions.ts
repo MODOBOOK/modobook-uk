@@ -19,28 +19,74 @@ export const getMyProfile = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { resolveClinicAccess } = await import("./clinic-context.server");
     const access = await resolveClinicAccess(supabase, userId);
-    if (!access.profileId) return null;
-    const { data, error } = await supabase
+
+    const wrap = (data: any, accessLike: {
+      role: string;
+      isOwner: boolean;
+      dataScope: string;
+      canManageRota?: boolean;
+      canUsePrescribing?: boolean;
+    }) => ({
+      ...data,
+      __clinic_role: accessLike.role,
+      __is_owner: accessLike.isOwner,
+      __data_scope: accessLike.dataScope,
+      __can_manage_rota: accessLike.isOwner || Boolean(accessLike.canManageRota),
+      __can_use_prescribing: accessLike.isOwner || Boolean(accessLike.canUsePrescribing),
+    });
+
+    if (access.profileId) {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", access.profileId)
+        .maybeSingle();
+      if (error && error.code !== "PGRST116") throw error;
+      if (data) {
+        return wrap(data, {
+          role: access.role,
+          isOwner: access.isOwner,
+          dataScope: access.dataScope,
+          canManageRota: (access as any).canManageRota,
+          canUsePrescribing: (access as any).canUsePrescribing,
+        });
+      }
+    }
+
+    const { data: byUser } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", access.profileId)
-      .single();
-    if (error && error.code !== "PGRST116") throw error;
-    if (!data) return null;
-    return {
-      ...data,
-      __clinic_role: access.role,
-      __is_owner: access.isOwner,
-      __data_scope: access.dataScope,
-      __can_manage_rota: access.isOwner || access.canManageRota,
-      __can_use_prescribing: access.isOwner || access.canUsePrescribing,
-    } as typeof data & {
-      __clinic_role: string;
-      __is_owner: boolean;
-      __data_scope: string;
-      __can_manage_rota: boolean;
-      __can_use_prescribing: boolean;
-    };
+      .or(`user_id.eq.${userId},id.eq.${userId}`)
+      .limit(1)
+      .maybeSingle();
+    if (byUser) {
+      return wrap(byUser, {
+        role: "owner",
+        isOwner: true,
+        dataScope: "clinic",
+        canManageRota: true,
+        canUsePrescribing: true,
+      });
+    }
+
+    const email = String((context as any).claims?.email ?? "").toLowerCase();
+    if (!email) return null;
+
+    const { data: byEmail } = await supabase
+      .from("profiles")
+      .select("*")
+      .ilike("email", email)
+      .limit(1)
+      .maybeSingle();
+    if (!byEmail) return null;
+
+    return wrap(byEmail, {
+      role: "owner",
+      isOwner: true,
+      dataScope: "clinic",
+      canManageRota: true,
+      canUsePrescribing: true,
+    });
   });
 
 export const createProfile = createServerFn({ method: "POST" })
@@ -133,14 +179,12 @@ export const updateProfile = createServerFn({ method: "POST" })
       favourites_enabled?: boolean;
       favourites_custom_title?: string | null;
       about_page?: Record<string, unknown>;
-      // Booking window settings
       booking_min_notice_hours?: number;
       booking_max_lead_days?: number;
       booking_buffer_before_minutes?: number;
       booking_buffer_after_minutes?: number;
       booking_daily_cap?: number | null;
       booking_smart_times_enabled?: boolean;
-      // Payment settings
       payment_pass_fees_to_customer?: boolean;
       payment_surcharge_card_enabled?: boolean;
       payment_surcharge_card_percent?: number;
@@ -166,7 +210,6 @@ export const updateProfile = createServerFn({ method: "POST" })
       card_capture_policy_text?: string | null;
       show_prices_on_booking?: boolean;
       enforce_cancellation_fee?: boolean;
-      // Patient rules
       require_account_to_book?: boolean;
       require_phone?: boolean;
       require_dob?: boolean;
@@ -181,7 +224,6 @@ export const updateProfile = createServerFn({ method: "POST" })
       auto_refund_on_cancel?: boolean;
       no_refund_policy_enabled?: boolean;
       no_refund_policy_text?: string | null;
-      // Confirmations & reminders
       auto_confirm_bookings?: boolean;
       email_confirmations_enabled?: boolean;
       notify_new_booking_email?: boolean;
@@ -195,9 +237,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       sms_templates?: Record<string, string>;
       sms_channels?: Record<string, string>;
       sms_timings?: Record<string, unknown> | object;
-
       reminder_hours_before?: number[];
-      // Invoice branding
       invoice_bank_name?: string | null;
       invoice_account_name?: string | null;
       invoice_sort_code?: string | null;
@@ -219,9 +259,6 @@ export const updateProfile = createServerFn({ method: "POST" })
       membership_hero_subtitle?: string | null;
     }) => input,
   )
-
-
-
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const update: Record<string, unknown> = {};
@@ -255,11 +292,6 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.chooser_extra_title !== undefined) update.chooser_extra_title = data.chooser_extra_title;
     if (data.chooser_extra_body !== undefined) update.chooser_extra_body = data.chooser_extra_body;
     if (data.chooser_extra_treatment_ids !== undefined) update.chooser_extra_treatment_ids = data.chooser_extra_treatment_ids;
-
-    // Only the singular chooser_consultation_treatment_id has a FK constraint.
-    // Validate it against the treatments table to avoid FK violation; the array
-    // columns have no FK, so we leave them untouched (avoids accidentally wiping
-    // the array if the RLS-scoped lookup returns no rows).
     if (data.chooser_consultation_treatment_id) {
       const { data: existing } = await supabase
         .from("treatments")
@@ -268,7 +300,6 @@ export const updateProfile = createServerFn({ method: "POST" })
         .maybeSingle();
       if (!existing) update.chooser_consultation_treatment_id = null;
     }
-
     if (data.model_slots_position !== undefined) update.model_slots_position = data.model_slots_position;
     if (data.terms_html !== undefined) update.terms_html = data.terms_html;
     if (data.terms_required !== undefined) update.terms_required = data.terms_required;
@@ -285,7 +316,6 @@ export const updateProfile = createServerFn({ method: "POST" })
     if (data.avatar_url !== undefined) update.avatar_url = data.avatar_url;
     if (data.membership_hero_title !== undefined) update.membership_hero_title = data.membership_hero_title;
     if (data.membership_hero_subtitle !== undefined) update.membership_hero_subtitle = data.membership_hero_subtitle;
-
     const passthroughKeys = [
       "booking_min_notice_hours","booking_max_lead_days","booking_buffer_before_minutes",
       "booking_buffer_after_minutes","booking_daily_cap","booking_smart_times_enabled",
@@ -313,19 +343,10 @@ export const updateProfile = createServerFn({ method: "POST" })
       "invoice_company_number","invoice_show_bank_details","invoice_show_logo",
       "display_name_mode",
     ] as const;
-
     for (const k of passthroughKeys) {
       const v = (data as Record<string, unknown>)[k];
       if (v !== undefined) update[k] = v;
     }
-
-
-
-
-
-
-
-
     const { data: profile, error } = await supabase
       .from("profiles")
       .update(update as Database["public"]["Tables"]["profiles"]["Update"])
