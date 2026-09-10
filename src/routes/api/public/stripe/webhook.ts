@@ -957,6 +957,20 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                         ref_id: mm.id,
                         note: `Membership top-up ${inv.id}`,
                       } as never);
+                      try {
+                        await supabaseAdmin.rpc("create_notification", {
+                          p_profile_id: mm.profile_id,
+                          p_type: "membership_payment",
+                          p_title: "Membership payment received",
+                          p_body: `£${(creditCents / 100).toFixed(2)} credit added to a patient's account.`,
+                          p_emoji: "💰",
+                          p_link: "/dashboard/memberships",
+                          p_entity_id: null,
+                          p_entity_type: "membership",
+                        } as never);
+                      } catch (e) {
+                        console.error("[stripe webhook] membership payment notification failed", e);
+                      }
                     }
                   }
                 }
