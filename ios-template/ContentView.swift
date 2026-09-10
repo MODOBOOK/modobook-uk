@@ -1,121 +1,59 @@
 import SwiftUI
 import WebKit
 
+// Replace the whole contents of ContentView.swift with this file.
 struct ContentView: View {
-    @State private var isOffline = false
-    @State private var reloadID = UUID()
-
-    // Warm sand header colour from https://modobook.uk — matches the web
-    // app's top bar so the status bar area doesn't appear as a white strip.
-    private let headerColor = Color(
-        red: 250.0 / 255.0,
-        green: 248.0 / 255.0,
-        blue: 245.0 / 255.0
-    )
+    private let startURL = URL(string: "https://modobook.uk/auth?next=/app")!
+    private let headerColor = Color(red: 250.0 / 255.0, green: 248.0 / 255.0, blue: 245.0 / 255.0)
 
     var body: some View {
         ZStack {
-            // Fill the safe area behind the notch/status bar with the site header colour.
-            headerColor
-                .ignoresSafeArea()
-
-            WebView(
-                url: URL(string: "https://modobook.uk/app")!,
-                isOffline: $isOffline,
-                reloadID: reloadID
-            )
-            // Extend the web view to the bottom of the phone, but keep it
-            // below the top notch/status bar so it doesn't overlap system UI.
-            .ignoresSafeArea(.container, edges: .bottom)
-
-            if isOffline {
-                OfflineView {
-                    reloadID = UUID()
-                }
-            }
+            headerColor.ignoresSafeArea()
+            WebView(url: startURL)
+                .ignoresSafeArea(.container, edges: .bottom)
         }
     }
 }
 
 struct WebView: UIViewRepresentable {
     let url: URL
-    @Binding var isOffline: Bool
-    let reloadID: UUID
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(self)
+        Coordinator()
     }
 
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
+        config.websiteDataStore = WKWebsiteDataStore.default()
 
         let webView = WKWebView(frame: .zero, configuration: config)
-        webView.navigationDelegate = context.coordinator
+        webView.uiDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = true
         webView.scrollView.contentInsetAdjustmentBehavior = .never
+        webView.load(URLRequest(url: url))
         return webView
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        guard context.coordinator.lastReloadID != reloadID else { return }
-        context.coordinator.lastReloadID = reloadID
-        let request = URLRequest(url: url)
-        webView.load(request)
+        // Nothing to update; the page manages its own navigation.
     }
 
-    class Coordinator: NSObject, WKNavigationDelegate {
-        var parent: WebView
-        var lastReloadID: UUID?
-
-        init(_ parent: WebView) {
-            self.parent = parent
-        }
-
+    final class Coordinator: NSObject, WKUIDelegate {
+        // Opens Google / Apple sign-in pop-ups in the same web view
+        // instead of silently doing nothing.
         func webView(
             _ webView: WKWebView,
-            didFailProvisionalNavigation navigation: WKNavigation!,
-            withError error: Error
-        ) {
-            parent.isOffline = true
+            createWebViewWith configuration: WKWebViewConfiguration,
+            for navigationAction: WKNavigationAction,
+            windowFeatures: WKWindowFeatures
+        ) -> WKWebView? {
+            if navigationAction.targetFrame == nil {
+                webView.load(navigationAction.request)
+            }
+            return nil
         }
-
-        func webView(
-            _ webView: WKWebView,
-            didFail navigation: WKNavigation!,
-            withError error: Error
-        ) {
-            parent.isOffline = true
-        }
-
-        func webView(
-            _ webView: WKWebView,
-            didFinish navigation: WKNavigation!
-        ) {
-            parent.isOffline = false
-        }
-    }
-}
-
-struct OfflineView: View {
-    let onRetry: () -> Void
-
-    var body: some View {
-        VStack(spacing: 16) {
-            Text("You're offline")
-                .font(.headline)
-            Text("Check your connection and try again.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            Button("Retry", action: onRetry)
-                .buttonStyle(.borderedProminent)
-        }
-        .padding(24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.ultraThinMaterial)
-        .ignoresSafeArea()
     }
 }
 
