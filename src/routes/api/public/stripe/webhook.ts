@@ -841,14 +841,43 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
               // account. Credit the patient's savings pot on each paid
               // invoice; mark past_due on failure. Idempotent on invoice id.
               if (connectedAccountId) {
-                const subRef = (inv as unknown as { subscription?: string | { id?: string } | null }).subscription;
-                const subId = typeof subRef === "string" ? subRef : subRef?.id ?? null;
+                const subId = invoiceSubscriptionId(inv);
                 if (!subId) break;
-                const { data: membership } = await supabaseAdmin
+                let { data: membership } = await supabaseAdmin
                   .from("patient_memberships")
                   .select("id, profile_id, patient_user_id, membership_plans(credit_cents)")
                   .eq("stripe_subscription_id", subId)
                   .maybeSingle();
+                if (!membership) {
+                  // The first invoice can land before checkout.session.completed
+                  // stored the subscription id. Recover via the subscription's
+                  // own metadata and attach the id to the right membership row.
+                  try {
+                    const sub = await stripe.subscriptions.retrieve(
+                      subId,
+                      {},
+                      connectedAccountId ? { stripeAccount: connectedAccountId } : undefined,
+                    );
+                    const md = sub.metadata ?? {};
+                    if (md.kind === "membership" && md.plan_id && md.patient_user_id) {
+                      const { data: row } = await supabaseAdmin
+                        .from("patient_memberships")
+                        .select("id, profile_id, patient_user_id, membership_plans(credit_cents)")
+                        .eq("plan_id", md.plan_id)
+                        .eq("patient_user_id", md.patient_user_id)
+                        .maybeSingle();
+                      if (row) {
+                        await supabaseAdmin
+                          .from("patient_memberships")
+                          .update({ stripe_subscription_id: subId } as never)
+                          .eq("id", (row as { id: string }).id);
+                        membership = row;
+                      }
+                    }
+                  } catch (e) {
+                    console.error("[stripe webhook] membership subscription lookup failed", e);
+                  }
+                }
                 const mm = membership as {
                   id: string; profile_id: string; patient_user_id: string;
                   membership_plans?: { credit_cents: number } | null;
