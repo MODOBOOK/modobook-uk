@@ -36,7 +36,7 @@ function CookiePolicyPage() {
       <main className="mx-auto max-w-3xl px-4 py-10">
         <h1 className="font-serif text-4xl tracking-tight">Cookie Policy</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          MODO BOOKING PLATFORM · ICO registration <strong>C1994747</strong> · Privacy and Electronic
+          MODO BOOK LTD · ICO registration <strong>ZC209736</strong> · Privacy and Electronic
           Communications Regulations (PECR) &amp; UK GDPR
         </p>
 

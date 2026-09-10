@@ -114,7 +114,7 @@ function RetentionPage() {
       <main className="mx-auto max-w-3xl px-4 py-10">
         <h1 className="font-serif text-4xl tracking-tight">Data Retention Schedule</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          MODO BOOKING PLATFORM · ICO registration <strong>C1994747</strong> · UK GDPR Art. 5(1)(e)
+          MODO BOOK LTD · ICO registration <strong>ZC209736</strong> · UK GDPR Art. 5(1)(e)
         </p>
 
         <div className="prose prose-neutral mt-8 max-w-none prose-h2:font-serif prose-h2:tracking-tight prose-a:text-primary">

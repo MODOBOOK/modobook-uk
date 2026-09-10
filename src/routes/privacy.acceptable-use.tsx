@@ -36,7 +36,7 @@ function AcceptableUsePage() {
       <main className="mx-auto max-w-3xl px-4 py-10">
         <h1 className="font-serif text-4xl tracking-tight">Acceptable Use &amp; Practitioner Data Duties</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          MODO BOOKING PLATFORM · ICO registration <strong>C1994747</strong> · Applies to every clinic account
+          MODO BOOK LTD · ICO registration <strong>ZC209736</strong> · Applies to every clinic account
         </p>
 
         <div className="prose prose-neutral mt-8 max-w-none prose-h2:font-serif prose-h2:tracking-tight prose-a:text-primary">
