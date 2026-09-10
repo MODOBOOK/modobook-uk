@@ -182,6 +182,25 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                       ...patch,
                     } as never);
                   }
+                  try {
+                    const { data: plan } = await supabaseAdmin
+                      .from("membership_plans")
+                      .select("name")
+                      .eq("id", metadata.plan_id)
+                      .maybeSingle();
+                    await supabaseAdmin.rpc("create_notification", {
+                      p_profile_id: metadata.profile_id,
+                      p_type: "membership_signup",
+                      p_title: "New membership signup",
+                      p_body: `${details?.name ?? details?.email ?? "A patient"} joined ${(plan as { name?: string } | null)?.name ?? "a membership plan"}.`,
+                      p_emoji: "💳",
+                      p_link: "/dashboard/memberships",
+                      p_entity_id: null,
+                      p_entity_type: "membership",
+                    } as never);
+                  } catch (e) {
+                    console.error("[stripe webhook] membership notification failed", e);
+                  }
                 }
                 break;
               }
