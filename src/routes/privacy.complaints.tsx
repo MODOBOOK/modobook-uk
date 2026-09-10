@@ -56,7 +56,7 @@ function ComplaintsPage() {
           <p>
             <strong>Data protection contact:</strong>{" "}
             <a href="mailto:info@modobook.co.uk">info@modobook.co.uk</a><br />
-            <strong>Controller:</strong> MODO BOOK LTD, Scotland, United Kingdom<br />
+            <strong>Controller:</strong> MODO BOOK LTD, company number SC902227, Scotland, United Kingdom<br />
             <strong>ICO registration reference:</strong> ZC209736
           </p>
 
