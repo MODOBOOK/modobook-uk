@@ -41,9 +41,10 @@ function PrivacyPage() {
           Effective 2 July 2026 · Governed by the laws of Scotland (UK GDPR &amp; Data Protection Act 2018)
         </p>
         <div className="mt-4 rounded-lg border bg-muted/40 px-4 py-3 text-sm">
-          <strong>MODO BOOK LTD</strong> is registered with the UK Information
+          <strong>MODO BOOK LTD</strong> (company number <strong>SC902227</strong>, registered in
+          Scotland) is registered with the UK Information
           Commissioner's Office as a data controller — registration reference{" "}
-          <strong>ZC209736</strong>. You can verify this on the{" "}
+          <strong>ZC209736</strong>. You can verify these on the{" "}
           <a
             href="https://ico.org.uk/ESDWebPages/Search"
             target="_blank"
@@ -51,6 +52,15 @@ function PrivacyPage() {
             className="text-primary underline"
           >
             ICO public register
+          </a>{" "}
+          and{" "}
+          <a
+            href="https://find-and-update.company-information.service.gov.uk/company/SC902227"
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary underline"
+          >
+            Companies House
           </a>
           , and you have the right to complain to the ICO at any time about how we handle your data.
         </div>
@@ -184,7 +194,7 @@ function PrivacyPage() {
 
           <h2>11. Controller contact</h2>
           <p>
-            <strong>Controller:</strong> MODO BOOK LTD, Scotland, United Kingdom (ICO reg. ZC209736).<br />
+            <strong>Controller:</strong> MODO BOOK LTD, company number SC902227, Scotland, United Kingdom (ICO reg. ZC209736).<br />
             <strong>Data Protection contact:</strong> <a href="mailto:info@modobook.co.uk">info@modobook.co.uk</a>
             <br />
             For clinical data held about you as a patient, the practitioner who
