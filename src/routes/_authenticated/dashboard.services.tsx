@@ -1425,6 +1425,11 @@ function CategoryDialog({
                 </div>
               </div>
             )}
+            {limited && !limStart.trim() && !limEnd.trim() && (
+              <p className="text-[11px] font-medium text-rose-800">
+                Add a start and/or end date — until you do, this category stays hidden from your booking page.
+              </p>
+            )}
           </div>
         </div>
         <DialogFooter>
@@ -1432,7 +1437,7 @@ function CategoryDialog({
             Cancel
           </Button>
           <Button
-            disabled={!name.trim() || saving}
+            disabled={!name.trim() || saving || (limited && !limStart.trim() && !limEnd.trim())}
             onClick={async () => {
               setSaving(true);
               await onSubmit({
