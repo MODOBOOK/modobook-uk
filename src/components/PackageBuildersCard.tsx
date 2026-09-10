@@ -255,18 +255,36 @@ function BuilderDialog({
             </div>
           )}
 
-          {mode === "fixed" && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Pick how many</Label>
-                <Input type="number" min={1} value={form.pick_count ?? 3}
-                  onChange={(e) => set("pick_count", Number(e.target.value))} />
+          {(mode === "fixed" || mode === "sum") && (
+            <div className="space-y-1.5">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Pick how many</Label>
+                  <Input type="number" min={1} value={form.pick_count ?? form.min_items ?? 3}
+                    onChange={(e) => {
+                      const n = Number(e.target.value);
+                      set("pick_count", n);
+                      if (mode === "sum") set("min_items", Math.max(1, n));
+                    }} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>One price for the bundle £ (optional)</Label>
+                  <Input type="number" min={0} step="0.01" value={form.fixed_price ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value === "" ? null : Number(e.target.value);
+                      setForm((f) => ({
+                        ...f,
+                        fixed_price: v,
+                        mode: v === null ? "sum" : "fixed",
+                        pick_count: f.pick_count ?? f.min_items ?? 3,
+                      }));
+                    }} />
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label>Package price £</Label>
-                <Input type="number" min={0} step="0.01" value={form.fixed_price ?? ""}
-                  onChange={(e) => set("fixed_price", e.target.value === "" ? null : Number(e.target.value))} />
-              </div>
+              <p className="text-xs text-muted-foreground">
+                Leave the price blank to simply add up what they pick. Enter a price (e.g. 299) to charge one set
+                price for that number of treatments.
+              </p>
             </div>
           )}
 
