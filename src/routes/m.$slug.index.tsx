@@ -688,6 +688,8 @@ function BookPage() {
     if (!c || !c.is_limited) return true;
     const starts = c.limited_starts_at ? new Date(c.limited_starts_at).getTime() : null;
     const ends = c.limited_ends_at ? new Date(c.limited_ends_at).getTime() : null;
+    // A limited category with no window set yet is not ready to go public.
+    if (starts == null && ends == null) return false;
     return (starts == null || nowTs >= starts) && (ends == null || nowTs < ends);
   };
   const catEndsAt = (categoryId: string | null | undefined) => {
