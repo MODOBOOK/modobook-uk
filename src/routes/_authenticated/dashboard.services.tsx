@@ -88,6 +88,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { toast } from "sonner";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 export const Route = createFileRoute("/_authenticated/dashboard/services")({
   component: ServicesPage,
@@ -887,15 +902,18 @@ function ServiceList({
   onDeleteTreat: (t: Treat) => void;
   onMoveTreatTo: (t: Treat) => void;
 }) {
-  const [dragId, setDragId] = useState<string | null>(null);
-  const [overId, setOverId] = useState<string | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 8 } }),
+  );
 
-  function handleDrop(targetId: string) {
-    const from = treats.findIndex((t) => t.id === dragId);
+  function handleDragEnd(event: DragEndEvent) {
+    const activeId = String(event.active.id);
+    const targetId = event.over ? String(event.over.id) : null;
+    if (!targetId || activeId === targetId) return;
+    const from = treats.findIndex((t) => t.id === activeId);
     const to = treats.findIndex((t) => t.id === targetId);
-    setDragId(null);
-    setOverId(null);
-    if (!dragId || dragId === targetId || from < 0 || to < 0) return;
+    if (from < 0 || to < 0) return;
     const next = treats.slice();
     const [moved] = next.splice(from, 1);
     next.splice(to, 0, moved);
@@ -903,76 +921,86 @@ function ServiceList({
   }
 
   return (
-    <div className="space-y-2">
-      {treats.map((t) => (
-        <ServiceCard
-          key={t.id}
-          treat={t}
-          draggable={!reorderDisabled}
-          dragging={dragId === t.id}
-          dropTarget={overId === t.id && dragId !== t.id}
-          onDragStart={() => setDragId(t.id)}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setOverId(t.id);
-          }}
-          onDragLeave={() => setOverId((v) => (v === t.id ? null : v))}
-          onDrop={() => handleDrop(t.id)}
-          onDragEnd={() => {
-            setDragId(null);
-            setOverId(null);
-          }}
-          onDelete={() => onDeleteTreat(t)}
-          onMoveTo={() => onMoveTreatTo(t)}
-        />
-      ))}
-    </div>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={treats.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+        <div className="space-y-2">
+          {treats.map((t) => (
+            <SortableServiceCard
+              key={t.id}
+              treat={t}
+              reorderDisabled={reorderDisabled}
+              onDelete={() => onDeleteTreat(t)}
+              onMoveTo={() => onMoveTreatTo(t)}
+            />
+          ))}
+        </div>
+      </SortableContext>
+    </DndContext>
   );
 }
 
-function ServiceCard({
+function SortableServiceCard({
   treat,
-  draggable,
-  dragging,
-  dropTarget,
-  onDragStart,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  onDragEnd,
+  reorderDisabled,
   onDelete,
   onMoveTo,
 }: {
   treat: Treat;
-  draggable?: boolean;
+  reorderDisabled?: boolean;
+  onDelete: () => void;
+  onMoveTo: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: treat.id,
+    disabled: reorderDisabled,
+  });
+
+  return (
+    <ServiceCard
+      ref={setNodeRef}
+      treat={treat}
+      dragging={isDragging}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      dragHandleProps={reorderDisabled ? undefined : { ...attributes, ...listeners }}
+      onDelete={onDelete}
+      onMoveTo={onMoveTo}
+    />
+  );
+}
+
+function ServiceCard({
+  ref,
+  treat,
+  dragging,
+  style,
+  dragHandleProps,
+  onDelete,
+  onMoveTo,
+}: {
+  ref?: React.Ref<HTMLDivElement>;
+  treat: Treat;
   dragging?: boolean;
-  dropTarget?: boolean;
-  onDragStart?: () => void;
-  onDragOver?: (e: React.DragEvent) => void;
-  onDragLeave?: () => void;
-  onDrop?: () => void;
-  onDragEnd?: () => void;
+  style?: React.CSSProperties;
+  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement>;
   onDelete: () => void;
   onMoveTo?: () => void;
 }) {
   const editService = useContext(EditServiceCtx);
   return (
     <div
-      draggable={draggable}
-      onDragStart={onDragStart}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
-      onDragEnd={onDragEnd}
-      className={`group flex items-center gap-2 rounded-xl border bg-background px-2.5 py-2 transition-colors hover:border-primary/30 ${
-        dropTarget ? "border-primary" : ""
-      } ${dragging ? "opacity-50" : ""}`}
+      ref={ref}
+      style={style}
+      className={`group flex items-center gap-2 rounded-xl border bg-background px-2.5 py-2 transition-colors hover:border-primary/30 ${dragging ? "relative z-10 opacity-70 shadow-lg" : ""}`}
     >
-      {draggable && (
-        <GripVertical
-          className="h-4 w-4 shrink-0 cursor-grab text-muted-foreground/60 active:cursor-grabbing"
+      {dragHandleProps && (
+        <button
+          type="button"
+          {...dragHandleProps}
+          className="flex h-11 w-9 shrink-0 touch-none items-center justify-center rounded-lg text-muted-foreground/70 active:cursor-grabbing active:bg-muted"
           aria-label="Drag to reorder"
-        />
+        >
+          <GripVertical className="h-5 w-5" />
+        </button>
       )}
       <div className="flex min-w-0 flex-1 items-center gap-2.5">
         <span
@@ -996,10 +1024,10 @@ function ServiceCard({
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+            className="inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg text-muted-foreground hover:bg-muted active:bg-muted"
             aria-label="Service actions"
           >
-            <MoreVertical className="h-4 w-4" />
+            <MoreVertical className="h-5 w-5" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
