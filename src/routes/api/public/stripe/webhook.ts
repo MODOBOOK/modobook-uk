@@ -54,6 +54,28 @@ async function parseStripeWebhook(params: {
   throw lastError instanceof Error ? lastError : new Error("invalid signature");
 }
 
+/**
+ * Stripe removed the flat `invoice.subscription` field in recent API versions;
+ * the subscription now hangs off `parent.subscription_details` (or the line
+ * items). Membership credits silently stopped landing when only the old field
+ * was read, so check every shape.
+ */
+function invoiceSubscriptionId(inv: unknown): string | null {
+  const asId = (v: unknown): string | null =>
+    typeof v === "string" ? v : (v as { id?: string } | null)?.id ?? null;
+  const i = inv as {
+    subscription?: unknown;
+    parent?: { subscription_details?: { subscription?: unknown } | null } | null;
+    lines?: { data?: Array<{ subscription?: unknown; parent?: { subscription_item_details?: { subscription?: unknown } | null } | null }> };
+  };
+  return (
+    asId(i.subscription) ??
+    asId(i.parent?.subscription_details?.subscription) ??
+    asId(i.lines?.data?.[0]?.subscription) ??
+    asId(i.lines?.data?.[0]?.parent?.subscription_item_details?.subscription)
+  );
+}
+
 export const Route = createFileRoute("/api/public/stripe/webhook")({
   server: {
     handlers: {
