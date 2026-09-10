@@ -41,9 +41,10 @@ function PrivacyPage() {
           Effective 2 July 2026 · Governed by the laws of Scotland (UK GDPR &amp; Data Protection Act 2018)
         </p>
         <div className="mt-4 rounded-lg border bg-muted/40 px-4 py-3 text-sm">
-          <strong>MODO BOOKING PLATFORM</strong> is registered with the UK Information
+          <strong>MODO BOOK LTD</strong> (company number <strong>SC902227</strong>, registered in
+          Scotland) is registered with the UK Information
           Commissioner's Office as a data controller — registration reference{" "}
-          <strong>C1994747</strong>. You can verify this on the{" "}
+          <strong>ZC209736</strong>. You can verify these on the{" "}
           <a
             href="https://ico.org.uk/ESDWebPages/Search"
             target="_blank"
@@ -51,6 +52,15 @@ function PrivacyPage() {
             className="text-primary underline"
           >
             ICO public register
+          </a>{" "}
+          and{" "}
+          <a
+            href="https://find-and-update.company-information.service.gov.uk/company/SC902227"
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary underline"
+          >
+            Companies House
           </a>
           , and you have the right to complain to the ICO at any time about how we handle your data.
         </div>
@@ -59,8 +69,8 @@ function PrivacyPage() {
           <h2>1. Who we are</h2>
           <p>
             MODO ("we", "us", "the platform") is an aesthetics booking and clinical records
-            platform operated by MODO BOOKING PLATFORM (Scotland), ICO registration
-            <strong> C1994747</strong>. This notice explains how we process
+            platform operated by MODO BOOK LTD (Scotland), ICO registration
+            <strong> ZC209736</strong>. This notice explains how we process
             personal data for two groups of people:
           </p>
           <ul>
@@ -136,7 +146,7 @@ function PrivacyPage() {
             <li>Request <strong>portability</strong> of data you provided in a machine-readable format.</li>
             <li>Object to or restrict processing, including marketing.</li>
             <li>Withdraw consent at any time (this does not affect processing already carried out).</li>
-            <li>Complain to the Information Commissioner's Office (<a href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noreferrer">ico.org.uk/make-a-complaint</a>, 0303 123 1113), quoting our registration reference <strong>C1994747</strong>.</li>
+            <li>Complain to the Information Commissioner's Office (<a href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noreferrer">ico.org.uk/make-a-complaint</a>, 0303 123 1113), quoting our registration reference <strong>ZC209736</strong>.</li>
           </ul>
           <p>
             To exercise any of these rights, email <a href="mailto:info@modobook.co.uk">info@modobook.co.uk</a>.
@@ -179,12 +189,12 @@ function PrivacyPage() {
           <ul>
             <li><a href="https://ico.org.uk/make-a-complaint/" target="_blank" rel="noreferrer">ico.org.uk/make-a-complaint</a> · 0303 123 1113</li>
             <li>Information Commissioner's Office, Wycliffe House, Water Lane, Wilmslow, Cheshire SK9 5AF</li>
-            <li>Our registration reference: <strong>C1994747</strong></li>
+            <li>Our registration reference: <strong>ZC209736</strong></li>
           </ul>
 
           <h2>11. Controller contact</h2>
           <p>
-            <strong>Controller:</strong> MODO BOOKING PLATFORM, Scotland, United Kingdom (ICO reg. C1994747).<br />
+            <strong>Controller:</strong> MODO BOOK LTD, company number SC902227, Scotland, United Kingdom (ICO reg. ZC209736).<br />
             <strong>Data Protection contact:</strong> <a href="mailto:info@modobook.co.uk">info@modobook.co.uk</a>
             <br />
             For clinical data held about you as a patient, the practitioner who

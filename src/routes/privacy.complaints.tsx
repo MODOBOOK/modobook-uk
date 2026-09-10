@@ -36,7 +36,7 @@ function ComplaintsPage() {
       <main className="mx-auto max-w-3xl px-4 py-10">
         <h1 className="font-serif text-4xl tracking-tight">Complaints &amp; Subject Access Requests</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          MODO BOOKING PLATFORM · ICO registration <strong>C1994747</strong> · UK GDPR Art. 12–22
+          MODO BOOK LTD · ICO registration <strong>ZC209736</strong> · UK GDPR Art. 12–22
         </p>
 
         <div className="prose prose-neutral mt-8 max-w-none prose-h2:font-serif prose-h2:tracking-tight prose-a:text-primary">
@@ -56,8 +56,8 @@ function ComplaintsPage() {
           <p>
             <strong>Data protection contact:</strong>{" "}
             <a href="mailto:info@modobook.co.uk">info@modobook.co.uk</a><br />
-            <strong>Controller:</strong> MODO BOOKING PLATFORM, Scotland, United Kingdom<br />
-            <strong>ICO registration reference:</strong> C1994747
+            <strong>Controller:</strong> MODO BOOK LTD, company number SC902227, Scotland, United Kingdom<br />
+            <strong>ICO registration reference:</strong> ZC209736
           </p>
 
           <h2>2. Making a Subject Access Request (SAR)</h2>
