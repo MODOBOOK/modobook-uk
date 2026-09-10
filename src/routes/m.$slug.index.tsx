@@ -568,6 +568,9 @@ function BookPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locations, locationId]);
+  // Clinics that haven't added any location yet must still show their menu —
+  // there is nothing for the patient to pick, so the location step is skipped.
+  const locationGateOpen = !!locationId || bookableLocations.length === 0;
   const [directionsOpen, setDirectionsOpen] = useState(false);
   const [careGuideOpen, setCareGuideOpen] = useState(false);
   const [expandedFavId, setExpandedFavId] = useState<string | null>(null);
@@ -1708,7 +1711,7 @@ function BookPage() {
 
       {/* Chooser gate */}
 
-      {locationId && practitionerGateOpen && chooserOn && !mode && (
+      {locationGateOpen && practitionerGateOpen && chooserOn && !mode && (
         <section className="mx-auto mt-10 max-w-3xl px-4">
           <h2 className="mb-1 text-center text-xl font-bold" style={headingStyle}>
             How can we help today?
@@ -1768,7 +1771,7 @@ function BookPage() {
       )}
 
       {/* Concerns picker (unsure path) */}
-      {locationId && practitionerGateOpen && chooserOn && mode === "unsure" && !concernsConfirmed && (
+      {locationGateOpen && practitionerGateOpen && chooserOn && mode === "unsure" && !concernsConfirmed && (
         <section className="mx-auto mt-10 max-w-3xl px-4">
           <div className="mb-4 flex items-center justify-between">
             <button onClick={() => setMode(null)} className="text-sm opacity-70 hover:opacity-100">
@@ -1862,7 +1865,7 @@ function BookPage() {
 
       {/* Favourite / Most popular treatments */}
       {(() => {
-        if (!locationId) return null;
+        if (!locationGateOpen) return null;
         // When the booking chooser is active, favourites must not appear above
         // the consultation/concern results because they make it look like the
         // patient is being shown the full menu. Only show favourites on the
@@ -2009,7 +2012,7 @@ function BookPage() {
       })()}
       {/* Treatments + Packages */}
 
-      {locationId && practitionerGateOpen && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
+      {locationGateOpen && practitionerGateOpen && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
         <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
           {chooserOn && (
             <div className="mb-4 flex items-center justify-between">
@@ -2616,7 +2619,7 @@ function BookPage() {
 
           })()}
         </section>
-      ) : !locationId ? (
+      ) : !locationGateOpen ? (
         locations.length > 1 && (
           <section className="mx-auto mt-8 max-w-3xl px-4">
             <p className="rounded-2xl border border-dashed p-6 text-center text-sm opacity-70"
@@ -2636,7 +2639,7 @@ function BookPage() {
 
 
       {/* Sticky multi-select bar */}
-      {locationId && (selectedIds.length > 0 || selectedPackageIds.length > 0) && (() => {
+      {locationGateOpen && (selectedIds.length > 0 || selectedPackageIds.length > 0) && (() => {
         const treatmentsTotal = selectedIds
           .map((id) => priceFor(treatments.find((t) => t.id === id)!))
           .reduce((a, b) => a + b, 0);
