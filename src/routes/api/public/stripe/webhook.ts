@@ -54,6 +54,28 @@ async function parseStripeWebhook(params: {
   throw lastError instanceof Error ? lastError : new Error("invalid signature");
 }
 
+/**
+ * Stripe removed the flat `invoice.subscription` field in recent API versions;
+ * the subscription now hangs off `parent.subscription_details` (or the line
+ * items). Membership credits silently stopped landing when only the old field
+ * was read, so check every shape.
+ */
+function invoiceSubscriptionId(inv: unknown): string | null {
+  const asId = (v: unknown): string | null =>
+    typeof v === "string" ? v : (v as { id?: string } | null)?.id ?? null;
+  const i = inv as {
+    subscription?: unknown;
+    parent?: { subscription_details?: { subscription?: unknown } | null } | null;
+    lines?: { data?: Array<{ subscription?: unknown; parent?: { subscription_item_details?: { subscription?: unknown } | null } | null }> };
+  };
+  return (
+    asId(i.subscription) ??
+    asId(i.parent?.subscription_details?.subscription) ??
+    asId(i.lines?.data?.[0]?.subscription) ??
+    asId(i.lines?.data?.[0]?.parent?.subscription_item_details?.subscription)
+  );
+}
+
 export const Route = createFileRoute("/api/public/stripe/webhook")({
   server: {
     handlers: {
@@ -159,6 +181,25 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                       patient_user_id: metadata.patient_user_id,
                       ...patch,
                     } as never);
+                  }
+                  try {
+                    const { data: plan } = await supabaseAdmin
+                      .from("membership_plans")
+                      .select("name")
+                      .eq("id", metadata.plan_id)
+                      .maybeSingle();
+                    await supabaseAdmin.rpc("create_notification", {
+                      p_profile_id: metadata.profile_id,
+                      p_type: "membership_signup",
+                      p_title: "New membership signup",
+                      p_body: `${details?.name ?? details?.email ?? "A patient"} joined ${(plan as { name?: string } | null)?.name ?? "a membership plan"}.`,
+                      p_emoji: "💳",
+                      p_link: "/dashboard/memberships",
+                      p_entity_id: null,
+                      p_entity_type: "membership",
+                    } as never);
+                  } catch (e) {
+                    console.error("[stripe webhook] membership notification failed", e);
                   }
                 }
                 break;
@@ -841,14 +882,43 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
               // account. Credit the patient's savings pot on each paid
               // invoice; mark past_due on failure. Idempotent on invoice id.
               if (connectedAccountId) {
-                const subRef = (inv as unknown as { subscription?: string | { id?: string } | null }).subscription;
-                const subId = typeof subRef === "string" ? subRef : subRef?.id ?? null;
+                const subId = invoiceSubscriptionId(inv);
                 if (!subId) break;
-                const { data: membership } = await supabaseAdmin
+                let { data: membership } = await supabaseAdmin
                   .from("patient_memberships")
                   .select("id, profile_id, patient_user_id, membership_plans(credit_cents)")
                   .eq("stripe_subscription_id", subId)
                   .maybeSingle();
+                if (!membership) {
+                  // The first invoice can land before checkout.session.completed
+                  // stored the subscription id. Recover via the subscription's
+                  // own metadata and attach the id to the right membership row.
+                  try {
+                    const sub = await stripe.subscriptions.retrieve(
+                      subId,
+                      {},
+                      connectedAccountId ? { stripeAccount: connectedAccountId } : undefined,
+                    );
+                    const md = sub.metadata ?? {};
+                    if (md.kind === "membership" && md.plan_id && md.patient_user_id) {
+                      const { data: row } = await supabaseAdmin
+                        .from("patient_memberships")
+                        .select("id, profile_id, patient_user_id, membership_plans(credit_cents)")
+                        .eq("plan_id", md.plan_id)
+                        .eq("patient_user_id", md.patient_user_id)
+                        .maybeSingle();
+                      if (row) {
+                        await supabaseAdmin
+                          .from("patient_memberships")
+                          .update({ stripe_subscription_id: subId } as never)
+                          .eq("id", (row as { id: string }).id);
+                        membership = row;
+                      }
+                    }
+                  } catch (e) {
+                    console.error("[stripe webhook] membership subscription lookup failed", e);
+                  }
+                }
                 const mm = membership as {
                   id: string; profile_id: string; patient_user_id: string;
                   membership_plans?: { credit_cents: number } | null;
@@ -887,6 +957,20 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                         ref_id: mm.id,
                         note: `Membership top-up ${inv.id}`,
                       } as never);
+                      try {
+                        await supabaseAdmin.rpc("create_notification", {
+                          p_profile_id: mm.profile_id,
+                          p_type: "membership_payment",
+                          p_title: "Membership payment received",
+                          p_body: `£${(creditCents / 100).toFixed(2)} credit added to a patient's account.`,
+                          p_emoji: "💰",
+                          p_link: "/dashboard/memberships",
+                          p_entity_id: null,
+                          p_entity_type: "membership",
+                        } as never);
+                      } catch (e) {
+                        console.error("[stripe webhook] membership payment notification failed", e);
+                      }
                     }
                   }
                 }
