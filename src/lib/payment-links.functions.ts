@@ -257,7 +257,7 @@ export const completeAppointmentCheckout = createServerFn({ method: "POST" })
   .inputValidator(
     (input: {
       appointmentId: string;
-      method: "stripe_link" | "card_present" | "cash" | "bank_transfer";
+      method?: "stripe_link" | "card_present" | "cash" | "bank_transfer" | null;
       discountCents?: number | null;
       notes?: string | null;
       markPaid?: boolean;
@@ -267,10 +267,12 @@ export const completeAppointmentCheckout = createServerFn({ method: "POST" })
     const profile = await getProfile(context.supabase, context.userId);
     if (!profile) throw new Error("Profile not found");
     const patch: Record<string, unknown> = {
-      checkout_method: data.method,
       checkout_notes: data.notes ?? null,
       checkout_discount_cents: data.discountCents ?? null,
     };
+    // Only stamp the method when the caller actually took a payment action —
+    // saving notes on its own must not rewrite how the booking was paid.
+    if (data.method) patch.checkout_method = data.method;
     if (data.markPaid) {
       patch.payment_status = "paid";
       patch.payment_method = data.method;
