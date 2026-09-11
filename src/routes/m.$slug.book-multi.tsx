@@ -357,6 +357,45 @@ function MultiBookPage() {
   });
   const availableVisits = availableVisitsQuery.data ?? [];
 
+  // A prescriber clinic day is a fixed window the prescriber set in their hub.
+  // When one of the chosen treatments needs it, the patient must book inside
+  // that window — not anywhere in the clinic's normal diary.
+  const visitWindows = useMemo(() => {
+    if (clinicVisitItems.length === 0 || availableVisits.length === 0) return null;
+    const perTreatment = clinicVisitItems.map((p) =>
+      availableVisits.filter(
+        (v) => v.treatment_id === p.treatment_id && Number(v.remaining_capacity ?? 0) > 0,
+      ),
+    );
+    if (perTreatment.some((list) => list.length === 0)) return null;
+    const map = new Map<string, { start: string; end: string; visitIds: Record<string, string> }>();
+    for (const day of new Set(perTreatment[0].map((v) => v.visit_date))) {
+      const picked = perTreatment.map((list) => list.find((v) => v.visit_date === day));
+      if (picked.some((v) => !v)) continue;
+      // Where several prescribers are in on the same day, the bookable window
+      // is the part they all overlap on.
+      const start = picked.map((v) => v!.start_time).sort().at(-1)!;
+      const end = picked.map((v) => v!.end_time).sort()[0]!;
+      if (start >= end) continue;
+      const visitIds: Record<string, string> = {};
+      picked.forEach((v, i) => { visitIds[clinicVisitItems[i]!.treatment_id] = v!.visit_id; });
+      map.set(day, { start, end, visitIds });
+    }
+    return map.size > 0 ? map : null;
+  }, [clinicVisitItems, availableVisits]);
+
+  // Picking one of those days also picks the visit itself — no second step.
+  useEffect(() => {
+    const w = visitWindows?.get(date);
+    if (!w) return;
+    setVisitSelections((prev) => {
+      const next = { ...prev, ...w.visitIds };
+      const changed = Object.keys(w.visitIds).some((k) => prev[k] !== w.visitIds[k]);
+      return changed ? next : prev;
+    });
+  }, [visitWindows, date]);
+
+
   const allConsented = sameAddressItems.every((p) => prescriberConsents[p.treatment_id]);
   const allVisitsPicked = clinicVisitItems.every((p) => visitSelections[p.treatment_id]);
   const allClinicVisitsConsented = clinicVisitItems.every(
