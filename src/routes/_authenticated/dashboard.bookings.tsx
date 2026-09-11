@@ -1577,7 +1577,9 @@ function CheckoutSheet({
   const [allergiesText, setAllergiesText] = useState(a.allergies_text ?? "");
   const [discount, setDiscount] = useState("");
   const [discountKind, setDiscountKind] = useState<"percent" | "amount">("percent");
-  const [checkoutNotes, setCheckoutNotes] = useState("");
+  const [checkoutNotes, setCheckoutNotes] = useState(a.checkout_notes ?? "");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [depositMethod, setDepositMethod] = useState<"cash" | "card_in_person" | "bank_transfer" | "other">("cash");
   const [busy, setBusy] = useState(false);
   const [addFeesToLink, setAddFeesToLink] = useState(true);
   const [showReschedule, setShowReschedule] = useState(false);
