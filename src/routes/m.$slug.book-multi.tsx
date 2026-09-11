@@ -361,7 +361,10 @@ function MultiBookPage() {
   // When one of the chosen treatments needs it, the patient must book inside
   // that window — not anywhere in the clinic's normal diary.
   const visitWindows = useMemo(() => {
-    if (clinicVisitItems.length === 0 || availableVisits.length === 0) return null;
+    if (clinicVisitItems.length === 0) return null;
+    // Still loading the prescriber's clinic days — don't decide yet.
+    if (!availableVisitsQuery.isSuccess) return null;
+    const map = new Map<string, { start: string; end: string; visitIds: Record<string, string> }>();
     const perTreatment = clinicVisitItems.map((p) =>
       availableVisits.filter(
         (v) =>
@@ -371,9 +374,10 @@ function MultiBookPage() {
           (!locationId || !v.location_id || v.location_id === locationId),
       ),
     );
-    if (perTreatment.some((list) => list.length === 0)) return null;
+    // No prescribing day at this location = nothing bookable here, rather than
+    // falling back to the clinic's ordinary diary.
+    if (perTreatment.some((list) => list.length === 0)) return map;
 
-    const map = new Map<string, { start: string; end: string; visitIds: Record<string, string> }>();
     for (const day of new Set(perTreatment[0].map((v) => v.visit_date))) {
       const picked = perTreatment.map((list) => list.find((v) => v.visit_date === day));
       if (picked.some((v) => !v)) continue;
@@ -386,8 +390,8 @@ function MultiBookPage() {
       picked.forEach((v, i) => { visitIds[clinicVisitItems[i]!.treatment_id] = v!.visit_id; });
       map.set(day, { start, end, visitIds });
     }
-    return map.size > 0 ? map : null;
-  }, [clinicVisitItems, availableVisits, locationId]);
+    return map;
+  }, [clinicVisitItems, availableVisits, availableVisitsQuery.isSuccess, locationId]);
 
   // Picking one of those days also picks the visit itself — no second step.
   useEffect(() => {
@@ -466,6 +470,15 @@ function MultiBookPage() {
     queryFn: () => monthFn({ data: { profileId: ctx.profileId, year: month.getFullYear(), month: month.getMonth() + 1, locationId, practitionerId: chosenPractitionerId, durationMinutes: totalDuration } }),
   });
 
+  // Switching location can invalidate an already-picked prescriber clinic day.
+  useEffect(() => {
+    if (visitWindows && date && !visitWindows.has(date)) {
+      setDate("");
+      setSlot(null);
+    }
+  }, [visitWindows, date]);
+
+
   const isDateUnavailable = (d: Date) => {
     const iso = toIsoDate(d);
     // Prescriber clinic days: only those exact dates can be booked.
@@ -513,6 +526,8 @@ function MultiBookPage() {
   const slots = useMemo(() => {
     const visitWindow = visitWindows?.get(date) ?? null;
     if (totalDuration === 0) return [];
+    // Prescriber clinic booking: only the set days/times are bookable.
+    if (visitWindows && !visitWindow) return [];
     if (!visitWindow && (!dayQuery.data || dayQuery.data.isBlocked)) return [];
     const busy = (dayQuery.data?.busy ?? []).map((b) => ({ start: toMinutes(b.start_time), end: toMinutes(b.end_time), locId: b.location_id }));
     const overrideRules = (dayQuery.data?.overrides ?? []).filter((o) => !locationId || !o.location_id || o.location_id === locationId);
