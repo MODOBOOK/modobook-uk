@@ -354,8 +354,12 @@ export const checkOutAppointment = createServerFn({ method: "POST" })
     const now = new Date().toISOString();
     const patch: Record<string, unknown> = { checked_out_at: now };
     if (appt.aftercare_html && !appt.aftercare_sent_at) {
-      await dispatchAftercareForAppointment(supabase, profileId, appt);
-      patch.aftercare_sent_at = now;
+      try {
+        await dispatchAftercareForAppointment(supabase, profileId, appt);
+        patch.aftercare_sent_at = now;
+      } catch (e) {
+        console.error("[checkOutAppointment] aftercare dispatch failed", e);
+      }
     }
 
     const { error } = await supabase
