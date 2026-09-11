@@ -1548,6 +1548,8 @@ function CheckoutSheet({
   const cancel = useServerFn(cancelAppointment);
   const updateAfter = useServerFn(updateAppointmentAftercareAndAllergy);
   const checkout = useServerFn(completeAppointmentCheckout);
+  const checkOut = useServerFn(checkOutAppointment);
+  const undoCheckOut = useServerFn(undoCheckoutAppointment);
   const createLink = useServerFn(createPaymentLink);
   const emailLink = useServerFn(emailPaymentLink);
   const getOrCreateClient = useServerFn(getOrCreateClientForAppointment);
