@@ -142,6 +142,7 @@ function NewAppointmentPage() {
   const createLink = useServerFn(createPaymentLink);
   const emailLink = useServerFn(emailPaymentLink);
   const fetchModelSlots = useServerFn(listMyModelSlots);
+  const fetchPractitioners = useServerFn(listPractitioners);
   const [modelSlots, setModelSlots] = useState<ModelSlot[]>([]);
   const [modelExpanded, setModelExpanded] = useState(true);
 
