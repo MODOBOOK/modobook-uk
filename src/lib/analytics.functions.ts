@@ -181,5 +181,7 @@ export const getIncomeReport = createServerFn({ method: "GET" })
       byMethod: toList(methodMap),
       byTreatment: toList(treatMap).slice(0, 20),
       byMonth: [...monthMap.entries()].map(([label, v]) => ({ label, ...v })).sort((a, b) => a.label.localeCompare(b.label)),
+      practitioners: ((practitionerList ?? []) as { id: string; name: string }[]),
+      practitionerId: ownPractitionerId ?? data.practitionerId ?? null,
     };
   });
