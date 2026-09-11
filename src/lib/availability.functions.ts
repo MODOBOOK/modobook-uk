@@ -26,7 +26,19 @@ async function getScope(supabase: any, userId: string) {
   const a = await resolveClinicAccess(supabase, userId);
   const ownPractitionerId =
     a.dataScope === "own" && a.staffPractitionerId ? a.staffPractitionerId : null;
-  return { profileId: a.profileId, ownPractitionerId, isOwner: a.isOwner, role: a.role };
+  // Which practitioner card is *this* person, even for owners who can see the
+  // whole clinic. Used to open the calendar on their own diary by default.
+  let selfPractitionerId: string | null = ownPractitionerId ?? a.staffPractitionerId ?? null;
+  if (!selfPractitionerId && a.profileId) {
+    const { data: mine } = await supabase
+      .from("practitioners")
+      .select("id")
+      .eq("profile_id", a.profileId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    selfPractitionerId = (mine?.id as string | undefined) ?? null;
+  }
+  return { profileId: a.profileId, ownPractitionerId, selfPractitionerId, isOwner: a.isOwner, role: a.role };
 }
 
 /** Restrict a query to a staff member's own diary (plus clinic-wide rows). */
@@ -41,6 +53,7 @@ export const getCalendarScope = createServerFn({ method: "GET" })
     const s = await getScope(context.supabase, context.userId);
     return {
       ownPractitionerId: s.ownPractitionerId,
+      selfPractitionerId: s.selfPractitionerId,
       canSeeWholeClinic: !s.ownPractitionerId,
       isOwner: s.isOwner,
       role: s.role,
@@ -628,6 +641,33 @@ export const deleteRotaPeriod = createServerFn({ method: "POST" })
       .delete()
       .eq("profile_id", profileId)
       .in("id", data.ids);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+
+/** Assign (or clear) which practitioner an appointment belongs to. */
+export const setAppointmentPractitioner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { appointmentId: string; practitionerId: string | null }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    if (!profileId) throw new Error("Profile not found");
+    if (data.practitionerId) {
+      const { data: p } = await supabase
+        .from("practitioners")
+        .select("id")
+        .eq("id", data.practitionerId)
+        .eq("profile_id", profileId)
+        .maybeSingle();
+      if (!p) throw new Error("Practitioner not found");
+    }
+    const { error } = await supabase
+      .from("appointments")
+      .update({ practitioner_id: data.practitionerId } as never)
+      .eq("id", data.appointmentId)
+      .eq("profile_id", profileId);
     if (error) throw error;
     return { ok: true };
   });
