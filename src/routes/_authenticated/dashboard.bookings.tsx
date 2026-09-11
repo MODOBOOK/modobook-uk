@@ -49,6 +49,8 @@ import {
   listPractitioners,
   getCalendarScope,
   setAppointmentPractitioner,
+  checkOutAppointment,
+  undoCheckoutAppointment,
 } from "@/lib/availability.functions";
 import { ruleAppliesOnDate } from "@/lib/rota";
 import {
