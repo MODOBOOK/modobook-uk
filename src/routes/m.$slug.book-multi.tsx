@@ -364,7 +364,7 @@ function MultiBookPage() {
     if (clinicVisitItems.length === 0) return null;
     // Still loading the prescriber's clinic days — don't decide yet.
     if (!availableVisitsQuery.isSuccess) return null;
-    const map = new Map<string, { start: string; end: string; visitIds: Record<string, string> }>();
+    const map = new Map<string, { start: string; end: string; capacity: number; visitIds: Record<string, string> }>();
     const perTreatment = clinicVisitItems.map((p) =>
       availableVisits.filter(
         (v) =>
