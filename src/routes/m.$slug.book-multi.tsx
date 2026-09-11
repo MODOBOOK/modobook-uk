@@ -517,6 +517,8 @@ function MultiBookPage() {
   const slots = useMemo(() => {
     const visitWindow = visitWindows?.get(date) ?? null;
     if (totalDuration === 0) return [];
+    // Prescriber clinic booking: only the set days/times are bookable.
+    if (visitWindows && !visitWindow) return [];
     if (!visitWindow && (!dayQuery.data || dayQuery.data.isBlocked)) return [];
     const busy = (dayQuery.data?.busy ?? []).map((b) => ({ start: toMinutes(b.start_time), end: toMinutes(b.end_time), locId: b.location_id }));
     const overrideRules = (dayQuery.data?.overrides ?? []).filter((o) => !locationId || !o.location_id || o.location_id === locationId);
