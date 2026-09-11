@@ -470,6 +470,15 @@ function MultiBookPage() {
     queryFn: () => monthFn({ data: { profileId: ctx.profileId, year: month.getFullYear(), month: month.getMonth() + 1, locationId, practitionerId: chosenPractitionerId, durationMinutes: totalDuration } }),
   });
 
+  // Switching location can invalidate an already-picked prescriber clinic day.
+  useEffect(() => {
+    if (visitWindows && date && !visitWindows.has(date)) {
+      setDate("");
+      setTime("");
+    }
+  }, [visitWindows, date]);
+
+
   const isDateUnavailable = (d: Date) => {
     const iso = toIsoDate(d);
     // Prescriber clinic days: only those exact dates can be booked.
