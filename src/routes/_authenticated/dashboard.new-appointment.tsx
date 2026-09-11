@@ -5,6 +5,7 @@ import { getMyProfile } from "@/lib/profiles.functions";
 import { createAppointmentForPatient } from "@/lib/appointments.functions";
 import { createPaymentLink, emailPaymentLink } from "@/lib/payment-links.functions";
 import { listMyModelSlots } from "@/lib/discounts.functions";
+import { listPractitioners } from "@/lib/availability.functions";
 import { listClients } from "@/lib/clients.functions";
 import { listConsentTemplates } from "@/lib/templates.functions";
 import { listMedicalTemplates } from "@/lib/templates.functions";
