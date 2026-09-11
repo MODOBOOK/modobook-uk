@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { platformFeeCents } from "@/lib/platform-fee";
 import { isFullName, cleanPatientName, FULL_NAME_MESSAGE } from "@/lib/patient-name";
+import { resolveBookingPractitioner } from "./practitioner-assign.server";
 
 function publicClient() {
   return createClient<Database>(
@@ -898,12 +899,21 @@ export const requestBooking = createServerFn({ method: "POST" })
     }
 
     const id = crypto.randomUUID();
+    const assignedPractitionerId =
+      data.practitionerId ??
+      (await resolveBookingPractitioner(sb, {
+        profileId: data.profileId,
+        date: data.date,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        locationId: data.locationId ?? null,
+      }));
     const { error } = await sb.from("appointments").insert({
       id,
       profile_id: data.profileId,
       treatment_id: data.treatmentId,
       location_id: data.locationId ?? null,
-      practitioner_id: data.practitionerId ?? (await resolveBookingPractitioner(sb, { profileId: data.profileId, date: data.date, startTime: data.startTime ?? cursorStartForAssign, locationId: data.locationId ?? null })),
+      practitioner_id: assignedPractitionerId,
       scheduled_date: data.date,
       start_time: data.startTime,
       end_time: data.endTime,
@@ -1738,12 +1748,21 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
           : `Payment plan: Pay in full for ${sessionCount} appointments`
         : null;
       const appointmentNotes = [data.notes, paymentNote].filter(Boolean).join("\n") || null;
+      const assignedPractitionerId =
+        data.practitionerId ??
+        (await resolveBookingPractitioner(sb, {
+          profileId: data.profileId,
+          date: data.date,
+          startTime: cursor,
+          endTime: end,
+          locationId: data.locationId ?? null,
+        }));
       const { error } = await sb.from("appointments").insert({
         id,
         profile_id: data.profileId,
         treatment_id: b.treatmentId,
         location_id: data.locationId ?? null,
-        practitioner_id: data.practitionerId ?? (await resolveBookingPractitioner(sb, { profileId: data.profileId, date: data.date, startTime: data.startTime ?? cursorStartForAssign, locationId: data.locationId ?? null })),
+        practitioner_id: assignedPractitionerId,
         scheduled_date: data.date,
         start_time: cursor,
         end_time: end,
