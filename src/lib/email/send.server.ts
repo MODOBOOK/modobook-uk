@@ -126,7 +126,11 @@ export async function enqueueAppEmail(
           patient_name: baseData.patientName as string | undefined,
           clinic_name: baseData.clinicName as string | undefined,
           treatment_name: baseData.treatmentName as string | undefined,
-          practitioner_name: baseData.practitionerName as string | undefined,
+          // When nobody is assigned to the booking the tag would render empty and
+          // leave a gap mid-sentence — fall back to the clinic's own name.
+          practitioner_name:
+            ((baseData.practitionerName as string | undefined) ?? '').trim() ||
+            (baseData.clinicName as string | undefined),
           date_time: baseData.dateTime as string | undefined,
           form_name: baseData.formName as string | undefined,
         }
