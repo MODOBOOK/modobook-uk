@@ -399,6 +399,34 @@ function MultiBookPage() {
     return map;
   }, [clinicVisitItems, availableVisits, availableVisitsQuery.isSuccess, locationId]);
 
+  // A prescribing clinic day is tied to the location it was set up for, so the
+  // location choice is limited to wherever those days actually run.
+  const prescriberLocationIds = useMemo(() => {
+    if (clinicVisitItems.length === 0 || !availableVisitsQuery.isSuccess) return null;
+    return ctx.locations
+      .filter((l: Loc) =>
+        clinicVisitItems.every((p) =>
+          availableVisits.some(
+            (v) =>
+              v.treatment_id === p.treatment_id &&
+              Number(v.remaining_capacity ?? 0) > 0 &&
+              (!v.location_id || v.location_id === l.id),
+          ),
+        ),
+      )
+      .map((l: Loc) => l.id);
+  }, [clinicVisitItems, availableVisits, availableVisitsQuery.isSuccess, ctx.locations]);
+
+  // Force the booking onto the prescriber clinic's own location.
+  useEffect(() => {
+    if (!prescriberLocationIds || prescriberLocationIds.length === 0) return;
+    if (!locationId || !prescriberLocationIds.includes(locationId)) {
+      setLocationId(prescriberLocationIds[0]);
+      setDate("");
+      setSlot(null);
+    }
+  }, [prescriberLocationIds, locationId]);
+
   // Picking one of those days also picks the visit itself — no second step.
   useEffect(() => {
     const w = visitWindows?.get(date);
@@ -1129,11 +1157,11 @@ function MultiBookPage() {
                 )}
               </CardHeader>
               <CardContent className="space-y-5">
-                {ctx.locations.length > 1 && (
+                 {ctx.locations.length > 1 && (
                   <div>
                     <Label className="mb-2 block text-sm font-semibold">Location</Label>
                     <div className="flex flex-wrap gap-2">
-                      {ctx.locations.map((l: Loc) => {
+                      {ctx.locations.filter((l: Loc) => !prescriberLocationIds || prescriberLocationIds.includes(l.id)).map((l: Loc) => {
                         const selected = locationId === l.id;
                         return (
                           <Button
