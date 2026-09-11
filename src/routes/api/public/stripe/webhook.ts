@@ -417,7 +417,6 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 const patch: Record<string, unknown> = {
                   status: "confirmed",
                   payment_hold_expires_at: null,
-                  stripe_payment_intent_id: paymentIntentId,
                 };
                 if (kind === "deposit") {
                   patch.deposit_paid_at = new Date().toISOString();
@@ -428,6 +427,17 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                   patch.checkout_completed_at = new Date().toISOString();
                 }
                 return patch;
+              };
+
+              // Records the money atomically: the database ignores a repeat of
+              // the same payment intent, so two Stripe events for one charge
+              // can never double the paid amount.
+              const applyPayment = async (apptId: string, amountCents: number) => {
+                await supabaseAdmin.rpc("record_appointment_payment", {
+                  p_appointment_id: apptId,
+                  p_payment_intent: paymentIntentId ?? "",
+                  p_amount_cents: amountCents,
+                });
               };
 
               if (paymentLinkId) {
@@ -446,24 +456,7 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 if (apptId) {
                   const kind = pl?.kind || metadata.kind || "deposit";
                   const patch = buildApptPatch(kind);
-                  // Increment amount_paid_cents by the treatment portion of this charge.
-                  const { data: cur } = await supabaseAdmin
-                    .from("appointments")
-                    .select("amount_paid_cents, total_amount, stripe_payment_intent_id")
-                    .eq("id", apptId)
-                    .maybeSingle();
-                  const current = cur as {
-                    amount_paid_cents?: number;
-                    total_amount?: number | null;
-                    stripe_payment_intent_id?: string | null;
-                  } | null;
-                  if (!paymentIntentId || current?.stripe_payment_intent_id !== paymentIntentId) {
-                    const appointmentTotal = Math.round(Number(current?.total_amount ?? 0) * 100);
-                    patch.amount_paid_cents = Math.min(
-                      appointmentTotal,
-                      Number(current?.amount_paid_cents ?? 0) + treatmentPaidCents,
-                    );
-                  }
+                  await applyPayment(apptId, treatmentPaidCents);
                   await supabaseAdmin
                     .from("appointments")
                     .update(patch as never)
@@ -478,23 +471,7 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                   const perAppt = Math.round(treatmentPaidCents / ids.length);
                   for (const apptId of ids) {
                     const patch = buildApptPatch(kind);
-                    const { data: cur } = await supabaseAdmin
-                      .from("appointments")
-                      .select("amount_paid_cents, total_amount, stripe_payment_intent_id")
-                      .eq("id", apptId)
-                      .maybeSingle();
-                    const current = cur as {
-                      amount_paid_cents?: number;
-                      total_amount?: number | null;
-                      stripe_payment_intent_id?: string | null;
-                    } | null;
-                    if (!paymentIntentId || current?.stripe_payment_intent_id !== paymentIntentId) {
-                      const appointmentTotal = Math.round(Number(current?.total_amount ?? 0) * 100);
-                      patch.amount_paid_cents = Math.min(
-                        appointmentTotal,
-                        Number(current?.amount_paid_cents ?? 0) + perAppt,
-                      );
-                    }
+                    await applyPayment(apptId, perAppt);
                     await supabaseAdmin
                       .from("appointments")
                       .update(patch as never)
@@ -666,7 +643,6 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 const patch: Record<string, unknown> = {
                   status: "confirmed",
                   payment_hold_expires_at: null,
-                  stripe_payment_intent_id: pi.id,
                 };
                 if (kind === "deposit") {
                   patch.deposit_paid_at = new Date().toISOString();
@@ -686,24 +662,13 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
               const perAppt = ids.length > 0 ? Math.round(treatmentPaidCents / ids.length) : 0;
               for (const apptId of ids) {
                 const patch = buildApptPatch();
-                const { data: cur } = await supabaseAdmin
-                  .from("appointments")
-                  .select("amount_paid_cents, total_amount, stripe_payment_intent_id")
-                  .eq("id", apptId)
-                  .maybeSingle();
-                const current = cur as {
-                  amount_paid_cents?: number;
-                  total_amount?: number | null;
-                  stripe_payment_intent_id?: string | null;
-                } | null;
-                // Skip if this exact payment intent was already recorded
-                // (checkout.session.completed can fire for the same charge).
-                if (current?.stripe_payment_intent_id !== pi.id) {
-                  const appointmentTotal = Math.round(Number(current?.total_amount ?? 0) * 100);
-                  const next = Number(current?.amount_paid_cents ?? 0) + perAppt;
-                  patch.amount_paid_cents =
-                    appointmentTotal > 0 ? Math.min(appointmentTotal, next) : next;
-                }
+                // Atomic + idempotent: a second event for the same charge is
+                // ignored by the database, so the paid amount cannot double.
+                await supabaseAdmin.rpc("record_appointment_payment", {
+                  p_appointment_id: apptId,
+                  p_payment_intent: pi.id,
+                  p_amount_cents: perAppt,
+                });
                 await supabaseAdmin
                   .from("appointments")
                   .update(patch as never)
