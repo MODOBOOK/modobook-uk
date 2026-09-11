@@ -91,7 +91,7 @@ type Appt = {
   card_capture_agreed_at?: string | null;
   card_captured_at?: string | null;
   card_capture_policy_text?: string | null;
-
+  checked_out_at?: string | null;
 
   notes: string | null;
   practitioner_notes: string | null;
