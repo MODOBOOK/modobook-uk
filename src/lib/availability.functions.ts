@@ -167,7 +167,7 @@ export const listMyAppointments = createServerFn({ method: "GET" })
     const { ownPractitionerId } = await getScope(supabase, userId);
     let q = supabase
       .from("appointments")
-      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, status, payment_status, total_amount, amount_paid_cents, amount_refunded_cents, checkout_discount_cents, stripe_payment_intent_id, card_capture_agreed_at, card_captured_at, card_capture_policy_text, notes, practitioner_notes, aftercare_html, has_allergies, allergies_text, treatment_id, location_id, payment_hold_expires_at, practitioner_id, treatments(name, color), locations(name), practitioners(name)")
+      .select("id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, status, payment_status, total_amount, amount_paid_cents, amount_refunded_cents, checkout_discount_cents, stripe_payment_intent_id, card_capture_agreed_at, card_captured_at, card_capture_policy_text, checked_out_at, notes, practitioner_notes, aftercare_html, has_allergies, allergies_text, treatment_id, location_id, payment_hold_expires_at, practitioner_id, treatments(name, color), locations(name), practitioners(name)")
       .eq("profile_id", profileId)
       .order("scheduled_date", { ascending: true })
       .order("start_time", { ascending: true });
