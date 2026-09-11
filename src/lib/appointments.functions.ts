@@ -321,6 +321,110 @@ export const markAppointmentPaymentReceived = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Locations the clinic can move an appointment to for a given date/time.
+ * A location is only offered when the practitioner works there at that time
+ * (rota or one-off opening), it isn't blocked, and nothing else is booked.
+ */
+export const listRescheduleLocations = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: { appointmentId: string; date: string; startTime: string; endTime: string }) => input,
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).maybeSingle();
+    if (!profile) throw new Error("Profile not found");
+
+    const { data: appt } = await supabase
+      .from("appointments")
+      .select("id, location_id, practitioner_id")
+      .eq("id", data.appointmentId)
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+    if (!appt) throw new Error("Appointment not found");
+
+    const { data: locations } = await supabase
+      .from("locations")
+      .select("id, name, city, active")
+      .eq("profile_id", profile.id)
+      .eq("active", true)
+      .order("display_order");
+
+    const toMin = (t: string) => {
+      const [h, m] = String(t).split(":").map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+    const wantStart = toMin(data.startTime);
+    const wantEnd = toMin(data.endTime);
+    const dow = new Date(`${data.date}T00:00:00`).getDay();
+    const practitionerId = (appt as { practitioner_id?: string | null }).practitioner_id ?? null;
+
+    const [{ data: rules }, { data: overrides }, { data: blockedTimes }, { data: blockedDates }, { data: busy }, { data: locPracs }] =
+      await Promise.all([
+        supabase.from("availability_rules")
+          .select("location_id, practitioner_id, day_of_week, start_time, end_time, effective_from, effective_to")
+          .eq("profile_id", profile.id).eq("day_of_week", dow),
+        supabase.from("availability_overrides")
+          .select("location_id, practitioner_id, start_time, end_time")
+          .eq("profile_id", profile.id).eq("date", data.date),
+        supabase.from("blocked_times")
+          .select("location_id, practitioner_id, start_time, end_time")
+          .eq("profile_id", profile.id).eq("date", data.date),
+        supabase.from("blocked_dates")
+          .select("location_id, practitioner_id")
+          .eq("profile_id", profile.id).eq("date", data.date),
+        supabase.from("appointments")
+          .select("id, location_id, practitioner_id, start_time, end_time, status")
+          .eq("profile_id", profile.id).eq("scheduled_date", data.date).neq("status", "cancelled"),
+        supabase.from("location_practitioners").select("location_id, practitioner_id"),
+      ]);
+
+    const forPractitioner = (p: string | null | undefined) =>
+      !p || !practitionerId || p === practitionerId;
+
+    const covers = (from: string, to: string) => toMin(from) <= wantStart && toMin(to) >= wantEnd;
+    const clashes = (from: string, to: string) => toMin(from) < wantEnd && wantStart < toMin(to);
+
+    const results = (locations ?? []).map((l) => {
+      const locId = l.id as string;
+      const assigned = (locPracs ?? []).filter((lp) => lp.location_id === locId);
+      if (practitionerId && assigned.length > 0 && !assigned.some((lp) => lp.practitioner_id === practitionerId)) {
+        return { id: locId, name: l.name as string, city: (l.city as string) ?? null, available: false, reason: "Practitioner doesn't work here" };
+      }
+      if ((blockedDates ?? []).some((b) => (!b.location_id || b.location_id === locId) && forPractitioner(b.practitioner_id))) {
+        return { id: locId, name: l.name as string, city: (l.city as string) ?? null, available: false, reason: "Closed that day" };
+      }
+      const openByOverride = (overrides ?? []).some(
+        (o) => (!o.location_id || o.location_id === locId) && forPractitioner(o.practitioner_id) && covers(o.start_time as string, o.end_time as string),
+      );
+      const openByRule = (rules ?? []).some((r) => {
+        if (r.location_id && r.location_id !== locId) return false;
+        if (!forPractitioner(r.practitioner_id)) return false;
+        if (r.effective_from && data.date < (r.effective_from as string)) return false;
+        if (r.effective_to && data.date > (r.effective_to as string)) return false;
+        return covers(r.start_time as string, r.end_time as string);
+      });
+      if (!openByOverride && !openByRule) {
+        return { id: locId, name: l.name as string, city: (l.city as string) ?? null, available: false, reason: "Not open at that time" };
+      }
+      if ((blockedTimes ?? []).some((b) => (!b.location_id || b.location_id === locId) && forPractitioner(b.practitioner_id) && clashes(b.start_time as string, b.end_time as string))) {
+        return { id: locId, name: l.name as string, city: (l.city as string) ?? null, available: false, reason: "Time blocked out" };
+      }
+      if ((busy ?? []).some((b) =>
+        b.id !== data.appointmentId &&
+        (!b.location_id || b.location_id === locId) &&
+        forPractitioner(b.practitioner_id) &&
+        clashes(b.start_time as string, b.end_time as string))) {
+        return { id: locId, name: l.name as string, city: (l.city as string) ?? null, available: false, reason: "Already booked" };
+      }
+      return { id: locId, name: l.name as string, city: (l.city as string) ?? null, available: true, reason: null as string | null };
+    });
+
+    return { currentLocationId: (appt as { location_id?: string | null }).location_id ?? null, locations: results };
+  });
+
 export const rescheduleAppointment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
@@ -329,6 +433,7 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
       date: string;
       startTime: string;
       endTime: string;
+      locationId?: string | null;
       notifyPatient?: boolean;
     }) => input,
   )
@@ -356,10 +461,24 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
         scheduled_date: data.date,
         start_time: startHM,
         end_time: endHM,
+        ...(data.locationId !== undefined ? { location_id: data.locationId } : {}),
       } as never)
       .eq("id", data.appointmentId)
       .eq("profile_id", profile.id);
     if (uErr) throw uErr;
+
+    // When the appointment moved to another location, tell the patient about
+    // the new address rather than the old one.
+    let locRow = (appt as { locations?: { name?: string; address_line1?: string; city?: string; postcode?: string } | null }).locations ?? null;
+    if (data.locationId) {
+      const { data: newLoc } = await supabase
+        .from("locations")
+        .select("name, address_line1, city, postcode")
+        .eq("id", data.locationId)
+        .eq("profile_id", profile.id)
+        .maybeSingle();
+      if (newLoc) locRow = newLoc as typeof locRow;
+    }
 
     if (data.notifyPatient ?? true) {
       try {
@@ -374,13 +493,8 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
           messageKey: `wa-reschedule-${data.appointmentId}-${data.date}-${startHM}`,
           ...smsMessage("booking-reschedule", {
             patientName: appt.patient_name,
-            locationName: (appt as { locations?: { name?: string } | null }).locations?.name,
-            locationAddress: (() => {
-              const l = (appt as {
-                locations?: { address_line1?: string; city?: string; postcode?: string } | null
-              }).locations
-              return l ? [l.address_line1, l.city, l.postcode].filter(Boolean).join(', ') : undefined
-            })(),
+            locationName: locRow?.name,
+            locationAddress: locRow ? [locRow.address_line1, locRow.city, locRow.postcode].filter(Boolean).join(', ') : undefined,
             clinicName: branding.clinicName,
             dateTime: formatBookingDateTime(data.date, startHM),
           }),
@@ -402,6 +516,8 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
             patientName: (appt.patient_name ?? "").split(" ")[0] || "there",
             clinicName: branding.clinicName,
             dateTime: formatBookingDateTime(data.date, startHM),
+            locationName: locRow?.name,
+            locationAddress: locRow ? [locRow.address_line1, locRow.city, locRow.postcode].filter(Boolean).join(', ') : undefined,
             logoUrl: branding.logoUrl,
             brandColor: branding.brandColor,
             rescheduled: true,
