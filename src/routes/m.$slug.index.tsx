@@ -1648,18 +1648,20 @@ function BookPage() {
                     setNoPreference(false);
                     setPractitionerId(isPicked ? null : p.id);
                   }}
-                  className="flex items-center gap-3 rounded-2xl border p-3 text-left transition"
+                  className="flex w-full max-w-full items-center gap-3 overflow-hidden rounded-2xl border p-3 text-left transition"
                   style={{
                     borderColor: isPicked ? brand : `${brand}22`,
                     backgroundColor: isPicked ? `${brand}14` : menuCardBg,
-                    boxShadow: isPicked ? `0 0 0 2px ${brand}` : undefined,
+                    // Inset so the highlight ring stays inside the card and
+                    // never pushes it past the edge of a phone screen.
+                    boxShadow: isPicked ? `inset 0 0 0 2px ${brand}` : undefined,
                   }}
                 >
                   {p.photo_url ? (
-                    <img src={p.photo_url} alt={p.name} className="h-14 w-14 shrink-0 rounded-full object-cover" />
+                    <img src={p.photo_url} alt={p.name} className="h-12 w-12 shrink-0 rounded-full object-cover sm:h-14 sm:w-14" />
                   ) : (
                     <div
-                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white"
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white sm:h-14 sm:w-14"
                       style={{ backgroundColor: brand }}
                     >
                       {p.name.charAt(0)}
@@ -1674,7 +1676,13 @@ function BookPage() {
                     )}
                   </div>
                   {isPicked && (
-                    <span className="text-[11px] font-semibold uppercase" style={{ color: brand }}>Selected</span>
+                    <span
+                      aria-label="Selected"
+                      className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-sm font-bold text-white"
+                      style={{ backgroundColor: brand }}
+                    >
+                      ✓
+                    </span>
                   )}
                 </button>
               );
