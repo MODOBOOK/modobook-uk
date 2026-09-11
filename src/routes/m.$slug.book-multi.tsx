@@ -364,7 +364,7 @@ function MultiBookPage() {
     if (clinicVisitItems.length === 0) return null;
     // Still loading the prescriber's clinic days — don't decide yet.
     if (!availableVisitsQuery.isSuccess) return null;
-    const map = new Map<string, { start: string; end: string; visitIds: Record<string, string> }>();
+    const map = new Map<string, { start: string; end: string; capacity: number; visitIds: Record<string, string> }>();
     const perTreatment = clinicVisitItems.map((p) =>
       availableVisits.filter(
         (v) =>
@@ -388,7 +388,13 @@ function MultiBookPage() {
       if (start >= end) continue;
       const visitIds: Record<string, string> = {};
       picked.forEach((v, i) => { visitIds[clinicVisitItems[i]!.treatment_id] = v!.visit_id; });
-      map.set(day, { start, end, visitIds });
+      // How many people the prescriber can see that day sets how many start
+      // times we offer, regardless of how long the treatment itself takes.
+      const capacity = Math.max(
+        1,
+        Math.min(...picked.map((v) => Number(v!.remaining_capacity ?? 1) || 1)),
+      );
+      map.set(day, { start, end, capacity, visitIds });
     }
     return map;
   }, [clinicVisitItems, availableVisits, availableVisitsQuery.isSuccess, locationId]);
@@ -531,14 +537,35 @@ function MultiBookPage() {
     if (!visitWindow && (!dayQuery.data || dayQuery.data.isBlocked)) return [];
     const busy = (dayQuery.data?.busy ?? []).map((b) => ({ start: toMinutes(b.start_time), end: toMinutes(b.end_time), locId: b.location_id }));
     const overrideRules = (dayQuery.data?.overrides ?? []).filter((o) => !locationId || !o.location_id || o.location_id === locationId);
-    // On a prescriber clinic day the only bookable window is the one set in
-    // the prescriber hub — the clinic's usual opening hours don't apply.
-    const allRules: { start_time: string; end_time: string; slot_interval: number }[] = visitWindow
-      ? [{ start_time: visitWindow.start, end_time: visitWindow.end, slot_interval: 15 }]
-      : [
-        ...dayRules.map((r: Rule) => ({ start_time: r.start_time, end_time: r.end_time, slot_interval: r.slot_interval })),
-        ...overrideRules.map((o) => ({ start_time: o.start_time, end_time: o.end_time, slot_interval: o.slot_interval })),
-      ];
+    // On a prescriber clinic day the window and the number of people the
+    // prescriber can see decide the times — the treatment length and the
+    // clinic's usual diary don't. A 30 minute window with 6 places gives 6
+    // start times, five minutes apart.
+    if (visitWindow) {
+      const start = toMinutes(visitWindow.start);
+      const end = toMinutes(visitWindow.end);
+      const span = Math.max(0, end - start);
+      const count = Math.max(1, Math.floor(visitWindow.capacity));
+      const step = count > 1 ? span / count : span;
+      const times: string[] = [];
+      for (let i = 0; i < count; i++) {
+        const t = Math.round(start + step * i);
+        if (t >= end && i > 0) break;
+        times.push(fromMinutes(t));
+      }
+      let list = Array.from(new Set(times)).sort();
+      const n = new Date();
+      const todayIso = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+      if (date === todayIso) {
+        const cutoff = n.getHours() * 60 + n.getMinutes() + Math.max(0, minNoticeHours) * 60;
+        list = list.filter((s) => toMinutes(s) >= cutoff);
+      }
+      return list;
+    }
+    const allRules: { start_time: string; end_time: string; slot_interval: number }[] = [
+      ...dayRules.map((r: Rule) => ({ start_time: r.start_time, end_time: r.end_time, slot_interval: r.slot_interval })),
+      ...overrideRules.map((o) => ({ start_time: o.start_time, end_time: o.end_time, slot_interval: o.slot_interval })),
+    ];
     const out: string[] = [];
     for (const r of allRules) {
       const step = r.slot_interval ?? 15;
