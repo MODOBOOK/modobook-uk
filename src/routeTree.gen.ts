@@ -173,6 +173,7 @@ import { Route as ApiPublicHooksDailyScheduleDigestRouteImport } from './routes/
 import { Route as ApiPublicHooksComplianceRemindersRouteImport } from './routes/api/public/hooks/compliance-reminders'
 import { Route as ApiPublicHooksBillingReconcileRouteImport } from './routes/api/public/hooks/billing-reconcile'
 import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
+import { Route as ApiPublicHooksAftercareDispatchRouteImport } from './routes/api/public/hooks/aftercare-dispatch'
 import { Route as ApiPublicBookingReleaseRouteImport } from './routes/api/public/booking/release'
 import { Route as AuthenticatedPrescriberRequestsIdRouteImport } from './routes/_authenticated/prescriber.requests.$id'
 import { Route as AuthenticatedMobileBookingIdRouteImport } from './routes/_authenticated/mobile.booking.$id'
@@ -1113,6 +1114,12 @@ const ApiPublicHooksAppointmentRemindersRoute =
     path: '/api/public/hooks/appointment-reminders',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksAftercareDispatchRoute =
+  ApiPublicHooksAftercareDispatchRouteImport.update({
+    id: '/api/public/hooks/aftercare-dispatch',
+    path: '/api/public/hooks/aftercare-dispatch',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicBookingReleaseRoute = ApiPublicBookingReleaseRouteImport.update({
   id: '/api/public/booking/release',
   path: '/api/public/booking/release',
@@ -1400,6 +1407,7 @@ export interface FileRoutesByFullPath {
   '/mobile/booking/$id': typeof AuthenticatedMobileBookingIdRoute
   '/prescriber/requests/$id': typeof AuthenticatedPrescriberRequestsIdRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
+  '/api/public/hooks/aftercare-dispatch': typeof ApiPublicHooksAftercareDispatchRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/billing-reconcile': typeof ApiPublicHooksBillingReconcileRoute
   '/api/public/hooks/compliance-reminders': typeof ApiPublicHooksComplianceRemindersRoute
@@ -1576,6 +1584,7 @@ export interface FileRoutesByTo {
   '/mobile/booking/$id': typeof AuthenticatedMobileBookingIdRoute
   '/prescriber/requests/$id': typeof AuthenticatedPrescriberRequestsIdRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
+  '/api/public/hooks/aftercare-dispatch': typeof ApiPublicHooksAftercareDispatchRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/billing-reconcile': typeof ApiPublicHooksBillingReconcileRoute
   '/api/public/hooks/compliance-reminders': typeof ApiPublicHooksComplianceRemindersRoute
@@ -1766,6 +1775,7 @@ export interface FileRoutesById {
   '/_authenticated/mobile/booking/$id': typeof AuthenticatedMobileBookingIdRoute
   '/_authenticated/prescriber/requests/$id': typeof AuthenticatedPrescriberRequestsIdRoute
   '/api/public/booking/release': typeof ApiPublicBookingReleaseRoute
+  '/api/public/hooks/aftercare-dispatch': typeof ApiPublicHooksAftercareDispatchRoute
   '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
   '/api/public/hooks/billing-reconcile': typeof ApiPublicHooksBillingReconcileRoute
   '/api/public/hooks/compliance-reminders': typeof ApiPublicHooksComplianceRemindersRoute
@@ -1956,6 +1966,7 @@ export interface FileRouteTypes {
     | '/mobile/booking/$id'
     | '/prescriber/requests/$id'
     | '/api/public/booking/release'
+    | '/api/public/hooks/aftercare-dispatch'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/billing-reconcile'
     | '/api/public/hooks/compliance-reminders'
@@ -2132,6 +2143,7 @@ export interface FileRouteTypes {
     | '/mobile/booking/$id'
     | '/prescriber/requests/$id'
     | '/api/public/booking/release'
+    | '/api/public/hooks/aftercare-dispatch'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/billing-reconcile'
     | '/api/public/hooks/compliance-reminders'
@@ -2321,6 +2333,7 @@ export interface FileRouteTypes {
     | '/_authenticated/mobile/booking/$id'
     | '/_authenticated/prescriber/requests/$id'
     | '/api/public/booking/release'
+    | '/api/public/hooks/aftercare-dispatch'
     | '/api/public/hooks/appointment-reminders'
     | '/api/public/hooks/billing-reconcile'
     | '/api/public/hooks/compliance-reminders'
@@ -2392,6 +2405,7 @@ export interface RootRouteChildren {
   StaffAcceptTokenRoute: typeof StaffAcceptTokenRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicBookingReleaseRoute: typeof ApiPublicBookingReleaseRoute
+  ApiPublicHooksAftercareDispatchRoute: typeof ApiPublicHooksAftercareDispatchRoute
   ApiPublicHooksAppointmentRemindersRoute: typeof ApiPublicHooksAppointmentRemindersRoute
   ApiPublicHooksBillingReconcileRoute: typeof ApiPublicHooksBillingReconcileRoute
   ApiPublicHooksComplianceRemindersRoute: typeof ApiPublicHooksComplianceRemindersRoute
@@ -3563,6 +3577,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksAppointmentRemindersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/aftercare-dispatch': {
+      id: '/api/public/hooks/aftercare-dispatch'
+      path: '/api/public/hooks/aftercare-dispatch'
+      fullPath: '/api/public/hooks/aftercare-dispatch'
+      preLoaderRoute: typeof ApiPublicHooksAftercareDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/booking/release': {
       id: '/api/public/booking/release'
       path: '/api/public/booking/release'
@@ -4254,6 +4275,7 @@ const rootRouteChildren: RootRouteChildren = {
   StaffAcceptTokenRoute: StaffAcceptTokenRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicBookingReleaseRoute: ApiPublicBookingReleaseRoute,
+  ApiPublicHooksAftercareDispatchRoute: ApiPublicHooksAftercareDispatchRoute,
   ApiPublicHooksAppointmentRemindersRoute:
     ApiPublicHooksAppointmentRemindersRoute,
   ApiPublicHooksBillingReconcileRoute: ApiPublicHooksBillingReconcileRoute,
