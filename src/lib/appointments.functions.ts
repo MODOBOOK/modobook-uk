@@ -35,6 +35,7 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
       extraConsentTemplateIds?: string[];
       medicalFormTemplateIds?: string[];
       modelSlotId?: string | null;
+      practitionerId?: string | null;
       paymentReceived?: {
         kind: "deposit" | "full";
         amountCents: number;
@@ -94,6 +95,7 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
       total_amount: data.basePrice,
       created_by_practitioner: true,
       model_slot_id: data.modelSlotId ?? null,
+      practitioner_id: data.practitionerId ?? null,
     };
     if (pr) {
       insertRow.payment_method = pr.method;

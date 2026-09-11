@@ -17,12 +17,30 @@ async function clinicProfileId(supabase: any, userId: string) {
 async function assertOwnAppointment(supabase: any, appointmentId: string, profileId: string) {
   const { data, error } = await supabase
     .from("appointments")
-    .select("id, profile_id, base_amount, total_amount")
+    .select("id, profile_id, base_amount, total_amount, scheduled_date, start_time, end_time")
     .eq("id", appointmentId)
     .maybeSingle();
   if (error) throw error;
   if (!data || data.profile_id !== profileId) throw new Error("Appointment not found");
-  return data as { id: string; profile_id: string; base_amount: number | null; total_amount: number | null };
+  return data as {
+    id: string;
+    profile_id: string;
+    base_amount: number | null;
+    total_amount: number | null;
+    scheduled_date: string;
+    start_time: string;
+    end_time: string;
+  };
+}
+
+function toMinutes(t: string) {
+  const [h, m] = String(t).split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+
+function fromMinutes(n: number) {
+  const capped = Math.max(0, Math.min(24 * 60 - 1, n));
+  return `${String(Math.floor(capped / 60)).padStart(2, "0")}:${String(capped % 60).padStart(2, "0")}:00`;
 }
 
 /** Recalculate the booking total as base price + every extra. */
@@ -64,6 +82,51 @@ export const listAppointmentExtras = createServerFn({ method: "GET" })
       extras: rows ?? [],
       baseAmount: Number(appt.base_amount ?? appt.total_amount ?? 0),
       total: Number(appt.total_amount ?? 0),
+      startTime: String(appt.start_time).slice(0, 5),
+      endTime: String(appt.end_time).slice(0, 5),
+      durationMinutes: Math.max(0, toMinutes(appt.end_time) - toMinutes(appt.start_time)),
+    };
+  });
+
+/**
+ * Amend how long the visit runs for. Used when treatments are added on the day
+ * and the booking needs more chair time than it was booked for.
+ */
+export const setAppointmentDuration = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { appointmentId: string; durationMinutes: number }) => d)
+  .handler(async ({ data, context }) => {
+    const profileId = await clinicProfileId(context.supabase, context.userId);
+    const appt = await assertOwnAppointment(context.supabase, data.appointmentId, profileId);
+    const minutes = Math.max(5, Math.round(Number(data.durationMinutes) || 0));
+    const start = toMinutes(appt.start_time);
+    if (start + minutes > 24 * 60) throw new Error("That would run past midnight");
+    const endTime = fromMinutes(start + minutes);
+
+    // Warn (but don't block) if the longer visit now runs into another booking.
+    const { data: clashes } = await context.supabase
+      .from("appointments")
+      .select("id, start_time, end_time, patient_name")
+      .eq("profile_id", profileId)
+      .eq("scheduled_date", appt.scheduled_date)
+      .neq("id", appt.id)
+      .neq("status", "cancelled");
+    const overlap = (clashes ?? []).find(
+      (c: { start_time: string; end_time: string }) =>
+        start < toMinutes(c.end_time) && start + minutes > toMinutes(c.start_time),
+    ) as { patient_name?: string | null } | undefined;
+
+    const { error } = await context.supabase
+      .from("appointments")
+      .update({ end_time: endTime } as never)
+      .eq("id", appt.id)
+      .eq("profile_id", profileId);
+    if (error) throw error;
+    return {
+      ok: true,
+      endTime: endTime.slice(0, 5),
+      durationMinutes: minutes,
+      clashesWith: overlap?.patient_name ?? null,
     };
   });
 
@@ -151,9 +214,9 @@ export const listTreatmentsForExtras = createServerFn({ method: "GET" })
     const profileId = await clinicProfileId(context.supabase, context.userId);
     const { data, error } = await context.supabase
       .from("treatments")
-      .select("id, name, price")
+      .select("id, name, price, duration")
       .eq("profile_id", profileId)
       .order("name");
     if (error) throw error;
-    return (data ?? []) as { id: string; name: string; price: number | null }[];
+    return (data ?? []) as { id: string; name: string; price: number | null; duration: number | null }[];
   });

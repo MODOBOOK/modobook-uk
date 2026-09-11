@@ -5,6 +5,7 @@ import { getMyProfile } from "@/lib/profiles.functions";
 import { createAppointmentForPatient } from "@/lib/appointments.functions";
 import { createPaymentLink, emailPaymentLink } from "@/lib/payment-links.functions";
 import { listMyModelSlots } from "@/lib/discounts.functions";
+import { listPractitioners } from "@/lib/availability.functions";
 import { listClients } from "@/lib/clients.functions";
 import { listConsentTemplates } from "@/lib/templates.functions";
 import { listMedicalTemplates } from "@/lib/templates.functions";
@@ -114,6 +115,10 @@ function NewAppointmentPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [locationId, setLocationId] = useState<string>("");
+  // Who the client is seeing — asked up front so it never has to be added
+  // after the booking has already gone in.
+  const [practitioners, setPractitioners] = useState<{ id: string; name: string }[]>([]);
+  const [practitionerId, setPractitionerId] = useState<string>("");
   const [date, setDate] = useState(prefillDate ?? "");
   const [items, setItems] = useState<BookingItem[]>([]);
   const [slots, setSlots] = useState<string[]>([]);
@@ -137,6 +142,7 @@ function NewAppointmentPage() {
   const createLink = useServerFn(createPaymentLink);
   const emailLink = useServerFn(emailPaymentLink);
   const fetchModelSlots = useServerFn(listMyModelSlots);
+  const fetchPractitioners = useServerFn(listPractitioners);
   const [modelSlots, setModelSlots] = useState<ModelSlot[]>([]);
   const [modelExpanded, setModelExpanded] = useState(true);
 
@@ -182,15 +188,21 @@ function NewAppointmentPage() {
         .eq("active", true);
       setLocations(l ?? []);
       try {
-        const [cs, cons, meds, ms] = await Promise.all([
+        const [cs, cons, meds, ms, pracs] = await Promise.all([
           fetchClients() as Promise<ClientRow[]>,
           fetchConsents() as Promise<TemplateRow[]>,
           fetchMedical() as Promise<TemplateRow[]>,
           fetchModelSlots() as Promise<ModelSlot[]>,
+          fetchPractitioners() as Promise<{ id: string; name: string }[]>,
         ]);
         setClients(cs ?? []);
         setConsentTemplates((cons ?? []).map((r) => ({ id: r.id, name: r.name })));
         setMedicalTemplates((meds ?? []).map((r) => ({ id: r.id, name: r.name })));
+        const pracList = (pracs ?? []).map((p) => ({ id: p.id, name: p.name }));
+        setPractitioners(pracList);
+        // Solo clinics (or a staff member booking their own diary) never need
+        // to be asked — fill it in silently.
+        if (pracList.length === 1) setPractitionerId(pracList[0].id);
         const todayIso = new Date().toISOString().slice(0, 10);
         setModelSlots(
           (ms ?? [])
@@ -376,6 +388,10 @@ function NewAppointmentPage() {
       toast.error("Add at least one treatment and fill patient name, email and date");
       return;
     }
+    if (practitioners.length > 1 && !practitionerId) {
+      toast.error("Choose who the client is seeing");
+      return;
+    }
     if (items.some((it) => !it.treatmentId || !it.startTime)) {
       toast.error("Each treatment needs a start time");
       return;
@@ -425,6 +441,7 @@ function NewAppointmentPage() {
             extraConsentTemplateIds: [...pickedConsentIds],
             medicalFormTemplateIds: [...pickedMedicalIds],
             modelSlotId: it.modelSlotId,
+            practitionerId: practitionerId || null,
             paymentReceived,
           },
         });
@@ -598,6 +615,19 @@ function NewAppointmentPage() {
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
+          {practitioners.length > 1 && (
+            <div>
+              <Label>Who is the client seeing? *</Label>
+              <Select value={practitionerId} onValueChange={setPractitionerId}>
+                <SelectTrigger><SelectValue placeholder="Select team member" /></SelectTrigger>
+                <SelectContent>
+                  {practitioners.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           {locations.length > 0 && (
             <div>
               <Label>Location</Label>

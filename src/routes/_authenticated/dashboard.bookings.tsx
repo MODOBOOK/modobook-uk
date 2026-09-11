@@ -1802,6 +1802,7 @@ function CheckoutSheet({
         bookedName={a.treatments?.name ?? "Treatment"}
         disabled={cancelled}
         onTotalChange={(t) => onPatch({ total_amount: t })}
+        onEndTimeChange={(end) => onPatch({ end_time: `${end}:00` })}
       />
 
       {a.card_capture_agreed_at && (

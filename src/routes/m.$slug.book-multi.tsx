@@ -357,6 +357,45 @@ function MultiBookPage() {
   });
   const availableVisits = availableVisitsQuery.data ?? [];
 
+  // A prescriber clinic day is a fixed window the prescriber set in their hub.
+  // When one of the chosen treatments needs it, the patient must book inside
+  // that window — not anywhere in the clinic's normal diary.
+  const visitWindows = useMemo(() => {
+    if (clinicVisitItems.length === 0 || availableVisits.length === 0) return null;
+    const perTreatment = clinicVisitItems.map((p) =>
+      availableVisits.filter(
+        (v) => v.treatment_id === p.treatment_id && Number(v.remaining_capacity ?? 0) > 0,
+      ),
+    );
+    if (perTreatment.some((list) => list.length === 0)) return null;
+    const map = new Map<string, { start: string; end: string; visitIds: Record<string, string> }>();
+    for (const day of new Set(perTreatment[0].map((v) => v.visit_date))) {
+      const picked = perTreatment.map((list) => list.find((v) => v.visit_date === day));
+      if (picked.some((v) => !v)) continue;
+      // Where several prescribers are in on the same day, the bookable window
+      // is the part they all overlap on.
+      const start = picked.map((v) => v!.start_time).sort().at(-1)!;
+      const end = picked.map((v) => v!.end_time).sort()[0]!;
+      if (start >= end) continue;
+      const visitIds: Record<string, string> = {};
+      picked.forEach((v, i) => { visitIds[clinicVisitItems[i]!.treatment_id] = v!.visit_id; });
+      map.set(day, { start, end, visitIds });
+    }
+    return map.size > 0 ? map : null;
+  }, [clinicVisitItems, availableVisits]);
+
+  // Picking one of those days also picks the visit itself — no second step.
+  useEffect(() => {
+    const w = visitWindows?.get(date);
+    if (!w) return;
+    setVisitSelections((prev) => {
+      const next = { ...prev, ...w.visitIds };
+      const changed = Object.keys(w.visitIds).some((k) => prev[k] !== w.visitIds[k]);
+      return changed ? next : prev;
+    });
+  }, [visitWindows, date]);
+
+
   const allConsented = sameAddressItems.every((p) => prescriberConsents[p.treatment_id]);
   const allVisitsPicked = clinicVisitItems.every((p) => visitSelections[p.treatment_id]);
   const allClinicVisitsConsented = clinicVisitItems.every(
@@ -424,6 +463,8 @@ function MultiBookPage() {
 
   const isDateUnavailable = (d: Date) => {
     const iso = toIsoDate(d);
+    // Prescriber clinic days: only those exact dates can be booked.
+    if (visitWindows) return !visitWindows.has(iso);
     const data = monthQuery.data;
     if (!data) return false;
     // Ad-hoc open slots win over a closed day.
@@ -465,13 +506,19 @@ function MultiBookPage() {
   });
 
   const slots = useMemo(() => {
-    if (!dayQuery.data || dayQuery.data.isBlocked || totalDuration === 0) return [];
-    const busy = dayQuery.data.busy.map((b) => ({ start: toMinutes(b.start_time), end: toMinutes(b.end_time), locId: b.location_id }));
-    const overrideRules = (dayQuery.data.overrides ?? []).filter((o) => !locationId || !o.location_id || o.location_id === locationId);
-    const allRules: { start_time: string; end_time: string; slot_interval: number }[] = [
-      ...dayRules.map((r: Rule) => ({ start_time: r.start_time, end_time: r.end_time, slot_interval: r.slot_interval })),
-      ...overrideRules.map((o) => ({ start_time: o.start_time, end_time: o.end_time, slot_interval: o.slot_interval })),
-    ];
+    const visitWindow = visitWindows?.get(date) ?? null;
+    if (totalDuration === 0) return [];
+    if (!visitWindow && (!dayQuery.data || dayQuery.data.isBlocked)) return [];
+    const busy = (dayQuery.data?.busy ?? []).map((b) => ({ start: toMinutes(b.start_time), end: toMinutes(b.end_time), locId: b.location_id }));
+    const overrideRules = (dayQuery.data?.overrides ?? []).filter((o) => !locationId || !o.location_id || o.location_id === locationId);
+    // On a prescriber clinic day the only bookable window is the one set in
+    // the prescriber hub — the clinic's usual opening hours don't apply.
+    const allRules: { start_time: string; end_time: string; slot_interval: number }[] = visitWindow
+      ? [{ start_time: visitWindow.start, end_time: visitWindow.end, slot_interval: 15 }]
+      : [
+        ...dayRules.map((r: Rule) => ({ start_time: r.start_time, end_time: r.end_time, slot_interval: r.slot_interval })),
+        ...overrideRules.map((o) => ({ start_time: o.start_time, end_time: o.end_time, slot_interval: o.slot_interval })),
+      ];
     const out: string[] = [];
     for (const r of allRules) {
       const step = r.slot_interval ?? 15;
@@ -508,7 +555,7 @@ function MultiBookPage() {
     }
     return out2;
 
-  }, [dayQuery.data, dayRules, totalDuration, locationId, minNoticeHours, date, smartTimes]);
+  }, [dayQuery.data, dayRules, totalDuration, locationId, minNoticeHours, date, smartTimes, visitWindows]);
 
   async function submit() {
     if (submitLockRef.current) return;
