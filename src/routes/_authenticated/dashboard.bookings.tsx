@@ -64,6 +64,7 @@ import { listMyLocations } from "@/lib/locations.functions";
 import {
   getOrCreateClientForAppointment,
   markAppointmentNoShow,
+  markAppointmentPaymentReceived,
   setClientBlocked,
 } from "@/lib/patient-actions.functions";
 import { getCardOnFileForAppointment, chargeCardOnFile } from "@/lib/card-on-file.functions";
