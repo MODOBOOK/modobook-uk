@@ -154,6 +154,7 @@ export interface SmsMergeValues {
   date?: string | null
   time?: string | null
   location?: string | null
+  practitioner?: string | null
   address?: string | null
   link?: string | null
 }
@@ -176,6 +177,7 @@ export function renderSmsTemplate(
     '{date}': usesTimeTag ? datePart || '' : dateTime,
     '{time}': values.time || (usesTimeTag ? timePart || '' : ''),
     '{location}': (values.location ?? '').trim(),
+    '{practitioner}': (values.practitioner ?? '').trim(),
     '{address}': opts?.keepAddress ? (values.address ?? '').trim() : '',
     '{link}': '',
   }

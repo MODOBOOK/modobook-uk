@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { listClients, listArchivedClients, restoreClient, upsertClient, deleteClient, importClientsCsv, assignClientsToGroup, findDuplicateClients, mergeClients } from "@/lib/clients.functions";
+import { listClinicPractitioners, listClients, listArchivedClients, restoreClient, upsertClient, deleteClient, importClientsCsv, assignClientsToGroup, findDuplicateClients, mergeClients } from "@/lib/clients.functions";
 import { listMyAppointments } from "@/lib/availability.functions";
 import { createConsultation, listConsultationsForPatient } from "@/lib/consultations.functions";
 import { Button } from "@/components/ui/button";
@@ -78,6 +78,9 @@ function PatientsPage() {
   const upsert = useServerFn(upsertClient);
   const remove = useServerFn(deleteClient);
   const listAppt = useServerFn(listMyAppointments);
+  const listPractitioners = useServerFn(listClinicPractitioners);
+  const [practitioners, setPractitioners] = useState<{ id: string; name: string }[]>([]);
+  const [practitionerId, setPractitionerId] = useState<string>("all");
 
   const [clients, setClients] = useState<Client[]>([]);
   const [archivedClients, setArchivedClients] = useState<Client[]>([]);
@@ -99,8 +102,12 @@ function PatientsPage() {
   const findDupes = useServerFn(findDuplicateClients);
   const doMerge = useServerFn(mergeClients);
 
-  async function refresh() {
-    const [c, ar, a] = await Promise.all([list(), listArchived(), listAppt()]);
+  async function refresh(pid: string = practitionerId) {
+    const [c, ar, a] = await Promise.all([
+      list({ data: { practitionerId: pid === "all" ? null : pid } }),
+      listArchived(),
+      listAppt(),
+    ]);
     setClients(c as Client[]);
     setArchivedClients(ar as Client[]);
     setAppts(a as Appt[]);
@@ -108,6 +115,9 @@ function PatientsPage() {
   }
 
   useEffect(() => { refresh(); /* eslint-disable-next-line */ }, []);
+  useEffect(() => {
+    listPractitioners().then((r) => setPractitioners(r as { id: string; name: string }[])).catch(() => {});
+  }, [listPractitioners]);
 
   // Aggregate appointment-based patients that aren't yet in clients list (read-only)
   const allEntries = useMemo(() => {
@@ -296,6 +306,24 @@ function PatientsPage() {
           className="pl-10"
         />
       </div>
+
+      {practitioners.length > 1 && view === "active" && (
+        <select
+          className="h-10 w-full rounded-md border bg-background px-3 text-sm sm:w-64"
+          value={practitionerId}
+          onChange={(e) => {
+            const v = e.target.value;
+            setPractitionerId(v);
+            setLoading(true);
+            refresh(v);
+          }}
+        >
+          <option value="all">All patients</option>
+          {practitioners.map((p) => (
+            <option key={p.id} value={p.id}>Seen by {p.name}</option>
+          ))}
+        </select>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>

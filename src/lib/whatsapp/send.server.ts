@@ -214,6 +214,7 @@ export async function sendWhatsApp(input: SendWhatsAppInput): Promise<SendWhatsA
               treatment: c.treatmentName,
               date: c.dateTime,
               location: c.locationName,
+              practitioner: c.practitionerName,
               // Address only on the messages a patient needs it for.
               address: c.locationAddress,
               link: undefined,
@@ -368,6 +369,7 @@ export interface ApptMessageContext {
   dateTime?: string | null
   locationName?: string | null
   locationAddress?: string | null
+  practitionerName?: string | null
   manageUrl?: string | null
   bookingUrl?: string | null
   reviewUrl?: string | null
@@ -380,6 +382,8 @@ export function buildWhatsAppBody(kind: WhatsAppKind, c: ApptMessageContext): st
   // Location name always; full address only on the messages that need it.
   const site = (c.locationName ?? '').trim()
   const at = site ? ` at ${site}` : ''
+  const who = (c.practitionerName ?? '').trim()
+  const withWho = who ? ` with ${who}` : ''
   const when = c.dateTime ? ` on ${c.dateTime}` : ''
   const addr = (c.locationAddress ?? '').trim()
   const where = addr ? ` ${addr}.` : ''
@@ -388,9 +392,9 @@ export function buildWhatsAppBody(kind: WhatsAppKind, c: ApptMessageContext): st
   // reschedules also carry the address. Links are never sent.
   switch (kind) {
     case 'booking-confirmation':
-      return `Hi ${first}, you're booked in with ${clinic}${at}${when}.${where}`
+      return `Hi ${first}, you're booked in with ${clinic}${withWho}${at}${when}.${where}`
     case 'appointment-reminder':
-      return `Hi ${first}, reminder: your appointment with ${clinic}${at}${when}.${where}`
+      return `Hi ${first}, reminder: your appointment with ${clinic}${withWho}${at}${when}.${where}`
     case 'review-request':
       return `Hi ${first}, your appointment with ${clinic} is complete. Check your emails for your review and aftercare. Any issues, please contact your practitioner.`
     case 'booking-cancellation':

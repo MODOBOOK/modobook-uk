@@ -141,7 +141,7 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
               .eq('whatsapp_reminders_enabled', true)
 
             const apptSelect =
-              'id, patient_name, patient_phone, scheduled_date, start_time, created_at, manage_token, profile_id, status, treatments(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug)'
+              'id, patient_name, patient_phone, scheduled_date, start_time, created_at, manage_token, profile_id, status, treatments(name), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug)'
 
             const ctxFor = (a: any, hoursBefore?: number) => {
               const loc = a.locations
@@ -154,6 +154,7 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
                 locationAddress: loc
                   ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ')
                   : undefined,
+                practitionerName: a.practitioners?.name ?? undefined,
                 manageUrl:
                   a.manage_token && a.profiles?.slug
                     ? `${origin}/m/${a.profiles.slug}/manage/${a.manage_token}`

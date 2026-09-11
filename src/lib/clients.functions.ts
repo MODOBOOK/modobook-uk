@@ -40,10 +40,46 @@ async function getAllClientRows(
 
 export const listClients = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((input?: { practitionerId?: string | null }) => input ?? {})
+  .handler(async ({ data, context }) => {
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) return [];
-    return getAllClientRows(context.supabase, profileId, "*", false);
+    const rows = await getAllClientRows(context.supabase, profileId, "*", false);
+    const practitionerId = data?.practitionerId ?? null;
+    if (!practitionerId) return rows;
+    // Only clients who have actually been seen by this practitioner.
+    const { data: appts } = await context.supabase
+      .from("appointments")
+      .select("patient_email, patient_name")
+      .eq("profile_id", profileId)
+      .eq("practitioner_id", practitionerId)
+      .range(0, 9999);
+    const emails = new Set<string>();
+    const names = new Set<string>();
+    for (const a of (appts ?? []) as { patient_email: string | null; patient_name: string | null }[]) {
+      if (a.patient_email) emails.add(a.patient_email.trim().toLowerCase());
+      if (a.patient_name) names.add(a.patient_name.trim().toLowerCase());
+    }
+    return (rows as any[]).filter((c) => {
+      const e = (c.email ?? "").trim().toLowerCase();
+      const n = (c.full_name ?? "").trim().toLowerCase();
+      return (e && emails.has(e)) || (n && names.has(n));
+    });
+  });
+
+/** Practitioners available to filter client and booking lists by. */
+export const listClinicPractitioners = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) return [] as { id: string; name: string }[];
+    const { data } = await context.supabase
+      .from("practitioners")
+      .select("id, name")
+      .eq("profile_id", profileId)
+      .eq("active", true)
+      .order("name");
+    return (data ?? []) as { id: string; name: string }[];
   });
 
 export const listArchivedClients = createServerFn({ method: "GET" })

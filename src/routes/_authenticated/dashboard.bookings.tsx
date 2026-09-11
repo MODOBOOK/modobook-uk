@@ -48,6 +48,7 @@ import {
   getRotaSettings,
   listPractitioners,
   getCalendarScope,
+  setAppointmentPractitioner,
 } from "@/lib/availability.functions";
 import { ruleAppliesOnDate } from "@/lib/rota";
 import {
@@ -98,6 +99,7 @@ type Appt = {
   practitioner_id?: string | null;
   treatments: { name: string; color?: string | null } | null;
   locations: { name: string } | null;
+  practitioners?: { name: string } | null;
   location_id?: string | null;
 };
 
@@ -274,8 +276,11 @@ function BookingsPage() {
     setLocations(((l as any[]) ?? []).map((x) => ({ id: x.id, name: x.name })));
     setRotaAnchor((rota as { rota_anchor_date?: string | null } | null)?.rota_anchor_date ?? null);
     setPractitioners(((pracs as any[]) ?? []).map((x) => ({ id: x.id, name: x.name })));
-    const own = (scope as { ownPractitionerId?: string | null } | null)?.ownPractitionerId ?? null;
-    if (own) setPractitionerFilter(own);
+    // Open on your own diary by default so it's always clear whose calendar
+    // this is; you can switch to the whole team from the chips.
+    const sc = scope as { ownPractitionerId?: string | null; selfPractitionerId?: string | null } | null;
+    const mine = sc?.ownPractitionerId ?? sc?.selfPractitionerId ?? null;
+    setPractitionerFilter((cur) => (cur === "all" && mine ? mine : cur));
   }
 
 
@@ -846,7 +851,7 @@ function BookingsPage() {
                             backgroundColor: hexToRgba(color, 0.45),
                             color: "#0f172a",
                           }}
-                          title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"}`}
+                          title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"} · ${a.practitioners?.name ?? "Unassigned"}${a.locations?.name ? ` · ${a.locations.name}` : ""}`}
                         >
                           {tall ? (
                             <>
@@ -856,6 +861,12 @@ function BookingsPage() {
                                 {!narrow ? `–${a.end_time.slice(0, 5)}` : ""}
                                 {!narrow && a.treatments?.name ? ` · ${a.treatments.name}` : ""}
                               </div>
+                              {!narrow && height >= 48 && (
+                                <div className="truncate text-[10px] opacity-80">
+                                  {a.practitioners?.name ?? "Unassigned"}
+                                  {a.locations?.name ? ` · ${a.locations.name}` : ""}
+                                </div>
+                              )}
                             </>
                           ) : (
                             <div className="truncate">
@@ -892,6 +903,8 @@ function BookingsPage() {
           {selectedAppt && (
             <CheckoutSheet
               a={selectedAppt}
+              practitioners={practitioners}
+              locations={locations}
               onPatch={(patch) => {
                 setAppts((prev) => prev.map((x) => (x.id === selectedAppt.id ? { ...x, ...patch } : x)));
                 setSelectedAppt((s) => (s ? { ...s, ...patch } : s));
@@ -1511,8 +1524,15 @@ function UnblockDialog({
 /* ------------------------------ Checkout sheet ------------------------------ */
 
 function CheckoutSheet({
-  a, onPatch, onClose,
-}: { a: Appt; onPatch: (p: Partial<Appt>) => void; onClose: () => void }) {
+  a, onPatch, onClose, practitioners = [], locations = [],
+}: {
+  a: Appt;
+  onPatch: (p: Partial<Appt>) => void;
+  onClose: () => void;
+  practitioners?: { id: string; name: string }[];
+  locations?: { id: string; name: string }[];
+}) {
+  const assignPractitioner = useServerFn(setAppointmentPractitioner);
   const update = useServerFn(updateAppointmentNotes);
   const cancel = useServerFn(cancelAppointment);
   const updateAfter = useServerFn(updateAppointmentAftercareAndAllergy);
@@ -1685,7 +1705,36 @@ function CheckoutSheet({
           {a.start_time.slice(0, 5)}–{a.end_time.slice(0, 5)} · {a.treatments?.name ?? "Treatment"}
           {a.locations?.name && ` · ${a.locations.name}`}
         </div>
+        <div className="mt-0.5 text-xs font-medium">
+          With: {a.practitioners?.name ?? <span className="text-amber-700">Not set</span>}
+        </div>
       </div>
+
+      {practitioners.length > 0 && (
+        <div className="space-y-1">
+          <Label className="text-xs">Who is seeing this client</Label>
+          <select
+            className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+            value={a.practitioner_id ?? ""}
+            onChange={async (e) => {
+              const id = e.target.value || null;
+              try {
+                await assignPractitioner({ data: { appointmentId: a.id, practitionerId: id } });
+                onPatch({
+                  practitioner_id: id,
+                  practitioners: id ? { name: practitioners.find((p) => p.id === id)?.name ?? "" } : null,
+                });
+                toast.success("Saved");
+              } catch (err) { toast.error((err as Error).message); }
+            }}
+          >
+            <option value="">Not set</option>
+            {practitioners.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {(() => {
         const totalDue = Number(a.total_amount ?? 0);

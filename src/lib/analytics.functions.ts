@@ -73,7 +73,7 @@ export type IncomeReportRow = {
 
 export const getIncomeReport = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { from: string; to: string }) => d)
+  .inputValidator((d: { from: string; to: string; practitionerId?: string | null }) => d)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const profileId = await getProfileId(supabase, userId);
@@ -92,6 +92,8 @@ export const getIncomeReport = createServerFn({ method: "GET" })
       byMethod: [] as { label: string; amount: number; count: number }[],
       byTreatment: [] as { label: string; amount: number; count: number }[],
       byMonth: [] as { label: string; amount: number; count: number }[],
+      practitioners: [] as { id: string; name: string }[],
+      practitionerId: data.practitionerId ?? null,
     };
     if (!profileId) return empty;
 
@@ -110,6 +112,13 @@ export const getIncomeReport = createServerFn({ method: "GET" })
       .gte("scheduled_date", data.from)
       .lte("scheduled_date", data.to);
     if (ownPractitionerId) apptQuery = apptQuery.eq("practitioner_id", ownPractitionerId);
+    else if (data.practitionerId) apptQuery = apptQuery.eq("practitioner_id", data.practitionerId);
+    const { data: practitionerList } = await supabase
+      .from("practitioners")
+      .select("id, name")
+      .eq("profile_id", profileId)
+      .eq("active", true)
+      .order("name");
     const { data: appts, error } = await apptQuery
       .order("scheduled_date", { ascending: true })
       .range(0, 9999);
@@ -172,5 +181,7 @@ export const getIncomeReport = createServerFn({ method: "GET" })
       byMethod: toList(methodMap),
       byTreatment: toList(treatMap).slice(0, 20),
       byMonth: [...monthMap.entries()].map(([label, v]) => ({ label, ...v })).sort((a, b) => a.label.localeCompare(b.label)),
+      practitioners: ((practitionerList ?? []) as { id: string; name: string }[]),
+      practitionerId: ownPractitionerId ?? data.practitionerId ?? null,
     };
   });
