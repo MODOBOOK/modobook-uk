@@ -1157,11 +1157,11 @@ function MultiBookPage() {
                 )}
               </CardHeader>
               <CardContent className="space-y-5">
-                {ctx.locations.length > 1 && (
+                 {ctx.locations.length > 1 && (
                   <div>
                     <Label className="mb-2 block text-sm font-semibold">Location</Label>
                     <div className="flex flex-wrap gap-2">
-                      {ctx.locations.map((l: Loc) => {
+                      {ctx.locations.filter((l: Loc) => !prescriberLocationIds || prescriberLocationIds.includes(l.id)).map((l: Loc) => {
                         const selected = locationId === l.id;
                         return (
                           <Button
