@@ -60,10 +60,12 @@ import {
   completeAppointmentCheckout,
 } from "@/lib/payment-links.functions";
 import { refundAppointment } from "@/lib/stripe.functions";
+import { markAppointmentPaymentReceived } from "@/lib/appointments.functions";
 import { listMyLocations } from "@/lib/locations.functions";
 import {
   getOrCreateClientForAppointment,
   markAppointmentNoShow,
+  
   setClientBlocked,
 } from "@/lib/patient-actions.functions";
 import { getCardOnFileForAppointment, chargeCardOnFile } from "@/lib/card-on-file.functions";
@@ -88,6 +90,8 @@ type Appt = {
   amount_paid_cents: number | null;
   amount_refunded_cents: number | null;
   checkout_discount_cents?: number | null;
+  checkout_notes?: string | null;
+  deposit_paid_at?: string | null;
   stripe_payment_intent_id: string | null;
   card_capture_agreed_at?: string | null;
   card_captured_at?: string | null;
@@ -1554,6 +1558,7 @@ function CheckoutSheet({
   const emailLink = useServerFn(emailPaymentLink);
   const getOrCreateClient = useServerFn(getOrCreateClientForAppointment);
   const markNoShow = useServerFn(markAppointmentNoShow);
+  const recordPayment = useServerFn(markAppointmentPaymentReceived);
   const blockClient = useServerFn(setClientBlocked);
   const refund = useServerFn(refundAppointment);
   const loadCard = useServerFn(getCardOnFileForAppointment);
@@ -1575,7 +1580,9 @@ function CheckoutSheet({
   const [allergiesText, setAllergiesText] = useState(a.allergies_text ?? "");
   const [discount, setDiscount] = useState("");
   const [discountKind, setDiscountKind] = useState<"percent" | "amount">("percent");
-  const [checkoutNotes, setCheckoutNotes] = useState("");
+  const [checkoutNotes, setCheckoutNotes] = useState(a.checkout_notes ?? "");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [depositMethod, setDepositMethod] = useState<"cash" | "card_in_person" | "bank_transfer" | "other">("cash");
   const [busy, setBusy] = useState(false);
   const [addFeesToLink, setAddFeesToLink] = useState(true);
   const [showReschedule, setShowReschedule] = useState(false);
@@ -1635,6 +1642,50 @@ function CheckoutSheet({
       toast.success("Checkout undone");
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
+
+  async function saveCheckoutNotes() {
+    setBusy(true);
+    try {
+      await checkout({
+        data: {
+          appointmentId: a.id,
+          discountCents: Math.round(discountValue * 100),
+          notes: checkoutNotes || null,
+          markPaid: false,
+        },
+      });
+      onPatch({ checkout_notes: checkoutNotes || null });
+      toast.success("Notes saved");
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+
+  async function recordDeposit() {
+    const amount = parseFloat(depositAmount || "0");
+    if (!amount || amount <= 0) { toast.error("Enter an amount"); return; }
+    const cents = Math.round(amount * 100);
+    const totalCents = Math.round(Number(a.total_amount ?? 0) * 100);
+    const already = Number(a.amount_paid_cents ?? 0);
+    const isFull = already + cents >= totalCents && totalCents > 0;
+    setBusy(true);
+    try {
+      await recordPayment({
+        data: {
+          appointmentId: a.id,
+          kind: isFull ? "full" : "deposit",
+          amountCents: cents,
+          method: depositMethod,
+        },
+      });
+      onPatch({
+        amount_paid_cents: already + cents,
+        ...(isFull ? { payment_status: "paid" } : { deposit_paid_at: new Date().toISOString() }),
+      });
+      setDepositAmount("");
+      toast.success(`£${amount.toFixed(2)} recorded`);
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+
+
 
   async function markPaidWith(method: "card_present" | "cash" | "bank_transfer") {
     setBusy(true);
@@ -1913,8 +1964,42 @@ function CheckoutSheet({
           </div>
         </div>
         <div>
-          <Label className="text-xs">Notes (internal)</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Notes (internal)</Label>
+            <Button size="sm" variant="outline" disabled={busy} onClick={saveCheckoutNotes}>Save notes</Button>
+          </div>
           <Textarea rows={2} value={checkoutNotes} onChange={(e) => setCheckoutNotes(e.target.value)} placeholder="Notes for your records" />
+        </div>
+
+        {/* Record a payment already taken (e.g. a deposit) so it comes off the balance */}
+        <div className="rounded-md border p-2.5 space-y-2">
+          <Label className="text-xs">Deposit / payment already taken</Label>
+          <div className="flex gap-2">
+            <Input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              value={depositAmount}
+              onChange={(e) => setDepositAmount(e.target.value)}
+              placeholder="0.00"
+            />
+            <select
+              className="rounded-md border bg-background px-2 text-sm"
+              value={depositMethod}
+              onChange={(e) => setDepositMethod(e.target.value as typeof depositMethod)}
+            >
+              <option value="cash">Cash</option>
+              <option value="card_in_person">Card</option>
+              <option value="bank_transfer">Bank</option>
+              <option value="other">Other</option>
+            </select>
+            <Button size="sm" disabled={busy} onClick={recordDeposit}>Add</Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            {a.deposit_paid_at ? "A deposit is already recorded on this booking. " : ""}
+            Deducted from the outstanding balance below.
+          </p>
         </div>
         <div className="border-t pt-2 text-sm">
           <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>£{subtotal.toFixed(2)}</span></div>
