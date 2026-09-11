@@ -75,25 +75,10 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
     let updated = 0;
     const confirmedAppointmentIds: string[] = [];
     for (const apptId of ids) {
-      const { data: cur } = await supabaseAdmin
-        .from("appointments")
-        .select("amount_paid_cents, payment_status, total_amount, stripe_payment_intent_id")
-        .eq("id", apptId)
-        .maybeSingle();
-      const already = cur as {
-        amount_paid_cents?: number;
-        payment_status?: string;
-        total_amount?: number | null;
-        stripe_payment_intent_id?: string | null;
-      } | null;
-      // Idempotent: if already marked paid with intent recorded, skip amount bump.
-      const alreadyPaid = already?.payment_status === "paid";
-      const samePayment = Boolean(paymentIntentId && already?.stripe_payment_intent_id === paymentIntentId);
       const patch: Record<string, unknown> = {
         status: "confirmed",
         payment_hold_expires_at: null,
         payment_status: "paid",
-        stripe_payment_intent_id: paymentIntentId,
       };
       if (kind === "deposit") {
         patch.deposit_paid_at = new Date().toISOString();
@@ -101,13 +86,13 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
         patch.payment_method = "stripe_link";
         patch.checkout_completed_at = new Date().toISOString();
       }
-      if (!alreadyPaid && !samePayment) {
-        const appointmentTotal = Math.round(Number(already?.total_amount ?? 0) * 100);
-        patch.amount_paid_cents = Math.min(
-          appointmentTotal,
-          Number(already?.amount_paid_cents ?? 0) + perAppt,
-        );
-      }
+      // Atomic + idempotent money write: if the webhook already recorded this
+      // exact payment, the database ignores it instead of adding it twice.
+      await supabaseAdmin.rpc("record_appointment_payment", {
+        p_appointment_id: apptId,
+        p_payment_intent: paymentIntentId ?? "",
+        p_amount_cents: perAppt,
+      });
       const { error } = await supabaseAdmin
         .from("appointments")
         .update(patch as never)
