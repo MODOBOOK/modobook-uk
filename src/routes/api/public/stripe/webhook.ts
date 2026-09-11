@@ -417,7 +417,6 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 const patch: Record<string, unknown> = {
                   status: "confirmed",
                   payment_hold_expires_at: null,
-                  stripe_payment_intent_id: paymentIntentId,
                 };
                 if (kind === "deposit") {
                   patch.deposit_paid_at = new Date().toISOString();
@@ -428,6 +427,17 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                   patch.checkout_completed_at = new Date().toISOString();
                 }
                 return patch;
+              };
+
+              // Records the money atomically: the database ignores a repeat of
+              // the same payment intent, so two Stripe events for one charge
+              // can never double the paid amount.
+              const applyPayment = async (apptId: string, amountCents: number) => {
+                await supabaseAdmin.rpc("record_appointment_payment", {
+                  p_appointment_id: apptId,
+                  p_payment_intent: paymentIntentId,
+                  p_amount_cents: amountCents,
+                });
               };
 
               if (paymentLinkId) {
