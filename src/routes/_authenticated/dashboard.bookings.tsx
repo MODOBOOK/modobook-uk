@@ -60,6 +60,7 @@ import {
   completeAppointmentCheckout,
 } from "@/lib/payment-links.functions";
 import { refundAppointment } from "@/lib/stripe.functions";
+import { markAppointmentPaymentReceived } from "@/lib/appointments.functions";
 import { listMyLocations } from "@/lib/locations.functions";
 import {
   getOrCreateClientForAppointment,
