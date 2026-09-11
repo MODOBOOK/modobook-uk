@@ -467,6 +467,19 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
       .eq("profile_id", profile.id);
     if (uErr) throw uErr;
 
+    // When the appointment moved to another location, tell the patient about
+    // the new address rather than the old one.
+    let locRow = (appt as { locations?: { name?: string; address_line1?: string; city?: string; postcode?: string } | null }).locations ?? null;
+    if (data.locationId) {
+      const { data: newLoc } = await supabase
+        .from("locations")
+        .select("name, address_line1, city, postcode")
+        .eq("id", data.locationId)
+        .eq("profile_id", profile.id)
+        .maybeSingle();
+      if (newLoc) locRow = newLoc as typeof locRow;
+    }
+
     if (data.notifyPatient ?? true) {
       try {
         const { formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
@@ -480,13 +493,8 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
           messageKey: `wa-reschedule-${data.appointmentId}-${data.date}-${startHM}`,
           ...smsMessage("booking-reschedule", {
             patientName: appt.patient_name,
-            locationName: (appt as { locations?: { name?: string } | null }).locations?.name,
-            locationAddress: (() => {
-              const l = (appt as {
-                locations?: { address_line1?: string; city?: string; postcode?: string } | null
-              }).locations
-              return l ? [l.address_line1, l.city, l.postcode].filter(Boolean).join(', ') : undefined
-            })(),
+            locationName: locRow?.name,
+            locationAddress: locRow ? [locRow.address_line1, locRow.city, locRow.postcode].filter(Boolean).join(', ') : undefined,
             clinicName: branding.clinicName,
             dateTime: formatBookingDateTime(data.date, startHM),
           }),
