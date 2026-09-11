@@ -474,7 +474,7 @@ function MultiBookPage() {
   useEffect(() => {
     if (visitWindows && date && !visitWindows.has(date)) {
       setDate("");
-      setTime("");
+      setSlot(null);
     }
   }, [visitWindows, date]);
 
