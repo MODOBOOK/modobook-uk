@@ -1558,6 +1558,7 @@ function CheckoutSheet({
   const emailLink = useServerFn(emailPaymentLink);
   const getOrCreateClient = useServerFn(getOrCreateClientForAppointment);
   const markNoShow = useServerFn(markAppointmentNoShow);
+  const recordPayment = useServerFn(markAppointmentPaymentReceived);
   const blockClient = useServerFn(setClientBlocked);
   const refund = useServerFn(refundAppointment);
   const loadCard = useServerFn(getCardOnFileForAppointment);
