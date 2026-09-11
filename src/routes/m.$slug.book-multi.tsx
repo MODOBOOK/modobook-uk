@@ -364,10 +364,15 @@ function MultiBookPage() {
     if (clinicVisitItems.length === 0 || availableVisits.length === 0) return null;
     const perTreatment = clinicVisitItems.map((p) =>
       availableVisits.filter(
-        (v) => v.treatment_id === p.treatment_id && Number(v.remaining_capacity ?? 0) > 0,
+        (v) =>
+          v.treatment_id === p.treatment_id &&
+          Number(v.remaining_capacity ?? 0) > 0 &&
+          // A prescribing day set for one location doesn't open the other one.
+          (!locationId || !v.location_id || v.location_id === locationId),
       ),
     );
     if (perTreatment.some((list) => list.length === 0)) return null;
+
     const map = new Map<string, { start: string; end: string; visitIds: Record<string, string> }>();
     for (const day of new Set(perTreatment[0].map((v) => v.visit_date))) {
       const picked = perTreatment.map((list) => list.find((v) => v.visit_date === day));
