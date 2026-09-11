@@ -899,8 +899,21 @@ export const requestBooking = createServerFn({ method: "POST" })
     }
 
     const id = crypto.randomUUID();
+    // A model slot can be advertised for a specific team member; that person
+    // takes the booking unless the patient already picked someone.
+    let modelSlotPractitionerId: string | null = null;
+    if (data.modelSlotId) {
+      const { data: ms } = await supabaseAdmin
+        .from("model_slots")
+        .select("practitioner_id")
+        .eq("id", data.modelSlotId)
+        .eq("profile_id", data.profileId)
+        .maybeSingle();
+      modelSlotPractitionerId = (ms as { practitioner_id?: string | null } | null)?.practitioner_id ?? null;
+    }
     const assignedPractitionerId =
       data.practitionerId ??
+      modelSlotPractitionerId ??
       (await resolveBookingPractitioner(sb, {
         profileId: data.profileId,
         date: data.date,

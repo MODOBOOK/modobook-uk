@@ -146,6 +146,7 @@ export const upsertModelSlot = createServerFn({ method: "POST" })
     id?: string;
     treatment_id: string;
     location_id?: string | null;
+    practitioner_id?: string | null;
     slot_date?: string | null;
     start_time?: string | null;
     end_time?: string | null;
@@ -163,6 +164,7 @@ export const upsertModelSlot = createServerFn({ method: "POST" })
       profile_id: pid,
       treatment_id: data.treatment_id,
       location_id: data.location_id ?? null,
+      practitioner_id: data.practitioner_id ?? null,
       slot_date: flexible ? null : data.slot_date,
       start_time: flexible ? null : data.start_time,
       end_time: flexible ? null : data.end_time,

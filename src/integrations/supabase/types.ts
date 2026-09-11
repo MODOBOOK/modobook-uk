@@ -4536,6 +4536,7 @@ export type Database = {
           is_flexible: boolean
           location_id: string | null
           notes: string | null
+          practitioner_id: string | null
           price_mode: string
           price_value: number
           profile_id: string
@@ -4554,6 +4555,7 @@ export type Database = {
           is_flexible?: boolean
           location_id?: string | null
           notes?: string | null
+          practitioner_id?: string | null
           price_mode?: string
           price_value: number
           profile_id: string
@@ -4572,6 +4574,7 @@ export type Database = {
           is_flexible?: boolean
           location_id?: string | null
           notes?: string | null
+          practitioner_id?: string | null
           price_mode?: string
           price_value?: number
           profile_id?: string
@@ -4593,6 +4596,13 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "model_slots_practitioner_id_fkey"
+            columns: ["practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "practitioners"
             referencedColumns: ["id"]
           },
           {
