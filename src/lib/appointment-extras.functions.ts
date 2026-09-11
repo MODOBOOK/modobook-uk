@@ -17,12 +17,30 @@ async function clinicProfileId(supabase: any, userId: string) {
 async function assertOwnAppointment(supabase: any, appointmentId: string, profileId: string) {
   const { data, error } = await supabase
     .from("appointments")
-    .select("id, profile_id, base_amount, total_amount")
+    .select("id, profile_id, base_amount, total_amount, scheduled_date, start_time, end_time")
     .eq("id", appointmentId)
     .maybeSingle();
   if (error) throw error;
   if (!data || data.profile_id !== profileId) throw new Error("Appointment not found");
-  return data as { id: string; profile_id: string; base_amount: number | null; total_amount: number | null };
+  return data as {
+    id: string;
+    profile_id: string;
+    base_amount: number | null;
+    total_amount: number | null;
+    scheduled_date: string;
+    start_time: string;
+    end_time: string;
+  };
+}
+
+function toMinutes(t: string) {
+  const [h, m] = String(t).split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+
+function fromMinutes(n: number) {
+  const capped = Math.max(0, Math.min(24 * 60 - 1, n));
+  return `${String(Math.floor(capped / 60)).padStart(2, "0")}:${String(capped % 60).padStart(2, "0")}:00`;
 }
 
 /** Recalculate the booking total as base price + every extra. */
