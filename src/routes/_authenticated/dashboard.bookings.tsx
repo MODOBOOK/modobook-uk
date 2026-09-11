@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLinkFee } from "@/lib/use-link-fee";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
@@ -49,6 +50,8 @@ import {
   listPractitioners,
   getCalendarScope,
   setAppointmentPractitioner,
+  checkOutAppointment,
+  undoCheckoutAppointment,
 } from "@/lib/availability.functions";
 import { ruleAppliesOnDate } from "@/lib/rota";
 import {
@@ -89,7 +92,7 @@ type Appt = {
   card_capture_agreed_at?: string | null;
   card_captured_at?: string | null;
   card_capture_policy_text?: string | null;
-
+  checked_out_at?: string | null;
 
   notes: string | null;
   practitioner_notes: string | null;
@@ -838,22 +841,27 @@ function BookingsPage() {
                       
                       const tall = height >= 34;
                       const narrow = columns > 2;
+                      const isCheckedOut = !!a.checked_out_at;
                       const color = a.treatments?.color || "#3b82f6";
+                      const cardColor = isCheckedOut ? "#9ca3af" : color;
                       return (
                         <button
                           key={`a-${a.id}`}
                           onClick={() => setSelectedAppt(a)}
-                          className="absolute cursor-pointer overflow-hidden rounded-md border border-foreground/25 px-1 py-px text-left text-[10.5px] leading-[1.15] shadow-sm transition hover:z-30 hover:shadow-md sm:px-1.5"
+                          className={cn(
+                            "absolute cursor-pointer overflow-hidden rounded-md border border-foreground/25 px-1 py-px text-left text-[10.5px] leading-[1.15] shadow-sm transition hover:z-30 hover:shadow-md sm:px-1.5",
+                            isCheckedOut && "opacity-60 line-through decoration-foreground/50"
+                          )}
                           style={{
                             top,
                             height,
                             left: `calc(${leftPct}% + 1px)`,
                             width: `calc(${widthPct}% - 2px)`,
                             zIndex: 5 + index,
-                            backgroundColor: hexToRgba(color, 0.45),
+                            backgroundColor: hexToRgba(cardColor, isCheckedOut ? 0.25 : 0.45),
                             color: "#0f172a",
                           }}
-                          title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"}${practitioners.length > 1 ? ` · ${a.practitioners?.name ?? "Unassigned"}` : ""}${a.locations?.name ? ` · ${a.locations.name}` : ""}`}
+                          title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"}${practitioners.length > 1 ? ` · ${a.practitioners?.name ?? "Unassigned"}` : ""}${a.locations?.name ? ` · ${a.locations.name}` : ""}${isCheckedOut ? " · Checked out" : ""}`}
                         >
                           {tall ? (
                             <>
@@ -1540,6 +1548,8 @@ function CheckoutSheet({
   const cancel = useServerFn(cancelAppointment);
   const updateAfter = useServerFn(updateAppointmentAftercareAndAllergy);
   const checkout = useServerFn(completeAppointmentCheckout);
+  const checkOut = useServerFn(checkOutAppointment);
+  const undoCheckOut = useServerFn(undoCheckoutAppointment);
   const createLink = useServerFn(createPaymentLink);
   const emailLink = useServerFn(emailPaymentLink);
   const getOrCreateClient = useServerFn(getOrCreateClientForAppointment);
@@ -1606,6 +1616,24 @@ function CheckoutSheet({
     setBusy(true);
     try { await cancel({ data: { id: a.id } }); onPatch({ status: "cancelled" }); toast.success("Cancelled"); onClose(); }
     catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+
+  async function doCheckOut() {
+    setBusy(true);
+    try {
+      const res = await checkOut({ data: { id: a.id } });
+      onPatch({ checked_out_at: new Date().toISOString() });
+      toast.success((res as { aftercareSent?: boolean }).aftercareSent ? "Checked out — aftercare sent" : "Checked out");
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+
+  async function doUndoCheckOut() {
+    setBusy(true);
+    try {
+      await undoCheckOut({ data: { id: a.id } });
+      onPatch({ checked_out_at: undefined });
+      toast.success("Checkout undone");
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
 
   async function markPaidWith(method: "card_present" | "cash" | "bank_transfer") {
@@ -1858,7 +1886,18 @@ function CheckoutSheet({
 
       {/* Checkout */}
       <div className="rounded-lg border bg-card p-3 space-y-3">
-        <div className="flex items-center gap-2 font-semibold"><Percent className="h-4 w-4" /> Checkout</div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 font-semibold"><Percent className="h-4 w-4" /> Checkout</div>
+          {a.checked_out_at ? (
+            <Button size="sm" variant="outline" disabled={busy} onClick={doUndoCheckOut}>
+              <Undo2 className="h-4 w-4 mr-1" /> Undo checkout
+            </Button>
+          ) : (
+            <Button size="sm" disabled={busy || cancelled || isNoShow} onClick={doCheckOut}>
+              <CircleCheck className="h-4 w-4 mr-1" /> Check out
+            </Button>
+          )}
+        </div>
         <div className="grid grid-cols-[1fr_auto] gap-2">
           <div>
             <Label className="text-xs">Discount</Label>
