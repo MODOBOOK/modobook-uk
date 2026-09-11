@@ -7,6 +7,8 @@ interface Props {
   patientName?: string
   clinicName?: string
   treatmentName?: string
+  services?: { name: string; price?: string }[]
+  totalPrice?: string
   practitionerName?: string
   locationName?: string
   locationAddress?: string
@@ -24,6 +26,8 @@ const Email = ({
   patientName = 'there',
   clinicName = 'MODO',
   treatmentName = 'your treatment',
+  services,
+  totalPrice,
   practitionerName,
   locationName,
   locationAddress,
@@ -47,7 +51,18 @@ const Email = ({
           <BodyOverride text={bodyOverride} />
         ) : (
           <Section style={{ backgroundColor: '#f5f1ea', borderRadius: 12, padding: '16px 18px', margin: '8px 0 20px' }}>
-            <Text style={{ ...styles.text, margin: '0 0 6px' }}><strong>{treatmentName}</strong></Text>
+            {services && services.length > 1 ? (
+              services.map((s, i) => (
+                <Text key={i} style={{ ...styles.text, margin: '0 0 4px' }}>
+                  <strong>{s.name}</strong>{s.price ? ` — ${s.price}` : ''}
+                </Text>
+              ))
+            ) : (
+              <Text style={{ ...styles.text, margin: '0 0 6px' }}><strong>{treatmentName}</strong></Text>
+            )}
+            {services && services.length > 1 && totalPrice && (
+              <Text style={{ ...styles.text, margin: '6px 0 6px' }}><strong>Total: {totalPrice}</strong></Text>
+            )}
             <Text style={{ ...styles.muted, margin: '0 0 4px' }}>{dateTime}</Text>
             {practitionerName && <Text style={{ ...styles.muted, margin: '0 0 4px' }}>With {practitionerName}</Text>}
             {locationName && <Text style={{ ...styles.muted, margin: '0 0 4px' }}>{locationName}</Text>}
