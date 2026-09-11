@@ -115,6 +115,10 @@ function NewAppointmentPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [locationId, setLocationId] = useState<string>("");
+  // Who the client is seeing — asked up front so it never has to be added
+  // after the booking has already gone in.
+  const [practitioners, setPractitioners] = useState<{ id: string; name: string }[]>([]);
+  const [practitionerId, setPractitionerId] = useState<string>("");
   const [date, setDate] = useState(prefillDate ?? "");
   const [items, setItems] = useState<BookingItem[]>([]);
   const [slots, setSlots] = useState<string[]>([]);
