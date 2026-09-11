@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { rescheduleAppointment } from "@/lib/appointments.functions";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { rescheduleAppointment, listRescheduleLocations } from "@/lib/appointments.functions";
 import { CalendarClock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -32,7 +34,18 @@ export function RescheduleAppointmentDialog({
   const [end, setEnd] = useState(trim(initialEnd));
   const [notify, setNotify] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [locationId, setLocationId] = useState<string | null>(null);
+  const [locationTouched, setLocationTouched] = useState(false);
   const call = useServerFn(rescheduleAppointment);
+  const fetchLocations = useServerFn(listRescheduleLocations);
+
+  const { data: locData } = useQuery({
+    queryKey: ["reschedule-locations", appointmentId, date, start, end],
+    enabled: open && !!date && !!start && !!end,
+    queryFn: () => fetchLocations({ data: { appointmentId, date, startTime: start, endTime: end } }),
+  });
+  const currentLocationId = locData?.currentLocationId ?? null;
+  const chosenLocation = locationTouched ? locationId : currentLocationId;
 
   async function save() {
     if (!date || !start || !end) {
@@ -45,7 +58,7 @@ export function RescheduleAppointmentDialog({
     }
     setBusy(true);
     try {
-      await call({ data: { appointmentId, date, startTime: start, endTime: end, notifyPatient: notify } });
+      await call({ data: { appointmentId, date, startTime: start, endTime: end, locationId: chosenLocation ?? undefined, notifyPatient: notify } });
       toast.success("Appointment rescheduled");
       onRescheduled?.({ date, start: `${start}:00`, end: `${end}:00` });
       onOpenChange(false);
@@ -79,6 +92,31 @@ export function RescheduleAppointmentDialog({
               <Input id="rs-end" type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
             </div>
           </div>
+          {(locData?.locations?.length ?? 0) > 0 && (
+            <div className="space-y-1.5">
+              <Label>Location</Label>
+              <Select
+                value={chosenLocation ?? ""}
+                onValueChange={(v) => { setLocationTouched(true); setLocationId(v); }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(locData?.locations ?? []).map((l) => (
+                    <SelectItem key={l.id} value={l.id} disabled={!l.available && l.id !== currentLocationId}>
+                      {l.name}
+                      {l.city ? ` · ${l.city}` : ""}
+                      {!l.available && l.id !== currentLocationId ? ` — ${l.reason}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Only locations open and free at the new time can be picked.
+              </p>
+            </div>
+          )}
           <label className="flex items-center gap-2 text-sm">
             <Checkbox checked={notify} onCheckedChange={(v) => setNotify(!!v)} />
             Email the patient about the new time
