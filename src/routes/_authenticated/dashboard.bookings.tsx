@@ -1642,6 +1642,50 @@ function CheckoutSheet({
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
 
+  async function saveCheckoutNotes() {
+    setBusy(true);
+    try {
+      await checkout({
+        data: {
+          appointmentId: a.id,
+          discountCents: Math.round(discountValue * 100),
+          notes: checkoutNotes || null,
+          markPaid: false,
+        },
+      });
+      onPatch({ checkout_notes: checkoutNotes || null });
+      toast.success("Notes saved");
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+
+  async function recordDeposit() {
+    const amount = parseFloat(depositAmount || "0");
+    if (!amount || amount <= 0) { toast.error("Enter an amount"); return; }
+    const cents = Math.round(amount * 100);
+    const totalCents = Math.round(Number(a.total_amount ?? 0) * 100);
+    const already = Number(a.amount_paid_cents ?? 0);
+    const isFull = already + cents >= totalCents && totalCents > 0;
+    setBusy(true);
+    try {
+      await recordPayment({
+        data: {
+          appointmentId: a.id,
+          kind: isFull ? "full" : "deposit",
+          amountCents: cents,
+          method: depositMethod,
+        },
+      });
+      onPatch({
+        amount_paid_cents: already + cents,
+        ...(isFull ? { payment_status: "paid" } : { deposit_paid_at: new Date().toISOString() }),
+      });
+      setDepositAmount("");
+      toast.success(`£${amount.toFixed(2)} recorded`);
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+
+
+
   async function markPaidWith(method: "card_present" | "cash" | "bank_transfer") {
     setBusy(true);
     try {
