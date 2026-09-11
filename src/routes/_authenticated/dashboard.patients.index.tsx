@@ -307,6 +307,24 @@ function PatientsPage() {
         />
       </div>
 
+      {practitioners.length > 1 && view === "active" && (
+        <select
+          className="h-10 w-full rounded-md border bg-background px-3 text-sm sm:w-64"
+          value={practitionerId}
+          onChange={(e) => {
+            const v = e.target.value;
+            setPractitionerId(v);
+            setLoading(true);
+            refresh(v);
+          }}
+        >
+          <option value="all">All patients</option>
+          {practitioners.map((p) => (
+            <option key={p.id} value={p.id}>Seen by {p.name}</option>
+          ))}
+        </select>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
       ) : grouped.length === 0 ? (
