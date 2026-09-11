@@ -182,6 +182,59 @@ export function AppointmentExtrasPanel({
         </div>
       </div>
 
+      {/* Visit length — changing it always needs a confirm so the diary never
+          shifts by accident. */}
+      <div className="rounded-md bg-muted/40 p-2 space-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Length</span>
+          <Input
+            className="h-8 w-20"
+            inputMode="numeric"
+            value={mins}
+            disabled={disabled || busy}
+            onChange={(e) => setMins(e.target.value)}
+          />
+          <span className="text-sm text-muted-foreground">min</span>
+          <span className="ml-auto text-xs text-muted-foreground">
+            {startTime && endTime ? `${startTime}–${endTime}` : ""}
+          </span>
+        </div>
+        {(() => {
+          const next = parseInt(mins || "0", 10);
+          if (!Number.isFinite(next) || next < 5 || next === savedMins || !startTime) return null;
+          return (
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span>Would end at <strong>{fromMin(toMin(startTime) + next)}</strong></span>
+              <Button size="sm" className="h-7" disabled={busy} onClick={() => saveDuration(next)}>
+                Confirm
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7" disabled={busy} onClick={() => setMins(String(savedMins))}>
+                Cancel
+              </Button>
+            </div>
+          );
+        })()}
+        {suggestExtra && (
+          <div className="flex flex-wrap items-center gap-2 rounded-md bg-background p-2 text-xs">
+            <span>
+              {suggestExtra.name} usually takes {suggestExtra.minutes} min. Extend to{" "}
+              <strong>{fromMin(toMin(startTime || "00:00") + savedMins + suggestExtra.minutes)}</strong>?
+            </span>
+            <Button
+              size="sm"
+              className="h-7"
+              disabled={busy}
+              onClick={() => saveDuration(savedMins + suggestExtra.minutes)}
+            >
+              Extend
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7" disabled={busy} onClick={() => setSuggestExtra(null)}>
+              Keep as is
+            </Button>
+          </div>
+        )}
+      </div>
+
       {extras.map((x) => (
         <div key={x.id} className="flex items-center gap-2">
           <div className="min-w-0 flex-1 truncate text-sm">{x.name}</div>
