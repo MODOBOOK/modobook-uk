@@ -188,15 +188,21 @@ function NewAppointmentPage() {
         .eq("active", true);
       setLocations(l ?? []);
       try {
-        const [cs, cons, meds, ms] = await Promise.all([
+        const [cs, cons, meds, ms, pracs] = await Promise.all([
           fetchClients() as Promise<ClientRow[]>,
           fetchConsents() as Promise<TemplateRow[]>,
           fetchMedical() as Promise<TemplateRow[]>,
           fetchModelSlots() as Promise<ModelSlot[]>,
+          fetchPractitioners() as Promise<{ id: string; name: string }[]>,
         ]);
         setClients(cs ?? []);
         setConsentTemplates((cons ?? []).map((r) => ({ id: r.id, name: r.name })));
         setMedicalTemplates((meds ?? []).map((r) => ({ id: r.id, name: r.name })));
+        const pracList = (pracs ?? []).map((p) => ({ id: p.id, name: p.name }));
+        setPractitioners(pracList);
+        // Solo clinics (or a staff member booking their own diary) never need
+        // to be asked — fill it in silently.
+        if (pracList.length === 1) setPractitionerId(pracList[0].id);
         const todayIso = new Date().toISOString().slice(0, 10);
         setModelSlots(
           (ms ?? [])
