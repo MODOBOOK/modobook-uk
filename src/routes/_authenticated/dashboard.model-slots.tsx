@@ -5,6 +5,7 @@ import { listMyModelSlots, upsertModelSlot, deleteModelSlot } from "@/lib/discou
 import { getMyTreatments, createTreatment } from "@/lib/treatments.functions";
 import { Checkbox } from "@/components/ui/checkbox";
 import { listMyLocations } from "@/lib/locations.functions";
+import { listMyPractitioners } from "@/lib/practitioners.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/model-slots")({
 type Slot = {
   id: string; treatment_id: string; location_id: string | null;
   slot_date: string | null; start_time: string | null; end_time: string | null;
+  practitioner_id?: string | null;
   price_mode: "fixed" | "percent"; price_value: number;
   notes: string | null; booked_appointment_id: string | null; active: boolean;
   category: string | null;
@@ -33,26 +35,32 @@ type Slot = {
 
 type Treat = { id: string; name: string; price: number; duration: number };
 type Loc = { id: string; name: string };
+type Prac = { id: string; name: string };
 
 function ModelSlotsPage() {
   const list = useServerFn(listMyModelSlots);
   const lTreats = useServerFn(getMyTreatments);
   const lLocs = useServerFn(listMyLocations);
+  const lPracs = useServerFn(listMyPractitioners);
   const del = useServerFn(deleteModelSlot);
   const lProfile = useServerFn(getMyProfile);
   const saveProfile = useServerFn(updateProfile);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [treats, setTreats] = useState<Treat[]>([]);
   const [locs, setLocs] = useState<Loc[]>([]);
+  const [pracs, setPracs] = useState<Prac[]>([]);
   const [editing, setEditing] = useState<Slot | "new" | null>(null);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [position, setPosition] = useState<"top" | "bottom">("top");
 
   async function refresh() {
-    const [s, t, l, p] = await Promise.all([list(), lTreats(), lLocs(), lProfile()]);
+    const [s, t, l, p, pr] = await Promise.all([list(), lTreats(), lLocs(), lProfile(), lPracs()]);
     setSlots((s as any) ?? []);
     setTreats((t as any) ?? []);
     setLocs((l as any) ?? []);
+    setPracs((((pr as any)?.practitioners ?? []) as any[])
+      .filter((x) => x.active !== false)
+      .map((x) => ({ id: x.id, name: x.name })));
     if (p) {
       setProfileId((p as any).id);
       setPosition(((p as any).model_slots_position ?? "top") as "top" | "bottom");
@@ -71,6 +79,7 @@ function ModelSlotsPage() {
 
   const tById = new Map(treats.map((t) => [t.id, t]));
   const lById = new Map(locs.map((l) => [l.id, l]));
+  const pById = new Map(pracs.map((p) => [p.id, p]));
 
   const existingCategories = Array.from(
     new Set(slots.map((s) => (s.category ?? "").trim()).filter(Boolean)),
@@ -147,6 +156,7 @@ function ModelSlotsPage() {
                           </>
                         )}
                         {s.location_id && lById.get(s.location_id) ? ` · ${lById.get(s.location_id)!.name}` : ""}
+                        {pracs.length > 1 ? ` · ${s.practitioner_id && pById.get(s.practitioner_id) ? pById.get(s.practitioner_id)!.name : "Anyone"}` : ""}
                       </p>
                       <p className="text-xs">
                         {t && <span className="line-through text-muted-foreground">£{Number(t.price).toFixed(2)}</span>}{" "}
@@ -176,6 +186,7 @@ function ModelSlotsPage() {
           existing={editing === "new" ? null : editing}
           treatments={treats}
           locations={locs}
+          practitioners={pracs}
           existingCategories={existingCategories}
           onClose={() => setEditing(null)}
           onSaved={() => { setEditing(null); refresh(); }}
@@ -186,9 +197,9 @@ function ModelSlotsPage() {
   );
 }
 
-function SlotEditor({ existing, treatments, locations, existingCategories, onClose, onSaved }: {
+function SlotEditor({ existing, treatments, locations, practitioners, existingCategories, onClose, onSaved }: {
   existing: Slot | null;
-  treatments: Treat[]; locations: Loc[];
+  treatments: Treat[]; locations: Loc[]; practitioners: Prac[];
   existingCategories: string[];
   onClose: () => void; onSaved: () => void;
 }) {
@@ -197,6 +208,7 @@ function SlotEditor({ existing, treatments, locations, existingCategories, onClo
   const [allTreatments, setAllTreatments] = useState<Treat[]>(treatments);
   const [selectedIds, setSelectedIds] = useState<string[]>(existing ? [existing.treatment_id] : []);
   const [locationId, setLocationId] = useState<string>(existing?.location_id ?? "");
+  const [practitionerId, setPractitionerId] = useState<string>(existing?.practitioner_id ?? "");
   const [date, setDate] = useState(existing?.slot_date ?? "");
   const [startT, setStartT] = useState(existing?.start_time?.slice(0, 5) ?? "10:00");
   const [endT, setEndT] = useState(existing?.end_time?.slice(0, 5) ?? "11:00");
@@ -253,6 +265,7 @@ function SlotEditor({ existing, treatments, locations, existingCategories, onClo
           id: existing!.id,
           treatment_id: selectedIds[0],
           location_id: locationId || null,
+          practitioner_id: practitionerId || null,
           is_flexible: isFlexible,
           slot_date: isFlexible ? null : date,
           start_time: isFlexible ? null : startT,
@@ -273,6 +286,7 @@ function SlotEditor({ existing, treatments, locations, existingCategories, onClo
             await save({ data: {
               treatment_id: tid,
               location_id: locationId || null,
+              practitioner_id: practitionerId || null,
               is_flexible: isFlexible,
               slot_date: w.date, start_time: w.start, end_time: w.end,
               price_mode: mode, price_value: v,
@@ -351,6 +365,19 @@ function SlotEditor({ existing, treatments, locations, existingCategories, onClo
                   {locations.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+          )}
+          {practitioners.length > 1 && (
+            <div>
+              <Label>Who is this model slot with</Label>
+              <Select value={practitionerId || "any"} onValueChange={(v) => setPractitionerId(v === "any" ? "" : v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Anyone on the team</SelectItem>
+                  {practitioners.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="mt-1 text-xs text-muted-foreground">The patient's booking and emails will show this person.</p>
             </div>
           )}
           <div className="flex items-start justify-between gap-3 rounded-md border border-dashed p-3">

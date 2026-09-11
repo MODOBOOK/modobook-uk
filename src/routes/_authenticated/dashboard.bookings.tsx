@@ -275,12 +275,14 @@ function BookingsPage() {
     setBlockedDates((bd as BlockedDate[]) ?? []);
     setLocations(((l as any[]) ?? []).map((x) => ({ id: x.id, name: x.name })));
     setRotaAnchor((rota as { rota_anchor_date?: string | null } | null)?.rota_anchor_date ?? null);
-    setPractitioners(((pracs as any[]) ?? []).map((x) => ({ id: x.id, name: x.name })));
-    // Open on your own diary by default so it's always clear whose calendar
-    // this is; you can switch to the whole team from the chips.
+    const pracList = ((pracs as any[]) ?? []).map((x) => ({ id: x.id, name: x.name }));
+    setPractitioners(pracList);
+    // Only team clinics need a "whose diary is this" default. Solo clinics keep
+    // the whole calendar so nothing can be hidden by a filter.
     const sc = scope as { ownPractitionerId?: string | null; selfPractitionerId?: string | null } | null;
     const mine = sc?.ownPractitionerId ?? sc?.selfPractitionerId ?? null;
-    setPractitionerFilter((cur) => (cur === "all" && mine ? mine : cur));
+    if (pracList.length > 1) setPractitionerFilter((cur) => (cur === "all" && mine ? mine : cur));
+    else setPractitionerFilter("all");
   }
 
 
@@ -851,7 +853,7 @@ function BookingsPage() {
                             backgroundColor: hexToRgba(color, 0.45),
                             color: "#0f172a",
                           }}
-                          title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"} · ${a.practitioners?.name ?? "Unassigned"}${a.locations?.name ? ` · ${a.locations.name}` : ""}`}
+                          title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"}${practitioners.length > 1 ? ` · ${a.practitioners?.name ?? "Unassigned"}` : ""}${a.locations?.name ? ` · ${a.locations.name}` : ""}`}
                         >
                           {tall ? (
                             <>
@@ -863,8 +865,9 @@ function BookingsPage() {
                               </div>
                               {!narrow && height >= 48 && (
                                 <div className="truncate text-[10px] opacity-80">
-                                  {a.practitioners?.name ?? "Unassigned"}
-                                  {a.locations?.name ? ` · ${a.locations.name}` : ""}
+                                  {practitioners.length > 1 ? (a.practitioners?.name ?? "Unassigned") : ""}
+                                  {practitioners.length > 1 && a.locations?.name ? " · " : ""}
+                                  {a.locations?.name ?? ""}
                                 </div>
                               )}
                             </>
@@ -1705,12 +1708,14 @@ function CheckoutSheet({
           {a.start_time.slice(0, 5)}–{a.end_time.slice(0, 5)} · {a.treatments?.name ?? "Treatment"}
           {a.locations?.name && ` · ${a.locations.name}`}
         </div>
-        <div className="mt-0.5 text-xs font-medium">
-          With: {a.practitioners?.name ?? <span className="text-amber-700">Not set</span>}
-        </div>
+        {practitioners.length > 1 && (
+          <div className="mt-0.5 text-xs font-medium">
+            With: {a.practitioners?.name ?? <span className="text-amber-700">Not set</span>}
+          </div>
+        )}
       </div>
 
-      {practitioners.length > 0 && (
+      {practitioners.length > 1 && (
         <div className="space-y-1">
           <Label className="text-xs">Who is seeing this client</Label>
           <select

@@ -162,7 +162,7 @@ function UpcomingPage() {
               </option>
             ))}
           </select>
-          {practitioners.length > 0 && (
+          {practitioners.length > 1 && (
             <select
               value={practitioner}
               onChange={(e) => setPractitioner(e.target.value)}
@@ -219,7 +219,7 @@ function UpcomingPage() {
               {formatDay(date)} <span className="font-normal text-muted-foreground">· {items.length}</span>
             </h2>
             {items.map((a) => (
-              <AppointmentCard key={a.id} appt={a} />
+              <AppointmentCard key={a.id} appt={a} showPractitioner={practitioners.length > 1} />
             ))}
           </section>
         ))
@@ -239,7 +239,7 @@ function SummaryTile({ label, value, tone }: { label: string; value: string; ton
   );
 }
 
-function AppointmentCard({ appt }: { appt: UpcomingAppointment }) {
+function AppointmentCard({ appt, showPractitioner }: { appt: UpcomingAppointment; showPractitioner?: boolean }) {
   const runBrief = useServerFn(generateAppointmentBrief);
   const [brief, setBrief] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -278,7 +278,7 @@ function AppointmentCard({ appt }: { appt: UpcomingAppointment }) {
             <p className="mt-0.5 truncate text-sm text-muted-foreground">
               {appt.treatment_name ?? "Treatment"}
               {appt.location_name ? ` · ${appt.location_name}` : ""}
-              {appt.practitioner_name ? ` · ${appt.practitioner_name}` : ""}
+              {showPractitioner && appt.practitioner_name ? ` · ${appt.practitioner_name}` : ""}
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
