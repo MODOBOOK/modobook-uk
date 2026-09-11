@@ -98,6 +98,7 @@ type Appt = {
   practitioner_id?: string | null;
   treatments: { name: string; color?: string | null } | null;
   locations: { name: string } | null;
+  practitioners?: { name: string } | null;
   location_id?: string | null;
 };
 
@@ -274,8 +275,11 @@ function BookingsPage() {
     setLocations(((l as any[]) ?? []).map((x) => ({ id: x.id, name: x.name })));
     setRotaAnchor((rota as { rota_anchor_date?: string | null } | null)?.rota_anchor_date ?? null);
     setPractitioners(((pracs as any[]) ?? []).map((x) => ({ id: x.id, name: x.name })));
-    const own = (scope as { ownPractitionerId?: string | null } | null)?.ownPractitionerId ?? null;
-    if (own) setPractitionerFilter(own);
+    // Open on your own diary by default so it's always clear whose calendar
+    // this is; you can switch to the whole team from the chips.
+    const sc = scope as { ownPractitionerId?: string | null; selfPractitionerId?: string | null } | null;
+    const mine = sc?.ownPractitionerId ?? sc?.selfPractitionerId ?? null;
+    setPractitionerFilter((cur) => (cur === "all" && mine ? mine : cur));
   }
 
 
@@ -846,7 +850,7 @@ function BookingsPage() {
                             backgroundColor: hexToRgba(color, 0.45),
                             color: "#0f172a",
                           }}
-                          title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"}`}
+                          title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"} · ${a.practitioners?.name ?? "Unassigned"}${a.locations?.name ? ` · ${a.locations.name}` : ""}`}
                         >
                           {tall ? (
                             <>
@@ -856,6 +860,12 @@ function BookingsPage() {
                                 {!narrow ? `–${a.end_time.slice(0, 5)}` : ""}
                                 {!narrow && a.treatments?.name ? ` · ${a.treatments.name}` : ""}
                               </div>
+                              {!narrow && height >= 48 && (
+                                <div className="truncate text-[10px] opacity-80">
+                                  {a.practitioners?.name ?? "Unassigned"}
+                                  {a.locations?.name ? ` · ${a.locations.name}` : ""}
+                                </div>
+                              )}
                             </>
                           ) : (
                             <div className="truncate">
