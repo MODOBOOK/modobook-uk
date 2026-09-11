@@ -361,7 +361,10 @@ function MultiBookPage() {
   // When one of the chosen treatments needs it, the patient must book inside
   // that window — not anywhere in the clinic's normal diary.
   const visitWindows = useMemo(() => {
-    if (clinicVisitItems.length === 0 || availableVisits.length === 0) return null;
+    if (clinicVisitItems.length === 0) return null;
+    // Still loading the prescriber's clinic days — don't decide yet.
+    if (!availableVisitsQuery.isSuccess) return null;
+    const map = new Map<string, { start: string; end: string; visitIds: Record<string, string> }>();
     const perTreatment = clinicVisitItems.map((p) =>
       availableVisits.filter(
         (v) =>
@@ -371,9 +374,10 @@ function MultiBookPage() {
           (!locationId || !v.location_id || v.location_id === locationId),
       ),
     );
-    if (perTreatment.some((list) => list.length === 0)) return null;
+    // No prescribing day at this location = nothing bookable here, rather than
+    // falling back to the clinic's ordinary diary.
+    if (perTreatment.some((list) => list.length === 0)) return map;
 
-    const map = new Map<string, { start: string; end: string; visitIds: Record<string, string> }>();
     for (const day of new Set(perTreatment[0].map((v) => v.visit_date))) {
       const picked = perTreatment.map((list) => list.find((v) => v.visit_date === day));
       if (picked.some((v) => !v)) continue;
@@ -386,8 +390,8 @@ function MultiBookPage() {
       picked.forEach((v, i) => { visitIds[clinicVisitItems[i]!.treatment_id] = v!.visit_id; });
       map.set(day, { start, end, visitIds });
     }
-    return map.size > 0 ? map : null;
-  }, [clinicVisitItems, availableVisits, locationId]);
+    return map;
+  }, [clinicVisitItems, availableVisits, availableVisitsQuery.isSuccess, locationId]);
 
   // Picking one of those days also picks the visit itself — no second step.
   useEffect(() => {
