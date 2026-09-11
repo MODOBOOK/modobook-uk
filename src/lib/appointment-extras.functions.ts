@@ -214,9 +214,9 @@ export const listTreatmentsForExtras = createServerFn({ method: "GET" })
     const profileId = await clinicProfileId(context.supabase, context.userId);
     const { data, error } = await context.supabase
       .from("treatments")
-      .select("id, name, price")
+      .select("id, name, price, duration")
       .eq("profile_id", profileId)
       .order("name");
     if (error) throw error;
-    return (data ?? []) as { id: string; name: string; price: number | null }[];
+    return (data ?? []) as { id: string; name: string; price: number | null; duration: number | null }[];
   });
