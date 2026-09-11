@@ -387,7 +387,7 @@ function MultiBookPage() {
       map.set(day, { start, end, visitIds });
     }
     return map.size > 0 ? map : null;
-  }, [clinicVisitItems, availableVisits]);
+  }, [clinicVisitItems, availableVisits, locationId]);
 
   // Picking one of those days also picks the visit itself — no second step.
   useEffect(() => {
