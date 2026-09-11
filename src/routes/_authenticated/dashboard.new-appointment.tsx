@@ -388,6 +388,10 @@ function NewAppointmentPage() {
       toast.error("Add at least one treatment and fill patient name, email and date");
       return;
     }
+    if (practitioners.length > 1 && !practitionerId) {
+      toast.error("Choose who the client is seeing");
+      return;
+    }
     if (items.some((it) => !it.treatmentId || !it.startTime)) {
       toast.error("Each treatment needs a start time");
       return;
@@ -437,6 +441,7 @@ function NewAppointmentPage() {
             extraConsentTemplateIds: [...pickedConsentIds],
             medicalFormTemplateIds: [...pickedMedicalIds],
             modelSlotId: it.modelSlotId,
+            practitionerId: practitionerId || null,
             paymentReceived,
           },
         });
