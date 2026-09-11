@@ -36,14 +36,15 @@ function IncomeReportPage() {
   const [range, setRange] = useState(() => presetRange("this-month"));
   const [data, setData] = useState<Awaited<ReturnType<typeof getIncomeReport>> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [practitionerId, setPractitionerId] = useState<string>("all");
 
   useEffect(() => {
     setLoading(true);
-    fetchReport({ data: range })
+    fetchReport({ data: { ...range, practitionerId: practitionerId === "all" ? null : practitionerId } })
       .then(setData)
       .catch(() => toast.error("Could not load the income report"))
       .finally(() => setLoading(false));
-  }, [fetchReport, range]);
+  }, [fetchReport, range, practitionerId]);
 
   const periodLabel = useMemo(() => {
     if (preset === "all") return "All time";
@@ -118,6 +119,22 @@ function IncomeReportPage() {
                 <Label htmlFor="to">To</Label>
                 <Input id="to" type="date" value={range.to} onChange={(e) => setRange((r) => ({ ...r, to: e.target.value }))} />
               </div>
+            </div>
+          )}
+          {(data?.practitioners?.length ?? 0) > 1 && (
+            <div className="space-y-1.5">
+              <Label htmlFor="who">Practitioner</Label>
+              <select
+                id="who"
+                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                value={practitionerId}
+                onChange={(e) => setPractitionerId(e.target.value)}
+              >
+                <option value="all">Whole team</option>
+                {data?.practitioners.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
             </div>
           )}
           <p className="text-xs text-muted-foreground">{periodLabel}</p>
