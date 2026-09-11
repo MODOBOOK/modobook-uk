@@ -388,7 +388,13 @@ function MultiBookPage() {
       if (start >= end) continue;
       const visitIds: Record<string, string> = {};
       picked.forEach((v, i) => { visitIds[clinicVisitItems[i]!.treatment_id] = v!.visit_id; });
-      map.set(day, { start, end, visitIds });
+      // How many people the prescriber can see that day sets how many start
+      // times we offer, regardless of how long the treatment itself takes.
+      const capacity = Math.max(
+        1,
+        Math.min(...picked.map((v) => Number(v!.remaining_capacity ?? 1) || 1)),
+      );
+      map.set(day, { start, end, capacity, visitIds });
     }
     return map;
   }, [clinicVisitItems, availableVisits, availableVisitsQuery.isSuccess, locationId]);
