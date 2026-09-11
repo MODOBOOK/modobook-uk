@@ -350,34 +350,47 @@ export const getPrescriberInfoForTreatments = createServerFn({ method: "POST" })
       .select("id, name, requires_prescriber, prescriber_user_id, prescriber_routing, prescriber_note")
       .eq("profile_id", profile.id)
       .in("id", data.treatment_ids);
-    const list = (ts ?? []).filter((t) => t.requires_prescriber && t.prescriber_user_id);
+    // A prescribing clinic set up under Services has no linked prescriber
+    // account — it is the clinic's own prescribing day. Those treatments must
+    // still be returned so booking is restricted to the configured visit days.
+    const list = (ts ?? []).filter(
+      (t) => t.requires_prescriber && (t.prescriber_user_id || t.prescriber_routing === "clinic_visit"),
+    );
     if (list.length === 0) return [];
-    const prescriberIds = Array.from(new Set(list.map((t) => t.prescriber_user_id as string)));
-    const [{ data: codes }, { data: prof }] = await Promise.all([
-      supabaseAdmin.from("hub_codes").select("user_id, display_name").in("user_id", prescriberIds),
-      supabaseAdmin.from("prescriber_profiles").select("user_id, full_name, regulatory_body").in("user_id", prescriberIds),
-    ]);
+    const prescriberIds = Array.from(
+      new Set(list.map((t) => t.prescriber_user_id).filter(Boolean) as string[]),
+    );
+    const [{ data: codes }, { data: prof }] = prescriberIds.length
+      ? await Promise.all([
+          supabaseAdmin.from("hub_codes").select("user_id, display_name").in("user_id", prescriberIds),
+          supabaseAdmin.from("prescriber_profiles").select("user_id, full_name, regulatory_body").in("user_id", prescriberIds),
+        ])
+      : [{ data: [] as { user_id: string; display_name: string }[] }, { data: [] as { user_id: string; full_name: string; regulatory_body: string | null }[] }];
     const cmap = new Map((codes ?? []).map((c) => [c.user_id, c]));
     const pmap = new Map((prof ?? []).map((p) => [p.user_id, p]));
     // Try to resolve a public booking slug for the prescriber (only if they also have a practitioner profile)
-    const { data: profSlugs } = await supabaseAdmin
-      .from("profiles")
-      .select("user_id, slug, active")
-      .in("user_id", prescriberIds);
+    const { data: profSlugs } = prescriberIds.length
+      ? await supabaseAdmin
+          .from("profiles")
+          .select("user_id, slug, active")
+          .in("user_id", prescriberIds)
+      : { data: [] as { user_id: string; slug: string; active: boolean }[] };
     const smap = new Map((profSlugs ?? []).filter((p) => p.active).map((p) => [p.user_id, p.slug]));
-    return list.map((t) => ({
-      treatment_id: t.id,
-      treatment_name: t.name,
-      routing: t.prescriber_routing as "same_address" | "clinic_visit" | "in_person_consult",
-      note: t.prescriber_note,
-      prescriber_user_id: t.prescriber_user_id as string,
-      prescriber_name:
-        pmap.get(t.prescriber_user_id as string)?.full_name ??
-        cmap.get(t.prescriber_user_id as string)?.display_name ??
-        "Prescriber",
-      prescriber_regulatory_body: pmap.get(t.prescriber_user_id as string)?.regulatory_body ?? null,
-      prescriber_booking_slug: smap.get(t.prescriber_user_id as string) ?? null,
-    }));
+    return list.map((t) => {
+      const pid = t.prescriber_user_id as string | null;
+      return {
+        treatment_id: t.id,
+        treatment_name: t.name,
+        routing: t.prescriber_routing as "same_address" | "clinic_visit" | "in_person_consult",
+        note: t.prescriber_note,
+        prescriber_user_id: pid,
+        prescriber_name:
+          (pid && (pmap.get(pid)?.full_name ?? cmap.get(pid)?.display_name)) ?? "the prescriber",
+        prescriber_regulatory_body: (pid && pmap.get(pid)?.regulatory_body) ?? null,
+        prescriber_booking_slug: (pid && smap.get(pid)) ?? null,
+      };
+    });
+
   });
 
 // Note: prescriber referrals are now auto-created by the
