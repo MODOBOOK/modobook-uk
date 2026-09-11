@@ -314,7 +314,7 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
 
   const { data: appts, error } = await supabaseAdmin
     .from('appointments')
-    .select('id, patient_name, patient_email, patient_phone, scheduled_date, start_time, manage_token, profile_id, notes, payment_method, payment_status, amount_paid_cents, total_amount, treatments(name), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug, email, notify_new_booking_email, new_booking_email_to)')
+    .select('id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, manage_token, profile_id, notes, payment_method, payment_status, amount_paid_cents, total_amount, treatments(name), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug, email, notify_new_booking_email, new_booking_email_to)')
     .in('id', appointmentIds)
 
   if (error) throw error
@@ -322,32 +322,47 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
   const brandingCache = new Map<string, PractitionerBranding>()
   const results: Array<{ appointmentId: string; ok: boolean; skipped?: string; error?: string }> = []
 
-  for (const raw of appts ?? []) {
-    const a = raw as {
-      id: string
-      patient_name: string | null
-      patient_email: string | null
-      patient_phone: string | null
-      scheduled_date: string
-      start_time: string
-      manage_token: string | null
-      profile_id: string
-      notes?: string | null
-      payment_method?: string | null
-      payment_status?: string | null
-      amount_paid_cents?: number | null
-      total_amount?: number | null
-      treatments?: { name?: string } | null
-      practitioners?: { name?: string } | null
-      locations?: { name?: string; address_line1?: string; city?: string; postcode?: string } | null
-      profiles?: {
-        clinic_name?: string
-        slug?: string
-        email?: string | null
-        notify_new_booking_email?: boolean | null
-        new_booking_email_to?: string | null
-      } | null
-    }
+  type Appt = {
+    id: string
+    patient_name: string | null
+    patient_email: string | null
+    patient_phone: string | null
+    scheduled_date: string
+    start_time: string
+    end_time?: string | null
+    manage_token: string | null
+    profile_id: string
+    notes?: string | null
+    payment_method?: string | null
+    payment_status?: string | null
+    amount_paid_cents?: number | null
+    total_amount?: number | null
+    treatments?: { name?: string } | null
+    practitioners?: { name?: string } | null
+    locations?: { name?: string; address_line1?: string; city?: string; postcode?: string } | null
+    profiles?: {
+      clinic_name?: string
+      slug?: string
+      email?: string | null
+      notify_new_booking_email?: boolean | null
+      new_booking_email_to?: string | null
+    } | null
+  }
+
+  // One booking can span several appointments (multi-service bookings). Group
+  // them so the patient gets a single confirmation listing every service, not
+  // one email per treatment.
+  const groups = new Map<string, Appt[]>()
+  for (const raw of (appts ?? []) as Appt[]) {
+    const key = `${raw.profile_id}|${(raw.patient_email ?? '').toLowerCase()}|${raw.scheduled_date}`
+    const list = groups.get(key)
+    if (list) list.push(raw)
+    else groups.set(key, [raw])
+  }
+
+  for (const group of groups.values()) {
+    group.sort((x, y) => String(x.start_time).localeCompare(String(y.start_time)))
+    const a = group[0]!
 
     let branding = brandingCache.get(a.profile_id)
     if (!branding) {
@@ -360,6 +375,14 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
       : undefined
     const loc = a.locations
 
+    const services = group.map((g) => ({
+      name: g.treatments?.name ?? 'Treatment',
+      price: typeof g.total_amount === 'number' ? `£${Number(g.total_amount).toFixed(2)}` : undefined,
+    }))
+    const totalNumber = group.reduce((sum, g) => sum + Number(g.total_amount ?? 0), 0)
+    const totalPrice = totalNumber > 0 ? `£${totalNumber.toFixed(2)}` : undefined
+    const treatmentSummary = services.map((s) => s.name).join(', ')
+
     // WhatsApp confirmation (per-clinic toggle; no-ops when off / no phone)
     try {
       const { sendWhatsApp, smsMessage, getSmsTimings } = await import('@/lib/whatsapp/send.server')
@@ -367,7 +390,7 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
       const ctx = {
         patientName: a.patient_name,
         clinicName: a.profiles?.clinic_name ?? branding.clinicName,
-        treatmentName: a.treatments?.name,
+        treatmentName: treatmentSummary,
         dateTime: formatBookingDateTime(a.scheduled_date, a.start_time),
         locationName: loc?.name ?? loc?.city ?? undefined,
         locationAddress: loc ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ') : undefined,
@@ -394,7 +417,7 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
     try {
       const alertTo = (a.profiles?.new_booking_email_to || a.profiles?.email || '').trim()
       if (alertTo && a.profiles?.notify_new_booking_email !== false) {
-        const paid = (a.amount_paid_cents ?? 0) / 100
+        const paid = group.reduce((s, g) => s + Number(g.amount_paid_cents ?? 0), 0) / 100
         const paymentSummary = a.payment_method === 'cash' || a.payment_method === 'in_clinic'
           ? 'Paying in clinic'
           : paid > 0
@@ -410,7 +433,7 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
             patientName: a.patient_name ?? 'A patient',
             patientEmail: a.patient_email ?? undefined,
             patientPhone: a.patient_phone ?? undefined,
-            treatmentName: a.treatments?.name ?? 'a treatment',
+            treatmentName: treatmentSummary || 'a treatment',
             practitionerName: a.practitioners?.name,
             locationName: loc?.name ?? loc?.city ?? undefined,
             dateTime: formatBookingDateTime(a.scheduled_date, a.start_time),
@@ -436,7 +459,9 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
         profileId: a.profile_id,
         patientName: (a.patient_name ?? '').split(' ')[0] || 'there',
         clinicName: a.profiles?.clinic_name ?? branding.clinicName,
-        treatmentName: a.treatments?.name ?? 'your treatment',
+        treatmentName: treatmentSummary || 'your treatment',
+        services: services.length > 1 ? services : undefined,
+        totalPrice: services.length > 1 ? totalPrice : undefined,
         practitionerName: a.practitioners?.name,
         locationName: loc?.name ?? loc?.city ?? undefined,
         locationAddress: loc ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ') : undefined,
@@ -447,7 +472,9 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
       },
     })
 
-    results.push({ appointmentId: a.id, ok: res.ok, skipped: res.skipped, error: res.error })
+    for (const g of group) {
+      results.push({ appointmentId: g.id, ok: res.ok, skipped: res.skipped, error: res.error })
+    }
   }
 
   // Also enqueue medical form + consent request emails so patients get direct links
