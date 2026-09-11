@@ -496,6 +496,11 @@ export async function sendBookingFormRequestEmails(
 ) {
   if (appointmentIds.length === 0) return
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+  // Collapse identical forms across the services in one booking first.
+  try {
+    const { dedupeBookingMedicalForms } = await import('@/lib/booking-forms.server')
+    await dedupeBookingMedicalForms(appointmentIds)
+  } catch (e) { console.error('[email] form dedupe failed', e) }
 
   const [{ data: forms }, { data: consents }] = await Promise.all([
     supabaseAdmin
