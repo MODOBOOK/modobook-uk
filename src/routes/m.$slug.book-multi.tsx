@@ -463,6 +463,8 @@ function MultiBookPage() {
 
   const isDateUnavailable = (d: Date) => {
     const iso = toIsoDate(d);
+    // Prescriber clinic days: only those exact dates can be booked.
+    if (visitWindows) return !visitWindows.has(iso);
     const data = monthQuery.data;
     if (!data) return false;
     // Ad-hoc open slots win over a closed day.
