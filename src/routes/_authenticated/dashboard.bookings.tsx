@@ -840,22 +840,27 @@ function BookingsPage() {
                       
                       const tall = height >= 34;
                       const narrow = columns > 2;
+                      const isCheckedOut = !!a.checked_out_at;
                       const color = a.treatments?.color || "#3b82f6";
+                      const cardColor = isCheckedOut ? "#9ca3af" : color;
                       return (
                         <button
                           key={`a-${a.id}`}
                           onClick={() => setSelectedAppt(a)}
-                          className="absolute cursor-pointer overflow-hidden rounded-md border border-foreground/25 px-1 py-px text-left text-[10.5px] leading-[1.15] shadow-sm transition hover:z-30 hover:shadow-md sm:px-1.5"
+                          className={cn(
+                            "absolute cursor-pointer overflow-hidden rounded-md border border-foreground/25 px-1 py-px text-left text-[10.5px] leading-[1.15] shadow-sm transition hover:z-30 hover:shadow-md sm:px-1.5",
+                            isCheckedOut && "opacity-60 line-through decoration-foreground/50"
+                          )}
                           style={{
                             top,
                             height,
                             left: `calc(${leftPct}% + 1px)`,
                             width: `calc(${widthPct}% - 2px)`,
                             zIndex: 5 + index,
-                            backgroundColor: hexToRgba(color, 0.45),
+                            backgroundColor: hexToRgba(cardColor, isCheckedOut ? 0.25 : 0.45),
                             color: "#0f172a",
                           }}
-                          title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"}${practitioners.length > 1 ? ` · ${a.practitioners?.name ?? "Unassigned"}` : ""}${a.locations?.name ? ` · ${a.locations.name}` : ""}`}
+                          title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"}${practitioners.length > 1 ? ` · ${a.practitioners?.name ?? "Unassigned"}` : ""}${a.locations?.name ? ` · ${a.locations.name}` : ""}${isCheckedOut ? " · Checked out" : ""}`}
                         >
                           {tall ? (
                             <>
