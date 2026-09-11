@@ -196,26 +196,22 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
 
     const confirmedAppointmentIds: string[] = [];
     for (const apptId of ids) {
-      const { data: cur } = await supabaseAdmin
-        .from("appointments")
-        .select("amount_paid_cents, payment_status")
-        .eq("id", apptId)
-        .maybeSingle();
-      const already = cur as { amount_paid_cents?: number; payment_status?: string } | null;
       const patch: Record<string, unknown> = {
         status: "confirmed",
         payment_hold_expires_at: null,
         payment_status: "paid",
-        stripe_payment_intent_id: pi.id,
       };
       if (kind === "deposit") patch.deposit_paid_at = new Date().toISOString();
       else {
         patch.payment_method = "stripe_link";
         patch.checkout_completed_at = new Date().toISOString();
       }
-      if (already?.payment_status !== "paid") {
-        patch.amount_paid_cents = Number(already?.amount_paid_cents ?? 0) + perAppt;
-      }
+      // Atomic + idempotent: the same payment can only ever be counted once.
+      await supabaseAdmin.rpc("record_appointment_payment", {
+        p_appointment_id: apptId,
+        p_payment_intent: pi.id,
+        p_amount_cents: perAppt,
+      });
       const { error } = await supabaseAdmin
         .from("appointments")
         .update(patch as never)
