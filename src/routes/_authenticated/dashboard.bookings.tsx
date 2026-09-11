@@ -1886,7 +1886,18 @@ function CheckoutSheet({
 
       {/* Checkout */}
       <div className="rounded-lg border bg-card p-3 space-y-3">
-        <div className="flex items-center gap-2 font-semibold"><Percent className="h-4 w-4" /> Checkout</div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 font-semibold"><Percent className="h-4 w-4" /> Checkout</div>
+          {a.checked_out_at ? (
+            <Button size="sm" variant="outline" disabled={busy} onClick={doUndoCheckOut}>
+              <Undo2 className="h-4 w-4 mr-1" /> Undo checkout
+            </Button>
+          ) : (
+            <Button size="sm" disabled={busy || cancelled || isNoShow} onClick={doCheckOut}>
+              <CircleCheck className="h-4 w-4 mr-1" /> Check out
+            </Button>
+          )}
+        </div>
         <div className="grid grid-cols-[1fr_auto] gap-2">
           <div>
             <Label className="text-xs">Discount</Label>
