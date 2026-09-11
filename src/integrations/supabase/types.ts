@@ -682,6 +682,7 @@ export type Database = {
           card_capture_agreed_at: string | null
           card_capture_policy_text: string | null
           card_captured_at: string | null
+          checked_out_at: string | null
           checkout_completed_at: string | null
           checkout_discount_cents: number | null
           checkout_method: string | null
@@ -740,6 +741,7 @@ export type Database = {
           card_capture_agreed_at?: string | null
           card_capture_policy_text?: string | null
           card_captured_at?: string | null
+          checked_out_at?: string | null
           checkout_completed_at?: string | null
           checkout_discount_cents?: number | null
           checkout_method?: string | null
@@ -798,6 +800,7 @@ export type Database = {
           card_capture_agreed_at?: string | null
           card_capture_policy_text?: string | null
           card_captured_at?: string | null
+          checked_out_at?: string | null
           checkout_completed_at?: string | null
           checkout_discount_cents?: number | null
           checkout_method?: string | null
