@@ -1804,8 +1804,13 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
 
     // The DB trigger create_appointment_medical_forms generated rows on insert;
     // return their tokens so the confirmation page can link the patient straight
-    // into completing them.
+    // into completing them. Identical forms across the services in this booking
+    // are collapsed to one so the patient only fills it in once.
     const apptIds = created.map((c) => c.id);
+    try {
+      const { dedupeBookingMedicalForms } = await import("./booking-forms.server");
+      await dedupeBookingMedicalForms(apptIds);
+    } catch (e) { console.error("[requestMultiBooking] form dedupe failed", e); }
     const medicalForms: { token: string; appointment_id: string; template_name: string | null }[] = [];
     if (apptIds.length > 0) {
       const { data: forms } = await supabaseAdmin
