@@ -1135,7 +1135,7 @@ function MultiBookPage() {
                   <Label className="mb-2 block text-sm font-semibold">Available start times (needs {totalDuration} min)</Label>
                   {dayQuery.isLoading ? (
                     <p className="mt-2 text-sm text-muted-foreground">Loading…</p>
-                  ) : dayQuery.data?.isBlocked ? (
+                  ) : dayQuery.data?.isBlocked && !visitWindows?.has(date) ? (
                     <p className="mt-2 text-sm text-muted-foreground">This date is unavailable.</p>
                   ) : slots.length === 0 ? (
                     <p className="mt-2 text-sm text-muted-foreground">No slots available. Try another date.</p>
