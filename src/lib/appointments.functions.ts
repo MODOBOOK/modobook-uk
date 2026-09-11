@@ -516,6 +516,8 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
             patientName: (appt.patient_name ?? "").split(" ")[0] || "there",
             clinicName: branding.clinicName,
             dateTime: formatBookingDateTime(data.date, startHM),
+            locationName: locRow?.name,
+            locationAddress: locRow ? [locRow.address_line1, locRow.city, locRow.postcode].filter(Boolean).join(', ') : undefined,
             logoUrl: branding.logoUrl,
             brandColor: branding.brandColor,
             rescheduled: true,
