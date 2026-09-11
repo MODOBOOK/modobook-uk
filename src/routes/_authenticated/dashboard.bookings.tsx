@@ -1919,8 +1919,42 @@ function CheckoutSheet({
           </div>
         </div>
         <div>
-          <Label className="text-xs">Notes (internal)</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Notes (internal)</Label>
+            <Button size="sm" variant="outline" disabled={busy} onClick={saveCheckoutNotes}>Save notes</Button>
+          </div>
           <Textarea rows={2} value={checkoutNotes} onChange={(e) => setCheckoutNotes(e.target.value)} placeholder="Notes for your records" />
+        </div>
+
+        {/* Record a payment already taken (e.g. a deposit) so it comes off the balance */}
+        <div className="rounded-md border p-2.5 space-y-2">
+          <Label className="text-xs">Deposit / payment already taken</Label>
+          <div className="flex gap-2">
+            <Input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              value={depositAmount}
+              onChange={(e) => setDepositAmount(e.target.value)}
+              placeholder="0.00"
+            />
+            <select
+              className="rounded-md border bg-background px-2 text-sm"
+              value={depositMethod}
+              onChange={(e) => setDepositMethod(e.target.value as typeof depositMethod)}
+            >
+              <option value="cash">Cash</option>
+              <option value="card_in_person">Card</option>
+              <option value="bank_transfer">Bank</option>
+              <option value="other">Other</option>
+            </select>
+            <Button size="sm" disabled={busy} onClick={recordDeposit}>Add</Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            {a.deposit_paid_at ? "A deposit is already recorded on this booking. " : ""}
+            Deducted from the outstanding balance below.
+          </p>
         </div>
         <div className="border-t pt-2 text-sm">
           <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span>£{subtotal.toFixed(2)}</span></div>
