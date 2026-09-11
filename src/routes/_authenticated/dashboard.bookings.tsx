@@ -88,6 +88,8 @@ type Appt = {
   amount_paid_cents: number | null;
   amount_refunded_cents: number | null;
   checkout_discount_cents?: number | null;
+  checkout_notes?: string | null;
+  deposit_paid_at?: string | null;
   stripe_payment_intent_id: string | null;
   card_capture_agreed_at?: string | null;
   card_captured_at?: string | null;
