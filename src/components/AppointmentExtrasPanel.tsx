@@ -12,10 +12,20 @@ import {
   updateAppointmentExtra,
   removeAppointmentExtra,
   setAppointmentBasePrice,
+  setAppointmentDuration,
   listTreatmentsForExtras,
 } from "@/lib/appointment-extras.functions";
 
 type Extra = { id: string; treatment_id: string | null; name: string; unit_price: number; quantity: number };
+
+function toMin(t: string) {
+  const [h, m] = t.split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+function fromMin(n: number) {
+  const c = Math.max(0, n);
+  return `${String(Math.floor(c / 60) % 24).padStart(2, "0")}:${String(c % 60).padStart(2, "0")}`;
+}
 
 /**
  * Added on the day: the client comes in for one thing and has something else
@@ -27,11 +37,13 @@ export function AppointmentExtrasPanel({
   bookedName,
   disabled,
   onTotalChange,
+  onEndTimeChange,
 }: {
   appointmentId: string;
   bookedName: string;
   disabled?: boolean;
   onTotalChange: (total: number) => void;
+  onEndTimeChange?: (endTime: string) => void;
 }) {
   const load = useServerFn(listAppointmentExtras);
   const loadTreatments = useServerFn(listTreatmentsForExtras);
@@ -39,15 +51,21 @@ export function AppointmentExtrasPanel({
   const patch = useServerFn(updateAppointmentExtra);
   const remove = useServerFn(removeAppointmentExtra);
   const setBase = useServerFn(setAppointmentBasePrice);
+  const setDuration = useServerFn(setAppointmentDuration);
 
   const [extras, setExtras] = useState<Extra[]>([]);
-  const [treatments, setTreatments] = useState<{ id: string; name: string; price: number | null }[]>([]);
+  const [treatments, setTreatments] = useState<{ id: string; name: string; price: number | null; duration: number | null }[]>([]);
   const [basePrice, setBasePrice] = useState("");
   const [pick, setPick] = useState<string>("");
   const [customName, setCustomName] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [savedMins, setSavedMins] = useState(0);
+  const [mins, setMins] = useState("");
+  const [suggestExtra, setSuggestExtra] = useState<{ name: string; minutes: number } | null>(null);
 
   useEffect(() => {
     let off = false;
@@ -56,6 +74,10 @@ export function AppointmentExtrasPanel({
         if (off) return;
         setExtras(r.extras as Extra[]);
         setBasePrice(Number(r.baseAmount ?? 0).toFixed(2));
+        setStartTime(r.startTime ?? "");
+        setEndTime(r.endTime ?? "");
+        setSavedMins(Number(r.durationMinutes ?? 0));
+        setMins(String(r.durationMinutes ?? 0));
       })
       .catch(() => {});
     loadTreatments({})
@@ -85,6 +107,24 @@ export function AppointmentExtrasPanel({
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
 
+  /** Save a new visit length — always an explicit confirm, never automatic. */
+  async function saveDuration(minutes: number) {
+    setBusy(true);
+    try {
+      const r = await setDuration({ data: { appointmentId, durationMinutes: minutes } });
+      setSavedMins(r.durationMinutes);
+      setMins(String(r.durationMinutes));
+      setEndTime(r.endTime);
+      setSuggestExtra(null);
+      onEndTimeChange?.(r.endTime);
+      toast.success(
+        r.clashesWith
+          ? `Now ends ${r.endTime} — heads up, this overlaps ${r.clashesWith}`
+          : `Appointment now ends at ${r.endTime}`,
+      );
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+
   async function addExtra() {
     const chosen = treatments.find((t) => t.id === pick);
     const name = chosen?.name ?? customName.trim();
@@ -96,6 +136,8 @@ export function AppointmentExtrasPanel({
         data: { appointmentId, treatmentId: chosen?.id ?? null, name, unitPrice: price, quantity: 1 },
       });
       applyTotals(r);
+      const extraMins = Number(chosen?.duration ?? 0);
+      if (extraMins > 0) setSuggestExtra({ name, minutes: extraMins });
       setPick(""); setCustomName(""); setNewPrice(""); setAdding(false);
       await refresh();
       toast.success("Treatment added");
