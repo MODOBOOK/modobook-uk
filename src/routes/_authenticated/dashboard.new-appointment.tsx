@@ -615,6 +615,19 @@ function NewAppointmentPage() {
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
+          {practitioners.length > 1 && (
+            <div>
+              <Label>Who is the client seeing? *</Label>
+              <Select value={practitionerId} onValueChange={setPractitionerId}>
+                <SelectTrigger><SelectValue placeholder="Select team member" /></SelectTrigger>
+                <SelectContent>
+                  {practitioners.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           {locations.length > 0 && (
             <div>
               <Label>Location</Label>
