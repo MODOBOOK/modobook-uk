@@ -25,11 +25,13 @@ export const Route = createFileRoute("/api/public/hooks/aftercare-dispatch")({
           },
         });
 
-        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+        const cutoff = new Date(Date.now() - 2 * 60 * 60 * 1000);
+        const cutoffDate = cutoff.toISOString().slice(0, 10);
+        const cutoffTime = cutoff.toISOString().slice(11, 19);
         const { data: appts, error } = await supabase
           .from("appointments")
           .select("id, patient_name, patient_email, patient_phone, aftercare_html, aftercare_sent_at, checked_out_at, scheduled_date, start_time, end_time, profile_id, status")
-          .lte("end_time", twoHoursAgo)
+          .or(`scheduled_date.lt.${cutoffDate},and(scheduled_date.eq.${cutoffDate},end_time.lte.${cutoffTime})`)
           .not("aftercare_html", "is", null)
           .is("aftercare_sent_at", null)
           .is("checked_out_at", null)
