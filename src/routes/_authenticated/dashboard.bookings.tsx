@@ -1618,6 +1618,24 @@ function CheckoutSheet({
     catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
 
+  async function doCheckOut() {
+    setBusy(true);
+    try {
+      const res = await checkOut({ data: { id: a.id } });
+      onPatch({ checked_out_at: new Date().toISOString() });
+      toast.success((res as { aftercareSent?: boolean }).aftercareSent ? "Checked out — aftercare sent" : "Checked out");
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+
+  async function doUndoCheckOut() {
+    setBusy(true);
+    try {
+      await undoCheckOut({ data: { id: a.id } });
+      onPatch({ checked_out_at: undefined });
+      toast.success("Checkout undone");
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+
   async function markPaidWith(method: "card_present" | "cash" | "bank_transfer") {
     setBusy(true);
     try {
