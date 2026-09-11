@@ -300,6 +300,89 @@ export const updateAppointmentAftercareAndAllergy = createServerFn({ method: "PO
     return { ok: true };
   });
 
+async function dispatchAftercareForAppointment(
+  supabase: any,
+  profileId: string,
+  appt: {
+    id: string;
+    patient_name?: string | null;
+    patient_email?: string | null;
+    patient_phone?: string | null;
+    aftercare_html?: string | null;
+    scheduled_date?: string | null;
+    start_time?: string | null;
+  },
+) {
+  if (!appt.aftercare_html || !appt.patient_email) return { sent: false };
+  const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
+  const branding = await getPractitionerBranding(profileId);
+  const firstName = (appt.patient_name ?? "").split(" ")[0] || "there";
+  await tryEnqueueAppEmail({
+    templateName: "patient-message",
+    recipientEmail: appt.patient_email,
+    messageId: `aftercare-${appt.id}`,
+    templateData: {
+      profileId,
+      patientName: appt.patient_name,
+      clinicName: branding.clinicName,
+      subject: `Aftercare instructions from ${branding.clinicName}`,
+      body: `Hi ${firstName},\n\nThank you for visiting ${branding.clinicName}.\n\n${appt.aftercare_html}\n\nIf you have any questions, please contact your practitioner.`,
+      logoUrl: branding.logoUrl,
+      brandColor: branding.brandColor,
+    },
+  });
+  return { sent: true };
+}
+
+export const checkOutAppointment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    if (!profileId) throw new Error("Profile not found");
+
+    const { data: appt, error: fetchErr } = await supabase
+      .from("appointments")
+      .select("id, patient_name, patient_email, patient_phone, aftercare_html, aftercare_sent_at, scheduled_date, start_time, status")
+      .eq("id", data.id)
+      .eq("profile_id", profileId)
+      .maybeSingle();
+    if (fetchErr) throw fetchErr;
+    if (!appt) throw new Error("Appointment not found");
+
+    const now = new Date().toISOString();
+    const patch: Record<string, unknown> = { checked_out_at: now };
+    if (appt.aftercare_html && !appt.aftercare_sent_at) {
+      await dispatchAftercareForAppointment(supabase, profileId, appt);
+      patch.aftercare_sent_at = now;
+    }
+
+    const { error } = await supabase
+      .from("appointments")
+      .update(patch as never)
+      .eq("id", data.id)
+      .eq("profile_id", profileId);
+    if (error) throw error;
+    return { ok: true, aftercareSent: !!patch.aftercare_sent_at };
+  });
+
+export const undoCheckoutAppointment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { error } = await supabase
+      .from("appointments")
+      .update({ checked_out_at: null } as never)
+      .eq("id", data.id)
+      .eq("profile_id", profileId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 
 
 
