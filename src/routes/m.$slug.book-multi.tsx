@@ -555,7 +555,7 @@ function MultiBookPage() {
     }
     return out2;
 
-  }, [dayQuery.data, dayRules, totalDuration, locationId, minNoticeHours, date, smartTimes]);
+  }, [dayQuery.data, dayRules, totalDuration, locationId, minNoticeHours, date, smartTimes, visitWindows]);
 
   async function submit() {
     if (submitLockRef.current) return;
