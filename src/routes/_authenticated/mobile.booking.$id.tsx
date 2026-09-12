@@ -49,6 +49,10 @@ function MobileBookingDetail() {
     );
   }
 
+  const totalPence = Math.round(Number(appt.total_amount ?? 0) * 100);
+  const paidPence = Number(appt.amount_paid_cents ?? 0);
+  const refundedPence = Number(appt.amount_refunded_cents ?? 0);
+
   const date = new Date(`${appt.scheduled_date}T00:00:00`).toLocaleDateString("en-GB", {
     weekday: "long",
     day: "numeric",
