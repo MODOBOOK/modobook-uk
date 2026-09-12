@@ -27,6 +27,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       .select("*")
       .eq("profile_id", profile.id)
       .eq("active", true)
+      .eq("hidden_from_menu", false)
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
     if (treatmentError) throw treatmentError;

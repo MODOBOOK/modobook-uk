@@ -95,6 +95,73 @@ async function sanitizeTreatments(
   return { treatment_ids: kept, treatment_id: kept[0] ?? null };
 }
 
+/**
+ * Packages made only of free-typed items have no real service behind them, so
+ * the calendar has nothing to schedule and the public page falls back to
+ * "Contact to book". Create (or reuse) a hidden service that represents the
+ * package itself so it can be booked online. The service never shows on the
+ * public menu.
+ */
+async function ensurePackageService(
+  supabase: any,
+  profileId: string,
+  packageId: string,
+  data: PackageInput,
+): Promise<void> {
+  const customs = (data.custom_items ?? []).map((s) => s.trim()).filter(Boolean);
+  if (customs.length === 0) return;
+
+  const { data: pkg } = await supabase
+    .from("packages")
+    .select("treatment_id")
+    .eq("id", packageId)
+    .eq("profile_id", profileId)
+    .maybeSingle();
+
+  const duration = data.duration_minutes && data.duration_minutes > 0 ? data.duration_minutes : 60;
+  const existingId = (pkg as { treatment_id: string | null } | null)?.treatment_id ?? null;
+
+  if (existingId) {
+    const { data: existing } = await supabase
+      .from("treatments")
+      .select("id, hidden_from_menu")
+      .eq("id", existingId)
+      .eq("profile_id", profileId)
+      .maybeSingle();
+    if (existing?.hidden_from_menu) {
+      await supabase
+        .from("treatments")
+        .update({ name: data.name, duration, active: true })
+        .eq("id", existing.id);
+      return;
+    }
+    // A real service is already attached — nothing to do.
+    return;
+  }
+
+  const { data: created, error } = await supabase
+    .from("treatments")
+    .insert({
+      profile_id: profileId,
+      name: data.name,
+      description: data.description,
+      duration,
+      price: 0,
+      active: true,
+      hidden_from_menu: true,
+      category_id: null,
+    })
+    .select("id")
+    .single();
+  if (error || !created) return;
+
+  await supabase
+    .from("packages")
+    .update({ treatment_id: created.id, treatment_ids: [created.id] })
+    .eq("id", packageId)
+    .eq("profile_id", profileId);
+}
+
 export const listMyPackages = createServerFn({ method: "GET" })
 
   .middleware([requireSupabaseAuth])
@@ -120,7 +187,7 @@ export const createPackage = createServerFn({ method: "POST" })
       .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).single();
     if (!profile) throw new Error("No profile");
     const clean = await sanitizeTreatments(supabase, profile.id, data.treatment_ids);
-    const { error } = await supabase.from("packages").insert({
+    const { data: inserted, error } = await supabase.from("packages").insert({
       profile_id: profile.id,
       name: data.name,
       description: data.description,
@@ -137,9 +204,12 @@ export const createPackage = createServerFn({ method: "POST" })
       category_id: data.category_id,
       allow_split_payment: data.allow_split_payment ?? false,
       ...limitedFields(data),
-    });
+    }).select("id").single();
 
     if (error) throw new Error(error.message);
+    if (inserted?.id && clean.treatment_ids.length === 0) {
+      await ensurePackageService(supabase, profile.id, inserted.id, data);
+    }
     return { ok: true };
   });
 
@@ -152,11 +222,24 @@ export const updatePackage = createServerFn({ method: "POST" })
       .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).single();
     if (!profile) throw new Error("No profile");
     const clean = await sanitizeTreatments(supabase, profile.id, data.treatment_ids);
+    // Keep the hidden "package service" attached when the package is made up of
+    // free-typed items only, otherwise saving would unlink it every time.
+    let keepId: string | null = null;
+    if (clean.treatment_ids.length === 0) {
+      const { data: current } = await supabase
+        .from("packages").select("treatment_id").eq("id", data.id).eq("profile_id", profile.id).maybeSingle();
+      const currentId = (current as { treatment_id: string | null } | null)?.treatment_id ?? null;
+      if (currentId) {
+        const { data: t } = await supabase
+          .from("treatments").select("id, hidden_from_menu").eq("id", currentId).eq("profile_id", profile.id).maybeSingle();
+        if (t?.hidden_from_menu) keepId = t.id;
+      }
+    }
     const { error } = await supabase.from("packages").update({
       name: data.name,
       description: data.description,
-      treatment_id: clean.treatment_id,
-      treatment_ids: clean.treatment_ids,
+      treatment_id: keepId ?? clean.treatment_id,
+      treatment_ids: keepId ? [keepId] : clean.treatment_ids,
       custom_items: (data.custom_items ?? []).map((s) => s.trim()).filter(Boolean),
       session_count: data.session_count,
       price: data.price,
@@ -171,6 +254,9 @@ export const updatePackage = createServerFn({ method: "POST" })
     }).eq("id", data.id);
 
     if (error) throw new Error(error.message);
+    if (clean.treatment_ids.length === 0) {
+      await ensurePackageService(supabase, profile.id, data.id, data);
+    }
     return { ok: true };
   });
 
