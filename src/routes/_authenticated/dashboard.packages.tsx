@@ -36,6 +36,7 @@ type Pkg = {
   description: string | null;
   treatment_id: string | null;
   treatment_ids: string[] | null;
+  custom_items?: string[] | null;
   session_count: number;
   price: number;
   compare_at_price?: number | null;
