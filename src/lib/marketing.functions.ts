@@ -641,15 +641,8 @@ async function collectBulkOptInCandidates(supabase: any, ownerId: string) {
   const withEmail = pending.filter((r) => !!r.email && r.email.includes('@'))
 
   // Existing customer relationship: must have at least one appointment.
-  const ids = withEmail.map((r) => r.id)
-  const bookedIds = new Set<string>()
-  for (let i = 0; i < ids.length; i += 500) {
-    const chunk = ids.slice(i, i + 500)
-    if (!chunk.length) continue
-    const { data: appts } = await supabase.from('appointments').select('client_id').in('client_id', chunk).limit(20000)
-    for (const a of (appts || []) as any[]) if (a.client_id) bookedIds.add(a.client_id as string)
-  }
-  const customers = withEmail.filter((r) => bookedIds.has(r.id))
+  const bookedByClient = await appointmentsByClient(supabase, ownerId, withEmail)
+  const customers = withEmail.filter((r) => (bookedByClient.get(r.id) || []).length > 0)
   const noAppointment = withEmail.length - customers.length
 
   // Exclude suppressed / previously unsubscribed emails.
