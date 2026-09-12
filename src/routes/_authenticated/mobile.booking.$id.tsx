@@ -11,6 +11,10 @@ export const Route = createFileRoute("/_authenticated/mobile/booking/$id")({
   component: MobileBookingDetail,
 });
 
+function gbp(pence: number) {
+  return `£${(pence / 100).toFixed(2)}`;
+}
+
 function Row({ icon: Icon, children }: { icon: any; children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-3 py-3">
