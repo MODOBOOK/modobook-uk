@@ -6,7 +6,10 @@ import type { Block } from '@/lib/email-templates/marketing-broadcast'
 
 const RECIPIENT_LIMIT = 2000
 // Max marketing emails enqueued per dispatch run; the cron resumes the rest.
-const CAMPAIGN_BATCH_SIZE = 60
+// Keep bulk campaigns behind time-sensitive booking and medical-form emails.
+// Ten messages per five-minute dispatch prevents a campaign from monopolising
+// the transactional queue or triggering the provider's burst limit.
+const CAMPAIGN_BATCH_SIZE = 10
 const COOLDOWN_HOURS = 6
 
 // ---------- schemas ----------
