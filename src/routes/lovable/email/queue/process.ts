@@ -331,6 +331,13 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                 return Response.json({ processed: totalProcessed, stopped: 'rate_limited' })
               }
 
+              // Bad recipient address: permanent for this message. Drop it now
+              // instead of retrying five times and burning the rate limit.
+              if (isPermanentMessageError(error)) {
+                await moveToDlq(supabase, queue, msg, errorMsg.slice(0, 1000))
+                continue
+              }
+
               // 403s are permanent configuration or authorization failures for this
               // message, so move straight to DLQ and stop processing the rest of the batch.
               if (isForbidden(error)) {
