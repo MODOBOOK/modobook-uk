@@ -10318,6 +10318,7 @@ export type Database = {
         }
         Returns: Json
       }
+      retry_dlq_emails: { Args: never; Returns: number }
       save_walk_in_medical_form_response: {
         Args: { p_form_id: string; p_referral_id: string; p_response: Json }
         Returns: boolean

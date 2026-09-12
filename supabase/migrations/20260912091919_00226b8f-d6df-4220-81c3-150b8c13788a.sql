@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.retry_dlq_emails() FROM PUBLIC, anon, authenticated;
