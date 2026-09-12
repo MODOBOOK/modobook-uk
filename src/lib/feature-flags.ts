@@ -117,6 +117,13 @@ export function coursePickerEnabled(slug?: string | null) {
   return isFeatureLive(COURSE_PICKER_SLUGS, slug);
 }
 
+/** Free-typed "also included" lines on packages (pilot clinic only). */
+export const CUSTOM_PACKAGE_ITEM_SLUGS = ["aestheticsbynurseryan"];
+
+export function customPackageItemsEnabled(slug?: string | null) {
+  return isFeatureLive(CUSTOM_PACKAGE_ITEM_SLUGS, slug);
+}
+
 /**
  * Live design studio (split-screen booking-page editor with draft/publish).
  * Trialling with the two pilot clinics before opening to everyone.
