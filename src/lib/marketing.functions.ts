@@ -133,18 +133,7 @@ async function resolveSegmentRecipients(
     rules.last_visit_within_days || rules.no_visit_within_days || rules.has_upcoming !== undefined ||
     (rules.treatment_ids && rules.treatment_ids.length) || (rules.location_ids && rules.location_ids.length)
   if (needsAppointmentFilter && list.length) {
-    const ids = list.map((c) => c.id)
-    let apptQ = supabase.from('appointments')
-      .select('client_id, appointment_date, treatment_id, location_id')
-      .eq('practitioner_id', practitionerId)
-      .in('client_id', ids)
-    const { data: appts } = await apptQ
-    const byClient = new Map<string, Array<{ date: string; treatment_id: string | null; location_id: string | null }>>()
-    for (const a of (appts || []) as any[]) {
-      const arr = byClient.get(a.client_id) || []
-      arr.push({ date: a.appointment_date, treatment_id: a.treatment_id, location_id: a.location_id })
-      byClient.set(a.client_id, arr)
-    }
+    const byClient = await appointmentsByClient(supabase, practitionerId, list)
     const today = new Date().toISOString().slice(0, 10)
     list = list.filter((c) => {
       const rows = byClient.get(c.id) || []
