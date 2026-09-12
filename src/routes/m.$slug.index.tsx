@@ -2388,7 +2388,7 @@ function BookPage() {
                             <div className="font-semibold" style={{ color: brand }}>{p.name}</div>
                             {pkg.description && (
                               <div className="mt-1">
-                                <p className={`text-sm opacity-70 ${expandedPkgIds.has(p.id) ? "" : "line-clamp-3"}`}>
+                                <p className={`whitespace-pre-line text-sm opacity-70 ${expandedPkgIds.has(p.id) ? "" : "line-clamp-3"}`}>
                                   {pkg.description}
                                 </p>
                                 {pkg.description.length > 120 && (
