@@ -425,6 +425,71 @@ function PackagesPage() {
                 )}
               </div>
 
+              {allowCustomItems && (
+                <div>
+                  <Label>Other included items (typed by you)</Label>
+                  <div className="mt-1 flex gap-2">
+                    <Input
+                      value={customDraft}
+                      onChange={(e) => setCustomDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const v = customDraft.trim();
+                          if (!v) return;
+                          setForm((f) => ({ ...f, custom_items: [...f.custom_items, v] }));
+                          setCustomDraft("");
+                        }
+                      }}
+                      placeholder="e.g. Bridal trial makeup"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        const v = customDraft.trim();
+                        if (!v) return;
+                        setForm((f) => ({ ...f, custom_items: [...f.custom_items, v] }));
+                        setCustomDraft("");
+                      }}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                  {form.custom_items.length > 0 && (
+                    <div className="mt-2 space-y-1.5">
+                      {form.custom_items.map((item, i) => (
+                        <div key={`${item}-${i}`} className="flex items-center gap-2 rounded-md border bg-background p-2">
+                          <Input
+                            value={item}
+                            onChange={(e) =>
+                              setForm((f) => ({
+                                ...f,
+                                custom_items: f.custom_items.map((x, ix) => (ix === i ? e.target.value : x)),
+                              }))
+                            }
+                            className="h-8 flex-1"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setForm((f) => ({ ...f, custom_items: f.custom_items.filter((_, ix) => ix !== i) }))}
+                            className="rounded p-1 text-muted-foreground hover:bg-muted"
+                            aria-label={`Remove ${item}`}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                      <p className="text-xs text-muted-foreground">
+                        These show on your booking page as part of what&rsquo;s included. They aren&rsquo;t scheduled or priced separately.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+
+
               <div>
                 <Label>Total sessions</Label>
                 <Input
