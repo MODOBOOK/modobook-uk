@@ -254,6 +254,9 @@ export const updatePackage = createServerFn({ method: "POST" })
     }).eq("id", data.id);
 
     if (error) throw new Error(error.message);
+    if (clean.treatment_ids.length === 0) {
+      await ensurePackageService(supabase, profile.id, data.id, data);
+    }
     return { ok: true };
   });
 
