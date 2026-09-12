@@ -448,16 +448,12 @@ async function dispatchCampaign(campaignId: string, practitionerId: string) {
     // Pre-compute last treatment name per client (for {{last_treatment}} merge tag)
     const lastTreatmentByClient = new Map<string, string>()
     if (capped.length) {
-      const { data: latestAppts } = await supabase.from('appointments')
-        .select('client_id, appointment_date, treatments(name)')
-        .eq('practitioner_id', practitionerId)
-        .in('client_id', capped.map((c) => c.id))
-        .order('appointment_date', { ascending: false })
-      const seen = new Set<string>()
-      for (const a of (latestAppts || []) as any[]) {
-        if (seen.has(a.client_id)) continue
-        seen.add(a.client_id)
-        if (a.treatments?.name) lastTreatmentByClient.set(a.client_id, a.treatments.name)
+      const byClient = await appointmentsByClient(supabase, practitionerId, capped, true)
+      for (const [clientId, rows] of byClient) {
+        const latest = rows
+          .filter((r) => r.treatment_name)
+          .sort((a, b) => (a.date < b.date ? 1 : -1))[0]
+        if (latest?.treatment_name) lastTreatmentByClient.set(clientId, latest.treatment_name)
       }
     }
 
