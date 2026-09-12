@@ -243,30 +243,23 @@ async function resolveSegmentRecipientsInline(supabase: any, practitionerId: str
   const needsAppt = rules.last_visit_within_days || rules.no_visit_within_days || rules.has_upcoming !== undefined ||
     (rules.treatment_ids && rules.treatment_ids.length) || (rules.location_ids && rules.location_ids.length)
   if (needsAppt && list.length) {
-    const ids = list.map((c) => c.id)
-    const { data: appts } = await supabase.from('appointments')
-      .select('client_id, appointment_date, treatment_id, location_id')
-      .eq('practitioner_id', practitionerId).in('client_id', ids)
-    const byClient = new Map<string, any[]>()
-    for (const a of (appts || []) as any[]) {
-      const arr = byClient.get(a.client_id) || []; arr.push(a); byClient.set(a.client_id, arr)
-    }
+    const byClient = await appointmentsByClient(supabase, practitionerId, list)
     const today = new Date().toISOString().slice(0, 10)
     list = list.filter((c) => {
       const rows = byClient.get(c.id) || []
       if (rules.treatment_ids?.length && !rows.some((r) => r.treatment_id && rules.treatment_ids.includes(r.treatment_id))) return false
       if (rules.location_ids?.length && !rows.some((r) => r.location_id && rules.location_ids.includes(r.location_id))) return false
-      if (rules.has_upcoming === true && !rows.some((r) => r.appointment_date >= today)) return false
-      if (rules.has_upcoming === false && rows.some((r) => r.appointment_date >= today)) return false
+      if (rules.has_upcoming === true && !rows.some((r) => r.date >= today)) return false
+      if (rules.has_upcoming === false && rows.some((r) => r.date >= today)) return false
       if (rules.last_visit_within_days) {
         const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - rules.last_visit_within_days)
         const cutStr = cutoff.toISOString().slice(0, 10)
-        if (!rows.some((r) => r.appointment_date >= cutStr && r.appointment_date <= today)) return false
+        if (!rows.some((r) => r.date >= cutStr && r.date <= today)) return false
       }
       if (rules.no_visit_within_days) {
         const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - rules.no_visit_within_days)
         const cutStr = cutoff.toISOString().slice(0, 10)
-        if (rows.some((r) => r.appointment_date >= cutStr && r.appointment_date <= today)) return false
+        if (rows.some((r) => r.date >= cutStr && r.date <= today)) return false
       }
       return true
     })
