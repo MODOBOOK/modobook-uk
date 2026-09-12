@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { describeCancellationRules, type CancellationRule } from "@/lib/policy";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  getRescheduleContextByToken,
+  getRescheduleSlotsByToken,
+  rescheduleByToken,
+} from "@/lib/reschedule.functions";
 import { toast } from "sonner";
 import { Calendar, Clock, MapPin } from "lucide-react";
 import { SafeHtml } from "@/components/SafeHtml";
@@ -40,6 +47,10 @@ function ManagePage() {
   const { token, slug } = useParams({ from: "/m/$slug/manage/$token" });
   const [status, setStatus] = useState(appt.status);
   const [cancelling, setCancelling] = useState(false);
+  const [rescheduling, setRescheduling] = useState(false);
+  const [moved, setMoved] = useState<{ date: string; start: string } | null>(null);
+  const shownDate = moved?.date ?? appt.scheduled_date;
+  const shownStart = moved?.start ?? appt.start_time.slice(0, 5);
 
   async function cancel() {
     if (!confirm("Cancel this appointment? Cancellation charges may apply per the policy below.")) return;
@@ -69,8 +80,8 @@ function ManagePage() {
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <div className="font-semibold text-base">{appt.treatment_name}</div>
-          <div className="flex items-center gap-2"><Calendar className="h-4 w-4" />{new Date(appt.scheduled_date).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</div>
-          <div className="flex items-center gap-2"><Clock className="h-4 w-4" />{appt.start_time.slice(0,5)} – {appt.end_time.slice(0,5)}</div>
+          <div className="flex items-center gap-2"><Calendar className="h-4 w-4" />{new Date(shownDate).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</div>
+          <div className="flex items-center gap-2"><Clock className="h-4 w-4" />{shownStart}</div>
           {appt.location_name && <div className="flex items-center gap-2"><MapPin className="h-4 w-4" />{appt.location_name}</div>}
           <div className="pt-2">
             Status: <span className={`inline-block rounded px-2 py-0.5 text-xs font-semibold ${status === "cancelled" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>{status}</span>
@@ -114,8 +125,23 @@ function ManagePage() {
 
       {status !== "cancelled" && (
         <div className="flex flex-col gap-2">
-          <Button asChild variant="outline">
-            <Link to="/m/$slug" params={{ slug }}>Book a different time</Link>
+          {!rescheduling ? (
+            <Button variant="outline" onClick={() => setRescheduling(true)}>
+              Book a different time
+            </Button>
+          ) : (
+            <ReschedulePanel
+              token={token}
+              currentDate={appt.scheduled_date}
+              onClose={() => setRescheduling(false)}
+              onDone={(d, s) => {
+                setRescheduling(false);
+                setMoved({ date: d, start: s });
+              }}
+            />
+          )}
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/m/$slug" params={{ slug }}>Book another appointment</Link>
           </Button>
           <Button variant="destructive" onClick={cancel} disabled={cancelling}>
             {cancelling ? "Cancelling…" : "Cancel appointment"}
@@ -123,5 +149,88 @@ function ManagePage() {
         </div>
       )}
     </main>
+  );
+}
+
+function ReschedulePanel({
+  token,
+  currentDate,
+  onClose,
+  onDone,
+}: {
+  token: string;
+  currentDate: string;
+  onClose: () => void;
+  onDone: (date: string, start: string) => void;
+}) {
+  const ctxFn = useServerFn(getRescheduleContextByToken);
+  const slotsFn = useServerFn(getRescheduleSlotsByToken);
+  const moveFn = useServerFn(rescheduleByToken);
+
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const [date, setDate] = useState(currentDate > todayIso ? currentDate : todayIso);
+  const [saving, setSaving] = useState(false);
+
+  const ctxQ = useQuery({
+    queryKey: ["reschedule-ctx", token],
+    queryFn: () => ctxFn({ data: { token } }),
+  });
+  const slotsQ = useQuery({
+    queryKey: ["reschedule-slots", token, date],
+    queryFn: () => slotsFn({ data: { token, date } }),
+    enabled: !!ctxQ.data?.allowed,
+  });
+
+  async function pick(time: string) {
+    setSaving(true);
+    try {
+      const r = await moveFn({ data: { token, date, startTime: time } });
+      if (r.ok) {
+        toast.success("Appointment moved");
+        onDone(r.date!, r.startTime!);
+      } else {
+        toast.error(r.error ?? "Could not move the appointment");
+        slotsQ.refetch();
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader><CardTitle className="text-base">Pick a new time</CardTitle></CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        {ctxQ.isLoading ? (
+          <p className="text-muted-foreground">Checking availability…</p>
+        ) : !ctxQ.data?.allowed ? (
+          <p className="text-muted-foreground">{ctxQ.data?.reason ?? "Changes aren't available for this appointment."}</p>
+        ) : (
+          <>
+            <input
+              type="date"
+              value={date}
+              min={todayIso}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full rounded-md border bg-background px-3 py-2"
+            />
+            {slotsQ.isFetching ? (
+              <p className="text-muted-foreground">Loading times…</p>
+            ) : (slotsQ.data?.slots ?? []).length === 0 ? (
+              <p className="text-muted-foreground">No times available on that date. Try another day.</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {(slotsQ.data?.slots ?? []).map((s) => (
+                  <Button key={s} variant="outline" size="sm" disabled={saving} onClick={() => pick(s)}>
+                    {s}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+      </CardContent>
+    </Card>
   );
 }
