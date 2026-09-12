@@ -1824,11 +1824,10 @@ function CheckoutSheet({
         const totalDue = Number(a.total_amount ?? 0);
         const paid = Number(a.amount_paid_cents ?? 0) / 100;
         const discounted = Number(a.checkout_discount_cents ?? 0) / 100;
-        // A settled booking never shows outstanding, and any checkout discount
-        // reduces what's still due.
-        const outstanding = a.payment_status === "paid"
-          ? 0
-          : Math.max(0, totalDue - paid - discounted);
+        // Outstanding is always what's left after money received and any
+        // checkout discount — a deposit marked "paid" still leaves a balance.
+        const outstanding = Math.max(0, totalDue - paid - discounted);
+
         return (
           <div className="flex flex-wrap gap-2">
             <Badge variant={cancelled ? "destructive" : "outline"}>{a.status}</Badge>
