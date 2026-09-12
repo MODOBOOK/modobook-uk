@@ -1,0 +1,1 @@
+ALTER TABLE public.packages ADD COLUMN IF NOT EXISTS custom_items text[] NOT NULL DEFAULT '{}'::text[];

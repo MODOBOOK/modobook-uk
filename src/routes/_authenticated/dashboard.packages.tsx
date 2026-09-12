@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { packagesEnabled } from "@/lib/feature-flags";
+import { packagesEnabled, customPackageItemsEnabled } from "@/lib/feature-flags";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyPackages, createPackage, updatePackage, deletePackage, reorderPackages } from "@/lib/packages.functions";
@@ -36,6 +36,7 @@ type Pkg = {
   description: string | null;
   treatment_id: string | null;
   treatment_ids: string[] | null;
+  custom_items?: string[] | null;
   session_count: number;
   price: number;
   compare_at_price?: number | null;
@@ -81,6 +82,7 @@ const blankForm = {
   name: "",
   description: "",
   treatment_ids: [] as string[],
+  custom_items: [] as string[],
   session_count: 1,
   price: 0,
   compare_at_price: "" as string,
@@ -116,9 +118,12 @@ function PackagesPage() {
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [profileId, setProfileId] = useState<string>("");
+  const [clinicSlug, setClinicSlug] = useState<string>("");
+  const [customDraft, setCustomDraft] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Pkg | null>(null);
   const [form, setForm] = useState(blankForm);
+  const allowCustomItems = customPackageItemsEnabled(clinicSlug);
 
   async function refresh() {
     const [p, t, c, profile] = await Promise.all([list(), listTreatments(), listCategories(), fetchProfile()]);
@@ -126,6 +131,7 @@ function PackagesPage() {
     setTreatments((t as Treatment[]) ?? []);
     setCategories((c as Category[]) ?? []);
     setProfileId((profile as { id?: string } | null)?.id ?? "");
+    setClinicSlug((profile as { slug?: string | null } | null)?.slug ?? "");
   }
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
@@ -154,6 +160,7 @@ function PackagesPage() {
       name: p.name,
       description: p.description ?? "",
       treatment_ids: p.treatment_ids ?? (p.treatment_id ? [p.treatment_id] : []),
+      custom_items: p.custom_items ?? [],
       session_count: p.session_count,
       price: Number(p.price),
       compare_at_price: p.compare_at_price == null ? "" : String(Number(p.compare_at_price)),
@@ -250,6 +257,7 @@ function PackagesPage() {
       description: form.description.trim() || null,
       treatment_id: form.treatment_ids[0] ?? null,
       treatment_ids: form.treatment_ids,
+      custom_items: form.custom_items.map((s) => s.trim()).filter(Boolean),
       session_count: totalSessions,
       price: effectivePrice,
       compare_at_price: form.compare_at_price.trim() === "" ? null : Math.max(0, Number(form.compare_at_price) || 0),
@@ -416,6 +424,71 @@ function PackagesPage() {
                   </>
                 )}
               </div>
+
+              {allowCustomItems && (
+                <div>
+                  <Label>Other included items (typed by you)</Label>
+                  <div className="mt-1 flex gap-2">
+                    <Input
+                      value={customDraft}
+                      onChange={(e) => setCustomDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const v = customDraft.trim();
+                          if (!v) return;
+                          setForm((f) => ({ ...f, custom_items: [...f.custom_items, v] }));
+                          setCustomDraft("");
+                        }
+                      }}
+                      placeholder="e.g. Bridal trial makeup"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        const v = customDraft.trim();
+                        if (!v) return;
+                        setForm((f) => ({ ...f, custom_items: [...f.custom_items, v] }));
+                        setCustomDraft("");
+                      }}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                  {form.custom_items.length > 0 && (
+                    <div className="mt-2 space-y-1.5">
+                      {form.custom_items.map((item, i) => (
+                        <div key={`${item}-${i}`} className="flex items-center gap-2 rounded-md border bg-background p-2">
+                          <Input
+                            value={item}
+                            onChange={(e) =>
+                              setForm((f) => ({
+                                ...f,
+                                custom_items: f.custom_items.map((x, ix) => (ix === i ? e.target.value : x)),
+                              }))
+                            }
+                            className="h-8 flex-1"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setForm((f) => ({ ...f, custom_items: f.custom_items.filter((_, ix) => ix !== i) }))}
+                            className="rounded p-1 text-muted-foreground hover:bg-muted"
+                            aria-label={`Remove ${item}`}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                      <p className="text-xs text-muted-foreground">
+                        These show on your booking page as part of what&rsquo;s included. They aren&rsquo;t scheduled or priced separately.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+
 
               <div>
                 <Label>Total sessions</Label>

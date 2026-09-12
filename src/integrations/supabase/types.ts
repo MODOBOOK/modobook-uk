@@ -4991,6 +4991,7 @@ export type Database = {
           category_id: string | null
           compare_at_price: number | null
           created_at: string
+          custom_items: string[]
           description: string | null
           duration_minutes: number | null
           expiry_days: number | null
@@ -5023,6 +5024,7 @@ export type Database = {
           category_id?: string | null
           compare_at_price?: number | null
           created_at?: string
+          custom_items?: string[]
           description?: string | null
           duration_minutes?: number | null
           expiry_days?: number | null
@@ -5055,6 +5057,7 @@ export type Database = {
           category_id?: string | null
           compare_at_price?: number | null
           created_at?: string
+          custom_items?: string[]
           description?: string | null
           duration_minutes?: number | null
           expiry_days?: number | null

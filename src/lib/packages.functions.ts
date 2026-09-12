@@ -11,6 +11,8 @@ type PackageInput = {
   description: string | null;
   treatment_id: string | null;
   treatment_ids: string[];
+  /** Free-typed extras that aren't set up as treatments in the system. */
+  custom_items?: string[] | null;
   session_count: number;
   price: number;
   compare_at_price: number | null;
@@ -124,6 +126,7 @@ export const createPackage = createServerFn({ method: "POST" })
       description: data.description,
       treatment_id: clean.treatment_id,
       treatment_ids: clean.treatment_ids,
+      custom_items: (data.custom_items ?? []).map((s) => s.trim()).filter(Boolean),
       session_count: data.session_count,
       price: data.price,
       compare_at_price: data.compare_at_price ?? null,
@@ -154,6 +157,7 @@ export const updatePackage = createServerFn({ method: "POST" })
       description: data.description,
       treatment_id: clean.treatment_id,
       treatment_ids: clean.treatment_ids,
+      custom_items: (data.custom_items ?? []).map((s) => s.trim()).filter(Boolean),
       session_count: data.session_count,
       price: data.price,
       compare_at_price: data.compare_at_price ?? null,
