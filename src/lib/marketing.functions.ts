@@ -49,6 +49,54 @@ async function assertOwnCampaign(supabase: any, practitionerId: string, id: stri
   return data
 }
 
+// appointments has no client_id / appointment_date columns: it stores
+// patient_email + scheduled_date. Match clinic clients to their appointments
+// by email (case-insensitive) and normalise the shape used by the filters.
+type ApptRow = { date: string; treatment_id: string | null; location_id: string | null; treatment_name?: string }
+async function appointmentsByClient(
+  supabase: any,
+  profileId: string,
+  clients: Array<{ id: string; email?: string | null }>,
+  withTreatmentName = false,
+): Promise<Map<string, ApptRow[]>> {
+  const byClient = new Map<string, ApptRow[]>()
+  const emailToIds = new Map<string, string[]>()
+  for (const c of clients) {
+    const e = (c.email || '').trim().toLowerCase()
+    if (!e) continue
+    const arr = emailToIds.get(e) || []
+    arr.push(c.id)
+    emailToIds.set(e, arr)
+  }
+  if (!emailToIds.size) return byClient
+
+  const cols = `patient_email, scheduled_date, treatment_id, location_id${withTreatmentName ? ', treatments(name)' : ''}`
+  const { data: appts } = await supabase
+    .from('appointments')
+    .select(cols)
+    .eq('profile_id', profileId)
+    .not('patient_email', 'is', null)
+    .limit(50000)
+
+  for (const a of (appts || []) as any[]) {
+    const e = String(a.patient_email || '').trim().toLowerCase()
+    const ids = emailToIds.get(e)
+    if (!ids) continue
+    const row: ApptRow = {
+      date: a.scheduled_date,
+      treatment_id: a.treatment_id ?? null,
+      location_id: a.location_id ?? null,
+      treatment_name: a.treatments?.name || undefined,
+    }
+    for (const id of ids) {
+      const arr = byClient.get(id) || []
+      arr.push(row)
+      byClient.set(id, arr)
+    }
+  }
+  return byClient
+}
+
 async function resolveSegmentRecipients(
   supabase: any,
   practitionerId: string,
@@ -85,18 +133,7 @@ async function resolveSegmentRecipients(
     rules.last_visit_within_days || rules.no_visit_within_days || rules.has_upcoming !== undefined ||
     (rules.treatment_ids && rules.treatment_ids.length) || (rules.location_ids && rules.location_ids.length)
   if (needsAppointmentFilter && list.length) {
-    const ids = list.map((c) => c.id)
-    let apptQ = supabase.from('appointments')
-      .select('client_id, appointment_date, treatment_id, location_id')
-      .eq('practitioner_id', practitionerId)
-      .in('client_id', ids)
-    const { data: appts } = await apptQ
-    const byClient = new Map<string, Array<{ date: string; treatment_id: string | null; location_id: string | null }>>()
-    for (const a of (appts || []) as any[]) {
-      const arr = byClient.get(a.client_id) || []
-      arr.push({ date: a.appointment_date, treatment_id: a.treatment_id, location_id: a.location_id })
-      byClient.set(a.client_id, arr)
-    }
+    const byClient = await appointmentsByClient(supabase, practitionerId, list)
     const today = new Date().toISOString().slice(0, 10)
     list = list.filter((c) => {
       const rows = byClient.get(c.id) || []
@@ -206,30 +243,23 @@ async function resolveSegmentRecipientsInline(supabase: any, practitionerId: str
   const needsAppt = rules.last_visit_within_days || rules.no_visit_within_days || rules.has_upcoming !== undefined ||
     (rules.treatment_ids && rules.treatment_ids.length) || (rules.location_ids && rules.location_ids.length)
   if (needsAppt && list.length) {
-    const ids = list.map((c) => c.id)
-    const { data: appts } = await supabase.from('appointments')
-      .select('client_id, appointment_date, treatment_id, location_id')
-      .eq('practitioner_id', practitionerId).in('client_id', ids)
-    const byClient = new Map<string, any[]>()
-    for (const a of (appts || []) as any[]) {
-      const arr = byClient.get(a.client_id) || []; arr.push(a); byClient.set(a.client_id, arr)
-    }
+    const byClient = await appointmentsByClient(supabase, practitionerId, list)
     const today = new Date().toISOString().slice(0, 10)
     list = list.filter((c) => {
       const rows = byClient.get(c.id) || []
       if (rules.treatment_ids?.length && !rows.some((r) => r.treatment_id && rules.treatment_ids.includes(r.treatment_id))) return false
       if (rules.location_ids?.length && !rows.some((r) => r.location_id && rules.location_ids.includes(r.location_id))) return false
-      if (rules.has_upcoming === true && !rows.some((r) => r.appointment_date >= today)) return false
-      if (rules.has_upcoming === false && rows.some((r) => r.appointment_date >= today)) return false
+      if (rules.has_upcoming === true && !rows.some((r) => r.date >= today)) return false
+      if (rules.has_upcoming === false && rows.some((r) => r.date >= today)) return false
       if (rules.last_visit_within_days) {
         const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - rules.last_visit_within_days)
         const cutStr = cutoff.toISOString().slice(0, 10)
-        if (!rows.some((r) => r.appointment_date >= cutStr && r.appointment_date <= today)) return false
+        if (!rows.some((r) => r.date >= cutStr && r.date <= today)) return false
       }
       if (rules.no_visit_within_days) {
         const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - rules.no_visit_within_days)
         const cutStr = cutoff.toISOString().slice(0, 10)
-        if (rows.some((r) => r.appointment_date >= cutStr && r.appointment_date <= today)) return false
+        if (rows.some((r) => r.date >= cutStr && r.date <= today)) return false
       }
       return true
     })
@@ -418,16 +448,12 @@ async function dispatchCampaign(campaignId: string, practitionerId: string) {
     // Pre-compute last treatment name per client (for {{last_treatment}} merge tag)
     const lastTreatmentByClient = new Map<string, string>()
     if (capped.length) {
-      const { data: latestAppts } = await supabase.from('appointments')
-        .select('client_id, appointment_date, treatments(name)')
-        .eq('practitioner_id', practitionerId)
-        .in('client_id', capped.map((c) => c.id))
-        .order('appointment_date', { ascending: false })
-      const seen = new Set<string>()
-      for (const a of (latestAppts || []) as any[]) {
-        if (seen.has(a.client_id)) continue
-        seen.add(a.client_id)
-        if (a.treatments?.name) lastTreatmentByClient.set(a.client_id, a.treatments.name)
+      const byClient = await appointmentsByClient(supabase, practitionerId, capped, true)
+      for (const [clientId, rows] of byClient) {
+        const latest = rows
+          .filter((r) => r.treatment_name)
+          .sort((a, b) => (a.date < b.date ? 1 : -1))[0]
+        if (latest?.treatment_name) lastTreatmentByClient.set(clientId, latest.treatment_name)
       }
     }
 
@@ -615,15 +641,8 @@ async function collectBulkOptInCandidates(supabase: any, ownerId: string) {
   const withEmail = pending.filter((r) => !!r.email && r.email.includes('@'))
 
   // Existing customer relationship: must have at least one appointment.
-  const ids = withEmail.map((r) => r.id)
-  const bookedIds = new Set<string>()
-  for (let i = 0; i < ids.length; i += 500) {
-    const chunk = ids.slice(i, i + 500)
-    if (!chunk.length) continue
-    const { data: appts } = await supabase.from('appointments').select('client_id').in('client_id', chunk).limit(20000)
-    for (const a of (appts || []) as any[]) if (a.client_id) bookedIds.add(a.client_id as string)
-  }
-  const customers = withEmail.filter((r) => bookedIds.has(r.id))
+  const bookedByClient = await appointmentsByClient(supabase, ownerId, withEmail)
+  const customers = withEmail.filter((r) => (bookedByClient.get(r.id) || []).length > 0)
   const noAppointment = withEmail.length - customers.length
 
   // Exclude suppressed / previously unsubscribed emails.
@@ -820,18 +839,13 @@ async function resolveAutomationRecipients(supabase: any, automation: any): Prom
   if (automation.type === 'win_back') {
     const days = cfg.no_visit_days || 180
     const cutoff = new Date(Date.now() - days * 86400_000).toISOString().slice(0, 10)
-    const ids = clients.map((c) => c.id)
-    if (!ids.length) return []
-    const { data: appts } = await supabase.from('appointments')
-      .select('client_id, appointment_date').eq('practitioner_id', pid).in('client_id', ids)
-    const lastByClient = new Map<string, string>()
-    for (const a of (appts || []) as any[]) {
-      const prev = lastByClient.get(a.client_id)
-      if (!prev || a.appointment_date > prev) lastByClient.set(a.client_id, a.appointment_date)
-    }
+    if (!clients.length) return []
+    const byClient = await appointmentsByClient(supabase, pid, clients)
     return clients.filter((c) => {
-      const last = lastByClient.get(c.id)
-      return last && last < cutoff
+      const rows = byClient.get(c.id) || []
+      if (!rows.length) return false
+      const last = rows.reduce((m, r) => (r.date > m ? r.date : m), rows[0].date)
+      return last < cutoff
     }).map((c) => mapClient(c, { dedup_key: `winback-${todayStr.slice(0, 7)}-${c.id}` }))
   }
 
@@ -840,21 +854,14 @@ async function resolveAutomationRecipients(supabase: any, automation: any): Prom
     const weeks = cfg.interval_weeks || 8
     if (!treatmentId) return []
     const targetDate = new Date(Date.now() - weeks * 7 * 86400_000).toISOString().slice(0, 10)
-    const ids = clients.map((c) => c.id)
-    if (!ids.length) return []
-    const { data: appts } = await supabase.from('appointments')
-      .select('client_id, appointment_date, treatment_id, treatments(name)')
-      .eq('practitioner_id', pid).eq('treatment_id', treatmentId).in('client_id', ids)
-      .eq('appointment_date', targetDate)
-    const seen = new Set<string>()
+    if (!clients.length) return []
+    const byClient = await appointmentsByClient(supabase, pid, clients, true)
     const out: any[] = []
-    for (const a of (appts || []) as any[]) {
-      if (seen.has(a.client_id)) continue
-      seen.add(a.client_id)
-      const c = clients.find((x) => x.id === a.client_id)
-      if (!c) continue
+    for (const c of clients) {
+      const match = (byClient.get(c.id) || []).find((r) => r.treatment_id === treatmentId && r.date === targetDate)
+      if (!match) continue
       out.push(mapClient(c, {
-        last_treatment: a.treatments?.name || '',
+        last_treatment: match.treatment_name || '',
         dedup_key: `interval-${automation.id}-${targetDate}-${c.id}`,
       }))
     }
