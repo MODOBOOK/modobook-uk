@@ -561,6 +561,8 @@ function ServicesPage() {
       <ServiceDialog
         state={svcDialog}
         categories={picker}
+        allTreatments={treats.data ?? []}
+        onOptionsSaved={() => treats.refetch()}
         onClose={() => setSvcDialog(null)}
         onSubmit={async (values) => {
           try {
