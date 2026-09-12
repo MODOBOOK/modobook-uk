@@ -80,8 +80,8 @@ function ManagePage() {
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
           <div className="font-semibold text-base">{appt.treatment_name}</div>
-          <div className="flex items-center gap-2"><Calendar className="h-4 w-4" />{new Date(appt.scheduled_date).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</div>
-          <div className="flex items-center gap-2"><Clock className="h-4 w-4" />{appt.start_time.slice(0,5)} – {appt.end_time.slice(0,5)}</div>
+          <div className="flex items-center gap-2"><Calendar className="h-4 w-4" />{new Date(shownDate).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</div>
+          <div className="flex items-center gap-2"><Clock className="h-4 w-4" />{shownStart}</div>
           {appt.location_name && <div className="flex items-center gap-2"><MapPin className="h-4 w-4" />{appt.location_name}</div>}
           <div className="pt-2">
             Status: <span className={`inline-block rounded px-2 py-0.5 text-xs font-semibold ${status === "cancelled" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>{status}</span>
