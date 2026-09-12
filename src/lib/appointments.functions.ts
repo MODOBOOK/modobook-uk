@@ -298,12 +298,15 @@ export const markAppointmentPaymentReceived = createServerFn({ method: "POST" })
       payment_method: data.method,
       amount_paid_cents: prevPaid + data.amountCents,
     };
+    const newPaid = prevPaid + data.amountCents;
+    const totalCents = Math.round(Number(appt.total_amount ?? 0) * 100);
     if (data.kind === "deposit") {
       patch.deposit_paid_at = new Date().toISOString();
       if (!appt.deposit_required_cents) patch.deposit_required_cents = data.amountCents;
-    } else {
-      patch.payment_status = "paid";
     }
+    // Only settle the booking once the full amount is covered.
+    if (!totalCents || newPaid >= totalCents) patch.payment_status = "paid";
+
 
     const { error: uErr } = await supabase
       .from("appointments")
