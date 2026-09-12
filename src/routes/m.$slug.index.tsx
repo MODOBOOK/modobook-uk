@@ -1951,7 +1951,7 @@ function BookPage() {
                         return <div className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">Only {c.left} of {c.cap} spots left</div>;
                       })()}
                       {t.description && (
-                        <div className={`text-xs leading-relaxed opacity-70 ${isExpanded ? "" : "line-clamp-1"}`}>
+                        <div className={`whitespace-pre-line text-xs leading-relaxed opacity-70 ${isExpanded ? "" : "line-clamp-1"}`}>
                           {t.description}
                         </div>
                       )}
