@@ -157,6 +157,7 @@ export const updatePackage = createServerFn({ method: "POST" })
       description: data.description,
       treatment_id: clean.treatment_id,
       treatment_ids: clean.treatment_ids,
+      custom_items: (data.custom_items ?? []).map((s) => s.trim()).filter(Boolean),
       session_count: data.session_count,
       price: data.price,
       compare_at_price: data.compare_at_price ?? null,
