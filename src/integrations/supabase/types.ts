@@ -3431,6 +3431,27 @@ export type Database = {
           },
         ]
       }
+      email_hold: {
+        Row: {
+          created_at: string
+          id: number
+          label: string | null
+          payload: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          label?: string | null
+          payload: Json
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          label?: string | null
+          payload?: Json
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -10094,6 +10115,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      hold_bulk_marketing_emails: { Args: never; Returns: number }
       increment_package_claim: {
         Args: { p_package_id: string }
         Returns: undefined
@@ -10290,6 +10312,7 @@ export type Database = {
         Args: { _discount_code_id: string; _referred_profile_id: string }
         Returns: boolean
       }
+      release_held_emails: { Args: never; Returns: number }
       resolve_hub_code: {
         Args: { p_code: string }
         Returns: {
