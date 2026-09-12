@@ -734,8 +734,12 @@ export async function processScheduledCampaigns() {
   const nowIso = new Date().toISOString()
   const { data: due } = await supabaseAdmin.from('marketing_campaigns')
     .select('id, practitioner_id').eq('status', 'scheduled').lte('scheduled_for', nowIso).limit(20)
+  // Resume any campaign still part-way through its paced batches.
+  const { data: inProgress } = await supabaseAdmin.from('marketing_campaigns')
+    .select('id, practitioner_id').eq('status', 'sending').limit(20)
+  const queue = [...((due || []) as any[]), ...((inProgress || []) as any[])]
   const results: any[] = []
-  for (const c of (due || []) as any[]) {
+  for (const c of queue) {
     try { results.push({ id: c.id, ...(await dispatchCampaign(c.id, c.practitioner_id)) }) }
     catch (e) { results.push({ id: c.id, error: e instanceof Error ? e.message : String(e) }) }
   }
