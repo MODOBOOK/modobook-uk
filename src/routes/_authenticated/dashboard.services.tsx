@@ -1792,6 +1792,25 @@ function ServiceDialog({
           </SvcSection>
 
           <SvcSection
+            title="Patient choices (ml, vials, sessions)"
+            hint="Show one row with a pop-up of amounts and prices"
+            open={section === "options"}
+            onToggle={() => setSection(section === "options" ? "" : "options")}
+          >
+            {state?.treat ? (
+              <CourseOptionsEditor
+                treatment={state.treat as unknown as CourseTreatment}
+                allTreatments={allTreatments as unknown as CourseTreatment[]}
+                onSaved={onOptionsSaved}
+              />
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Save this service first, then reopen it to add amounts such as 0.7ml, 1ml or 3 sessions.
+              </p>
+            )}
+          </SvcSection>
+
+          <SvcSection
             title="Pricing & display"
             hint="Price style, badge, discount and picture"
             open={section === "pricing"}
