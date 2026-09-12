@@ -49,6 +49,54 @@ async function assertOwnCampaign(supabase: any, practitionerId: string, id: stri
   return data
 }
 
+// appointments has no client_id / appointment_date columns: it stores
+// patient_email + scheduled_date. Match clinic clients to their appointments
+// by email (case-insensitive) and normalise the shape used by the filters.
+type ApptRow = { date: string; treatment_id: string | null; location_id: string | null; treatment_name?: string }
+async function appointmentsByClient(
+  supabase: any,
+  profileId: string,
+  clients: Array<{ id: string; email?: string | null }>,
+  withTreatmentName = false,
+): Promise<Map<string, ApptRow[]>> {
+  const byClient = new Map<string, ApptRow[]>()
+  const emailToIds = new Map<string, string[]>()
+  for (const c of clients) {
+    const e = (c.email || '').trim().toLowerCase()
+    if (!e) continue
+    const arr = emailToIds.get(e) || []
+    arr.push(c.id)
+    emailToIds.set(e, arr)
+  }
+  if (!emailToIds.size) return byClient
+
+  const cols = `patient_email, scheduled_date, treatment_id, location_id${withTreatmentName ? ', treatments(name)' : ''}`
+  const { data: appts } = await supabase
+    .from('appointments')
+    .select(cols)
+    .eq('profile_id', profileId)
+    .not('patient_email', 'is', null)
+    .limit(50000)
+
+  for (const a of (appts || []) as any[]) {
+    const e = String(a.patient_email || '').trim().toLowerCase()
+    const ids = emailToIds.get(e)
+    if (!ids) continue
+    const row: ApptRow = {
+      date: a.scheduled_date,
+      treatment_id: a.treatment_id ?? null,
+      location_id: a.location_id ?? null,
+      treatment_name: a.treatments?.name || undefined,
+    }
+    for (const id of ids) {
+      const arr = byClient.get(id) || []
+      arr.push(row)
+      byClient.set(id, arr)
+    }
+  }
+  return byClient
+}
+
 async function resolveSegmentRecipients(
   supabase: any,
   practitionerId: string,
