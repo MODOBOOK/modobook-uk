@@ -3,6 +3,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { createCourseTreatmentOption, updateTreatment, renameCourseGroup } from "@/lib/treatments.functions";
 import { courseGroupKeyFor, courseGroupLabel } from "@/lib/course-group-label";
 import {
+  listMyLocations,
+  getTreatmentLocationPricing,
+  setTreatmentLocationPricing,
+} from "@/lib/locations.functions";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
