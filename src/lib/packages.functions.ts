@@ -222,11 +222,24 @@ export const updatePackage = createServerFn({ method: "POST" })
       .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).single();
     if (!profile) throw new Error("No profile");
     const clean = await sanitizeTreatments(supabase, profile.id, data.treatment_ids);
+    // Keep the hidden "package service" attached when the package is made up of
+    // free-typed items only, otherwise saving would unlink it every time.
+    let keepId: string | null = null;
+    if (clean.treatment_ids.length === 0) {
+      const { data: current } = await supabase
+        .from("packages").select("treatment_id").eq("id", data.id).eq("profile_id", profile.id).maybeSingle();
+      const currentId = (current as { treatment_id: string | null } | null)?.treatment_id ?? null;
+      if (currentId) {
+        const { data: t } = await supabase
+          .from("treatments").select("id, hidden_from_menu").eq("id", currentId).eq("profile_id", profile.id).maybeSingle();
+        if (t?.hidden_from_menu) keepId = t.id;
+      }
+    }
     const { error } = await supabase.from("packages").update({
       name: data.name,
       description: data.description,
-      treatment_id: clean.treatment_id,
-      treatment_ids: clean.treatment_ids,
+      treatment_id: keepId ?? clean.treatment_id,
+      treatment_ids: keepId ? [keepId] : clean.treatment_ids,
       custom_items: (data.custom_items ?? []).map((s) => s.trim()).filter(Boolean),
       session_count: data.session_count,
       price: data.price,
