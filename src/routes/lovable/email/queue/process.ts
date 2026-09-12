@@ -27,6 +27,30 @@ function isForbidden(error: unknown): boolean {
   return error instanceof Error && error.message.includes('403')
 }
 
+// Permanent per-message failures (bad recipient address etc). Retrying only
+// burns the workspace rate limit and starves booking emails.
+function isPermanentMessageError(error: unknown): boolean {
+  const status =
+    error && typeof error === 'object' && 'status' in error
+      ? (error as { status: number }).status
+      : null
+  if (status === 400 || status === 422) return true
+  return error instanceof Error && /invalid_email|Invalid 'to' email/i.test(error.message)
+}
+
+// Bulk/marketing sends must never block booking, form or reminder emails.
+function isBulkMarketing(payload: Record<string, any>): boolean {
+  const label = String(payload?.label ?? '').toLowerCase()
+  const purpose = String(payload?.purpose ?? '').toLowerCase()
+  return (
+    purpose === 'marketing' ||
+    label.includes('marketing') ||
+    label.includes('broadcast') ||
+    label.includes('campaign') ||
+    label.includes('newsletter')
+  )
+}
+
 // Extract Retry-After seconds from a structured EmailAPIError, or default to 60s.
 function getRetryAfterSeconds(error: unknown): number {
   if (error && typeof error === 'object' && 'retryAfterSeconds' in error) {
