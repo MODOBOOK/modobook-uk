@@ -846,18 +846,13 @@ async function resolveAutomationRecipients(supabase: any, automation: any): Prom
   if (automation.type === 'win_back') {
     const days = cfg.no_visit_days || 180
     const cutoff = new Date(Date.now() - days * 86400_000).toISOString().slice(0, 10)
-    const ids = clients.map((c) => c.id)
-    if (!ids.length) return []
-    const { data: appts } = await supabase.from('appointments')
-      .select('client_id, appointment_date').eq('practitioner_id', pid).in('client_id', ids)
-    const lastByClient = new Map<string, string>()
-    for (const a of (appts || []) as any[]) {
-      const prev = lastByClient.get(a.client_id)
-      if (!prev || a.appointment_date > prev) lastByClient.set(a.client_id, a.appointment_date)
-    }
+    if (!clients.length) return []
+    const byClient = await appointmentsByClient(supabase, pid, clients)
     return clients.filter((c) => {
-      const last = lastByClient.get(c.id)
-      return last && last < cutoff
+      const rows = byClient.get(c.id) || []
+      if (!rows.length) return false
+      const last = rows.reduce((m, r) => (r.date > m ? r.date : m), rows[0].date)
+      return last < cutoff
     }).map((c) => mapClient(c, { dedup_key: `winback-${todayStr.slice(0, 7)}-${c.id}` }))
   }
 
@@ -866,21 +861,14 @@ async function resolveAutomationRecipients(supabase: any, automation: any): Prom
     const weeks = cfg.interval_weeks || 8
     if (!treatmentId) return []
     const targetDate = new Date(Date.now() - weeks * 7 * 86400_000).toISOString().slice(0, 10)
-    const ids = clients.map((c) => c.id)
-    if (!ids.length) return []
-    const { data: appts } = await supabase.from('appointments')
-      .select('client_id, appointment_date, treatment_id, treatments(name)')
-      .eq('practitioner_id', pid).eq('treatment_id', treatmentId).in('client_id', ids)
-      .eq('appointment_date', targetDate)
-    const seen = new Set<string>()
+    if (!clients.length) return []
+    const byClient = await appointmentsByClient(supabase, pid, clients, true)
     const out: any[] = []
-    for (const a of (appts || []) as any[]) {
-      if (seen.has(a.client_id)) continue
-      seen.add(a.client_id)
-      const c = clients.find((x) => x.id === a.client_id)
-      if (!c) continue
+    for (const c of clients) {
+      const match = (byClient.get(c.id) || []).find((r) => r.treatment_id === treatmentId && r.date === targetDate)
+      if (!match) continue
       out.push(mapClient(c, {
-        last_treatment: a.treatments?.name || '',
+        last_treatment: match.treatment_name || '',
         dedup_key: `interval-${automation.id}-${targetDate}-${c.id}`,
       }))
     }
