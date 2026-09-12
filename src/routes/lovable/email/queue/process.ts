@@ -137,9 +137,12 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
 
         // 2. Process auth_emails first (priority), then transactional_emails
         for (const queue of ['auth_emails', 'transactional_emails']) {
-          const { data: messages, error: readError } = await supabase.rpc('read_email_batch', {
+          // Read a wider slice so critical emails can be pulled out from behind
+          // a large marketing backlog, then work the critical ones first.
+          const readSize = queue === 'transactional_emails' ? batchSize * 10 : batchSize
+          const { data: rawMessages, error: readError } = await supabase.rpc('read_email_batch', {
             queue_name: queue,
-            batch_size: batchSize,
+            batch_size: readSize,
             vt: 30,
           })
 
@@ -148,7 +151,18 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
             continue
           }
 
-          if (!messages?.length) continue
+          if (!rawMessages?.length) continue
+
+          const critical = rawMessages.filter((m: any) => !isBulkMarketing(m?.message ?? {}))
+          const bulk = rawMessages.filter((m: any) => isBulkMarketing(m?.message ?? {}))
+
+          // Cooldown: critical only, and only a small trickle.
+          // Normal: critical first, marketing gets whatever capacity is left.
+          const messages = inCooldown
+            ? critical.slice(0, 3)
+            : [...critical, ...bulk].slice(0, batchSize)
+
+          if (!messages.length) continue
 
           // Retry budget is based on real send failures, not pgmq read_ct.
           const messageIds = Array.from(
