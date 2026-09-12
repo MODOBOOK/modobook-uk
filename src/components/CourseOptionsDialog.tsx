@@ -518,6 +518,12 @@ export function CourseOptionsEditor({
 
   const unitPreview = unitLabel.trim() || "sessions";
 
+  // Load the saved per-location prices for whichever options are open.
+  useEffect(() => {
+    for (const id of expandedIds) void loadLocPrices(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandedIds, locations.length]);
+
   return (
     <div className="space-y-4">
       <div className="rounded-md border bg-muted/30 p-3 space-y-2">
