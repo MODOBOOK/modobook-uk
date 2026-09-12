@@ -8,10 +8,10 @@ import { AlertTriangle, Lock } from "lucide-react";
 
 type Status = Awaited<ReturnType<typeof getMyBillingStatus>>;
 
-const BLOCKED_FALLBACK: Status = {
-  state: "blocked",
-  hasAccess: false,
-  daysLeft: 0,
+const CHECK_FAILED_FALLBACK: Status = {
+  state: "active",
+  hasAccess: true,
+  daysLeft: null,
   deadline: null,
   arrearsCents: 0,
   arrearsInvoiceUrl: null,
@@ -32,7 +32,9 @@ export function PlatformBillingGate({ children }: { children: React.ReactNode })
       try {
         return (await load()) as Status;
       } catch {
-        return BLOCKED_FALLBACK;
+        // A temporary billing/API error must never lock a paid clinic out.
+        // Confirmed subscription states from the server still enforce access.
+        return CHECK_FAILED_FALLBACK;
       }
     },
     staleTime: 15_000,
