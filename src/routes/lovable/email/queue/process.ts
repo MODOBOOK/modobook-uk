@@ -27,6 +27,30 @@ function isForbidden(error: unknown): boolean {
   return error instanceof Error && error.message.includes('403')
 }
 
+// Permanent per-message failures (bad recipient address etc). Retrying only
+// burns the workspace rate limit and starves booking emails.
+function isPermanentMessageError(error: unknown): boolean {
+  const status =
+    error && typeof error === 'object' && 'status' in error
+      ? (error as { status: number }).status
+      : null
+  if (status === 400 || status === 422) return true
+  return error instanceof Error && /invalid_email|Invalid 'to' email/i.test(error.message)
+}
+
+// Bulk/marketing sends must never block booking, form or reminder emails.
+function isBulkMarketing(payload: Record<string, any>): boolean {
+  const label = String(payload?.label ?? '').toLowerCase()
+  const purpose = String(payload?.purpose ?? '').toLowerCase()
+  return (
+    purpose === 'marketing' ||
+    label.includes('marketing') ||
+    label.includes('broadcast') ||
+    label.includes('campaign') ||
+    label.includes('newsletter')
+  )
+}
+
 // Extract Retry-After seconds from a structured EmailAPIError, or default to 60s.
 function getRetryAfterSeconds(error: unknown): number {
   if (error && typeof error === 'object' && 'retryAfterSeconds' in error) {
@@ -96,9 +120,11 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
           .select('retry_after_until, batch_size, send_delay_ms, auth_email_ttl_minutes, transactional_email_ttl_minutes')
           .single()
 
-        if (state?.retry_after_until && new Date(state.retry_after_until) > new Date()) {
-          return Response.json({ skipped: true, reason: 'rate_limited' })
-        }
+        // During a rate-limit cooldown we still push a trickle of critical
+        // (booking/form/reminder) emails through; only bulk marketing waits.
+        const inCooldown = Boolean(
+          state?.retry_after_until && new Date(state.retry_after_until) > new Date()
+        )
 
         const batchSize = state?.batch_size ?? DEFAULT_BATCH_SIZE
         const sendDelayMs = state?.send_delay_ms ?? DEFAULT_SEND_DELAY_MS
@@ -111,9 +137,12 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
 
         // 2. Process auth_emails first (priority), then transactional_emails
         for (const queue of ['auth_emails', 'transactional_emails']) {
-          const { data: messages, error: readError } = await supabase.rpc('read_email_batch', {
+          // Read a wider slice so critical emails can be pulled out from behind
+          // a large marketing backlog, then work the critical ones first.
+          const readSize = queue === 'transactional_emails' ? batchSize * 10 : batchSize
+          const { data: rawMessages, error: readError } = await supabase.rpc('read_email_batch', {
             queue_name: queue,
-            batch_size: batchSize,
+            batch_size: readSize,
             vt: 30,
           })
 
@@ -122,7 +151,18 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
             continue
           }
 
-          if (!messages?.length) continue
+          if (!rawMessages?.length) continue
+
+          const critical = rawMessages.filter((m: any) => !isBulkMarketing(m?.message ?? {}))
+          const bulk = rawMessages.filter((m: any) => isBulkMarketing(m?.message ?? {}))
+
+          // Cooldown: critical only, and only a small trickle.
+          // Normal: critical first, marketing gets whatever capacity is left.
+          const messages = inCooldown
+            ? critical.slice(0, 3)
+            : [...critical, ...bulk].slice(0, batchSize)
+
+          if (!messages.length) continue
 
           // Retry budget is based on real send failures, not pgmq read_ct.
           const messageIds = Array.from(
@@ -268,15 +308,10 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
               })
 
               if (isRateLimited(error)) {
-                await supabase.from('email_send_log').insert({
-                  message_id: payload.message_id,
-                  template_name: payload.label || queue,
-                  recipient_email: payload.to,
-                  status: 'failed',
-                  error_message: errorMsg.slice(0, 1000),
-                })
-
-                const retryAfterSecs = getRetryAfterSeconds(error)
+                // Rate limiting is a provider-side pause, not a fault of this
+                // message — it must NOT consume the message's retry budget,
+                // otherwise busy periods dead-letter booking emails.
+                const retryAfterSecs = Math.min(getRetryAfterSeconds(error), 30)
                 await supabase
                   .from('email_send_state')
                   .update({
@@ -289,6 +324,13 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
 
                 // Stop processing — remaining messages stay in queue (VT expires, retried next cycle)
                 return Response.json({ processed: totalProcessed, stopped: 'rate_limited' })
+              }
+
+              // Bad recipient address: permanent for this message. Drop it now
+              // instead of retrying five times and burning the rate limit.
+              if (isPermanentMessageError(error)) {
+                await moveToDlq(supabase, queue, msg, errorMsg.slice(0, 1000))
+                continue
               }
 
               // 403s are permanent configuration or authorization failures for this
