@@ -3,6 +3,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { createCourseTreatmentOption, updateTreatment, renameCourseGroup } from "@/lib/treatments.functions";
 import { courseGroupKeyFor, courseGroupLabel } from "@/lib/course-group-label";
 import {
+  listMyLocations,
+  getTreatmentLocationPricing,
+  setTreatmentLocationPricing,
+} from "@/lib/locations.functions";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -172,6 +177,73 @@ export function CourseOptionsEditor({
   const createOption = useServerFn(createCourseTreatmentOption);
   const update = useServerFn(updateTreatment);
   const renameGroup = useServerFn(renameCourseGroup);
+  const fetchLocations = useServerFn(listMyLocations);
+  const fetchLocPricing = useServerFn(getTreatmentLocationPricing);
+  const saveLocPricing = useServerFn(setTreatmentLocationPricing);
+  // Per-location prices for each option, keyed by option id then location id.
+  // Blank means "use the price above".
+  const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
+  const [locPrices, setLocPrices] = useState<Record<string, Record<string, string>>>({});
+  const [locMeta, setLocMeta] = useState<
+    Record<string, Record<string, { duration_minutes: number | null; available: boolean }>>
+  >({});
+  const loadedLocPrices = useState(() => new Set<string>())[0];
+
+  useEffect(() => {
+    let off = false;
+    fetchLocations()
+      .then((rows) => {
+        if (!off) setLocations((rows as { id: string; name: string }[]).map((l) => ({ id: l.id, name: l.name })));
+      })
+      .catch(() => {});
+    return () => { off = true; };
+  }, [fetchLocations]);
+
+  async function loadLocPrices(treatmentId: string) {
+    if (treatmentId.startsWith("new-") || loadedLocPrices.has(treatmentId)) return;
+    loadedLocPrices.add(treatmentId);
+    try {
+      const rows = (await fetchLocPricing({ data: { treatment_id: treatmentId } })) as {
+        location_id: string;
+        price_cents: number | null;
+        duration_minutes: number | null;
+        available: boolean;
+      }[];
+      setLocPrices((current) => ({
+        ...current,
+        [treatmentId]: Object.fromEntries(
+          rows.map((r) => [r.location_id, r.price_cents == null ? "" : (r.price_cents / 100).toFixed(2)]),
+        ),
+      }));
+      setLocMeta((current) => ({
+        ...current,
+        [treatmentId]: Object.fromEntries(
+          rows.map((r) => [r.location_id, { duration_minutes: r.duration_minutes, available: r.available }]),
+        ),
+      }));
+    } catch {
+      loadedLocPrices.delete(treatmentId);
+    }
+  }
+
+  async function persistLocPrices(treatmentId: string) {
+    const entries = locPrices[treatmentId];
+    if (!entries) return;
+    for (const [location_id, value] of Object.entries(entries)) {
+      const trimmed = value.trim();
+      const num = Number(trimmed);
+      const meta = locMeta[treatmentId]?.[location_id];
+      await saveLocPricing({
+        data: {
+          treatment_id: treatmentId,
+          location_id,
+          price_cents: trimmed && Number.isFinite(num) && num >= 0 ? Math.round(num * 100) : null,
+          duration_minutes: meta?.duration_minutes ?? null,
+          available: meta?.available ?? true,
+        },
+      });
+    }
+  }
   const [newSessions, setNewSessions] = useState("3 sessions");
   const [newCount, setNewCount] = useState("3");
   const [unitLabel, setUnitLabel] = useState(
@@ -326,6 +398,7 @@ export function CourseOptionsEditor({
             : option,
         ),
       );
+      await persistLocPrices(t.id);
       toast.success(`${sessions} session option saved`);
       await onSaved();
     } catch (e) {
@@ -444,6 +517,12 @@ export function CourseOptionsEditor({
   }
 
   const unitPreview = unitLabel.trim() || "sessions";
+
+  // Load the saved per-location prices for whichever options are open.
+  useEffect(() => {
+    for (const id of expandedIds) void loadLocPrices(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandedIds, locations.length]);
 
   return (
     <div className="space-y-4">
@@ -591,6 +670,35 @@ export function CourseOptionsEditor({
                       <Input type="number" min={0} placeholder="e.g. 4" value={d.weeks} onChange={(e) => patch(o.id, o, { weeks: e.target.value })} />
                     </div>
                    </div>
+                   {locations.length > 0 && !o.id.startsWith("new-") && (
+                     <div className="space-y-2 rounded-md border bg-muted/30 p-3">
+                       <Label className="text-xs">Price at each location (£)</Label>
+                       <p className="text-xs text-muted-foreground">
+                         Leave blank to charge the total price above.
+                       </p>
+                       <div className="grid gap-2 sm:grid-cols-2">
+                         {locations.map((loc) => (
+                           <div key={loc.id} className="flex items-center gap-2">
+                             <span className="min-w-0 flex-1 truncate text-sm">{loc.name}</span>
+                             <Input
+                               className="w-28"
+                               type="number"
+                               min={0}
+                               step="0.01"
+                               placeholder={Number(d.price || 0).toFixed(2)}
+                               value={locPrices[o.id]?.[loc.id] ?? ""}
+                               onChange={(e) =>
+                                 setLocPrices((current) => ({
+                                   ...current,
+                                   [o.id]: { ...(current[o.id] ?? {}), [loc.id]: e.target.value },
+                                 }))
+                               }
+                             />
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   )}
                    <div className="space-y-1">
                      <Label className="text-xs">Description (optional)</Label>
                      <Textarea
