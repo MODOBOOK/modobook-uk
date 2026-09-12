@@ -156,6 +156,7 @@ function PackagesPage() {
       name: p.name,
       description: p.description ?? "",
       treatment_ids: p.treatment_ids ?? (p.treatment_id ? [p.treatment_id] : []),
+      custom_items: p.custom_items ?? [],
       session_count: p.session_count,
       price: Number(p.price),
       compare_at_price: p.compare_at_price == null ? "" : String(Number(p.compare_at_price)),
