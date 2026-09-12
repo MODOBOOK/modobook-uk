@@ -11,7 +11,7 @@ type Status = Awaited<ReturnType<typeof getMyBillingStatus>>;
 const CHECK_FAILED_FALLBACK: Status = {
   state: "active",
   hasAccess: true,
-  daysLeft: null,
+  daysLeft: 0,
   deadline: null,
   arrearsCents: 0,
   arrearsInvoiceUrl: null,
