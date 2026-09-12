@@ -62,10 +62,40 @@ function MobileBookingDetail() {
 
       <div className="mt-3 flex flex-wrap gap-2">
         <span className="rounded-full border px-3 py-1 text-sm capitalize">{appt.status}</span>
-        {appt.payment_status && (
-          <span className="rounded-full border px-3 py-1 text-sm capitalize">{appt.payment_status}</span>
-        )}
+        <span className="rounded-full border px-3 py-1 text-sm">
+          {totalPence > 0
+            ? paidPence >= totalPence
+              ? `Paid in full ${gbp(totalPence)}`
+              : paidPence > 0
+                ? `${gbp(paidPence)} paid · ${gbp(totalPence - paidPence)} to pay`
+                : `${gbp(totalPence)} to pay`
+            : "No price set"}
+        </span>
       </div>
+
+      {totalPence > 0 && (
+        <div className="mt-4 rounded-2xl border bg-card p-4 text-lg">
+          <div className="flex justify-between py-1">
+            <span className="text-muted-foreground">Treatment total</span>
+            <span>{gbp(totalPence)}</span>
+          </div>
+          <div className="flex justify-between py-1">
+            <span className="text-muted-foreground">Paid so far</span>
+            <span>{gbp(paidPence)}</span>
+          </div>
+          {refundedPence > 0 && (
+            <div className="flex justify-between py-1">
+              <span className="text-muted-foreground">Refunded</span>
+              <span>-{gbp(refundedPence)}</span>
+            </div>
+          )}
+          <div className="mt-1 flex justify-between border-t pt-2 font-semibold">
+            <span>Still to pay</span>
+            <span>{gbp(Math.max(0, totalPence - paidPence))}</span>
+          </div>
+        </div>
+      )}
+
 
       <div className="mt-6 divide-y rounded-2xl border bg-card px-4">
         <Row icon={Clock}>
