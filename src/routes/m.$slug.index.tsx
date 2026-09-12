@@ -2422,19 +2422,29 @@ function BookPage() {
                               </p>
                             )}
 
-                            {includedGrouped.length > 0 && (
-                              <div className="mt-3 rounded-lg border p-2.5" style={{ borderColor: `${brand}26`, background: `${brand}0a` }}>
-                                <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide opacity-70">Includes</div>
-                                <ul className="space-y-0.5 text-sm">
-                                  {includedGrouped.map(({ t, qty }) => (
-                                    <li key={t.id} className="flex items-start gap-1.5">
-                                      <span style={{ color: brand }}>•</span>
-                                      <span>{qty > 1 ? `${qty} × ${t.name}` : t.name}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
+                            {(() => {
+                              const customItems = ((p as { custom_items?: string[] | null }).custom_items ?? []).filter(Boolean);
+                              if (includedGrouped.length === 0 && customItems.length === 0) return null;
+                              return (
+                                <div className="mt-3 rounded-lg border p-2.5" style={{ borderColor: `${brand}26`, background: `${brand}0a` }}>
+                                  <div className="mb-1 text-[11px] font-semibold uppercase tracking-wide opacity-70">Includes</div>
+                                  <ul className="space-y-0.5 text-sm">
+                                    {includedGrouped.map(({ t, qty }) => (
+                                      <li key={t.id} className="flex items-start gap-1.5">
+                                        <span style={{ color: brand }}>•</span>
+                                        <span>{qty > 1 ? `${qty} × ${t.name}` : t.name}</span>
+                                      </li>
+                                    ))}
+                                    {customItems.map((item, i) => (
+                                      <li key={`ci-${i}`} className="flex items-start gap-1.5">
+                                        <span style={{ color: brand }}>•</span>
+                                        <span>{item}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              );
+                            })()}
 
                             {saving > 0 && (
                               <div className="mt-3 flex flex-wrap items-center gap-2">
