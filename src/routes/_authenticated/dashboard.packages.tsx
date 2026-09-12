@@ -82,6 +82,7 @@ const blankForm = {
   name: "",
   description: "",
   treatment_ids: [] as string[],
+  custom_items: [] as string[],
   session_count: 1,
   price: 0,
   compare_at_price: "" as string,
