@@ -36,6 +36,7 @@ import { getTreatmentConsents } from "@/lib/treatment-consents.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
 import { PrescribingClinicCard } from "@/components/PrescribingClinicCard";
+import { CourseOptionsEditor, type CourseTreatment } from "@/components/CourseOptionsDialog";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
