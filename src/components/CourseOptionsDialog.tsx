@@ -177,6 +177,59 @@ export function CourseOptionsEditor({
   const createOption = useServerFn(createCourseTreatmentOption);
   const update = useServerFn(updateTreatment);
   const renameGroup = useServerFn(renameCourseGroup);
+  const fetchLocations = useServerFn(listMyLocations);
+  const fetchLocPricing = useServerFn(getTreatmentLocationPricing);
+  const saveLocPricing = useServerFn(setTreatmentLocationPricing);
+  // Per-location prices for each option, keyed by option id then location id.
+  // Blank means "use the price above".
+  const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
+  const [locPrices, setLocPrices] = useState<Record<string, Record<string, string>>>({});
+  const loadedLocPrices = useState(() => new Set<string>())[0];
+
+  useEffect(() => {
+    let off = false;
+    fetchLocations()
+      .then((rows) => {
+        if (!off) setLocations((rows as { id: string; name: string }[]).map((l) => ({ id: l.id, name: l.name })));
+      })
+      .catch(() => {});
+    return () => { off = true; };
+  }, [fetchLocations]);
+
+  async function loadLocPrices(treatmentId: string) {
+    if (treatmentId.startsWith("new-") || loadedLocPrices.has(treatmentId)) return;
+    loadedLocPrices.add(treatmentId);
+    try {
+      const rows = (await fetchLocPricing({ data: { treatment_id: treatmentId } })) as {
+        location_id: string;
+        price_cents: number | null;
+      }[];
+      setLocPrices((current) => ({
+        ...current,
+        [treatmentId]: Object.fromEntries(
+          rows.map((r) => [r.location_id, r.price_cents == null ? "" : (r.price_cents / 100).toFixed(2)]),
+        ),
+      }));
+    } catch {
+      loadedLocPrices.delete(treatmentId);
+    }
+  }
+
+  async function persistLocPrices(treatmentId: string) {
+    const entries = locPrices[treatmentId];
+    if (!entries) return;
+    for (const [location_id, value] of Object.entries(entries)) {
+      const trimmed = value.trim();
+      const num = Number(trimmed);
+      await saveLocPricing({
+        data: {
+          treatment_id: treatmentId,
+          location_id,
+          price_cents: trimmed && Number.isFinite(num) && num >= 0 ? Math.round(num * 100) : null,
+        },
+      });
+    }
+  }
   const [newSessions, setNewSessions] = useState("3 sessions");
   const [newCount, setNewCount] = useState("3");
   const [unitLabel, setUnitLabel] = useState(
