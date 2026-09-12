@@ -5,6 +5,8 @@ import { z } from 'zod'
 import type { Block } from '@/lib/email-templates/marketing-broadcast'
 
 const RECIPIENT_LIMIT = 2000
+// Max marketing emails enqueued per dispatch run; the cron resumes the rest.
+const CAMPAIGN_BATCH_SIZE = 60
 const COOLDOWN_HOURS = 6
 
 // ---------- schemas ----------
@@ -429,7 +431,7 @@ async function dispatchCampaign(campaignId: string, practitionerId: string) {
   const { data: campaign, error: cErr } = await supabase.from('marketing_campaigns')
     .select('*').eq('id', campaignId).maybeSingle()
   if (cErr || !campaign) throw new Error('Campaign not found')
-  if (campaign.status === 'sent' || campaign.status === 'sending') return { ok: true, skipped: 'already_processing' }
+  if (campaign.status === 'sent') return { ok: true, skipped: 'already_processing' }
 
   // Lock
   await supabase.from('marketing_campaigns').update({ status: 'sending' })
@@ -443,7 +445,16 @@ async function dispatchCampaign(campaignId: string, practitionerId: string) {
 
     // Reuse authenticated resolver logic via admin client (RLS bypassed but scoped by practitioner id)
     const recipients = await resolveSegmentRecipients(supabase, practitionerId, campaign.segment_id)
-    const capped = recipients.slice(0, RECIPIENT_LIMIT)
+    const allCapped = recipients.slice(0, RECIPIENT_LIMIT)
+
+    // Skip anyone already queued/sent for this campaign (resumed run).
+    const { data: doneRows } = await supabase.from('marketing_campaign_recipients')
+      .select('client_id').eq('campaign_id', campaignId).limit(RECIPIENT_LIMIT)
+    const alreadyDone = new Set(((doneRows || []) as any[]).map((r) => r.client_id))
+    const remaining = allCapped.filter((r: any) => !alreadyDone.has(r.id))
+    // Pace bulk sends so booking/medical-form emails aren't stuck behind a big blast.
+    const capped = remaining.slice(0, CAMPAIGN_BATCH_SIZE)
+    const hasMore = remaining.length > capped.length
 
     // Pre-compute last treatment name per client (for {{last_treatment}} merge tag)
     const lastTreatmentByClient = new Map<string, string>()
@@ -496,16 +507,19 @@ async function dispatchCampaign(campaignId: string, practitionerId: string) {
     }
 
 
+    const { count: doneCount } = await supabase.from('marketing_campaign_recipients')
+      .select('id', { count: 'exact', head: true }).eq('campaign_id', campaignId)
+
     await supabase.from('marketing_campaigns').update({
-      status: 'sent',
-      sent_at: new Date().toISOString(),
-      recipient_count: capped.length,
-      sent_count: sent,
-      failed_count: failed,
-      suppressed_count: suppressed,
+      status: hasMore ? 'sending' : 'sent',
+      sent_at: hasMore ? campaign.sent_at : new Date().toISOString(),
+      recipient_count: allCapped.length,
+      sent_count: (campaign.sent_count || 0) + sent,
+      failed_count: (campaign.failed_count || 0) + failed,
+      suppressed_count: (campaign.suppressed_count || 0) + suppressed,
     }).eq('id', campaignId)
 
-    return { ok: true, sent, failed, suppressed, total: capped.length }
+    return { ok: true, sent, failed, suppressed, total: capped.length, queuedSoFar: doneCount || 0, hasMore }
   } catch (e) {
     await supabase.from('marketing_campaigns').update({ status: 'failed' }).eq('id', campaignId)
     throw e
@@ -720,8 +734,12 @@ export async function processScheduledCampaigns() {
   const nowIso = new Date().toISOString()
   const { data: due } = await supabaseAdmin.from('marketing_campaigns')
     .select('id, practitioner_id').eq('status', 'scheduled').lte('scheduled_for', nowIso).limit(20)
+  // Resume any campaign still part-way through its paced batches.
+  const { data: inProgress } = await supabaseAdmin.from('marketing_campaigns')
+    .select('id, practitioner_id').eq('status', 'sending').limit(20)
+  const queue = [...((due || []) as any[]), ...((inProgress || []) as any[])]
   const results: any[] = []
-  for (const c of (due || []) as any[]) {
+  for (const c of queue) {
     try { results.push({ id: c.id, ...(await dispatchCampaign(c.id, c.practitioner_id)) }) }
     catch (e) { results.push({ id: c.id, error: e instanceof Error ? e.message : String(e) }) }
   }
