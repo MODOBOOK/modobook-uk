@@ -47,6 +47,10 @@ function ManagePage() {
   const { token, slug } = useParams({ from: "/m/$slug/manage/$token" });
   const [status, setStatus] = useState(appt.status);
   const [cancelling, setCancelling] = useState(false);
+  const [rescheduling, setRescheduling] = useState(false);
+  const [moved, setMoved] = useState<{ date: string; start: string } | null>(null);
+  const shownDate = moved?.date ?? appt.scheduled_date;
+  const shownStart = moved?.start ?? appt.start_time.slice(0, 5);
 
   async function cancel() {
     if (!confirm("Cancel this appointment? Cancellation charges may apply per the policy below.")) return;
