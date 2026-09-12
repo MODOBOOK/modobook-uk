@@ -118,9 +118,12 @@ function PackagesPage() {
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [profileId, setProfileId] = useState<string>("");
+  const [clinicSlug, setClinicSlug] = useState<string>("");
+  const [customDraft, setCustomDraft] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Pkg | null>(null);
   const [form, setForm] = useState(blankForm);
+  const allowCustomItems = customPackageItemsEnabled(clinicSlug);
 
   async function refresh() {
     const [p, t, c, profile] = await Promise.all([list(), listTreatments(), listCategories(), fetchProfile()]);
@@ -128,6 +131,7 @@ function PackagesPage() {
     setTreatments((t as Treatment[]) ?? []);
     setCategories((c as Category[]) ?? []);
     setProfileId((profile as { id?: string } | null)?.id ?? "");
+    setClinicSlug((profile as { slug?: string | null } | null)?.slug ?? "");
   }
   useEffect(() => { refresh(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
