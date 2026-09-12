@@ -1026,7 +1026,7 @@ function MultiBookPage() {
                       <div key={p.id} className="flex items-center justify-between text-sm border-b last:border-b-0 py-2">
                         <div>
                           <div className="font-medium" style={{ color: brand }}>{p.name}</div>
-                          {p.description && <div className="text-xs opacity-80">{p.description}</div>}
+                          {p.description && <div className="whitespace-pre-line text-xs opacity-80">{p.description}</div>}
                           <div className="text-xs opacity-70">{p.session_count} session{p.session_count === 1 ? "" : "s"} · first session booked below, remaining tracked in your account</div>
                         </div>
                         {showPrices && (
