@@ -507,16 +507,19 @@ async function dispatchCampaign(campaignId: string, practitionerId: string) {
     }
 
 
+    const { count: doneCount } = await supabase.from('marketing_campaign_recipients')
+      .select('id', { count: 'exact', head: true }).eq('campaign_id', campaignId)
+
     await supabase.from('marketing_campaigns').update({
-      status: 'sent',
-      sent_at: new Date().toISOString(),
-      recipient_count: capped.length,
-      sent_count: sent,
-      failed_count: failed,
-      suppressed_count: suppressed,
+      status: hasMore ? 'sending' : 'sent',
+      sent_at: hasMore ? campaign.sent_at : new Date().toISOString(),
+      recipient_count: allCapped.length,
+      sent_count: (campaign.sent_count || 0) + sent,
+      failed_count: (campaign.failed_count || 0) + failed,
+      suppressed_count: (campaign.suppressed_count || 0) + suppressed,
     }).eq('id', campaignId)
 
-    return { ok: true, sent, failed, suppressed, total: capped.length }
+    return { ok: true, sent, failed, suppressed, total: capped.length, queuedSoFar: doneCount || 0, hasMore }
   } catch (e) {
     await supabase.from('marketing_campaigns').update({ status: 'failed' }).eq('id', campaignId)
     throw e
