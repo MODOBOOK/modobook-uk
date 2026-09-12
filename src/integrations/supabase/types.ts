@@ -9532,6 +9532,7 @@ export type Database = {
           discount_show_was_now: boolean
           discount_starts_at: string | null
           duration: number
+          hidden_from_menu: boolean
           id: string
           is_consultation: boolean | null
           leaflet_html: string | null
@@ -9587,6 +9588,7 @@ export type Database = {
           discount_show_was_now?: boolean
           discount_starts_at?: string | null
           duration: number
+          hidden_from_menu?: boolean
           id?: string
           is_consultation?: boolean | null
           leaflet_html?: string | null
@@ -9642,6 +9644,7 @@ export type Database = {
           discount_show_was_now?: boolean
           discount_starts_at?: string | null
           duration?: number
+          hidden_from_menu?: boolean
           id?: string
           is_consultation?: boolean | null
           leaflet_html?: string | null

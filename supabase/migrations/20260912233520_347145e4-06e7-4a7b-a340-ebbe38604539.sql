@@ -1,0 +1,1 @@
+ALTER TABLE public.treatments ADD COLUMN IF NOT EXISTS hidden_from_menu boolean NOT NULL DEFAULT false;
