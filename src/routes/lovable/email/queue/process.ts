@@ -120,9 +120,11 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
           .select('retry_after_until, batch_size, send_delay_ms, auth_email_ttl_minutes, transactional_email_ttl_minutes')
           .single()
 
-        if (state?.retry_after_until && new Date(state.retry_after_until) > new Date()) {
-          return Response.json({ skipped: true, reason: 'rate_limited' })
-        }
+        // During a rate-limit cooldown we still push a trickle of critical
+        // (booking/form/reminder) emails through; only bulk marketing waits.
+        const inCooldown = Boolean(
+          state?.retry_after_until && new Date(state.retry_after_until) > new Date()
+        )
 
         const batchSize = state?.batch_size ?? DEFAULT_BATCH_SIZE
         const sendDelayMs = state?.send_delay_ms ?? DEFAULT_SEND_DELAY_MS
