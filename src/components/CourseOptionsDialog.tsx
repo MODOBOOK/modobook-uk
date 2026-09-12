@@ -670,6 +670,35 @@ export function CourseOptionsEditor({
                       <Input type="number" min={0} placeholder="e.g. 4" value={d.weeks} onChange={(e) => patch(o.id, o, { weeks: e.target.value })} />
                     </div>
                    </div>
+                   {locations.length > 0 && !o.id.startsWith("new-") && (
+                     <div className="space-y-2 rounded-md border bg-muted/30 p-3">
+                       <Label className="text-xs">Price at each location (£)</Label>
+                       <p className="text-xs text-muted-foreground">
+                         Leave blank to charge the total price above.
+                       </p>
+                       <div className="grid gap-2 sm:grid-cols-2">
+                         {locations.map((loc) => (
+                           <div key={loc.id} className="flex items-center gap-2">
+                             <span className="min-w-0 flex-1 truncate text-sm">{loc.name}</span>
+                             <Input
+                               className="w-28"
+                               type="number"
+                               min={0}
+                               step="0.01"
+                               placeholder={Number(d.price || 0).toFixed(2)}
+                               value={locPrices[o.id]?.[loc.id] ?? ""}
+                               onChange={(e) =>
+                                 setLocPrices((current) => ({
+                                   ...current,
+                                   [o.id]: { ...(current[o.id] ?? {}), [loc.id]: e.target.value },
+                                 }))
+                               }
+                             />
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   )}
                    <div className="space-y-1">
                      <Label className="text-xs">Description (optional)</Label>
                      <Textarea
