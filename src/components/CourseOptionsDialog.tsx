@@ -206,11 +206,19 @@ export function CourseOptionsEditor({
       const rows = (await fetchLocPricing({ data: { treatment_id: treatmentId } })) as {
         location_id: string;
         price_cents: number | null;
+        duration_minutes: number | null;
+        available: boolean;
       }[];
       setLocPrices((current) => ({
         ...current,
         [treatmentId]: Object.fromEntries(
           rows.map((r) => [r.location_id, r.price_cents == null ? "" : (r.price_cents / 100).toFixed(2)]),
+        ),
+      }));
+      setLocMeta((current) => ({
+        ...current,
+        [treatmentId]: Object.fromEntries(
+          rows.map((r) => [r.location_id, { duration_minutes: r.duration_minutes, available: r.available }]),
         ),
       }));
     } catch {
@@ -224,11 +232,14 @@ export function CourseOptionsEditor({
     for (const [location_id, value] of Object.entries(entries)) {
       const trimmed = value.trim();
       const num = Number(trimmed);
+      const meta = locMeta[treatmentId]?.[location_id];
       await saveLocPricing({
         data: {
           treatment_id: treatmentId,
           location_id,
           price_cents: trimmed && Number.isFinite(num) && num >= 0 ? Math.round(num * 100) : null,
+          duration_minutes: meta?.duration_minutes ?? null,
+          available: meta?.available ?? true,
         },
       });
     }
