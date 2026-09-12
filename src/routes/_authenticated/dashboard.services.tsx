@@ -36,6 +36,7 @@ import { getTreatmentConsents } from "@/lib/treatment-consents.functions";
 import { getMyProfile, updateProfile } from "@/lib/profiles.functions";
 import { ImageUploader } from "@/components/ImageUploader";
 import { PrescribingClinicCard } from "@/components/PrescribingClinicCard";
+import { CourseOptionsEditor, type CourseTreatment } from "@/components/CourseOptionsDialog";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
@@ -560,6 +561,10 @@ function ServicesPage() {
       <ServiceDialog
         state={svcDialog}
         categories={picker}
+        allTreatments={treats.data ?? []}
+        onOptionsSaved={async () => {
+          await treats.refetch();
+        }}
         onClose={() => setSvcDialog(null)}
         onSubmit={async (values) => {
           try {
@@ -1465,11 +1470,15 @@ function CategoryDialog({
 function ServiceDialog({
   state,
   categories,
+  allTreatments = [],
+  onOptionsSaved = () => undefined,
   onClose,
   onSubmit,
 }: {
   state: { defaultCatId: string | null; treat?: Treat } | null;
   categories: { id: string; label: string; depth: number }[];
+  allTreatments?: Treat[];
+  onOptionsSaved?: () => void | Promise<void>;
   onClose: () => void;
   onSubmit: (v: {
     name: string;
@@ -1789,6 +1798,25 @@ function ServiceDialog({
               </div>
               <p className="text-[11px] text-muted-foreground">Appointments for this service appear in this colour on your calendar.</p>
             </div>
+          </SvcSection>
+
+          <SvcSection
+            title="Patient choices (ml, vials, sessions)"
+            hint="Show one row with a pop-up of amounts and prices"
+            open={section === "options"}
+            onToggle={() => setSection(section === "options" ? "" : "options")}
+          >
+            {state?.treat ? (
+              <CourseOptionsEditor
+                treatment={state.treat as unknown as CourseTreatment}
+                allTreatments={allTreatments as unknown as CourseTreatment[]}
+                onSaved={onOptionsSaved}
+              />
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Save this service first, then reopen it to add amounts such as 0.7ml, 1ml or 3 sessions.
+              </p>
+            )}
           </SvcSection>
 
           <SvcSection
