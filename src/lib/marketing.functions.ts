@@ -5,6 +5,8 @@ import { z } from 'zod'
 import type { Block } from '@/lib/email-templates/marketing-broadcast'
 
 const RECIPIENT_LIMIT = 2000
+// Max marketing emails enqueued per dispatch run; the cron resumes the rest.
+const CAMPAIGN_BATCH_SIZE = 60
 const COOLDOWN_HOURS = 6
 
 // ---------- schemas ----------
@@ -429,7 +431,7 @@ async function dispatchCampaign(campaignId: string, practitionerId: string) {
   const { data: campaign, error: cErr } = await supabase.from('marketing_campaigns')
     .select('*').eq('id', campaignId).maybeSingle()
   if (cErr || !campaign) throw new Error('Campaign not found')
-  if (campaign.status === 'sent' || campaign.status === 'sending') return { ok: true, skipped: 'already_processing' }
+  if (campaign.status === 'sent') return { ok: true, skipped: 'already_processing' }
 
   // Lock
   await supabase.from('marketing_campaigns').update({ status: 'sending' })
@@ -443,7 +445,16 @@ async function dispatchCampaign(campaignId: string, practitionerId: string) {
 
     // Reuse authenticated resolver logic via admin client (RLS bypassed but scoped by practitioner id)
     const recipients = await resolveSegmentRecipients(supabase, practitionerId, campaign.segment_id)
-    const capped = recipients.slice(0, RECIPIENT_LIMIT)
+    const allCapped = recipients.slice(0, RECIPIENT_LIMIT)
+
+    // Skip anyone already queued/sent for this campaign (resumed run).
+    const { data: doneRows } = await supabase.from('marketing_campaign_recipients')
+      .select('client_id').eq('campaign_id', campaignId).limit(RECIPIENT_LIMIT)
+    const alreadyDone = new Set(((doneRows || []) as any[]).map((r) => r.client_id))
+    const remaining = allCapped.filter((r: any) => !alreadyDone.has(r.id))
+    // Pace bulk sends so booking/medical-form emails aren't stuck behind a big blast.
+    const capped = remaining.slice(0, CAMPAIGN_BATCH_SIZE)
+    const hasMore = remaining.length > capped.length
 
     // Pre-compute last treatment name per client (for {{last_treatment}} merge tag)
     const lastTreatmentByClient = new Map<string, string>()
