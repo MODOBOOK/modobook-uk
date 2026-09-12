@@ -11,6 +11,10 @@ export const Route = createFileRoute("/_authenticated/mobile/booking/$id")({
   component: MobileBookingDetail,
 });
 
+function gbp(pence: number) {
+  return `£${(pence / 100).toFixed(2)}`;
+}
+
 function Row({ icon: Icon, children }: { icon: any; children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-3 py-3">
@@ -45,6 +49,10 @@ function MobileBookingDetail() {
     );
   }
 
+  const totalPence = Math.round(Number(appt.total_amount ?? 0) * 100);
+  const paidPence = Number(appt.amount_paid_cents ?? 0);
+  const refundedPence = Number(appt.amount_refunded_cents ?? 0);
+
   const date = new Date(`${appt.scheduled_date}T00:00:00`).toLocaleDateString("en-GB", {
     weekday: "long",
     day: "numeric",
@@ -62,10 +70,40 @@ function MobileBookingDetail() {
 
       <div className="mt-3 flex flex-wrap gap-2">
         <span className="rounded-full border px-3 py-1 text-sm capitalize">{appt.status}</span>
-        {appt.payment_status && (
-          <span className="rounded-full border px-3 py-1 text-sm capitalize">{appt.payment_status}</span>
-        )}
+        <span className="rounded-full border px-3 py-1 text-sm">
+          {totalPence > 0
+            ? paidPence >= totalPence
+              ? `Paid in full ${gbp(totalPence)}`
+              : paidPence > 0
+                ? `${gbp(paidPence)} paid · ${gbp(totalPence - paidPence)} to pay`
+                : `${gbp(totalPence)} to pay`
+            : "No price set"}
+        </span>
       </div>
+
+      {totalPence > 0 && (
+        <div className="mt-4 rounded-2xl border bg-card p-4 text-lg">
+          <div className="flex justify-between py-1">
+            <span className="text-muted-foreground">Treatment total</span>
+            <span>{gbp(totalPence)}</span>
+          </div>
+          <div className="flex justify-between py-1">
+            <span className="text-muted-foreground">Paid so far</span>
+            <span>{gbp(paidPence)}</span>
+          </div>
+          {refundedPence > 0 && (
+            <div className="flex justify-between py-1">
+              <span className="text-muted-foreground">Refunded</span>
+              <span>-{gbp(refundedPence)}</span>
+            </div>
+          )}
+          <div className="mt-1 flex justify-between border-t pt-2 font-semibold">
+            <span>Still to pay</span>
+            <span>{gbp(Math.max(0, totalPence - paidPence))}</span>
+          </div>
+        </div>
+      )}
+
 
       <div className="mt-6 divide-y rounded-2xl border bg-card px-4">
         <Row icon={Clock}>

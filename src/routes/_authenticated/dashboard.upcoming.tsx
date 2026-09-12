@@ -301,14 +301,14 @@ function AppointmentCard({ appt, showPractitioner }: { appt: UpcomingAppointment
           {appt.medications.length > 0 && <Chip icon={Pill} tone="muted" label={`${appt.medications.length} current medication${appt.medications.length > 1 ? "s" : ""}`} />}
           <Chip
             icon={Wallet}
-            tone={paid > 0 ? "ok" : "warn"}
+            tone={totalPence > 0 && paid >= totalPence ? "ok" : "warn"}
             label={
               totalPence > 0
                 ? paid >= totalPence
                   ? `Paid in full ${money(totalPence)}`
                   : paid > 0
-                    ? `${money(paid)} of ${money(totalPence)} paid`
-                    : `${money(totalPence)} outstanding`
+                    ? `${money(paid)} paid · ${money(totalPence - paid)} to pay`
+                    : `${money(totalPence)} to pay`
                 : appt.payment_status ?? "No price set"
             }
           />
