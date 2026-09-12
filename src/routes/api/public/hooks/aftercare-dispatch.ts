@@ -28,14 +28,21 @@ export const Route = createFileRoute("/api/public/hooks/aftercare-dispatch")({
         const cutoff = new Date(Date.now() - 2 * 60 * 60 * 1000);
         const cutoffDate = cutoff.toISOString().slice(0, 10);
         const cutoffTime = cutoff.toISOString().slice(11, 19);
+        // Only ever look back a short window: this sweep is a fallback for
+        // appointments that finished recently but were never checked out.
+        // Without a lower bound it would email months of historical patients.
+        const lookbackDate = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
         const { data: appts, error } = await supabase
           .from("appointments")
           .select("id, patient_name, patient_email, patient_phone, aftercare_html, aftercare_sent_at, checked_out_at, scheduled_date, start_time, end_time, profile_id, status")
+          .gte("scheduled_date", lookbackDate)
           .or(`scheduled_date.lt.${cutoffDate},and(scheduled_date.eq.${cutoffDate},end_time.lte.${cutoffTime})`)
           .not("aftercare_html", "is", null)
           .is("aftercare_sent_at", null)
           .is("checked_out_at", null)
-          .not("status", "in", "(cancelled,no_show)");
+          .not("status", "in", "(cancelled,no_show)")
+          .order("scheduled_date", { ascending: false })
+          .limit(100);
 
         if (error) {
           console.error("[aftercare-dispatch] fetch failed", error);
