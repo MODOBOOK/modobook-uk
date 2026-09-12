@@ -204,9 +204,12 @@ export const createPackage = createServerFn({ method: "POST" })
       category_id: data.category_id,
       allow_split_payment: data.allow_split_payment ?? false,
       ...limitedFields(data),
-    });
+    }).select("id").single();
 
     if (error) throw new Error(error.message);
+    if (inserted?.id && clean.treatment_ids.length === 0) {
+      await ensurePackageService(supabase, profile.id, inserted.id, data);
+    }
     return { ok: true };
   });
 
