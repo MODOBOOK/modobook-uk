@@ -22,6 +22,27 @@ export const Route = createFileRoute('/api/public/hooks/billing-reconcile')({
         const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
         const { reconcileSubscriptionFromStripe } = await import('@/lib/billing-reconcile.server')
 
+        // Optional targeted repair: { email } or { profileId } forces a Stripe
+        // re-check for one practitioner even if their account still has access
+        // (e.g. still inside the trial but they've already paid).
+        let body: any = null
+        try {
+          body = await request.json()
+        } catch {
+          /* no body — full sweep */
+        }
+        const target = body?.email || body?.profileId
+        if (target) {
+          const q = supabaseAdmin.from('profiles').select('id, email')
+          const { data: prof, error: pErr } = body?.profileId
+            ? await q.eq('id', body.profileId).maybeSingle()
+            : await q.ilike('email', String(body.email)).maybeSingle()
+          if (pErr) return new Response(pErr.message, { status: 500 })
+          if (!prof) return Response.json({ ok: false, error: 'not_found' }, { status: 404 })
+          const ok = await reconcileSubscriptionFromStripe(supabaseAdmin, prof.id, prof.email)
+          return Response.json({ ok: true, checked: 1, healed: ok ? 1 : 0 })
+        }
+
         // Candidates: practitioners whose subscription row is missing/expired.
         const { data: profiles, error } = await supabaseAdmin
           .from('profiles')
