@@ -9,6 +9,8 @@ Goal: MODO runs in an app WebView; dashboard must feel native on phones.
 - [x] Month calendar: compact cells on phones (count badge only)
 - [ ] User to review on phone and flag any screens still cramped
 - [x] Let configured prescribing-clinic windows override the clinic's normal closed-day message
+- [x] Stop Kerri Roma's clinic emails while imported bookings are reviewed
+- [x] Prevent temporary billing-check failures from locking paid clinics out
 # Supreme patient CSV import
 
 - [x] Load all active and archived patients beyond 1,000
