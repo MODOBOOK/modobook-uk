@@ -114,8 +114,23 @@ function ManagePage() {
 
       {status !== "cancelled" && (
         <div className="flex flex-col gap-2">
-          <Button asChild variant="outline">
-            <Link to="/m/$slug" params={{ slug }}>Book a different time</Link>
+          {!rescheduling ? (
+            <Button variant="outline" onClick={() => setRescheduling(true)}>
+              Book a different time
+            </Button>
+          ) : (
+            <ReschedulePanel
+              token={token}
+              currentDate={appt.scheduled_date}
+              onClose={() => setRescheduling(false)}
+              onDone={(d, s) => {
+                setRescheduling(false);
+                setMoved({ date: d, start: s });
+              }}
+            />
+          )}
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/m/$slug" params={{ slug }}>Book another appointment</Link>
           </Button>
           <Button variant="destructive" onClick={cancel} disabled={cancelling}>
             {cancelling ? "Cancelling…" : "Cancel appointment"}
@@ -123,5 +138,88 @@ function ManagePage() {
         </div>
       )}
     </main>
+  );
+}
+
+function ReschedulePanel({
+  token,
+  currentDate,
+  onClose,
+  onDone,
+}: {
+  token: string;
+  currentDate: string;
+  onClose: () => void;
+  onDone: (date: string, start: string) => void;
+}) {
+  const ctxFn = useServerFn(getRescheduleContextByToken);
+  const slotsFn = useServerFn(getRescheduleSlotsByToken);
+  const moveFn = useServerFn(rescheduleByToken);
+
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const [date, setDate] = useState(currentDate > todayIso ? currentDate : todayIso);
+  const [saving, setSaving] = useState(false);
+
+  const ctxQ = useQuery({
+    queryKey: ["reschedule-ctx", token],
+    queryFn: () => ctxFn({ data: { token } }),
+  });
+  const slotsQ = useQuery({
+    queryKey: ["reschedule-slots", token, date],
+    queryFn: () => slotsFn({ data: { token, date } }),
+    enabled: !!ctxQ.data?.allowed,
+  });
+
+  async function pick(time: string) {
+    setSaving(true);
+    try {
+      const r = await moveFn({ data: { token, date, startTime: time } });
+      if (r.ok) {
+        toast.success("Appointment moved");
+        onDone(r.date!, r.startTime!);
+      } else {
+        toast.error(r.error ?? "Could not move the appointment");
+        slotsQ.refetch();
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader><CardTitle className="text-base">Pick a new time</CardTitle></CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        {ctxQ.isLoading ? (
+          <p className="text-muted-foreground">Checking availability…</p>
+        ) : !ctxQ.data?.allowed ? (
+          <p className="text-muted-foreground">{ctxQ.data?.reason ?? "Changes aren't available for this appointment."}</p>
+        ) : (
+          <>
+            <input
+              type="date"
+              value={date}
+              min={todayIso}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full rounded-md border bg-background px-3 py-2"
+            />
+            {slotsQ.isFetching ? (
+              <p className="text-muted-foreground">Loading times…</p>
+            ) : (slotsQ.data?.slots ?? []).length === 0 ? (
+              <p className="text-muted-foreground">No times available on that date. Try another day.</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {(slotsQ.data?.slots ?? []).map((s) => (
+                  <Button key={s} variant="outline" size="sm" disabled={saving} onClick={() => pick(s)}>
+                    {s}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+        <Button variant="ghost" size="sm" onClick={onClose}>Cancel</Button>
+      </CardContent>
+    </Card>
   );
 }
