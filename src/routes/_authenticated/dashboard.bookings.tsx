@@ -2006,10 +2006,11 @@ function CheckoutSheet({
           {discountValue > 0 && <div className="flex justify-between text-emerald-600"><span>Discount</span><span>-£{discountValue.toFixed(2)}</span></div>}
           {(() => {
             const paidRaw = Number(a.amount_paid_cents ?? 0) / 100;
-            // Never show more paid than the invoice total — a full payment should
-            // read as "paid in full", not a negative/credit balance.
-            const paidShown = a.payment_status === "paid" ? Math.min(paidRaw || total, total) : Math.min(paidRaw, total);
-            const outstanding = a.payment_status === "paid" ? 0 : Math.max(0, total - paidShown);
+            // Outstanding always follows the money: a deposit flagged as "paid"
+            // must not wipe out the rest of the balance.
+            const paidShown = Math.min(paidRaw, total);
+            const outstanding = Math.max(0, total - paidShown);
+
             return (
               <>
                 {paidShown > 0 && (
