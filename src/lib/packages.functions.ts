@@ -187,7 +187,7 @@ export const createPackage = createServerFn({ method: "POST" })
       .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).single();
     if (!profile) throw new Error("No profile");
     const clean = await sanitizeTreatments(supabase, profile.id, data.treatment_ids);
-    const { error } = await supabase.from("packages").insert({
+    const { data: inserted, error } = await supabase.from("packages").insert({
       profile_id: profile.id,
       name: data.name,
       description: data.description,
