@@ -184,6 +184,9 @@ export function CourseOptionsEditor({
   // Blank means "use the price above".
   const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
   const [locPrices, setLocPrices] = useState<Record<string, Record<string, string>>>({});
+  const [locMeta, setLocMeta] = useState<
+    Record<string, Record<string, { duration_minutes: number | null; available: boolean }>>
+  >({});
   const loadedLocPrices = useState(() => new Set<string>())[0];
 
   useEffect(() => {
