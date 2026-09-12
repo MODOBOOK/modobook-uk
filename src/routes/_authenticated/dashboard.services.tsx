@@ -1466,11 +1466,15 @@ function CategoryDialog({
 function ServiceDialog({
   state,
   categories,
+  allTreatments = [],
+  onOptionsSaved = () => undefined,
   onClose,
   onSubmit,
 }: {
   state: { defaultCatId: string | null; treat?: Treat } | null;
   categories: { id: string; label: string; depth: number }[];
+  allTreatments?: Treat[];
+  onOptionsSaved?: () => void | Promise<void>;
   onClose: () => void;
   onSubmit: (v: {
     name: string;
