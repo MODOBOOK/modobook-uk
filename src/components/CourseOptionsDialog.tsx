@@ -398,6 +398,7 @@ export function CourseOptionsEditor({
             : option,
         ),
       );
+      await persistLocPrices(t.id);
       toast.success(`${sessions} session option saved`);
       await onSaved();
     } catch (e) {
