@@ -1824,11 +1824,10 @@ function CheckoutSheet({
         const totalDue = Number(a.total_amount ?? 0);
         const paid = Number(a.amount_paid_cents ?? 0) / 100;
         const discounted = Number(a.checkout_discount_cents ?? 0) / 100;
-        // A settled booking never shows outstanding, and any checkout discount
-        // reduces what's still due.
-        const outstanding = a.payment_status === "paid"
-          ? 0
-          : Math.max(0, totalDue - paid - discounted);
+        // Outstanding is always what's left after money received and any
+        // checkout discount — a deposit marked "paid" still leaves a balance.
+        const outstanding = Math.max(0, totalDue - paid - discounted);
+
         return (
           <div className="flex flex-wrap gap-2">
             <Badge variant={cancelled ? "destructive" : "outline"}>{a.status}</Badge>
@@ -2006,10 +2005,11 @@ function CheckoutSheet({
           {discountValue > 0 && <div className="flex justify-between text-emerald-600"><span>Discount</span><span>-£{discountValue.toFixed(2)}</span></div>}
           {(() => {
             const paidRaw = Number(a.amount_paid_cents ?? 0) / 100;
-            // Never show more paid than the invoice total — a full payment should
-            // read as "paid in full", not a negative/credit balance.
-            const paidShown = a.payment_status === "paid" ? Math.min(paidRaw || total, total) : Math.min(paidRaw, total);
-            const outstanding = a.payment_status === "paid" ? 0 : Math.max(0, total - paidShown);
+            // Outstanding always follows the money: a deposit flagged as "paid"
+            // must not wipe out the rest of the balance.
+            const paidShown = Math.min(paidRaw, total);
+            const outstanding = Math.max(0, total - paidShown);
+
             return (
               <>
                 {paidShown > 0 && (
