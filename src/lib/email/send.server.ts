@@ -41,6 +41,20 @@ export async function enqueueAppEmail(
   if (!recipient) return { ok: false, error: 'recipientEmail required' }
   const normalized = recipient.toLowerCase()
 
+  // Clinic-level emergency stop. This is checked centrally so confirmations,
+  // forms, reminders, aftercare and campaigns all pause together.
+  const profileIdForDelivery = (input.templateData as any)?.profileId as string | undefined
+  if (profileIdForDelivery) {
+    const { data: deliveryProfile } = await supabase
+      .from('profiles')
+      .select('email_sending_paused')
+      .eq('id', profileIdForDelivery)
+      .maybeSingle()
+    if ((deliveryProfile as { email_sending_paused?: boolean } | null)?.email_sending_paused) {
+      return { ok: true, skipped: 'clinic-email-paused' }
+    }
+  }
+
   // Demo-mode guard: never send real emails from a demo clinic, and never
   // send anything to reserved demo email addresses.
   const dm = await import('@/lib/demo.server')

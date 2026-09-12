@@ -7456,6 +7456,7 @@ export type Database = {
           display_name_mode: string
           email: string | null
           email_confirmations_enabled: boolean
+          email_sending_paused: boolean
           enforce_cancellation_fee: boolean
           favourite_treatment_ids: string[]
           favourites_custom_title: string | null
@@ -7598,6 +7599,7 @@ export type Database = {
           display_name_mode?: string
           email?: string | null
           email_confirmations_enabled?: boolean
+          email_sending_paused?: boolean
           enforce_cancellation_fee?: boolean
           favourite_treatment_ids?: string[]
           favourites_custom_title?: string | null
@@ -7740,6 +7742,7 @@ export type Database = {
           display_name_mode?: string
           email?: string | null
           email_confirmations_enabled?: boolean
+          email_sending_paused?: boolean
           enforce_cancellation_fee?: boolean
           favourite_treatment_ids?: string[]
           favourites_custom_title?: string | null
