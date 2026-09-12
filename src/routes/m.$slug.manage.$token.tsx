@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { describeCancellationRules, type CancellationRule } from "@/lib/policy";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  getRescheduleContextByToken,
+  getRescheduleSlotsByToken,
+  rescheduleByToken,
+} from "@/lib/reschedule.functions";
 import { toast } from "sonner";
 import { Calendar, Clock, MapPin } from "lucide-react";
 import { SafeHtml } from "@/components/SafeHtml";
