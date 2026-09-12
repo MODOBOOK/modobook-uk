@@ -95,6 +95,73 @@ async function sanitizeTreatments(
   return { treatment_ids: kept, treatment_id: kept[0] ?? null };
 }
 
+/**
+ * Packages made only of free-typed items have no real service behind them, so
+ * the calendar has nothing to schedule and the public page falls back to
+ * "Contact to book". Create (or reuse) a hidden service that represents the
+ * package itself so it can be booked online. The service never shows on the
+ * public menu.
+ */
+async function ensurePackageService(
+  supabase: any,
+  profileId: string,
+  packageId: string,
+  data: PackageInput,
+): Promise<void> {
+  const customs = (data.custom_items ?? []).map((s) => s.trim()).filter(Boolean);
+  if (customs.length === 0) return;
+
+  const { data: pkg } = await supabase
+    .from("packages")
+    .select("treatment_id")
+    .eq("id", packageId)
+    .eq("profile_id", profileId)
+    .maybeSingle();
+
+  const duration = data.duration_minutes && data.duration_minutes > 0 ? data.duration_minutes : 60;
+  const existingId = (pkg as { treatment_id: string | null } | null)?.treatment_id ?? null;
+
+  if (existingId) {
+    const { data: existing } = await supabase
+      .from("treatments")
+      .select("id, hidden_from_menu")
+      .eq("id", existingId)
+      .eq("profile_id", profileId)
+      .maybeSingle();
+    if (existing?.hidden_from_menu) {
+      await supabase
+        .from("treatments")
+        .update({ name: data.name, duration, active: true })
+        .eq("id", existing.id);
+      return;
+    }
+    // A real service is already attached — nothing to do.
+    return;
+  }
+
+  const { data: created, error } = await supabase
+    .from("treatments")
+    .insert({
+      profile_id: profileId,
+      name: data.name,
+      description: data.description,
+      duration,
+      price: 0,
+      active: true,
+      hidden_from_menu: true,
+      category_id: null,
+    })
+    .select("id")
+    .single();
+  if (error || !created) return;
+
+  await supabase
+    .from("packages")
+    .update({ treatment_id: created.id, treatment_ids: [created.id] })
+    .eq("id", packageId)
+    .eq("profile_id", profileId);
+}
+
 export const listMyPackages = createServerFn({ method: "GET" })
 
   .middleware([requireSupabaseAuth])
