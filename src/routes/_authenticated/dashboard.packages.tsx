@@ -253,6 +253,7 @@ function PackagesPage() {
       description: form.description.trim() || null,
       treatment_id: form.treatment_ids[0] ?? null,
       treatment_ids: form.treatment_ids,
+      custom_items: form.custom_items.map((s) => s.trim()).filter(Boolean),
       session_count: totalSessions,
       price: effectivePrice,
       compare_at_price: form.compare_at_price.trim() === "" ? null : Math.max(0, Number(form.compare_at_price) || 0),
