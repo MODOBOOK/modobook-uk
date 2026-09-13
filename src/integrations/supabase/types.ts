@@ -3452,6 +3452,33 @@ export type Database = {
         }
         Relationships: []
       }
+      email_rate_window: {
+        Row: {
+          created_at: string
+          id: number
+          max_per_minute: number
+          sent_count: number
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          max_per_minute?: number
+          sent_count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          max_per_minute?: number
+          sent_count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -9870,6 +9897,7 @@ export type Database = {
         Args: { p_email: string; p_slug: string }
         Returns: number
       }
+      claim_email_slots: { Args: { p_requested: number }; Returns: number }
       close_walk_in_as_practitioner: {
         Args: { p_id: string; p_note?: string }
         Returns: boolean
