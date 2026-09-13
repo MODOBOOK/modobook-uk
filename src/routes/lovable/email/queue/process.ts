@@ -158,9 +158,29 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
 
           // Cooldown: critical only, and only a small trickle.
           // Normal: critical first, marketing gets whatever capacity is left.
-          const messages = inCooldown
+          const candidates = inCooldown
             ? critical.slice(0, 3)
             : [...critical, ...bulk].slice(0, batchSize)
+
+          if (!candidates.length) continue
+
+          // Proactive pacing: claim slots from the workspace-wide per-minute
+          // budget before sending. Staying under the provider's limit is far
+          // cheaper than recovering from a 429 storm.
+          const { data: grantedRaw, error: slotError } = await supabase.rpc('claim_email_slots', {
+            p_requested: candidates.length,
+          })
+          if (slotError) {
+            console.error('Failed to claim email send slots', { queue, error: slotError })
+            continue
+          }
+          const granted = typeof grantedRaw === 'number' ? grantedRaw : 0
+          if (granted <= 0) {
+            console.warn('Email rate budget exhausted for this minute', { queue })
+            continue
+          }
+
+          const messages = candidates.slice(0, granted)
 
           if (!messages.length) continue
 
