@@ -116,7 +116,8 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
         appointment_id: id,
         amount: (pr.amountCents || totalCents) / 100,
         status: "succeeded",
-        stripe_payment_intent_id: pr.reference || `manual:${pr.method}`,
+        stripe_payment_intent_id:
+          pr.reference || `manual:${pr.method}:${crypto.randomUUID()}`,
       } as never);
     }
 
@@ -320,7 +321,8 @@ export const markAppointmentPaymentReceived = createServerFn({ method: "POST" })
       appointment_id: data.appointmentId,
       amount: data.amountCents / 100,
       status: "succeeded",
-      stripe_payment_intent_id: data.reference || `manual:${data.method}`,
+      stripe_payment_intent_id:
+        data.reference || `manual:${data.method}:${crypto.randomUUID()}`,
     } as never);
 
     return { ok: true };
