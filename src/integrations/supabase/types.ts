@@ -3851,14 +3851,37 @@ export type Database = {
         }
         Relationships: []
       }
+      health_check_settings: {
+        Row: {
+          auto_fix_enabled: boolean
+          id: number
+          max_rows_per_fix: number
+          updated_at: string
+        }
+        Insert: {
+          auto_fix_enabled?: boolean
+          id?: number
+          max_rows_per_fix?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_fix_enabled?: boolean
+          id?: number
+          max_rows_per_fix?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       health_findings: {
         Row: {
           affected_count: number
+          auto_fixed_count: number
           check_key: string
           created_at: string
           detail: string | null
           first_seen_at: string
           id: string
+          last_auto_fixed_at: string | null
           last_seen_at: string
           profile_id: string | null
           resolved_at: string | null
@@ -3870,11 +3893,13 @@ export type Database = {
         }
         Insert: {
           affected_count?: number
+          auto_fixed_count?: number
           check_key: string
           created_at?: string
           detail?: string | null
           first_seen_at?: string
           id?: string
+          last_auto_fixed_at?: string | null
           last_seen_at?: string
           profile_id?: string | null
           resolved_at?: string | null
@@ -3886,11 +3911,13 @@ export type Database = {
         }
         Update: {
           affected_count?: number
+          auto_fixed_count?: number
           check_key?: string
           created_at?: string
           detail?: string | null
           first_seen_at?: string
           id?: string
+          last_auto_fixed_at?: string | null
           last_seen_at?: string
           profile_id?: string | null
           resolved_at?: string | null
@@ -3899,6 +3926,39 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      health_fix_log: {
+        Row: {
+          action: string
+          affected_count: number
+          check_key: string
+          created_at: string
+          error_message: string | null
+          id: string
+          sample: Json | null
+          succeeded: boolean
+        }
+        Insert: {
+          action: string
+          affected_count?: number
+          check_key: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          sample?: Json | null
+          succeeded?: boolean
+        }
+        Update: {
+          action?: string
+          affected_count?: number
+          check_key?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          sample?: Json | null
+          succeeded?: boolean
         }
         Relationships: []
       }
@@ -9884,6 +9944,7 @@ export type Database = {
         }[]
       }
       admin_revoke_admin: { Args: { _user_id: string }; Returns: boolean }
+      apply_health_auto_fixes: { Args: never; Returns: Json }
       approve_prescriber_clinic_visit: {
         Args: { p_id: string }
         Returns: boolean
