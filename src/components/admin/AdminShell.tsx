@@ -1,9 +1,10 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Shield, Users, ScrollText, Mail, BadgeCheck, LayoutDashboard } from "lucide-react";
+import { Shield, Users, ScrollText, Mail, BadgeCheck, LayoutDashboard, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
+  { to: "/admin/health", label: "Health", icon: Activity },
   { to: "/admin/practitioners", label: "Practitioners", icon: Users },
   { to: "/admin/audit", label: "Audit log", icon: ScrollText },
   { to: "/admin/emails", label: "Emails", icon: Mail },
