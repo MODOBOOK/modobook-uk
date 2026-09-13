@@ -1,0 +1,11 @@
+select cron.schedule(
+  'compliance-reminders-daily',
+  '0 8 * * *',
+  $$
+  select net.http_post(
+    url:='https://project--ad2db8dc-b519-4cbc-b7c4-dc1d5eed30c6.lovable.app/api/public/hooks/compliance-reminders',
+    headers:='{"Content-Type": "application/json", "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmYmtidHN4dWZ2eGticG95ampuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NDY3NTIsImV4cCI6MjA5ODEyMjc1Mn0.CWWAbXiD83hHLwg79e4fxUR61q2Vgr9wSmNTtPzCUkA"}'::jsonb,
+    body:='{}'::jsonb
+  ) as request_id;
+  $$
+);
