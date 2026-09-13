@@ -3824,6 +3824,57 @@ export type Database = {
         }
         Relationships: []
       }
+      health_findings: {
+        Row: {
+          affected_count: number
+          check_key: string
+          created_at: string
+          detail: string | null
+          first_seen_at: string
+          id: string
+          last_seen_at: string
+          profile_id: string | null
+          resolved_at: string | null
+          sample: Json | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          affected_count?: number
+          check_key: string
+          created_at?: string
+          detail?: string | null
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          profile_id?: string | null
+          resolved_at?: string | null
+          sample?: Json | null
+          severity?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          affected_count?: number
+          check_key?: string
+          created_at?: string
+          detail?: string | null
+          first_seen_at?: string
+          id?: string
+          last_seen_at?: string
+          profile_id?: string | null
+          resolved_at?: string | null
+          sample?: Json | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       hub_codes: {
         Row: {
           code: string
@@ -10351,6 +10402,7 @@ export type Database = {
         Returns: Json
       }
       retry_dlq_emails: { Args: never; Returns: number }
+      run_health_checks: { Args: never; Returns: number }
       save_walk_in_medical_form_response: {
         Args: { p_form_id: string; p_referral_id: string; p_response: Json }
         Returns: boolean
