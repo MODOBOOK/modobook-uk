@@ -172,6 +172,7 @@ function AvailabilityPage() {
   const listBlT = useServerFn(listBlockedTimes);
   const addBlT = useServerFn(addBlockedTime);
   const delBlT = useServerFn(deleteBlockedTime);
+  const updBlT = useServerFn(updateBlockedTime);
   const getRota = useServerFn(getRotaSettings);
   const setAnchor = useServerFn(setRotaAnchor);
   const endRota = useServerFn(endCurrentRota);
@@ -183,6 +184,10 @@ function AvailabilityPage() {
   const [overrides, setOverrides] = useState<Override[]>([]);
   const [blocked, setBlocked] = useState<Blocked[]>([]);
   const [blockedTimes, setBlockedTimes] = useState<BlockedTime[]>([]);
+  // Row being edited in the "time off" list (times + why it's blocked).
+  const [editBt, setEditBt] = useState<BlockedTime | null>(null);
+  const [editBtForm, setEditBtForm] = useState({ date: "", start: "", end: "", reason: "" });
+  const [savingBt, setSavingBt] = useState(false);
   const [locations, setLocations] = useState<Location[]>([]);
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [anchorDate, setAnchorDate] = useState<string | null>(null);
