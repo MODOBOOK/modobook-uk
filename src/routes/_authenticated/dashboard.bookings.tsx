@@ -41,6 +41,7 @@ import {
   updateAppointmentAftercareAndAllergy,
   listBlockedTimes,
   addBlockedTime,
+  updateBlockedTime,
   deleteBlockedTime,
   addAvailabilityOverride,
   listAvailabilityRules,
