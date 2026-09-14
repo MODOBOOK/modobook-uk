@@ -1325,6 +1325,94 @@ function BlockTimeDialog({
   );
 }
 
+/** Edit the times / reason of an existing block, or remove it entirely. */
+function EditBlockDialog({
+  block, onOpenChange, onSaved, onRemoved,
+}: {
+  block: BlockedTime | null;
+  onOpenChange: (v: boolean) => void;
+  onSaved: (b: BlockedTime) => void;
+  onRemoved: (id: string) => void;
+}) {
+  const save = useServerFn(updateBlockedTime);
+  const del = useServerFn(deleteBlockedTime);
+  const [date, setDate] = useState("");
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("17:00");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!block) return;
+    setDate(block.date);
+    setStartTime(block.start_time.slice(0, 5));
+    setEndTime(block.end_time.slice(0, 5));
+    setReason(block.reason ?? "");
+  }, [block]);
+
+  async function submit() {
+    if (!block) return;
+    setBusy(true);
+    try {
+      const row = await save({
+        data: { id: block.id, date, start_time: `${startTime}:00`, end_time: `${endTime}:00`, reason: reason || null },
+      });
+      onSaved(row as BlockedTime);
+      toast.success("Blocked time updated");
+      onOpenChange(false);
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setBusy(false); }
+  }
+
+  async function remove() {
+    if (!block) return;
+    if (!confirm("Unblock this time?")) return;
+    setBusy(true);
+    try {
+      await del({ data: { id: block.id } });
+      onRemoved(block.id);
+      toast.success("Unblocked — time now open");
+      onOpenChange(false);
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setBusy(false); }
+  }
+
+  return (
+    <Dialog open={!!block} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Edit blocked time</DialogTitle></DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Date</Label>
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Start</Label>
+              <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+            </div>
+            <div>
+              <Label>End</Label>
+              <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+            </div>
+          </div>
+          <div>
+            <Label>Reason</Label>
+            <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Lunch, training, holiday…" />
+          </div>
+          <DialogFooter className="gap-2 sm:justify-between">
+            <Button variant="destructive" onClick={remove} disabled={busy}>Unblock</Button>
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button onClick={submit} disabled={busy}>{busy ? "Saving…" : "Save changes"}</Button>
+            </div>
+          </DialogFooter>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function UnblockDialog({
   open, onOpenChange, blocks, onRemoved, onOpened, practitionerId, locations = [], defaultLocationId = "all", seed,
 }: {
