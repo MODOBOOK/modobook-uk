@@ -19,6 +19,7 @@ import {
 import { addWalkInConsentForms, addWalkInMedicalForms, listLinkedPractitionerConsentForms, listLinkedPractitionerMedicalForms, listMySnippets, listMyRxTemplates, saveWalkInMedicalFormResponse, sendWalkInToPractitioner } from "@/lib/prescriber-directions.functions";
 import { AESTHETICS_MEDICATIONS } from "@/lib/aesthetics-medications";
 import { WalkInDialog } from "@/components/prescriber/WalkInDialog";
+import { SafeHtml } from "@/components/SafeHtml";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
