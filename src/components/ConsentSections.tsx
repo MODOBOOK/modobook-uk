@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, ChevronUp, ChevronDown, X, ListChecks } from "lucide-react";
+import { SafeHtml } from "@/components/SafeHtml";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 export type ConsentSection = {
   title: string;
@@ -25,9 +27,10 @@ export function ConsentSectionsView({
   const hasSections = Array.isArray(sections) && sections.length > 0;
   if (!hasSections) {
     return (
-      <div className="prose prose-sm max-w-none whitespace-pre-wrap rounded-xl border bg-muted/30 p-4 text-sm">
-        {fallbackBody || summary || "No consent text provided."}
-      </div>
+      <SafeHtml
+        html={fallbackBody || summary || "No consent text provided."}
+        className="prose prose-sm max-w-none rounded-xl border bg-muted/30 p-4 text-sm [&_p]:my-2"
+      />
     );
   }
   return (
