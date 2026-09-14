@@ -110,6 +110,28 @@ export const getCompliance = createServerFn({ method: "GET" })
     const db = context.supabase as any;
     const a = await access(context as Ctx);
 
+    // Clinics can switch compliance tracking off entirely (solo practitioners
+    // often don't need it). When off we return empty data and never seed.
+    const { data: prof } = await db
+      .from("profiles")
+      .select("compliance_enabled")
+      .eq("id", a.profileId)
+      .maybeSingle();
+    const enabled = prof?.compliance_enabled !== false;
+    if (!enabled) {
+      return {
+        enabled: false,
+        isOwner: a.isOwner,
+        role: a.role,
+        checkTemplates: [],
+        auditTemplates: [],
+        records: [],
+        audits: [],
+        actions: [],
+        today: todayIso(),
+      };
+    }
+
     // First visit: give the clinic the full ready-made set, already scheduled
     // with reminders, so audits open pre-filled with their questions.
     const { count: tplCount } = await db
@@ -153,6 +175,7 @@ export const getCompliance = createServerFn({ method: "GET" })
     ]);
 
     return {
+      enabled: true,
       isOwner: a.isOwner,
       role: a.role,
       checkTemplates: checks.data ?? [],
@@ -162,6 +185,26 @@ export const getCompliance = createServerFn({ method: "GET" })
       actions: actions.data ?? [],
       today: todayIso(),
     };
+  });
+
+/**
+ * Clinic owner turns compliance tracking on or off for the whole clinic.
+ * Turning it off hides the section from everyone's menus; nothing is deleted,
+ * so switching back on restores all checks, audits and history.
+ */
+export const setComplianceEnabled = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { enabled: boolean }) => ({ enabled: Boolean(i?.enabled) }))
+  .handler(async ({ data, context }) => {
+    const db = context.supabase as any;
+    const a = await access(context as Ctx);
+    if (!a.isOwner) throw new Error("Only the clinic owner can change this setting.");
+    const { error } = await db
+      .from("profiles")
+      .update({ compliance_enabled: data.enabled })
+      .eq("id", a.profileId);
+    if (error) throw new Error(error.message);
+    return { ok: true, enabled: data.enabled };
   });
 
 // ---- Seeding ready-made templates ----------------------------------------
