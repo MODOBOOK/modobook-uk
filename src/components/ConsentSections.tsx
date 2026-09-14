@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, ChevronUp, ChevronDown, X, ListChecks } from "lucide-react";
+import { SafeHtml } from "@/components/SafeHtml";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 export type ConsentSection = {
   title: string;
@@ -25,9 +26,10 @@ export function ConsentSectionsView({
   const hasSections = Array.isArray(sections) && sections.length > 0;
   if (!hasSections) {
     return (
-      <div className="prose prose-sm max-w-none whitespace-pre-wrap rounded-xl border bg-muted/30 p-4 text-sm">
-        {fallbackBody || summary || "No consent text provided."}
-      </div>
+      <SafeHtml
+        html={fallbackBody || summary || "No consent text provided."}
+        className="prose prose-sm max-w-none rounded-xl border bg-muted/30 p-4 text-sm [&_p]:my-2"
+      />
     );
   }
   return (
@@ -49,7 +51,9 @@ export function ConsentSectionsView({
             <h3 className="text-sm font-semibold tracking-tight">{s.title}</h3>
           </header>
           <div className="space-y-2 px-4 py-3 text-sm leading-relaxed">
-            {s.body && <p className="text-foreground/85">{s.body}</p>}
+            {s.body && (
+              <SafeHtml html={s.body} className="prose prose-sm max-w-none text-foreground/85 [&_p]:my-2" />
+            )}
             {Array.isArray(s.bullets) && s.bullets.length > 0 && (
               <ul className="space-y-1.5">
                 {s.bullets.map((b, j) => (
@@ -128,13 +132,11 @@ export function ConsentSectionsEditor({
               onChange={(e) => update(i, { title: e.target.value })}
               placeholder="Section title (e.g. Risks & complications)"
             />
-            <Textarea
-              rows={3}
-              value={s.body ?? ""}
-              disabled={disabled}
-              onChange={(e) => update(i, { body: e.target.value })}
-              placeholder="Optional paragraph explaining this section."
-            />
+            {disabled ? (
+              <SafeHtml html={s.body} className="prose prose-sm max-w-none rounded-md border bg-muted/20 p-3 text-sm [&_p]:my-2" />
+            ) : (
+              <RichTextEditor value={s.body ?? ""} onChange={(html) => update(i, { body: html })} />
+            )}
             <BulletEditor
               value={s.bullets ?? []}
               disabled={disabled}

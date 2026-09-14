@@ -1,3 +1,4 @@
+import { richTextToPlain } from "@/lib/rich-text";
 import { jsPDF } from "jspdf";
 
 export type ConsentSectionLike = { title: string; body?: string; bullets?: string[] };
@@ -151,7 +152,7 @@ export async function generateConsentPdf(inputs: ConsentPdfInput | ConsentPdfInp
         y += 14;
         if (s.body) {
           doc.setFont("helvetica", "normal").setFontSize(10).setTextColor(40);
-          const lines = doc.splitTextToSize(s.body, CW);
+          const lines = doc.splitTextToSize(richTextToPlain(s.body), CW);
           for (const l of lines) { ensure(14); doc.text(l, M, y); y += 13; }
         }
         if (Array.isArray(s.bullets) && s.bullets.length) {
@@ -165,7 +166,7 @@ export async function generateConsentPdf(inputs: ConsentPdfInput | ConsentPdfInp
       }
     } else if (consent.template_body) {
       doc.setFont("helvetica", "normal").setFontSize(10).setTextColor(40);
-      const lines = doc.splitTextToSize(consent.template_body, CW);
+      const lines = doc.splitTextToSize(richTextToPlain(consent.template_body), CW);
       for (const l of lines) { ensure(14); doc.text(l, M, y); y += 13; }
     }
 

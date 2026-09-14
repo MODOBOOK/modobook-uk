@@ -7,6 +7,9 @@ import {
   listRecentFormSubmissions,
 } from "@/lib/medical-forms.functions";
 import { FormResponseDialog } from "@/components/patient/FormResponseDialog";
+import { RichTextEditor } from "@/components/RichTextEditor";
+import { SafeHtml } from "@/components/SafeHtml";
+import { SignaturePad } from "@/components/SignaturePad";
 import { getMyTreatments } from "@/lib/treatments.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -695,12 +698,12 @@ function ElementEditor({ element, siblings, onChange, onRemove, onMove, onDuplic
       )}
 
       {element.type === "paragraph" && (
-        <Textarea rows={2} value={element.text ?? ""} onChange={(e) => onChange({ text: e.target.value })} placeholder="Paragraph text" />
+        <RichTextEditor value={element.text ?? ""} onChange={(html) => onChange({ text: html })} />
       )}
 
       {element.type === "info" && (
         <div className="space-y-2">
-          <Textarea rows={2} value={element.text ?? ""} onChange={(e) => onChange({ text: e.target.value })} placeholder="Patient-facing message" />
+          <RichTextEditor value={element.text ?? ""} onChange={(html) => onChange({ text: html })} />
           <Select value={element.variant ?? "info"} onValueChange={(v) => onChange({ variant: v as any })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -961,14 +964,21 @@ function PreviewElement({ el, value, onChange }: { el: FormElement; value: any; 
     const cls = el.level === 1 ? "text-2xl font-bold" : el.level === 3 ? "text-base font-bold" : "text-lg font-bold";
     return <T className={cls}>{el.text}</T>;
   }
-  if (el.type === "paragraph") return <p className="text-sm text-muted-foreground">{el.text}</p>;
+  if (el.type === "paragraph") {
+    return <SafeHtml html={el.text} className="prose prose-sm max-w-none text-sm text-muted-foreground [&_p]:my-2 [&_strong]:text-foreground" />;
+  }
   if (el.type === "info") {
     const tones: Record<string, string> = {
       info: "border-sky-300 bg-sky-50 text-sky-900",
       warning: "border-amber-300 bg-amber-50 text-amber-900",
       success: "border-emerald-300 bg-emerald-50 text-emerald-900",
     };
-    return <div className={`rounded-md border p-3 text-sm ${tones[el.variant ?? "info"]}`}>{el.text}</div>;
+    return (
+      <SafeHtml
+        html={el.text}
+        className={`prose prose-sm max-w-none rounded-md border p-3 text-sm [&_p]:my-2 ${tones[el.variant ?? "info"]}`}
+      />
+    );
   }
   if (el.type === "separator") return <hr />;
   if (el.type === "space") return <div className="h-3" />;
@@ -1068,8 +1078,10 @@ function PreviewElement({ el, value, onChange }: { el: FormElement; value: any; 
     return (
       <div className="space-y-1.5">
         <Label className="text-sm">{el.label}{reqMark}</Label>
-        <Input placeholder="Type your full name to sign" value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
-        <p className="text-xs text-muted-foreground">By typing your name you confirm your electronic signature.</p>
+        <SignaturePad
+          value={typeof value === "string" && value.startsWith("data:image") ? value : null}
+          onChange={(v) => onChange(v ?? "")}
+        />
         {help}
       </div>
     );
