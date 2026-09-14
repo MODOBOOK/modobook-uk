@@ -83,6 +83,37 @@ export const cloneSystemAftercareTemplate = createServerFn({ method: "POST" })
     return row;
   });
 
+export const cloneAftercareTemplate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string }) => i)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { data: src, error: e1 } = await context.supabase
+      .from("aftercare_templates")
+      .select("name, body_html, delay_hours, category, summary, show_on_public")
+      .eq("id", data.id)
+      .eq("profile_id", profileId)
+      .single();
+    if (e1) throw e1;
+    const { data: row, error } = await context.supabase
+      .from("aftercare_templates")
+      .insert({
+        profile_id: profileId,
+        is_system: false,
+        name: `${src.name} (copy)`,
+        body_html: src.body_html,
+        delay_hours: src.delay_hours,
+        category: src.category,
+        summary: src.summary,
+        show_on_public: src.show_on_public ?? false,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return row;
+  });
+
 export const saveAftercareTemplate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { id?: string; name: string; body_html: string; delay_hours: number; show_on_public?: boolean }) => i)
