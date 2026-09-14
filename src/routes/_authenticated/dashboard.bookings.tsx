@@ -259,6 +259,7 @@ function BookingsPage() {
   const [showPayLink, setShowPayLink] = useState(false);
   const [showBlock, setShowBlock] = useState(false);
   const [showUnblock, setShowUnblock] = useState(false);
+  const [editBlock, setEditBlock] = useState<BlockedTime | null>(null);
   // Clicking empty calendar space opens the add menu with the clicked
   // date/time remembered and passed into whichever action is chosen.
   const [slotMenu, setSlotMenu] = useState<{ date: string; time: string; x: number; y: number } | null>(null);
