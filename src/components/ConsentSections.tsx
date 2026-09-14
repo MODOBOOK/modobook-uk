@@ -52,7 +52,9 @@ export function ConsentSectionsView({
             <h3 className="text-sm font-semibold tracking-tight">{s.title}</h3>
           </header>
           <div className="space-y-2 px-4 py-3 text-sm leading-relaxed">
-            {s.body && <p className="text-foreground/85">{s.body}</p>}
+            {s.body && (
+              <SafeHtml html={s.body} className="prose prose-sm max-w-none text-foreground/85 [&_p]:my-2" />
+            )}
             {Array.isArray(s.bullets) && s.bullets.length > 0 && (
               <ul className="space-y-1.5">
                 {s.bullets.map((b, j) => (
