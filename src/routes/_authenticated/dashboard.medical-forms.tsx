@@ -7,6 +7,9 @@ import {
   listRecentFormSubmissions,
 } from "@/lib/medical-forms.functions";
 import { FormResponseDialog } from "@/components/patient/FormResponseDialog";
+import { RichTextEditor } from "@/components/RichTextEditor";
+import { SafeHtml } from "@/components/SafeHtml";
+import { SignaturePad } from "@/components/SignaturePad";
 import { getMyTreatments } from "@/lib/treatments.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
