@@ -567,7 +567,7 @@ export const updateBlockedTime = createServerFn({ method: "POST" })
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
     const { ownPractitionerId } = await getScope(context.supabase, context.userId);
-    const patch: Record<string, unknown> = {};
+    const patch: { date?: string; start_time?: string; end_time?: string; reason?: string | null } = {};
     if (data.date) patch.date = data.date;
     if (data.start_time) patch.start_time = data.start_time;
     if (data.end_time) patch.end_time = data.end_time;
