@@ -19,6 +19,7 @@ import {
 import { addWalkInConsentForms, addWalkInMedicalForms, listLinkedPractitionerConsentForms, listLinkedPractitionerMedicalForms, listMySnippets, listMyRxTemplates, saveWalkInMedicalFormResponse, sendWalkInToPractitioner } from "@/lib/prescriber-directions.functions";
 import { AESTHETICS_MEDICATIONS } from "@/lib/aesthetics-medications";
 import { WalkInDialog } from "@/components/prescriber/WalkInDialog";
+import { SafeHtml } from "@/components/SafeHtml";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -660,7 +661,7 @@ function FormSchemaElement({ element, answers, onChange }: { element: Prescriber
   const value = answers[id] ?? answers[label];
   const reqMark = element.required ? <span className="text-destructive"> *</span> : null;
   if (type === "heading") return <p className="text-sm font-semibold text-foreground">{String(element.text ?? label)}</p>;
-  if (type === "paragraph" || type === "info") return <p className="whitespace-pre-wrap text-muted-foreground">{String(element.text ?? label)}</p>;
+  if (type === "paragraph" || type === "info") return <SafeHtml html={String(element.text ?? label)} className="prose prose-sm max-w-none text-muted-foreground [&_p]:my-2" />;
   if (type === "separator") return <div className="my-2 border-t" />;
   if (type === "space") return <div className="h-2" />;
   if (type === "yesno" || type === "radio") {
