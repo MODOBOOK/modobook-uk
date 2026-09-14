@@ -557,6 +557,28 @@ export const addBlockedTime = createServerFn({ method: "POST" })
     return row;
   });
 
+/** Change the times / reason on an existing block. */
+export const updateBlockedTime = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (d: { id: string; date?: string; start_time?: string; end_time?: string; reason?: string | null }) => d,
+  )
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { ownPractitionerId } = await getScope(context.supabase, context.userId);
+    const patch: { date?: string; start_time?: string; end_time?: string; reason?: string | null } = {};
+    if (data.date) patch.date = data.date;
+    if (data.start_time) patch.start_time = data.start_time;
+    if (data.end_time) patch.end_time = data.end_time;
+    if (data.reason !== undefined) patch.reason = data.reason || null;
+    let q = context.supabase.from("blocked_times").update(patch).eq("id", data.id).eq("profile_id", profileId);
+    if (ownPractitionerId) q = q.eq("practitioner_id", ownPractitionerId);
+    const { data: row, error } = await q.select().single();
+    if (error) throw error;
+    return row;
+  });
+
 export const deleteBlockedTime = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { id: string }) => d)

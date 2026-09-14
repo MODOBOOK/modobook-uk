@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Trash2, Plus, Repeat, CalendarDays, CalendarRange, Clock } from "lucide-react";
+import { Trash2, Plus, Repeat, CalendarDays, CalendarRange, Clock, Pencil } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import {
@@ -26,6 +26,7 @@ import {
   deleteBlockedDate,
   listBlockedTimes,
   addBlockedTime,
+  updateBlockedTime,
   deleteBlockedTime,
   getRotaSettings,
   setRotaAnchor,
@@ -171,6 +172,7 @@ function AvailabilityPage() {
   const listBlT = useServerFn(listBlockedTimes);
   const addBlT = useServerFn(addBlockedTime);
   const delBlT = useServerFn(deleteBlockedTime);
+  const updBlT = useServerFn(updateBlockedTime);
   const getRota = useServerFn(getRotaSettings);
   const setAnchor = useServerFn(setRotaAnchor);
   const endRota = useServerFn(endCurrentRota);
@@ -182,6 +184,10 @@ function AvailabilityPage() {
   const [overrides, setOverrides] = useState<Override[]>([]);
   const [blocked, setBlocked] = useState<Blocked[]>([]);
   const [blockedTimes, setBlockedTimes] = useState<BlockedTime[]>([]);
+  // Row being edited in the "time off" list (times + why it's blocked).
+  const [editBt, setEditBt] = useState<BlockedTime | null>(null);
+  const [editBtForm, setEditBtForm] = useState({ date: "", start: "", end: "", reason: "" });
+  const [savingBt, setSavingBt] = useState(false);
   const [locations, setLocations] = useState<Location[]>([]);
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [anchorDate, setAnchorDate] = useState<string | null>(null);
@@ -510,6 +516,29 @@ function AvailabilityPage() {
   }
   async function removeBlockTime(id: string) {
     try { await delBlT({ data: { id } }); await refresh(); } catch (err: any) { toast.error(err?.message ?? "Failed"); }
+  }
+  function openEditBlockTime(b: BlockedTime) {
+    setEditBt(b);
+    setEditBtForm({ date: b.date, start: b.start_time.slice(0, 5), end: b.end_time.slice(0, 5), reason: b.reason ?? "" });
+  }
+  async function saveEditBlockTime() {
+    if (!editBt) return;
+    setSavingBt(true);
+    try {
+      await updBlT({
+        data: {
+          id: editBt.id,
+          date: editBtForm.date,
+          start_time: `${editBtForm.start}:00`,
+          end_time: `${editBtForm.end}:00`,
+          reason: editBtForm.reason || null,
+        },
+      });
+      setEditBt(null);
+      await refresh();
+      toast.success("Blocked time updated");
+    } catch (err: any) { toast.error(err?.message ?? "Failed"); }
+    finally { setSavingBt(false); }
   }
 
   // Only shifts that are still running (or start in the future) belong to the
@@ -1146,7 +1175,10 @@ function AvailabilityPage() {
                         <span className="text-xs rounded-full bg-muted px-2 py-0.5">{locName(b.location_id) ?? "All locations"}</span>
                         {b.practitioner_id && <span className="text-xs rounded-full bg-muted px-2 py-0.5">{pracName(b.practitioner_id)}</span>}
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => removeBlockTime(b.id)}><Trash2 className="h-4 w-4" /></Button>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => openEditBlockTime(b)}><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => removeBlockTime(b.id)}><Trash2 className="h-4 w-4" /></Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1155,6 +1187,36 @@ function AvailabilityPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!editBt} onOpenChange={(v) => { if (!v) setEditBt(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit blocked time</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Date</Label>
+              <Input type="date" value={editBtForm.date} onChange={(e) => setEditBtForm((f) => ({ ...f, date: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Start</Label>
+                <Input type="time" value={editBtForm.start} onChange={(e) => setEditBtForm((f) => ({ ...f, start: e.target.value }))} />
+              </div>
+              <div>
+                <Label>End</Label>
+                <Input type="time" value={editBtForm.end} onChange={(e) => setEditBtForm((f) => ({ ...f, end: e.target.value }))} />
+              </div>
+            </div>
+            <div>
+              <Label>Reason</Label>
+              <Input value={editBtForm.reason} onChange={(e) => setEditBtForm((f) => ({ ...f, reason: e.target.value }))} placeholder="Lunch, training, holiday…" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditBt(null)}>Cancel</Button>
+            <Button onClick={saveEditBlockTime} disabled={savingBt}>{savingBt ? "Saving…" : "Save changes"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dlgOpen} onOpenChange={setDlgOpen}>
         <DialogContent>
