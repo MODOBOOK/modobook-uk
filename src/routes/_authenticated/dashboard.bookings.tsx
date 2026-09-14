@@ -997,6 +997,12 @@ function BookingsPage() {
         onOpened={refresh}
         seed={unblockSeed}
       />
+      <EditBlockDialog
+        block={editBlock}
+        onOpenChange={(v) => { if (!v) setEditBlock(null); }}
+        onSaved={(row) => setBlocks((p) => p.map((b) => (b.id === row.id ? row : b)))}
+        onRemoved={(id) => setBlocks((p) => p.filter((b) => b.id !== id))}
+      />
     </div>
   );
 }
