@@ -133,13 +133,11 @@ export function ConsentSectionsEditor({
               onChange={(e) => update(i, { title: e.target.value })}
               placeholder="Section title (e.g. Risks & complications)"
             />
-            <Textarea
-              rows={3}
-              value={s.body ?? ""}
-              disabled={disabled}
-              onChange={(e) => update(i, { body: e.target.value })}
-              placeholder="Optional paragraph explaining this section."
-            />
+            {disabled ? (
+              <SafeHtml html={s.body} className="prose prose-sm max-w-none rounded-md border bg-muted/20 p-3 text-sm [&_p]:my-2" />
+            ) : (
+              <RichTextEditor value={s.body ?? ""} onChange={(html) => update(i, { body: html })} />
+            )}
             <BulletEditor
               value={s.bullets ?? []}
               disabled={disabled}
