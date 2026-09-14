@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   getCompliance,
+  setComplianceEnabled,
   seedComplianceDefaults,
   saveCheckTemplate,
   deleteCheckTemplate,
@@ -98,6 +99,7 @@ function Page() {
   const fetchAll = useServerFn(getCompliance);
   const { data, isLoading } = useQuery({ queryKey: ["compliance"], queryFn: () => fetchAll() });
 
+  const setEnabled = useServerFn(setComplianceEnabled);
   const seed = useServerFn(seedComplianceDefaults);
   const doCheck = useServerFn(recordCheck);
   const saveCheck = useServerFn(saveCheckTemplate);
