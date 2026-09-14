@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { SignaturePad } from "@/components/SignaturePad";
+import { SafeHtml } from "@/components/SafeHtml";
 
 type FormElement = {
   id: string;
@@ -338,14 +339,21 @@ function RenderElement({ el, value, onChange }: { el: FormElement; value: any; o
     const cls = el.level === 1 ? "text-2xl font-bold" : el.level === 3 ? "text-base font-bold" : "text-lg font-bold";
     return <T className={cls}>{el.text}</T>;
   }
-  if (el.type === "paragraph") return <p className="text-sm text-muted-foreground">{el.text}</p>;
+  if (el.type === "paragraph") {
+    return <SafeHtml html={el.text} className="prose prose-sm max-w-none text-sm text-muted-foreground [&_p]:my-2 [&_strong]:text-foreground" />;
+  }
   if (el.type === "info") {
     const tones: Record<string, string> = {
       info: "border-sky-300 bg-sky-50 text-sky-900",
       warning: "border-amber-300 bg-amber-50 text-amber-900",
       success: "border-emerald-300 bg-emerald-50 text-emerald-900",
     };
-    return <div className={`rounded-md border p-3 text-sm ${tones[(el as any).variant ?? "info"]}`}>{el.text}</div>;
+    return (
+      <SafeHtml
+        html={el.text}
+        className={`prose prose-sm max-w-none rounded-md border p-3 text-sm [&_p]:my-2 ${tones[(el as any).variant ?? "info"]}`}
+      />
+    );
   }
   if (el.type === "separator") return <hr />;
   if (el.type === "space") return <div className="h-3" />;
