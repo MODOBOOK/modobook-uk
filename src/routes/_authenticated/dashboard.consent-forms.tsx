@@ -291,6 +291,11 @@ function ConsentFormsPage() {
                 t={t}
                 editable
                 onEdit={() => openEditor(t)}
+                onClone={async () => {
+                  await clone({ data: { template_id: t.id } });
+                  toast.success("Cloned to your templates");
+                  refresh();
+                }}
                 onDelete={async () => {
                   if (!confirm("Delete this consent template?")) return;
                   await remove({ data: { id: t.id } });

@@ -10,6 +10,7 @@ import {
   getAftercareTemplateTreatmentIds,
   setAftercareTemplateTreatmentIds,
   cloneSystemAftercareTemplate,
+  cloneAftercareTemplate,
 } from "@/lib/aftercare-templates.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +66,7 @@ function AftercarePage() {
   const getTplTreatments = useServerFn(getAftercareTemplateTreatmentIds);
   const setTplTreatments = useServerFn(setAftercareTemplateTreatmentIds);
   const cloneSys = useServerFn(cloneSystemAftercareTemplate);
+  const cloneMine = useServerFn(cloneAftercareTemplate);
   const qc = useQueryClient();
   const q = useQuery({ queryKey: ["aftercare-templates"], queryFn: () => list() });
   const tQ = useQuery({ queryKey: ["my-treatments-basic"], queryFn: () => listTreatments() });
@@ -136,6 +138,18 @@ function AftercarePage() {
                     <div className="flex gap-1 shrink-0">
                       <Button size="sm" variant="ghost" onClick={() => openEditor(t)}>
                         <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        title="Clone this template"
+                        onClick={async () => {
+                          await cloneMine({ data: { id: t.id } });
+                          await qc.invalidateQueries({ queryKey: ["aftercare-templates"] });
+                          toast.success("Cloned to your templates");
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
                       </Button>
                       <Button
                         size="sm"
