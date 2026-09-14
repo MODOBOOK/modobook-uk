@@ -820,19 +820,13 @@ function BookingsPage() {
                       return (
                         <button
                           key={`b-${b.id}`}
-                          onClick={async () => {
-                            if (!confirm(`Unblock ${b.start_time.slice(0,5)}–${b.end_time.slice(0,5)}?`)) return;
-                            try {
-                              await deleteBlockedTime({ data: { id: b.id } });
-                              setBlocks((p) => p.filter((x) => x.id !== b.id));
-                              toast.success("Unblocked — time now open");
-                            } catch (err) { toast.error((err as Error).message); }
-                          }}
+                          onClick={() => setEditBlock(b)}
                           className="absolute left-0 right-0 z-0 overflow-hidden border-y border-foreground/15 bg-foreground/10 px-1.5 py-0.5 text-left text-[10px] leading-tight text-foreground/70"
                           style={{ top: (s - START_HOUR) * HOUR_HEIGHT, height: (e - s) * HOUR_HEIGHT }}
-                          title="Tap to open this slot"
+                          title={b.reason ? `${b.reason} — tap to edit` : "Tap to edit or unblock"}
                         >
                           <span className="inline-flex items-center gap-1 font-semibold"><Ban className="h-3 w-3 shrink-0" /> Blocked {b.start_time.slice(0,5)}–{b.end_time.slice(0,5)}</span>
+                          {b.reason && <span className="block truncate italic opacity-80">{b.reason}</span>}
                         </button>
                       );
                     })}
