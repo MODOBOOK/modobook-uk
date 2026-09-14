@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, ChevronUp, ChevronDown, X, ListChecks } from "lucide-react";
 import { SafeHtml } from "@/components/SafeHtml";
