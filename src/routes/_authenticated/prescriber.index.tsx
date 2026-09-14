@@ -660,7 +660,7 @@ function FormSchemaElement({ element, answers, onChange }: { element: Prescriber
   const value = answers[id] ?? answers[label];
   const reqMark = element.required ? <span className="text-destructive"> *</span> : null;
   if (type === "heading") return <p className="text-sm font-semibold text-foreground">{String(element.text ?? label)}</p>;
-  if (type === "paragraph" || type === "info") return <p className="whitespace-pre-wrap text-muted-foreground">{String(element.text ?? label)}</p>;
+  if (type === "paragraph" || type === "info") return <SafeHtml html={String(element.text ?? label)} className="prose prose-sm max-w-none text-muted-foreground [&_p]:my-2" />;
   if (type === "separator") return <div className="my-2 border-t" />;
   if (type === "space") return <div className="h-2" />;
   if (type === "yesno" || type === "radio") {
