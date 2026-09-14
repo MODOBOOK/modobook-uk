@@ -1175,7 +1175,10 @@ function AvailabilityPage() {
                         <span className="text-xs rounded-full bg-muted px-2 py-0.5">{locName(b.location_id) ?? "All locations"}</span>
                         {b.practitioner_id && <span className="text-xs rounded-full bg-muted px-2 py-0.5">{pracName(b.practitioner_id)}</span>}
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => removeBlockTime(b.id)}><Trash2 className="h-4 w-4" /></Button>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => openEditBlockTime(b)}><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => removeBlockTime(b.id)}><Trash2 className="h-4 w-4" /></Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1184,6 +1187,36 @@ function AvailabilityPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!editBt} onOpenChange={(v) => { if (!v) setEditBt(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit blocked time</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Date</Label>
+              <Input type="date" value={editBtForm.date} onChange={(e) => setEditBtForm((f) => ({ ...f, date: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Start</Label>
+                <Input type="time" value={editBtForm.start} onChange={(e) => setEditBtForm((f) => ({ ...f, start: e.target.value }))} />
+              </div>
+              <div>
+                <Label>End</Label>
+                <Input type="time" value={editBtForm.end} onChange={(e) => setEditBtForm((f) => ({ ...f, end: e.target.value }))} />
+              </div>
+            </div>
+            <div>
+              <Label>Reason</Label>
+              <Input value={editBtForm.reason} onChange={(e) => setEditBtForm((f) => ({ ...f, reason: e.target.value }))} placeholder="Lunch, training, holiday…" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditBt(null)}>Cancel</Button>
+            <Button onClick={saveEditBlockTime} disabled={savingBt}>{savingBt ? "Saving…" : "Save changes"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dlgOpen} onOpenChange={setDlgOpen}>
         <DialogContent>
