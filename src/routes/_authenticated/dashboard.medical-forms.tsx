@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  listForms, saveForm, deleteForm, getForm,
+  listForms, saveForm, deleteForm, getForm, cloneForm,
   listFormCategories, upsertFormCategory, deleteFormCategory,
   listRecentFormSubmissions,
 } from "@/lib/medical-forms.functions";
@@ -98,6 +98,7 @@ function FormsPage() {
   const fetchForms = useServerFn(listForms);
   const fetchCats = useServerFn(listFormCategories);
   const removeForm = useServerFn(deleteForm);
+  const cloneFormFn = useServerFn(cloneForm);
   const upsertCat = useServerFn(upsertFormCategory);
   const removeCat = useServerFn(deleteFormCategory);
 
@@ -230,6 +231,16 @@ function FormsPage() {
                         {f.is_system && <Badge variant="secondary" className="text-[10px]">System</Badge>}
                         <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditingId(f.id)}>
                           <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          size="icon" variant="ghost" className="h-8 w-8" title="Clone this form"
+                          onClick={async () => {
+                            await cloneFormFn({ data: { id: f.id } });
+                            toast.success("Cloned to your forms");
+                            refresh();
+                          }}
+                        >
+                          <Copy className="h-3.5 w-3.5" />
                         </Button>
                         {!f.is_system && (
                           <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" onClick={() => handleDelete(f.id)}>
