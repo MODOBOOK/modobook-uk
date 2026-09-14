@@ -517,6 +517,29 @@ function AvailabilityPage() {
   async function removeBlockTime(id: string) {
     try { await delBlT({ data: { id } }); await refresh(); } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
+  function openEditBlockTime(b: BlockedTime) {
+    setEditBt(b);
+    setEditBtForm({ date: b.date, start: b.start_time.slice(0, 5), end: b.end_time.slice(0, 5), reason: b.reason ?? "" });
+  }
+  async function saveEditBlockTime() {
+    if (!editBt) return;
+    setSavingBt(true);
+    try {
+      await updBlT({
+        data: {
+          id: editBt.id,
+          date: editBtForm.date,
+          start_time: `${editBtForm.start}:00`,
+          end_time: `${editBtForm.end}:00`,
+          reason: editBtForm.reason || null,
+        },
+      });
+      setEditBt(null);
+      await refresh();
+      toast.success("Blocked time updated");
+    } catch (err: any) { toast.error(err?.message ?? "Failed"); }
+    finally { setSavingBt(false); }
+  }
 
   // Only shifts that are still running (or start in the future) belong to the
   // live rota; anything with an end date in the past is a previous rota.
