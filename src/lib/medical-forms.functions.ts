@@ -172,6 +172,51 @@ export const saveForm = createServerFn({ method: "POST" })
     return { id };
   });
 
+export const cloneForm = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string }) => i)
+  .handler(async ({ data, context }) => {
+    const profileId = await getProfileId(context.supabase, context.userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { data: src, error: e1 } = await context.supabase
+      .from("medical_form_templates")
+      .select("*")
+      .eq("id", data.id)
+      .single();
+    if (e1) throw e1;
+    const { data: row, error } = await context.supabase
+      .from("medical_form_templates")
+      .insert({
+        profile_id: profileId,
+        name: `${src.name} (copy)`,
+        description: src.description ?? null,
+        category_id: src.category_id ?? null,
+        validity: src.validity ?? "always_required",
+        schema: src.schema,
+        is_system: false,
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    // Carry over links to this practitioner's own treatments only.
+    const { data: links } = await context.supabase
+      .from("treatment_medical_forms")
+      .select("treatment_id")
+      .eq("template_id", data.id);
+    const tids = (links ?? []).map((l: any) => l.treatment_id as string);
+    if (tids.length) {
+      const { data: mine } = await context.supabase
+        .from("treatments").select("id").eq("profile_id", profileId).in("id", tids);
+      const allowed = (mine ?? []).map((t: any) => t.id as string);
+      if (allowed.length) {
+        await context.supabase.from("treatment_medical_forms").insert(
+          allowed.map((tid) => ({ template_id: row.id, treatment_id: tid })),
+        );
+      }
+    }
+    return row;
+  });
+
 export const deleteForm = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: { id: string }) => i)
