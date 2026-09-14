@@ -24,6 +24,7 @@ async function getProfileId(supabase: any, userId: string): Promise<string | nul
 export type AddonRow = {
   id: string;
   name: string;
+  description?: string | null;
   price_cents: number;
   duration_min: number;
   discount_percent: number | null;
@@ -66,7 +67,7 @@ export const listAddons = createServerFn({ method: "GET" })
 export const upsertAddon = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: {
-    id?: string; name: string; price_cents: number; duration_min: number;
+    id?: string; name: string; description?: string | null; price_cents: number; duration_min: number;
     discount_percent?: number | null; discount_amount?: number | null;
     active?: boolean; sort_order?: number;
   }) => input)
@@ -76,6 +77,7 @@ export const upsertAddon = createServerFn({ method: "POST" })
     const payload: any = {
       profile_id: pid,
       name: data.name.trim(),
+      description: data.description?.trim() || null,
       price_cents: data.price_cents | 0,
       duration_min: data.duration_min | 0,
       discount_percent: data.discount_percent == null ? null : Math.min(100, Math.max(0, Number(data.discount_percent))),
@@ -147,6 +149,7 @@ export const setAddonLinks = createServerFn({ method: "POST" })
 export type PublicAddon = {
   id: string;
   name: string;
+  description?: string | null;
   price_cents: number;
   duration_min: number;
   discount_percent: number | null; // best (highest currency saving) applicable percent
@@ -195,7 +198,7 @@ export const listAddonsForBooking = createServerFn({ method: "POST" })
     if (!orFilters.length) return [];
     const { data: links } = await supabase
       .from("addon_links")
-      .select("addon_id, discount_percent, discount_amount, addons!inner(id, name, price_cents, duration_min, discount_percent, discount_amount, active, profile_id, sort_order)")
+      .select("addon_id, discount_percent, discount_amount, addons!inner(id, name, description, price_cents, duration_min, discount_percent, discount_amount, active, profile_id, sort_order)")
       .or(orFilters.join(","));
 
     // For each addon, choose the link that yields the biggest saving.
@@ -220,7 +223,7 @@ export const listAddonsForBooking = createServerFn({ method: "POST" })
       const thisSaving = saving(a, pct, amt);
       if (!cur) {
         best.set(a.id, {
-          id: a.id, name: a.name, price_cents: a.price_cents,
+          id: a.id, name: a.name, description: a.description ?? null, price_cents: a.price_cents,
           duration_min: a.duration_min,
           discount_percent: pct,
           discount_amount: amt,

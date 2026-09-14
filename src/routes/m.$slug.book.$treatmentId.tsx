@@ -956,6 +956,9 @@ function BookTreatmentPage() {
                     <input type="checkbox" readOnly checked={checked} className="h-4 w-4" />
                     <div>
                       <div className="text-sm font-medium">{a.name}</div>
+                      {a.description && (
+                        <div className="mt-0.5 max-w-md text-xs opacity-70">{a.description}</div>
+                      )}
                       {a.duration_min > 0 && (
                         <div className="text-xs opacity-60">+{a.duration_min} min</div>
                       )}

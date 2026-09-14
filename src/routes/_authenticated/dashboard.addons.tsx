@@ -9,6 +9,7 @@ import { getMyTreatments } from "@/lib/treatments.functions";
 import { getMyCategories } from "@/lib/categories.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -88,6 +89,7 @@ function AddonsPage() {
       await upsert({ data: {
         id: editing.id,
         name: editing.name!,
+        description: editing.description ?? null,
         price_cents: editing.price_cents ?? 0,
         duration_min: editing.duration_min ?? 0,
         discount_percent: editing.discount_percent ?? null,
@@ -155,6 +157,9 @@ function AddonsPage() {
                         )}{" "}
                         · {a.duration_min} min
                       </div>
+                      {a.description && (
+                        <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{a.description}</div>
+                      )}
                       <div className="mt-1 flex flex-wrap gap-1.5">
                         {cCount > 0 && <Badge variant="secondary" className="text-[10px]">{cCount} categor{cCount === 1 ? "y" : "ies"}</Badge>}
                         {tCount > 0 && <Badge variant="secondary" className="text-[10px]">{tCount} treatment{tCount === 1 ? "" : "s"}</Badge>}
@@ -187,6 +192,16 @@ function AddonsPage() {
               <div className="space-y-1.5">
                 <Label className="text-xs">Name</Label>
                 <Input value={editing.name ?? ""} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="e.g. Numbing cream" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Description (optional)</Label>
+                <Textarea
+                  rows={2}
+                  value={editing.description ?? ""}
+                  onChange={(e) => setEditing({ ...editing, description: e.target.value })}
+                  placeholder="e.g. Restylane Vital is a skin booster that deeply hydrates and improves skin quality."
+                />
+                <p className="text-[11px] text-muted-foreground">Shown to patients when this add-on is offered during booking.</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
