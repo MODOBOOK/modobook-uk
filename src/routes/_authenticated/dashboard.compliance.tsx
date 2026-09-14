@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   getCompliance,
+  setComplianceEnabled,
   seedComplianceDefaults,
   saveCheckTemplate,
   deleteCheckTemplate,
@@ -98,6 +99,7 @@ function Page() {
   const fetchAll = useServerFn(getCompliance);
   const { data, isLoading } = useQuery({ queryKey: ["compliance"], queryFn: () => fetchAll() });
 
+  const setEnabled = useServerFn(setComplianceEnabled);
   const seed = useServerFn(seedComplianceDefaults);
   const doCheck = useServerFn(recordCheck);
   const saveCheck = useServerFn(saveCheckTemplate);
@@ -180,6 +182,52 @@ function Page() {
   }
 
   const isOwner = data?.isOwner || data?.role === "admin";
+  const enabled = data?.enabled !== false;
+
+  async function toggleEnabled(next: boolean) {
+    setBusy(true);
+    try {
+      await setEnabled({ data: { enabled: next } });
+      toast.success(next ? "Compliance tracking switched on" : "Compliance tracking switched off");
+      refresh();
+    } catch (e: any) {
+      toast.error(e?.message || "Could not change that setting");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!enabled) {
+    return (
+      <div className="space-y-6 p-4 md:p-6">
+        <div>
+          <h1 className="font-serif text-2xl">Clinic Compliance</h1>
+          <p className="text-sm text-muted-foreground">
+            Run your regular clinic checks, score your audits and keep a dated record of everything.
+          </p>
+        </div>
+        <Card className="rounded-2xl border-dashed">
+          <CardContent className="flex flex-col items-start gap-3 p-6">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-muted-foreground" />
+              <p className="font-medium">Compliance tracking is switched off for this clinic</p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {data?.isOwner
+                ? "Nothing has been deleted — your checks, audits and history are kept and come back if you switch it on again. It's hidden from everyone's menus while off."
+                : "The clinic owner has switched compliance tracking off. If you need it back, ask them to turn it on from this page."}
+            </p>
+            {data?.isOwner && (
+              <div className="flex items-center gap-3 pt-1">
+                <Switch checked={false} disabled={busy} onCheckedChange={(v) => toggleEnabled(v)} />
+                <span className="text-sm">Use compliance tracking for this clinic</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-4 md:p-6">
@@ -190,18 +238,28 @@ function Page() {
             Run your regular clinic checks, score your audits and keep a dated record of everything.
           </p>
         </div>
-        <Button
-          variant="outline"
-          disabled={busy}
-          onClick={() =>
-            run(async () => {
-              const r = await seed({ data: {} });
-              if (!r.checks && !r.audits) toast.message("All ready-made templates are already added.");
-            }, "Ready-made checks and audits added")
-          }
-        >
-          <Plus className="mr-1.5 h-4 w-4" /> Add ready-made templates
-        </Button>
+        <div className="flex flex-wrap items-center gap-4">
+          {data?.isOwner && (
+            <div className="flex items-center gap-2">
+              <Switch id="compliance-enabled" checked disabled={busy} onCheckedChange={(v) => toggleEnabled(v)} />
+              <Label htmlFor="compliance-enabled" className="text-sm text-muted-foreground">
+                Compliance tracking on
+              </Label>
+            </div>
+          )}
+          <Button
+            variant="outline"
+            disabled={busy}
+            onClick={() =>
+              run(async () => {
+                const r = await seed({ data: {} });
+                if (!r.checks && !r.audits) toast.message("All ready-made templates are already added.");
+              }, "Ready-made checks and audits added")
+            }
+          >
+            <Plus className="mr-1.5 h-4 w-4" /> Add ready-made templates
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">

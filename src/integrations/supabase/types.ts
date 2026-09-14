@@ -7588,6 +7588,7 @@ export type Database = {
           chooser_show_know: boolean
           chooser_show_unsure: boolean
           clinic_name: string | null
+          compliance_enabled: boolean
           contact_sms_number: string | null
           contact_whatsapp_number: string | null
           created_at: string
@@ -7731,6 +7732,7 @@ export type Database = {
           chooser_show_know?: boolean
           chooser_show_unsure?: boolean
           clinic_name?: string | null
+          compliance_enabled?: boolean
           contact_sms_number?: string | null
           contact_whatsapp_number?: string | null
           created_at?: string
@@ -7874,6 +7876,7 @@ export type Database = {
           chooser_show_know?: boolean
           chooser_show_unsure?: boolean
           clinic_name?: string | null
+          compliance_enabled?: boolean
           contact_sms_number?: string | null
           contact_whatsapp_number?: string | null
           created_at?: string
