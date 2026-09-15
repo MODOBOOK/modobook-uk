@@ -8,6 +8,7 @@ function escapeHtml(text: string) {
 }
 
 const ALLOWED_TAGS = new Set([
+  "a",
   "p",
   "br",
   "strong",
@@ -40,7 +41,21 @@ function sanitizeHtml(source: string) {
       const name = tag[2]?.toLowerCase();
       if (name && ALLOWED_TAGS.has(name)) {
         const closing = tag[1] === "/";
-        clean += name === "br" ? "<br />" : closing ? `</${name}>` : `<${name}>`;
+        if (name === "br") {
+          clean += "<br />";
+        } else if (closing) {
+          clean += `</${name}>`;
+        } else if (name === "a") {
+          // Keep links clickable, but only safe schemes and no other attributes.
+          const href = match[0].match(/\shref\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/i);
+          const raw = (href?.[2] ?? href?.[3] ?? href?.[4] ?? "").trim();
+          const safe = /^(https?:\/\/|mailto:|tel:|\/|#)/i.test(raw);
+          clean += safe
+            ? `<a href="${escapeHtml(raw)}" target="_blank" rel="noopener noreferrer nofollow">`
+            : "<a>";
+        } else {
+          clean += `<${name}>`;
+        }
       }
     }
 
