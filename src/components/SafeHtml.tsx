@@ -8,6 +8,7 @@ function escapeHtml(text: string) {
 }
 
 const ALLOWED_TAGS = new Set([
+  "a",
   "p",
   "br",
   "strong",
