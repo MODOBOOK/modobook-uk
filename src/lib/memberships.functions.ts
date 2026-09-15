@@ -536,7 +536,7 @@ export const subscribeToMembershipPlan = createServerFn({ method: "POST" })
         })),
       } as never);
 
-      if (email) {
+      if (email && !recentAcceptance) {
         const { getPractitionerBranding, tryEnqueueAppEmail } = await import("./email/send.server");
         const branding = await getPractitionerBranding(p.id);
         await tryEnqueueAppEmail({
