@@ -510,7 +510,18 @@ export const subscribeToMembershipPlan = createServerFn({ method: "POST" })
         .eq("profile_id", p.id)
         .ilike("email", email ?? "___none___")
         .maybeSingle();
-      await supabase.from("membership_terms_acceptances").insert({
+      // If they re-open checkout for the same plan, don't log the agreement
+      // again — one record per plan per patient per 30 minutes.
+      const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      const { data: recentAcceptance } = await supabase
+        .from("membership_terms_acceptances")
+        .select("id")
+        .eq("plan_id", plan.id)
+        .eq("patient_user_id", userId)
+        .gte("accepted_at", since)
+        .maybeSingle();
+
+      if (!recentAcceptance) await supabase.from("membership_terms_acceptances").insert({
         clinic_profile_id: p.id,
         plan_id: plan.id,
         patient_user_id: userId,
@@ -525,7 +536,7 @@ export const subscribeToMembershipPlan = createServerFn({ method: "POST" })
         })),
       } as never);
 
-      if (email) {
+      if (email && !recentAcceptance) {
         const { getPractitionerBranding, tryEnqueueAppEmail } = await import("./email/send.server");
         const branding = await getPractitionerBranding(p.id);
         await tryEnqueueAppEmail({
