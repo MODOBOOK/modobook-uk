@@ -122,49 +122,6 @@ export const adminInsights = createServerFn({ method: "GET" })
     }>;
     const clinicName = new Map(profiles.map((p) => [p.id, p.clinic_name || "Unknown clinic"]));
 
-    // ---- Activity feed (no patient data) ----
-    const activity: ActivityEvent[] = [];
-    for (const b of recentBookings) {
-      if (new Date(b.created_at).getTime() < now - 14 * day) continue;
-      activity.push({
-        kind: "booking",
-        at: b.created_at,
-        clinic: clinicName.get(b.profile_id) ?? "Unknown clinic",
-        text: `New booking${b.treatment_name_snapshot ? ` — ${b.treatment_name_snapshot}` : ""}`,
-        amount: num(b.total_amount) || null,
-      });
-    }
-    for (const p of recentPayments) {
-      if (new Date(p.created_at).getTime() < now - 14 * day) continue;
-      if (p.status !== "succeeded" && p.status !== "paid") continue;
-      activity.push({
-        kind: "payment",
-        at: p.created_at,
-        clinic: clinicName.get(p.profile_id) ?? "Unknown clinic",
-        text: "Payment received",
-        amount: num(p.amount) || null,
-      });
-    }
-    for (const pr of profiles) {
-      if (new Date(pr.created_at).getTime() < now - 30 * day) continue;
-      activity.push({
-        kind: "signup",
-        at: pr.created_at,
-        clinic: pr.clinic_name || "New clinic",
-        text: "Joined Modo",
-        amount: null,
-      });
-    }
-    for (const m of memberships) {
-      activity.push({
-        kind: "membership",
-        at: m.created_at,
-        clinic: clinicName.get(m.profile_id) ?? "Unknown clinic",
-        text: `Membership ${m.status === "active" ? "started" : "created"}`,
-        amount: null,
-      });
-    }
-    activity.sort((a, b) => (a.at < b.at ? 1 : -1));
 
     // ---- Per-clinic health (counts only) ----
     const byClinic = new Map<string, ClinicHealth>();
