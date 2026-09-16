@@ -143,6 +143,12 @@ function CommissionReportPage() {
                       </Badge>
                     </div>
                   </div>
+                  {s.accountNotConnected && (
+                    <p className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900">
+                      Set to their own account, but they haven&apos;t connected one — payments came into
+                      your clinic account, so these figures are worked out that way round.
+                    </p>
+                  )}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
                     <div><p className="text-xs text-muted-foreground">Bookings</p>{s.bookings}</div>
                     <div><p className="text-xs text-muted-foreground">Takings</p>{money(s.revenue)}</div>
