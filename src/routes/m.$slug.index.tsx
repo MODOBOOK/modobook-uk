@@ -1171,32 +1171,50 @@ function BookPage() {
   );
 
   // "Book a treatment now" quick-scroll CTA (pilot flag): a subtle button in
-  // the hero plus a floating pill once the treatment menu is off-screen.
+  // the hero plus a floating pill once the booking area is off-screen. The
+  // scroll target is whichever booking step is showing: the treatment menu,
+  // or the location / practitioner / chooser pickers that precede it.
   const bookCtaOn = bookCtaEnabled(slug);
   const [heroVisible, setHeroVisible] = useState(true);
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [bookingAreaVisible, setBookingAreaVisible] = useState(false);
   const scrollToMenu = () => {
-    document.getElementById("treatment-menu")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const el =
+      document.getElementById("treatment-menu") ||
+      document.querySelector("[data-section='practitioners']") ||
+      document.querySelector("[data-section='locations']") ||
+      document.getElementById("booking-chooser");
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
   useEffect(() => {
     if (!bookCtaOn) return;
-    const watch = (id: string, set: (v: boolean) => void) => {
-      const el = document.getElementById(id);
-      if (!el) return null;
-      const obs = new IntersectionObserver(
-        (entries) => set(entries[0]?.isIntersecting ?? false),
-        { threshold: 0 },
-      );
-      obs.observe(el);
-      return obs;
-    };
-    const heroObs = watch("modo-hero", setHeroVisible);
-    const menuObs = watch("treatment-menu", setMenuVisible);
+    const visible = new Set<Element>();
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) visible.add(e.target);
+          else visible.delete(e.target);
+        }
+        setBookingAreaVisible(visible.size > 0);
+      },
+      { threshold: 0 },
+    );
+    const heroEl = document.getElementById("modo-hero");
+    const heroObs = new IntersectionObserver(
+      (entries) => setHeroVisible(entries[0]?.isIntersecting ?? false),
+      { threshold: 0 },
+    );
+    if (heroEl) heroObs.observe(heroEl);
+    const areaEls = document.querySelectorAll(
+      "#treatment-menu, [data-section='locations'], [data-section='practitioners'], #booking-chooser",
+    );
+    areaEls.forEach((el) => obs.observe(el));
     return () => {
-      heroObs?.disconnect();
-      menuObs?.disconnect();
+      heroObs.disconnect();
+      obs.disconnect();
     };
   }, [bookCtaOn, locationGateOpen, practitionerGateOpen, chooserOn, mode, concernsConfirmed, pickedConcernIds]);
+
+  return (
 
   return (
     <main className="min-h-screen pb-16" style={pageStyle}>
@@ -1602,7 +1620,7 @@ function BookPage() {
       {/* Choose Location + practitioners */}
       {locations.length > 0 && (
 
-        <section data-section="locations" className="mx-auto mt-8 max-w-3xl px-4">
+        <section data-section="locations" className="mx-auto mt-8 max-w-3xl scroll-mt-16 px-4">
           <h2 className="mb-4 text-xl font-bold" style={headingStyle}>
             {locations.length > 1 ? "Choose Location" : "Location"}
           </h2>
@@ -1678,7 +1696,7 @@ function BookPage() {
 
       {/* Choose your practitioner — its own step, before the treatment menu */}
       {showPractitionerStep && (
-        <section data-section="practitioners" className="mx-auto mt-8 max-w-3xl px-4">
+        <section data-section="practitioners" className="mx-auto mt-8 max-w-3xl scroll-mt-16 px-4">
           <h2 className="mb-1 text-xl font-bold" style={headingStyle}>
             {practSelectionMode === "required" ? "Choose your practitioner" : "Choose your practitioner (optional)"}
           </h2>
@@ -1772,7 +1790,7 @@ function BookPage() {
       {/* Chooser gate */}
 
       {locationGateOpen && practitionerGateOpen && chooserOn && !mode && (
-        <section className="mx-auto mt-10 max-w-3xl px-4">
+        <section id="booking-chooser" className="mx-auto mt-10 max-w-3xl scroll-mt-16 px-4">
           <h2 className="mb-1 text-center text-xl font-bold" style={headingStyle}>
             How can we help today?
           </h2>
@@ -2752,11 +2770,11 @@ function BookPage() {
         );
       })()}
 
-      {/* Floating book CTA — only while the treatment menu is off-screen and
+      {/* Floating book CTA — only while the booking area is off-screen and
           nothing is selected (the sticky booking bar takes over then). */}
       {bookCtaOn && locationGateOpen && practitionerGateOpen
         && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0))
-        && !heroVisible && !menuVisible
+        && !heroVisible && !bookingAreaVisible
         && selectedIds.length === 0 && selectedPackageIds.length === 0 && (
         <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">
           <button
