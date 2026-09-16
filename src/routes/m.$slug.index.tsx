@@ -978,14 +978,23 @@ function BookPage() {
 
   const visibleTreatments = useMemo(
     () =>
-      treatments.filter(
-        (t) =>
-          isAvailableAtLocation(t) && catWindowLive(t.category_id) && !staleClinicTreatmentIds.has(t.id)
-          && (!practitionerTreatmentIds || practitionerTreatmentIds.has(t.id)),
-      ),
+      treatments.filter((t) => {
+        // Prescribing clinic days are run by the prescriber, not by a specific
+        // practitioner, so they must never be filtered out by a practitioner's
+        // own service list.
+        const isClinicVisit =
+          (t as { prescriber_routing?: string | null }).prescriber_routing === "clinic_visit";
+        return (
+          isAvailableAtLocation(t) &&
+          catWindowLive(t.category_id) &&
+          !staleClinicTreatmentIds.has(t.id) &&
+          (isClinicVisit || !practitionerTreatmentIds || practitionerTreatmentIds.has(t.id))
+        );
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [treatments, locationId, pricing, categories, nowTs, staleClinicTreatmentIds, practitionerTreatmentIds, practitionerId],
   );
+
 
   const treatmentCategories = useMemo(
     () =>
