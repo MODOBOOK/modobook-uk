@@ -170,8 +170,13 @@ export const getCommissionReport = createServerFn({ method: "GET" })
       const pct = Math.max(0, Math.min(100, Number(s.commission_percent ?? 0)));
       const practitionerShare = Math.round(agg.revenue * pct) / 100;
       const ownerShare = Math.round((agg.revenue - practitionerShare) * 100) / 100;
-      const mode: "clinic" | "own_account" = s.payout_mode === "own_account" ? "own_account" : "clinic";
+      const wantsOwn = s.payout_mode === "own_account";
+      const notConnected = wantsOwn && !s.stripe_account_id;
+      // Without a connected account the money actually landed in the clinic account,
+      // so the figures must be calculated the clinic way round.
+      const mode: "clinic" | "own_account" = wantsOwn && !notConnected ? "own_account" : "clinic";
       rows.push({
+        accountNotConnected: notConnected,
         staffId: s.id,
         name: s.name,
         role: s.role,
