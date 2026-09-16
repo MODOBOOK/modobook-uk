@@ -65,6 +65,7 @@ function buildHtml(findings: Finding[], infoCount: number, clinicWatch: string[]
     ${rows}
   </table>
   ${infoLine}
+  ${watchSection}
   <p style="margin:20px 0 24px">
     <a href="${HEALTH_URL}" style="display:inline-block;padding:10px 18px;border-radius:8px;background:#0f172a;color:#ffffff;font-size:14px;text-decoration:none">Open system health</a>
   </p>
@@ -72,10 +73,59 @@ function buildHtml(findings: Finding[], infoCount: number, clinicWatch: string[]
 </div>`
 }
 
-function buildText(findings: Finding[], infoCount: number): string {
+function buildText(findings: Finding[], infoCount: number, clinicWatch: string[]): string {
   const lines = findings.map((f) => `- [${f.severity.toUpperCase()}] ${f.title} (${f.affected_count} affected)`)
   if (infoCount > 0) lines.push(`- Plus ${infoCount} lower-priority note(s) on the health page`)
+  if (clinicWatch.length > 0) {
+    lines.push('', 'Clinic watch (privacy-safe counts only):')
+    for (const w of clinicWatch) lines.push(`- ${w}`)
+  }
   return `Modo system check\n\n${lines.join('\n')}\n\nOpen system health: ${HEALTH_URL}`
+}
+
+// GDPR-safe clinic watch: per-clinic counts only, no client personal data.
+// Flags clinics that have gone quiet or have upcoming bookings with no price.
+async function computeClinicWatch(supabaseAdmin: any): Promise<string[]> {
+  const day = 24 * 60 * 60 * 1000
+  const now = Date.now()
+  const iso = (t: number) => new Date(t).toISOString()
+
+  const [profilesRes, bookingsRes, upcomingRes] = await Promise.all([
+    supabaseAdmin.from('profiles').select('id, clinic_name').limit(500),
+    supabaseAdmin.from('appointments').select('profile_id, created_at')
+      .gte('created_at', iso(now - 30 * day)).limit(2000),
+    supabaseAdmin.from('appointments').select('profile_id, status, total_amount')
+      .gte('start_time', iso(now)).lte('start_time', iso(now + 60 * day)).limit(2000),
+  ])
+
+  const names = new Map<string, string>(
+    ((profilesRes.data ?? []) as any[]).map((p) => [p.id, p.clinic_name || 'Unnamed clinic']),
+  )
+  const lastBooking = new Map<string, number>()
+  for (const b of (bookingsRes.data ?? []) as any[]) {
+    const t = new Date(b.created_at).getTime()
+    if (t > (lastBooking.get(b.profile_id) ?? 0)) lastBooking.set(b.profile_id, t)
+  }
+  const noPrice = new Map<string, number>()
+  for (const b of (upcomingRes.data ?? []) as any[]) {
+    if (b.status === 'cancelled') continue
+    const amount = parseFloat(String(b.total_amount ?? '').replace(/[^0-9.-]/g, '')) || 0
+    if (!amount) noPrice.set(b.profile_id, (noPrice.get(b.profile_id) ?? 0) + 1)
+  }
+
+  const quiet: string[] = []
+  for (const [pid, t] of lastBooking) {
+    if (now - t >= 14 * day && names.has(pid)) quiet.push(names.get(pid)!)
+  }
+  const priceless: string[] = []
+  for (const [pid, n] of noPrice) {
+    if (n >= 3 && names.has(pid)) priceless.push(`${names.get(pid)} (${n})`)
+  }
+
+  const lines: string[] = []
+  if (quiet.length > 0) lines.push(`${quiet.length} clinic${quiet.length === 1 ? ' has' : 's have'} had no new bookings for 2+ weeks: ${quiet.slice(0, 8).join(', ')}${quiet.length > 8 ? ` and ${quiet.length - 8} more` : ''}`)
+  if (priceless.length > 0) lines.push(`${priceless.length} clinic${priceless.length === 1 ? ' has' : 's have'} 3+ upcoming bookings with no price set: ${priceless.slice(0, 8).join(', ')}${priceless.length > 8 ? ` and ${priceless.length - 8} more` : ''}`)
+  return lines
 }
 
 export const Route = createFileRoute('/api/public/hooks/health-digest')({
