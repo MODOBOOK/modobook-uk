@@ -1583,57 +1583,8 @@ function BookPage() {
 
       {/* Model slots now render inside the Treatments tab after the user presses "I know what I want". */}
 
-      {/* Contact us */}
-      {(() => {
-        if (!showContact) return null;
-        const sms = showSms ? profile.contact_sms_number?.trim() : null;
-        const wa = showWhatsapp ? profile.contact_whatsapp_number?.trim() : null;
-        const fb = showFacebook ? profile.social_links?.facebook?.trim() : null;
-        const igLink = showInstagram ? ig?.trim() : null;
-        const items: { href: string; label: string; sub?: string; Icon: typeof Phone }[] = [];
-        if (sms) items.push({ href: `sms:${sms}`, label: "Text us", sub: sms, Icon: Phone });
-        if (wa) items.push({ href: `https://wa.me/${wa.replace(/[^0-9]/g, "")}`, label: "WhatsApp", sub: wa, Icon: MessageCircle });
-        if (igLink) items.push({ href: igLink.startsWith("http") ? igLink : `https://instagram.com/${igLink.replace("@", "")}`, label: "Instagram", sub: igLink, Icon: Instagram });
-        if (fb) items.push({ href: fb.startsWith("http") ? fb : `https://facebook.com/${fb}`, label: "Facebook", sub: fb.replace(/^https?:\/\//, ""), Icon: Facebook });
-        if (items.length === 0) return null;
-        const tileLayout = theme?.contact_tile_layout ?? "grid";
-        const tileIconSize = theme?.contact_tile_icon_size ?? "md";
-        const tileBg = theme?.contact_tile_bg_color ?? undefined;
-        const tileBorder = theme?.contact_tile_border_color ?? `${brand}22`;
-        const iconCls = tileIconSize === "sm" ? "h-4 w-4" : tileIconSize === "lg" ? "h-7 w-7" : "h-5 w-5";
-        const iconPadCls = tileIconSize === "sm" ? "p-2" : tileIconSize === "lg" ? "p-4" : "p-3";
-        const gridCls = tileLayout === "horizontal-list"
-          ? "flex flex-col gap-2"
-          : "grid grid-cols-2 gap-3 sm:grid-cols-4";
-        return (
-          <section className="mx-auto mt-8 max-w-3xl px-4">
-            <h2 className="mb-4 text-xl font-bold" style={headingStyle}>Get in touch</h2>
-            <div className={gridCls}>
-              {items.map((it) => (
-                <a
-                  key={it.label}
-                  href={it.href}
-                  target={it.href.startsWith("http") ? "_blank" : undefined}
-                  rel="noreferrer"
-                  className={
-                    tileLayout === "horizontal-list"
-                      ? "flex flex-row items-center gap-3 rounded-2xl border p-3 transition hover:shadow-md"
-                      : "flex flex-col items-center gap-2 rounded-2xl border p-4 text-center transition hover:shadow-md"
-                  }
-                  style={{ borderColor: tileBorder, color: textColor, backgroundColor: tileBg ?? "var(--surface, transparent)" }}
-                >
-                  <span className={`rounded-full ${iconPadCls}`} style={{ backgroundColor: `${brand}14`, color: brand }}>
-                    <it.Icon className={iconCls} />
-                  </span>
-                  <span className="text-sm font-medium">{it.label}</span>
-                  {it.sub ? <span className="text-xs opacity-70 truncate w-full">{it.sub}</span> : null}
-                </a>
-              ))}
-            </div>
-          </section>
-        );
-
-      })()}
+      {/* Contact us (moved below the treatment menu on quick-book CTA pages) */}
+      {!bookCtaOn && contactSectionNode}
 
 
 
@@ -1666,54 +1617,8 @@ function BookPage() {
         <section className="mx-auto mt-6 hidden max-w-3xl px-4 sm:block">{membershipPromoNode}</section>
       )}
 
-      {/* Booking & cancellation policy */}
-      {(() => {
-        const isPercent = (profile.deposit_type ?? "fixed") === "percent";
-        const percent = Number(profile.deposit_percent ?? 0);
-        const cents = Number(profile.deposit_amount_cents ?? 0);
-        const hasDeposit = isPercent ? percent > 0 : cents > 0;
-        const noRefund = !!profile.no_refund_policy_enabled;
-        const noRefundText =
-          (profile.no_refund_policy_text ?? "").trim() ||
-          "All deposits and payments are non-refundable. If you cancel or reschedule, your payment cannot be returned.";
-        const passFees = !!profile.payment_pass_fees_to_customer;
-        if (!hasDeposit && !noRefund && !passFees && !profile.deposit_policy_text && !(profile.cancellation_rules && profile.cancellation_rules.length > 0)) return null;
-        return (
-        <section className="mx-auto mt-4 max-w-3xl px-4">
-          <details className="rounded-2xl border bg-card px-5 py-4 text-sm sm:px-7" style={{ borderColor: `${brand}1a` }}>
-            <summary className="cursor-pointer font-semibold" style={{ color: brand }}>
-              Booking & cancellation policy
-            </summary>
-            <div className="mt-3 space-y-2 opacity-90">
-              {hasDeposit && (
-                <p>
-                  {isPercent
-                    ? `A ${percent}% deposit is taken at time of booking.`
-                    : `A £${(cents / 100).toFixed(2)} deposit is taken at time of booking.`}
-                </p>
-              )}
-              {profile.deposit_policy_text && <p>{profile.deposit_policy_text}</p>}
-              {passFees && (
-                <p>
-                  A platform fee ({PLATFORM_FEE_DESCRIPTION}) applies to all online payments (card, Klarna and
-                  Clearpay) and is shown in your total before you pay. Cash and pay-in-clinic bookings carry no fee.
-                </p>
-              )}
-              {profile.cancellation_rules && profile.cancellation_rules.length > 0 && (
-                <ul className="ml-4 list-disc space-y-1">
-                  {describeCancellationRules(profile.cancellation_rules).map((r, i) => <li key={i}>{r}</li>)}
-                </ul>
-              )}
-              {noRefund && (
-                <p className="rounded-lg px-3 py-2 font-medium" style={{ backgroundColor: `${brand}0f`, color: brand }}>
-                  No refunds: {noRefundText}
-                </p>
-              )}
-            </div>
-          </details>
-        </section>
-        );
-      })()}
+      {/* Booking & cancellation policy (moved below the treatment menu on quick-book CTA pages) */}
+      {!bookCtaOn && policySectionNode}
 
       {/* Choose Location + practitioners */}
       {locations.length > 0 && (
@@ -2822,6 +2727,15 @@ function BookPage() {
           </p>
         </section>
       ) : null}
+
+      {/* Quick-book CTA pages: Get in touch + policies in their own section below the menu */}
+      {bookCtaOn && (contactSectionNode || policySectionNode) && (
+        <div className="mx-auto max-w-3xl px-4">
+          <div className="border-t pt-1" style={{ borderColor: `${brand}1a` }} />
+          {contactSectionNode}
+          {policySectionNode}
+        </div>
+      )}
 
 
       {/* Sticky multi-select bar */}
