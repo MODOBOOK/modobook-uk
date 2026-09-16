@@ -10319,6 +10319,7 @@ export type Database = {
           prescriber_user_id: string
           remaining_capacity: number
           start_time: string
+          total_capacity: number
           treatment_id: string
           visit_date: string
           visit_id: string
