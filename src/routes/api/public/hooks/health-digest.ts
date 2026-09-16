@@ -199,6 +199,7 @@ export const Route = createFileRoute('/api/public/hooks/health-digest')({
                 purpose: 'transactional',
                 label: LABEL,
                 idempotency_key: messageId,
+                unsubscribe_token: unsubscribeToken,
                 queued_at: nowIso,
               },
             })
