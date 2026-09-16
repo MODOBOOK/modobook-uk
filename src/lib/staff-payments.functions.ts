@@ -139,7 +139,7 @@ export const getCommissionReport = createServerFn({ method: "GET" })
 
     const { data: staffRows } = await supabase
       .from("staff_members")
-      .select("id, name, role, practitioner_id, payout_mode, commission_percent, status")
+      .select("id, name, role, practitioner_id, payout_mode, commission_percent, status, stripe_account_id")
       .eq("profile_id", profileId);
 
     const { data: appts, error } = await supabase
