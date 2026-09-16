@@ -588,7 +588,20 @@ function MultiBookPage() {
         if (t >= end && i > 0) break;
         times.push(fromMinutes(t));
       }
-      let list = Array.from(new Set(times)).sort();
+      // Anything already in the diary on that day is taken, so it can't be
+      // offered again — a prescribing clinic day is still one person at a time.
+      const hold = Math.max(1, Math.min(Math.round(step) || 1, totalDuration || 1));
+      let list = Array.from(new Set(times))
+        .sort()
+        .filter((s) => {
+          const t = toMinutes(s);
+          return !busy.some(
+            (b) =>
+              (!locationId || !b.locId || b.locId === locationId) &&
+              t < b.end &&
+              t + hold > b.start,
+          );
+        });
       const n = new Date();
       const todayIso = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
       if (date === todayIso) {
