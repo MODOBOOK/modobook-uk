@@ -60,10 +60,12 @@ function buildHtml(findings: Finding[], infoCount: number, clinicWatch: string[]
 
   return `<div style="font-family:Helvetica,Arial,sans-serif;max-width:640px;margin:0 auto">
   <h2 style="font-size:18px;color:#0f172a;margin:24px 0 4px">Modo system check</h2>
-  <p style="margin:0 0 16px;color:#64748b;font-size:13px">The morning checks found ${findings.length} issue${findings.length === 1 ? '' : 's'} that need${findings.length === 1 ? 's' : ''} attention.</p>
-  <table style="width:100%;border-collapse:collapse">
+  <p style="margin:0 0 16px;color:#64748b;font-size:13px">${findings.length > 0
+    ? `The morning checks found ${findings.length} issue${findings.length === 1 ? '' : 's'} that need${findings.length === 1 ? 's' : ''} attention.`
+    : 'The morning checks found no system issues — but a few clinics need a look below.'}</p>
+  ${findings.length > 0 ? `<table style="width:100%;border-collapse:collapse">
     ${rows}
-  </table>
+  </table>` : ''}
   ${infoLine}
   ${watchSection}
   <p style="margin:20px 0 24px">
