@@ -29,7 +29,7 @@ const SEV_STYLE: Record<string, { label: string; color: string; bg: string }> = 
   info: { label: 'Info', color: '#334155', bg: '#f1f5f9' },
 }
 
-function buildHtml(findings: Finding[], infoCount: number): string {
+function buildHtml(findings: Finding[], infoCount: number, clinicWatch: string[]): string {
   const rows = findings
     .map((f) => {
       const sev = SEV_STYLE[f.severity] ?? SEV_STYLE['info']!
@@ -50,13 +50,24 @@ function buildHtml(findings: Finding[], infoCount: number): string {
     ? `<p style="margin:12px 0 0;color:#64748b;font-size:13px">Plus ${infoCount} lower-priority note${infoCount === 1 ? '' : 's'} on the health page.</p>`
     : ''
 
+  const watchSection = clinicWatch.length > 0
+    ? `<h3 style="font-size:15px;color:#0f172a;margin:24px 0 6px">Clinic watch</h3>
+  <p style="margin:0 0 8px;color:#64748b;font-size:12px">Privacy-safe counts only — no client details.</p>
+  <ul style="margin:0;padding-left:18px;color:#334155;font-size:13px;line-height:1.6">
+    ${clinicWatch.map((w) => `<li>${esc(w)}</li>`).join('\n')}
+  </ul>`
+    : ''
+
   return `<div style="font-family:Helvetica,Arial,sans-serif;max-width:640px;margin:0 auto">
   <h2 style="font-size:18px;color:#0f172a;margin:24px 0 4px">Modo system check</h2>
-  <p style="margin:0 0 16px;color:#64748b;font-size:13px">The morning checks found ${findings.length} issue${findings.length === 1 ? '' : 's'} that need${findings.length === 1 ? 's' : ''} attention.</p>
-  <table style="width:100%;border-collapse:collapse">
+  <p style="margin:0 0 16px;color:#64748b;font-size:13px">${findings.length > 0
+    ? `The morning checks found ${findings.length} issue${findings.length === 1 ? '' : 's'} that need${findings.length === 1 ? 's' : ''} attention.`
+    : 'The morning checks found no system issues — but a few clinics need a look below.'}</p>
+  ${findings.length > 0 ? `<table style="width:100%;border-collapse:collapse">
     ${rows}
-  </table>
+  </table>` : ''}
   ${infoLine}
+  ${watchSection}
   <p style="margin:20px 0 24px">
     <a href="${HEALTH_URL}" style="display:inline-block;padding:10px 18px;border-radius:8px;background:#0f172a;color:#ffffff;font-size:14px;text-decoration:none">Open system health</a>
   </p>
@@ -64,10 +75,59 @@ function buildHtml(findings: Finding[], infoCount: number): string {
 </div>`
 }
 
-function buildText(findings: Finding[], infoCount: number): string {
+function buildText(findings: Finding[], infoCount: number, clinicWatch: string[]): string {
   const lines = findings.map((f) => `- [${f.severity.toUpperCase()}] ${f.title} (${f.affected_count} affected)`)
   if (infoCount > 0) lines.push(`- Plus ${infoCount} lower-priority note(s) on the health page`)
+  if (clinicWatch.length > 0) {
+    lines.push('', 'Clinic watch (privacy-safe counts only):')
+    for (const w of clinicWatch) lines.push(`- ${w}`)
+  }
   return `Modo system check\n\n${lines.join('\n')}\n\nOpen system health: ${HEALTH_URL}`
+}
+
+// GDPR-safe clinic watch: per-clinic counts only, no client personal data.
+// Flags clinics that have gone quiet or have upcoming bookings with no price.
+async function computeClinicWatch(supabaseAdmin: any): Promise<string[]> {
+  const day = 24 * 60 * 60 * 1000
+  const now = Date.now()
+  const iso = (t: number) => new Date(t).toISOString()
+
+  const [profilesRes, bookingsRes, upcomingRes] = await Promise.all([
+    supabaseAdmin.from('profiles').select('id, clinic_name').limit(500),
+    supabaseAdmin.from('appointments').select('profile_id, created_at')
+      .gte('created_at', iso(now - 30 * day)).limit(2000),
+    supabaseAdmin.from('appointments').select('profile_id, status, total_amount')
+      .gte('scheduled_date', iso(now).slice(0, 10)).lte('scheduled_date', iso(now + 60 * day).slice(0, 10)).limit(2000),
+  ])
+
+  const names = new Map<string, string>(
+    ((profilesRes.data ?? []) as any[]).map((p) => [p.id, p.clinic_name || 'Unnamed clinic']),
+  )
+  const lastBooking = new Map<string, number>()
+  for (const b of (bookingsRes.data ?? []) as any[]) {
+    const t = new Date(b.created_at).getTime()
+    if (t > (lastBooking.get(b.profile_id) ?? 0)) lastBooking.set(b.profile_id, t)
+  }
+  const noPrice = new Map<string, number>()
+  for (const b of (upcomingRes.data ?? []) as any[]) {
+    if (b.status === 'cancelled') continue
+    const amount = parseFloat(String(b.total_amount ?? '').replace(/[^0-9.-]/g, '')) || 0
+    if (!amount) noPrice.set(b.profile_id, (noPrice.get(b.profile_id) ?? 0) + 1)
+  }
+
+  const quiet: string[] = []
+  for (const [pid, t] of lastBooking) {
+    if (now - t >= 14 * day && names.has(pid)) quiet.push(names.get(pid)!)
+  }
+  const priceless: string[] = []
+  for (const [pid, n] of noPrice) {
+    if (n >= 3 && names.has(pid)) priceless.push(`${names.get(pid)} (${n})`)
+  }
+
+  const lines: string[] = []
+  if (quiet.length > 0) lines.push(`${quiet.length} clinic${quiet.length === 1 ? ' has' : 's have'} had no new bookings for 2+ weeks: ${quiet.slice(0, 8).join(', ')}${quiet.length > 8 ? ` and ${quiet.length - 8} more` : ''}`)
+  if (priceless.length > 0) lines.push(`${priceless.length} clinic${priceless.length === 1 ? ' has' : 's have'} 3+ upcoming bookings with no price set: ${priceless.slice(0, 8).join(', ')}${priceless.length > 8 ? ` and ${priceless.length - 8} more` : ''}`)
+  return lines
 }
 
 export const Route = createFileRoute('/api/public/hooks/health-digest')({
@@ -139,7 +199,10 @@ export const Route = createFileRoute('/api/public/hooks/health-digest')({
           const needs = all.filter((f) => f.severity === 'critical' || f.severity === 'warning')
           const infoCount = all.filter((f) => f.severity === 'info').length
 
-          if (needs.length === 0) {
+          // 4. Clinic watch: privacy-safe per-clinic counts (no client data).
+          const clinicWatch = await computeClinicWatch(supabaseAdmin)
+
+          if (needs.length === 0 && clinicWatch.length === 0) {
             return Response.json({ ok: true, emailed: 0, open: all.length, note: 'nothing needs attention' })
           }
 
@@ -147,9 +210,11 @@ export const Route = createFileRoute('/api/public/hooks/health-digest')({
           if (recErr) throw recErr
 
           const today = nowIso.slice(0, 10)
-          const subject = `Modo system check: ${needs.length} issue${needs.length === 1 ? '' : 's'} need attention (${today})`
-          const html = buildHtml(needs, infoCount)
-          const text = buildText(needs, infoCount)
+          const subject = needs.length > 0
+            ? `Modo system check: ${needs.length} issue${needs.length === 1 ? '' : 's'} need attention (${today})`
+            : `Modo clinic watch: ${clinicWatch.length} note${clinicWatch.length === 1 ? '' : 's'} (${today})`
+          const html = buildHtml(needs, infoCount, clinicWatch)
+          const text = buildText(needs, infoCount, clinicWatch)
 
           let emailed = 0
           const list = (recipients ?? []) as Array<{ email: string | null }>
