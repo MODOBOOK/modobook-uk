@@ -111,8 +111,8 @@ function HealthPage() {
             System health
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Runs automatically every morning at 6am. Safe payment problems are repaired on the spot and listed below;
-            anything needing a judgement call is only reported.
+            Runs automatically every morning. Anything found is listed below and emailed as a daily summary when it
+            needs attention.
           </p>
         </div>
         <Button onClick={runNow} disabled={busy} variant="outline">
