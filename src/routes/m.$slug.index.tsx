@@ -56,7 +56,7 @@ import { toast } from "sonner";
 import { SafeHtml } from "@/components/SafeHtml";
 import { PackageBuilderCard, type PublicBuilder } from "@/components/PackageBuilderCard";
 import { CourseGroupRow } from "@/components/CourseGroupRow";
-import { packageBuilderEnabled, linkButtonEnabled, treatmentLeafletsEnabled, coursePickerEnabled, membershipsEnabled } from "@/lib/feature-flags";
+import { packageBuilderEnabled, linkButtonEnabled, treatmentLeafletsEnabled, coursePickerEnabled, membershipsEnabled, bookCtaEnabled } from "@/lib/feature-flags";
 import { getLeafletSignedUrl } from "@/lib/leaflets.functions";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { formatPrice, BADGE_LABEL, badgeClasses, treatmentPricing, type TreatmentBadge } from "@/lib/price-display";
@@ -1170,6 +1170,34 @@ function BookPage() {
     </section>
   );
 
+  // "Book a treatment now" quick-scroll CTA (pilot flag): a subtle button in
+  // the hero plus a floating pill once the treatment menu is off-screen.
+  const bookCtaOn = bookCtaEnabled(slug);
+  const [heroVisible, setHeroVisible] = useState(true);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const scrollToMenu = () => {
+    document.getElementById("treatment-menu")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  useEffect(() => {
+    if (!bookCtaOn) return;
+    const watch = (id: string, set: (v: boolean) => void) => {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      const obs = new IntersectionObserver(
+        (entries) => set(entries[0]?.isIntersecting ?? false),
+        { threshold: 0 },
+      );
+      obs.observe(el);
+      return obs;
+    };
+    const heroObs = watch("modo-hero", setHeroVisible);
+    const menuObs = watch("treatment-menu", setMenuVisible);
+    return () => {
+      heroObs?.disconnect();
+      menuObs?.disconnect();
+    };
+  }, [bookCtaOn, locationGateOpen, practitionerGateOpen, chooserOn, mode, concernsConfirmed, pickedConcernIds]);
+
   return (
     <main className="min-h-screen pb-16" style={pageStyle}>
       <style>{`
@@ -1206,6 +1234,7 @@ function BookPage() {
 
         return (
           <section
+            id="modo-hero"
             data-modo-section
             className="relative overflow-hidden"
             style={{ backgroundColor: heroBandColor, color: heroTextColor }}
@@ -1327,6 +1356,18 @@ function BookPage() {
                         {reviewCount === 0 ? "New" : `${reviewAvg.toFixed(1)} · ${reviewCount} reviews`}
                       </span>
                     </Link>
+                  )}
+
+                  {bookCtaOn && (
+                    <button
+                      type="button"
+                      onClick={scrollToMenu}
+                      className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors hover:bg-white/10"
+                      style={{ borderColor: heroDivider, color: heroTextColor }}
+                    >
+                      <CalendarDays className="h-4 w-4" />
+                      Book a treatment now
+                    </button>
                   )}
                 </div>
               </div>
@@ -2032,7 +2073,7 @@ function BookPage() {
       {/* Treatments + Packages */}
 
       {locationGateOpen && practitionerGateOpen && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
-        <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
+        <section id="treatment-menu" className="mx-auto mt-10 max-w-3xl scroll-mt-16 px-4 pb-32">
           {chooserOn && (
             <div className="mb-4 flex items-center justify-between">
               <button
@@ -2710,6 +2751,25 @@ function BookPage() {
           </div>
         );
       })()}
+
+      {/* Floating book CTA — only while the treatment menu is off-screen and
+          nothing is selected (the sticky booking bar takes over then). */}
+      {bookCtaOn && locationGateOpen && practitionerGateOpen
+        && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0))
+        && !heroVisible && !menuVisible
+        && selectedIds.length === 0 && selectedPackageIds.length === 0 && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">
+          <button
+            type="button"
+            onClick={scrollToMenu}
+            className="pointer-events-auto inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold shadow-lg transition-transform active:scale-95"
+            style={{ backgroundColor: brand, color: "#fff" }}
+          >
+            <CalendarDays className="h-4 w-4" />
+            Book a treatment
+          </button>
+        </div>
+      )}
 
 
 

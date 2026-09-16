@@ -165,3 +165,14 @@ export const SMS_MARKETING_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
 export function smsMarketingEnabled(slug?: string | null) {
   return isFeatureLive(SMS_MARKETING_SLUGS, slug);
 }
+
+/**
+ * "Book a treatment now" quick-scroll CTA on the public booking page (subtle
+ * button in the hero + floating pill while the menu is off-screen).
+ * Pilot account only for now.
+ */
+export const BOOK_CTA_SLUGS = ["aestheticsbynurseryan"];
+
+export function bookCtaEnabled(slug?: string | null) {
+  return isFeatureLive(BOOK_CTA_SLUGS, slug);
+}
