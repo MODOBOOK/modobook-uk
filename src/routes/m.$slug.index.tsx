@@ -1205,7 +1205,7 @@ function BookPage() {
         }
         setBookingAreaVisible(visible.size > 0);
       },
-      { threshold: 0, rootMargin: "0px 0px -80% 0px" },
+      { threshold: 0, rootMargin: "0px 0px -60% 0px" },
     );
     areaEls.forEach((el) => areaObs.observe(el));
     return () => {
