@@ -1175,7 +1175,7 @@ function BookPage() {
   // scroll target is whichever booking step is showing: the treatment menu,
   // or the location / practitioner / chooser pickers that precede it.
   const bookCtaOn = bookCtaEnabled(slug);
-  const [heroVisible, setHeroVisible] = useState(true);
+  const [scrolled, setScrolled] = useState(false);
   const [bookingAreaVisible, setBookingAreaVisible] = useState(false);
   const scrollToMenu = () => {
     const el =
@@ -1187,13 +1187,13 @@ function BookPage() {
   };
   useEffect(() => {
     if (!bookCtaOn) return;
+    const onScroll = () => setScrolled(window.scrollY > 240);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
     const visible = new Set<Element>();
-    const heroEl = document.getElementById("modo-hero");
-    const heroObs = new IntersectionObserver(
-      (entries) => setHeroVisible(entries[0]?.isIntersecting ?? false),
-      { threshold: 0 },
-    );
-    if (heroEl) heroObs.observe(heroEl);
+    // The booking area counts as "on screen" once it reaches the top fifth of
+    // the viewport — so the pill stays handy while the client scrolls towards
+    // it, and disappears once the booking options themselves are in view.
     const areaEls = document.querySelectorAll(
       "#treatment-menu, [data-section='locations'], [data-section='practitioners'], #booking-chooser",
     );
@@ -1205,11 +1205,11 @@ function BookPage() {
         }
         setBookingAreaVisible(visible.size > 0);
       },
-      { threshold: 0 },
+      { threshold: 0, rootMargin: "0px 0px -80% 0px" },
     );
     areaEls.forEach((el) => areaObs.observe(el));
     return () => {
-      heroObs.disconnect();
+      window.removeEventListener("scroll", onScroll);
       areaObs.disconnect();
     };
   }, [bookCtaOn, locationGateOpen, practitionerGateOpen, chooserOn, mode, concernsConfirmed, pickedConcernIds]);
@@ -2768,11 +2768,11 @@ function BookPage() {
         );
       })()}
 
-      {/* Floating book CTA — only while the hero and the booking area are
-          both off-screen and nothing is selected (the sticky booking bar
-          takes over once something is selected). */}
+      {/* Floating book CTA — once the client starts scrolling, until the
+          booking options are on screen; the sticky booking bar takes over
+          once something is selected. */}
       {bookCtaOn && locationGateOpen && practitionerGateOpen
-        && !heroVisible && !bookingAreaVisible
+        && scrolled && !bookingAreaVisible
         && selectedIds.length === 0 && selectedPackageIds.length === 0 && (
         <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">
           <button
