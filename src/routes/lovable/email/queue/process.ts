@@ -292,7 +292,11 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                   text: payload.text,
                   purpose: payload.purpose,
                   label: payload.label,
-                  idempotency_key: payload.idempotency_key,
+                  // Use a fresh idempotency key on every retry: the email provider
+                  // permanently rejects a key that has already failed (409 run_failed).
+                  idempotency_key: failedAttempts > 0
+                    ? `${payload.idempotency_key}-a${failedAttempts}`
+                    : payload.idempotency_key,
                   unsubscribe_token: payload.unsubscribe_token,
                   message_id: payload.message_id,
                   ...(payload.reply_to ? { reply_to: payload.reply_to } : {}),
