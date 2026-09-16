@@ -218,7 +218,7 @@ export const refundAppointment = createServerFn({ method: "POST" })
 
     const { data: appt, error: aErr } = await supabase
       .from("appointments")
-      .select("id, profile_id, stripe_payment_intent_id, amount_paid_cents, amount_refunded_cents")
+      .select("id, profile_id, practitioner_id, stripe_payment_intent_id, amount_paid_cents, amount_refunded_cents")
       .eq("id", data.appointmentId)
       .eq("profile_id", profile.id)
       .single();
@@ -236,9 +236,16 @@ export const refundAppointment = createServerFn({ method: "POST" })
     const refundAmount = data.amount != null ? Math.min(data.amount, maxRefundable / 100) : undefined;
 
     try {
+      const { payoutAccountForAppointment } = await import("./payout-account.server");
+      // Refund on whichever account actually took the money (clinic or team member).
+      const account = await payoutAccountForAppointment({
+        profileId: profile.id as string,
+        practitionerId: (appt as { practitioner_id?: string | null }).practitioner_id ?? null,
+        clinicAccountId: profile.stripe_connect_account_id,
+      });
       const refund = await createRefund(
         appt.stripe_payment_intent_id,
-        profile.stripe_connect_account_id,
+        account ?? profile.stripe_connect_account_id,
         refundAmount,
       );
       const refundedCents = Number(refund.amount ?? (refundAmount ? Math.round(refundAmount * 100) : maxRefundable));

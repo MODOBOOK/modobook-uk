@@ -766,6 +766,11 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                   .from("profiles")
                   .update({ stripe_connect_onboarding_status: status } as never)
                   .eq("stripe_connect_account_id", accountId);
+                // Team members can have their own connected account too.
+                await supabaseAdmin
+                  .from("staff_members")
+                  .update({ stripe_account_status: status } as never)
+                  .eq("stripe_account_id", accountId);
               }
               break;
             }
@@ -782,6 +787,14 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                     stripe_connect_type: null,
                   } as never)
                   .eq("stripe_connect_account_id", accountId);
+                // Same for a team member's own account.
+                await supabaseAdmin
+                  .from("staff_members")
+                  .update({
+                    stripe_account_id: null,
+                    stripe_account_status: "not_started",
+                  } as never)
+                  .eq("stripe_account_id", accountId);
               }
               break;
             }

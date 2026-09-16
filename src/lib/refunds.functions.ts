@@ -17,7 +17,7 @@ export const autoRefundCancelledAppointment = createServerFn({ method: "POST" })
       const { data: appt } = await supabaseAdmin
         .from("appointments")
         .select(
-          "id, profile_id, status, scheduled_date, start_time, stripe_payment_intent_id, amount_paid_cents, amount_refunded_cents",
+          "id, profile_id, practitioner_id, status, scheduled_date, start_time, stripe_payment_intent_id, amount_paid_cents, amount_refunded_cents",
         )
         .eq("id", data.appointmentId)
         .maybeSingle();
@@ -52,9 +52,16 @@ export const autoRefundCancelledAppointment = createServerFn({ method: "POST" })
       if (hoursUntil < cutoffHours) return { refunded: false as const };
 
       const { createRefund } = await import("./stripe.server");
+      const { payoutAccountForAppointment } = await import("./payout-account.server");
+      // Refund on whichever account actually took the money (clinic or team member).
+      const account = await payoutAccountForAppointment({
+        profileId: appt.profile_id as string,
+        practitionerId: (appt as { practitioner_id?: string | null }).practitioner_id ?? null,
+        clinicAccountId: p.stripe_connect_account_id,
+      });
       const refund = await createRefund(
         appt.stripe_payment_intent_id,
-        p.stripe_connect_account_id,
+        account ?? p.stripe_connect_account_id,
         refundable / 100,
       );
       const refundedCents = Number(refund.amount ?? refundable);

@@ -112,6 +112,8 @@ export type CommissionStaffRow = {
   ownerShare: number;
   /** Positive: owner owes the practitioner. Negative: practitioner owes the owner. */
   owedToPractitioner: number;
+  /** Set to their own account but none connected — money actually landed in the clinic account. */
+  accountNotConnected?: boolean;
 };
 
 /** Commission earned per team member over a date range. Owner-only. */
@@ -137,7 +139,7 @@ export const getCommissionReport = createServerFn({ method: "GET" })
 
     const { data: staffRows } = await supabase
       .from("staff_members")
-      .select("id, name, role, practitioner_id, payout_mode, commission_percent, status")
+      .select("id, name, role, practitioner_id, payout_mode, commission_percent, status, stripe_account_id")
       .eq("profile_id", profileId);
 
     const { data: appts, error } = await supabase
@@ -168,8 +170,13 @@ export const getCommissionReport = createServerFn({ method: "GET" })
       const pct = Math.max(0, Math.min(100, Number(s.commission_percent ?? 0)));
       const practitionerShare = Math.round(agg.revenue * pct) / 100;
       const ownerShare = Math.round((agg.revenue - practitionerShare) * 100) / 100;
-      const mode: "clinic" | "own_account" = s.payout_mode === "own_account" ? "own_account" : "clinic";
+      const wantsOwn = s.payout_mode === "own_account";
+      const notConnected = wantsOwn && !s.stripe_account_id;
+      // Without a connected account the money actually landed in the clinic account,
+      // so the figures must be calculated the clinic way round.
+      const mode: "clinic" | "own_account" = wantsOwn && !notConnected ? "own_account" : "clinic";
       rows.push({
+        accountNotConnected: notConnected,
         staffId: s.id,
         name: s.name,
         role: s.role,

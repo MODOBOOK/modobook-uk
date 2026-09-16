@@ -88,6 +88,13 @@ function PayoutControls({ member, onSaved }: { member: Staff; onSaved: () => voi
           </div>
         </div>
       </div>
+      {mode === "own_account" && !connected && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900">
+          <strong>No account connected yet.</strong> Until they connect one, card payments for their
+          bookings still go into your clinic account — and the commission report will read the wrong
+          way round for them.
+        </div>
+      )}
       {mode === "own_account" && (
         <div className="flex flex-wrap items-center gap-2 text-xs">
           {connected ? (
