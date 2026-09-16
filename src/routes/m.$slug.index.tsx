@@ -1204,13 +1204,26 @@ function BookPage() {
       { threshold: 0 },
     );
     if (heroEl) heroObs.observe(heroEl);
+    // Booking area only counts as "on screen" once it reaches the upper part
+    // of the viewport, so the pill stays handy while the pickers are still
+    // down at the bottom edge.
     const areaEls = document.querySelectorAll(
       "#treatment-menu, [data-section='locations'], [data-section='practitioners'], #booking-chooser",
     );
-    areaEls.forEach((el) => obs.observe(el));
+    const areaObs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) visible.add(e.target);
+          else visible.delete(e.target);
+        }
+        setBookingAreaVisible(visible.size > 0);
+      },
+      { threshold: 0, rootMargin: "0px 0px -55% 0px" },
+    );
+    areaEls.forEach((el) => areaObs.observe(el));
     return () => {
       heroObs.disconnect();
-      obs.disconnect();
+      areaObs.disconnect();
     };
   }, [bookCtaOn, locationGateOpen, practitionerGateOpen, chooserOn, mode, concernsConfirmed, pickedConcernIds]);
 
