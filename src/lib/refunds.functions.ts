@@ -17,7 +17,7 @@ export const autoRefundCancelledAppointment = createServerFn({ method: "POST" })
       const { data: appt } = await supabaseAdmin
         .from("appointments")
         .select(
-          "id, profile_id, status, scheduled_date, start_time, stripe_payment_intent_id, amount_paid_cents, amount_refunded_cents",
+          "id, profile_id, practitioner_id, status, scheduled_date, start_time, stripe_payment_intent_id, amount_paid_cents, amount_refunded_cents",
         )
         .eq("id", data.appointmentId)
         .maybeSingle();
