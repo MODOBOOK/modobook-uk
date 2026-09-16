@@ -218,7 +218,7 @@ export const refundAppointment = createServerFn({ method: "POST" })
 
     const { data: appt, error: aErr } = await supabase
       .from("appointments")
-      .select("id, profile_id, stripe_payment_intent_id, amount_paid_cents, amount_refunded_cents")
+      .select("id, profile_id, practitioner_id, stripe_payment_intent_id, amount_paid_cents, amount_refunded_cents")
       .eq("id", data.appointmentId)
       .eq("profile_id", profile.id)
       .single();
