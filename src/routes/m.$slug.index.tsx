@@ -56,7 +56,7 @@ import { toast } from "sonner";
 import { SafeHtml } from "@/components/SafeHtml";
 import { PackageBuilderCard, type PublicBuilder } from "@/components/PackageBuilderCard";
 import { CourseGroupRow } from "@/components/CourseGroupRow";
-import { packageBuilderEnabled, linkButtonEnabled, treatmentLeafletsEnabled, coursePickerEnabled, membershipsEnabled } from "@/lib/feature-flags";
+import { packageBuilderEnabled, linkButtonEnabled, treatmentLeafletsEnabled, coursePickerEnabled, membershipsEnabled, bookCtaEnabled } from "@/lib/feature-flags";
 import { getLeafletSignedUrl } from "@/lib/leaflets.functions";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { formatPrice, BADGE_LABEL, badgeClasses, treatmentPricing, type TreatmentBadge } from "@/lib/price-display";
@@ -1170,6 +1170,50 @@ function BookPage() {
     </section>
   );
 
+  // "Book a treatment now" quick-scroll CTA (pilot flag): a subtle button in
+  // the hero plus a floating pill once the booking area is off-screen. The
+  // scroll target is whichever booking step is showing: the treatment menu,
+  // or the location / practitioner / chooser pickers that precede it.
+  const bookCtaOn = bookCtaEnabled(slug);
+  const [scrolled, setScrolled] = useState(false);
+  const [bookingAreaVisible, setBookingAreaVisible] = useState(false);
+  const scrollToMenu = () => {
+    const el =
+      document.getElementById("treatment-menu") ||
+      document.querySelector("[data-section='practitioners']") ||
+      document.querySelector("[data-section='locations']") ||
+      document.getElementById("booking-chooser");
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  useEffect(() => {
+    if (!bookCtaOn) return;
+    const onScroll = () => setScrolled(window.scrollY > 240);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    const visible = new Set<Element>();
+    // The booking area counts as "on screen" once it reaches the top fifth of
+    // the viewport — so the pill stays handy while the client scrolls towards
+    // it, and disappears once the booking options themselves are in view.
+    const areaEls = document.querySelectorAll(
+      "#treatment-menu, [data-section='locations'], [data-section='practitioners'], #booking-chooser",
+    );
+    const areaObs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) visible.add(e.target);
+          else visible.delete(e.target);
+        }
+        setBookingAreaVisible(visible.size > 0);
+      },
+      { threshold: 0, rootMargin: "0px 0px -60% 0px" },
+    );
+    areaEls.forEach((el) => areaObs.observe(el));
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      areaObs.disconnect();
+    };
+  }, [bookCtaOn, locationGateOpen, practitionerGateOpen, chooserOn, mode, concernsConfirmed, pickedConcernIds]);
+
   return (
     <main className="min-h-screen pb-16" style={pageStyle}>
       <style>{`
@@ -1206,6 +1250,7 @@ function BookPage() {
 
         return (
           <section
+            id="modo-hero"
             data-modo-section
             className="relative overflow-hidden"
             style={{ backgroundColor: heroBandColor, color: heroTextColor }}
@@ -1327,6 +1372,18 @@ function BookPage() {
                         {reviewCount === 0 ? "New" : `${reviewAvg.toFixed(1)} · ${reviewCount} reviews`}
                       </span>
                     </Link>
+                  )}
+
+                  {bookCtaOn && (
+                    <button
+                      type="button"
+                      onClick={scrollToMenu}
+                      className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors hover:bg-white/10"
+                      style={{ borderColor: heroDivider, color: heroTextColor }}
+                    >
+                      <CalendarDays className="h-4 w-4" />
+                      Book a treatment now
+                    </button>
                   )}
                 </div>
               </div>
@@ -1561,7 +1618,7 @@ function BookPage() {
       {/* Choose Location + practitioners */}
       {locations.length > 0 && (
 
-        <section data-section="locations" className="mx-auto mt-8 max-w-3xl px-4">
+        <section data-section="locations" className="mx-auto mt-8 max-w-3xl scroll-mt-16 px-4">
           <h2 className="mb-4 text-xl font-bold" style={headingStyle}>
             {locations.length > 1 ? "Choose Location" : "Location"}
           </h2>
@@ -1637,7 +1694,7 @@ function BookPage() {
 
       {/* Choose your practitioner — its own step, before the treatment menu */}
       {showPractitionerStep && (
-        <section data-section="practitioners" className="mx-auto mt-8 max-w-3xl px-4">
+        <section data-section="practitioners" className="mx-auto mt-8 max-w-3xl scroll-mt-16 px-4">
           <h2 className="mb-1 text-xl font-bold" style={headingStyle}>
             {practSelectionMode === "required" ? "Choose your practitioner" : "Choose your practitioner (optional)"}
           </h2>
@@ -1731,7 +1788,7 @@ function BookPage() {
       {/* Chooser gate */}
 
       {locationGateOpen && practitionerGateOpen && chooserOn && !mode && (
-        <section className="mx-auto mt-10 max-w-3xl px-4">
+        <section id="booking-chooser" className="mx-auto mt-10 max-w-3xl scroll-mt-16 px-4">
           <h2 className="mb-1 text-center text-xl font-bold" style={headingStyle}>
             How can we help today?
           </h2>
@@ -2032,7 +2089,7 @@ function BookPage() {
       {/* Treatments + Packages */}
 
       {locationGateOpen && practitionerGateOpen && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
-        <section className="mx-auto mt-10 max-w-3xl px-4 pb-32">
+        <section id="treatment-menu" className="mx-auto mt-10 max-w-3xl scroll-mt-16 px-4 pb-32">
           {chooserOn && (
             <div className="mb-4 flex items-center justify-between">
               <button
@@ -2710,6 +2767,24 @@ function BookPage() {
           </div>
         );
       })()}
+
+      {/* Floating book CTA — once the client starts scrolling, until the
+          booking options are on screen; the sticky booking bar takes over
+          once something is selected. */}
+      {bookCtaOn && scrolled && !bookingAreaVisible
+        && selectedIds.length === 0 && selectedPackageIds.length === 0 && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">
+          <button
+            type="button"
+            onClick={scrollToMenu}
+            className="pointer-events-auto inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold shadow-lg transition-transform active:scale-95"
+            style={{ backgroundColor: brand, color: "#fff" }}
+          >
+            <CalendarDays className="h-4 w-4" />
+            Book a treatment
+          </button>
+        </div>
+      )}
 
 
 
