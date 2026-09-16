@@ -19,6 +19,21 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+// PostgREST caps a single response at 1000 rows; page through in slices.
+async function fetchAll<T = any>(
+  makeQuery: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: any }>,
+  maxPages = 6,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let p = 0; p < maxPages; p++) {
+    const { data, error } = await makeQuery(p * 1000, p * 1000 + 999);
+    if (error) throw error;
+    out.push(...(data ?? []));
+    if (!data || data.length < 1000) break;
+  }
+  return out;
+}
+
 export type ActivityEvent = {
   kind: "booking" | "payment" | "signup" | "membership";
   at: string;
@@ -56,36 +71,46 @@ export const adminInsights = createServerFn({ method: "GET" })
     const day = 24 * 60 * 60 * 1000;
     const iso = (t: number) => new Date(t).toISOString();
 
-    const [profilesRes, recentBookings, recentPayments, membershipsRes, upcomingRes] = await Promise.all([
+    const [profilesRes, recentBookings, recentPayments, memberships, upcoming] = await Promise.all([
       supabaseAdmin
         .from("profiles")
         .select("id, clinic_name, slug, created_at, active")
         .order("created_at", { ascending: false })
         .limit(500),
-      supabaseAdmin
-        .from("appointments")
-        .select("id, profile_id, created_at, start_time, status, treatment_name_snapshot, total_amount")
-        .gte("created_at", iso(now - 30 * day))
-        .order("created_at", { ascending: false })
-        .limit(1500),
-      supabaseAdmin
-        .from("payments")
-        .select("id, profile_id, amount, status, created_at")
-        .gte("created_at", iso(now - 30 * day))
-        .order("created_at", { ascending: false })
-        .limit(1500),
-      supabaseAdmin
-        .from("patient_memberships")
-        .select("id, profile_id, status, created_at")
-        .gte("created_at", iso(now - 30 * day))
-        .order("created_at", { ascending: false })
-        .limit(200),
-      supabaseAdmin
-        .from("appointments")
-        .select("id, profile_id, start_time, status, total_amount")
-        .gte("start_time", iso(now))
-        .lte("start_time", iso(now + 60 * day))
-        .limit(2000),
+      fetchAll((f, t) =>
+        supabaseAdmin
+          .from("appointments")
+          .select("id, profile_id, created_at, start_time, status, treatment_name_snapshot, total_amount")
+          .gte("created_at", iso(now - 30 * day))
+          .order("created_at", { ascending: false })
+          .range(f, t),
+      ),
+      fetchAll((f, t) =>
+        supabaseAdmin
+          .from("payments")
+          .select("id, profile_id, amount, status, created_at")
+          .gte("created_at", iso(now - 30 * day))
+          .order("created_at", { ascending: false })
+          .range(f, t),
+      ),
+      fetchAll((f, t) =>
+        supabaseAdmin
+          .from("patient_memberships")
+          .select("id, profile_id, status, created_at")
+          .gte("created_at", iso(now - 30 * day))
+          .order("created_at", { ascending: false })
+          .range(f, t),
+        1,
+      ),
+      fetchAll((f, t) =>
+        supabaseAdmin
+          .from("appointments")
+          .select("id, profile_id, start_time, status, total_amount")
+          .gte("start_time", iso(now))
+          .lte("start_time", iso(now + 60 * day))
+          .range(f, t),
+        3,
+      ),
     ]);
 
     const profiles = (profilesRes.data ?? []) as Array<{
@@ -99,7 +124,7 @@ export const adminInsights = createServerFn({ method: "GET" })
 
     // ---- Activity feed (no patient data) ----
     const activity: ActivityEvent[] = [];
-    for (const b of (recentBookings.data ?? []) as any[]) {
+    for (const b of recentBookings) {
       if (new Date(b.created_at).getTime() < now - 14 * day) continue;
       activity.push({
         kind: "booking",
@@ -109,7 +134,7 @@ export const adminInsights = createServerFn({ method: "GET" })
         amount: num(b.total_amount) || null,
       });
     }
-    for (const p of (recentPayments.data ?? []) as any[]) {
+    for (const p of recentPayments) {
       if (new Date(p.created_at).getTime() < now - 14 * day) continue;
       if (p.status !== "succeeded" && p.status !== "paid") continue;
       activity.push({
@@ -130,7 +155,7 @@ export const adminInsights = createServerFn({ method: "GET" })
         amount: null,
       });
     }
-    for (const m of (membershipsRes.data ?? []) as any[]) {
+    for (const m of memberships) {
       activity.push({
         kind: "membership",
         at: m.created_at,
@@ -156,7 +181,7 @@ export const adminInsights = createServerFn({ method: "GET" })
         flags: [],
       });
     }
-    for (const b of (recentBookings.data ?? []) as any[]) {
+    for (const b of recentBookings) {
       const c = byClinic.get(b.profile_id);
       if (!c) continue;
       const t = new Date(b.created_at).getTime();
@@ -164,7 +189,7 @@ export const adminInsights = createServerFn({ method: "GET" })
       else if (t >= now - 14 * day) c.bookings_prev_7d++;
       if (!c.last_booking_at || b.created_at > c.last_booking_at) c.last_booking_at = b.created_at;
     }
-    for (const b of (upcomingRes.data ?? []) as any[]) {
+    for (const b of upcoming) {
       if (b.status === "cancelled") continue;
       const c = byClinic.get(b.profile_id);
       if (!c) continue;
@@ -172,16 +197,19 @@ export const adminInsights = createServerFn({ method: "GET" })
       if (!num(b.total_amount)) c.upcoming_no_price++;
     }
 
-    // Clinics with no bookings at all in the 30-day window need a separate
-    // check for their last ever booking, otherwise they'd look "quiet" forever.
-    const clinics = [...byClinic.values()].filter((c) => c.bookings_7d + c.bookings_prev_7d > 0 || c.upcoming > 0 || c.last_booking_at);
+    const clinics = [...byClinic.values()].filter(
+      (c) => c.bookings_7d + c.bookings_prev_7d > 0 || c.upcoming > 0 || c.last_booking_at,
+    );
     for (const c of clinics) {
-      const quietDays = c.last_booking_at ? Math.floor((now - new Date(c.last_booking_at).getTime()) / day) : 999;
+      const quietDays = c.last_booking_at
+        ? Math.floor((now - new Date(c.last_booking_at).getTime()) / day)
+        : 999;
       if (quietDays >= 14) c.flags.push("No new bookings for 2+ weeks");
       else if (c.bookings_7d === 0 && c.bookings_prev_7d > 0) c.flags.push("Bookings stopped this week");
       if (c.upcoming_no_price >= 3) c.flags.push(`${c.upcoming_no_price} upcoming bookings missing a price`);
       if (c.upcoming === 0) c.flags.push("No upcoming bookings in the next 60 days");
-      if (c.bookings_prev_7d > 0 && c.bookings_7d < c.bookings_prev_7d / 2) c.flags.push("Bookings dropped sharply this week");
+      if (c.bookings_prev_7d > 0 && c.bookings_7d < c.bookings_prev_7d / 2)
+        c.flags.push("Bookings dropped sharply this week");
     }
     clinics.sort((a, b) => b.flags.length - a.flags.length || b.bookings_7d - a.bookings_7d);
 
@@ -191,20 +219,17 @@ export const adminInsights = createServerFn({ method: "GET" })
       const d = iso(now - i * day).slice(0, 10);
       buckets.set(d, { day: d, bookings: 0, revenue: 0, signups: 0 });
     }
-    for (const b of (recentBookings.data ?? []) as any[]) {
-      const k = String(b.created_at).slice(0, 10);
-      const bk = buckets.get(k);
+    for (const b of recentBookings) {
+      const bk = buckets.get(String(b.created_at).slice(0, 10));
       if (bk) bk.bookings++;
     }
-    for (const p of (recentPayments.data ?? []) as any[]) {
+    for (const p of recentPayments) {
       if (p.status !== "succeeded" && p.status !== "paid") continue;
-      const k = String(p.created_at).slice(0, 10);
-      const bk = buckets.get(k);
+      const bk = buckets.get(String(p.created_at).slice(0, 10));
       if (bk) bk.revenue += num(p.amount);
     }
     for (const pr of profiles) {
-      const k = String(pr.created_at).slice(0, 10);
-      const bk = buckets.get(k);
+      const bk = buckets.get(String(pr.created_at).slice(0, 10));
       if (bk) bk.signups++;
     }
 
@@ -214,10 +239,10 @@ export const adminInsights = createServerFn({ method: "GET" })
       trends: [...buckets.values()],
       totals: {
         clinics: profiles.length,
-        bookings_30d: (recentBookings.data ?? []).length,
-        revenue_30d: (recentPayments.data ?? [])
-          .filter((p: any) => p.status === "succeeded" || p.status === "paid")
-          .reduce((s: number, p: any) => s + num(p.amount), 0),
+        bookings_30d: recentBookings.length,
+        revenue_30d: recentPayments
+          .filter((p) => p.status === "succeeded" || p.status === "paid")
+          .reduce((s, p) => s + num(p.amount), 0),
       },
     };
   });
