@@ -145,6 +145,32 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
         return d > 0 && d <= 120 ? d : 30;
       })();
 
+      // Clinic days are run by the prescriber, so the service must be offered by
+      // every practitioner — otherwise it vanishes from the booking page as soon
+      // as a patient picks someone whose service list does not include it.
+      const linkToPractitioners = async (treatmentId: string) => {
+        const { data: pracs } = await supabase
+          .from("practitioners")
+          .select("id")
+          .eq("profile_id", profile.id)
+          .eq("active", true);
+        if (!pracs?.length) return;
+        const { data: existingLinks } = await supabase
+          .from("practitioner_treatments")
+          .select("practitioner_id")
+          .eq("treatment_id", treatmentId);
+        const have = new Set((existingLinks ?? []).map((l) => l.practitioner_id));
+        const missing = pracs.filter((p) => !have.has(p.id));
+        if (!missing.length) return;
+        await supabase.from("practitioner_treatments").insert(
+          missing.map((p) => ({
+            profile_id: profile.id,
+            practitioner_id: p.id,
+            treatment_id: treatmentId,
+          })) as never,
+        );
+      };
+
       if (existing) {
         await supabase
           .from("treatments")
@@ -157,6 +183,7 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
             payment_mode: data.payment_mode ?? "full",
           } as never)
           .eq("id", existing.id);
+        await linkToPractitioners(existing.id as string);
         return existing.id as string;
       }
       const { data: created, error: tErr } = await supabase
@@ -177,8 +204,10 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
         .select("id")
         .single();
       if (tErr) throw tErr;
+      await linkToPractitioners(created.id as string);
       return created.id as string;
     };
+
 
     const price = data.price ?? null;
     const treatmentId = await ensureTreatment(price);
