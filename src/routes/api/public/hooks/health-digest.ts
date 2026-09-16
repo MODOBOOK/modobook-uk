@@ -197,7 +197,10 @@ export const Route = createFileRoute('/api/public/hooks/health-digest')({
           const needs = all.filter((f) => f.severity === 'critical' || f.severity === 'warning')
           const infoCount = all.filter((f) => f.severity === 'info').length
 
-          if (needs.length === 0) {
+          // 4. Clinic watch: privacy-safe per-clinic counts (no client data).
+          const clinicWatch = await computeClinicWatch(supabaseAdmin)
+
+          if (needs.length === 0 && clinicWatch.length === 0) {
             return Response.json({ ok: true, emailed: 0, open: all.length, note: 'nothing needs attention' })
           }
 
@@ -205,9 +208,11 @@ export const Route = createFileRoute('/api/public/hooks/health-digest')({
           if (recErr) throw recErr
 
           const today = nowIso.slice(0, 10)
-          const subject = `Modo system check: ${needs.length} issue${needs.length === 1 ? '' : 's'} need attention (${today})`
-          const html = buildHtml(needs, infoCount)
-          const text = buildText(needs, infoCount)
+          const subject = needs.length > 0
+            ? `Modo system check: ${needs.length} issue${needs.length === 1 ? '' : 's'} need attention (${today})`
+            : `Modo clinic watch: ${clinicWatch.length} note${clinicWatch.length === 1 ? '' : 's'} (${today})`
+          const html = buildHtml(needs, infoCount, clinicWatch)
+          const text = buildText(needs, infoCount, clinicWatch)
 
           let emailed = 0
           const list = (recipients ?? []) as Array<{ email: string | null }>
