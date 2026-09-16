@@ -156,7 +156,7 @@ export const Route = createFileRoute('/api/public/hooks/health-digest')({
           for (let i = 0; i < list.length; i++) {
             const to = String(list[i]?.email ?? '').trim().toLowerCase()
             if (!to) continue
-            const messageId = `health-digest-${today}-${i}`
+            const messageId = `health-digest-vtest-${today}-${i}`
 
           // One digest per recipient per day.
             const { data: already } = await supabaseAdmin
