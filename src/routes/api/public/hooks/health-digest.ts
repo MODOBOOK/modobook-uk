@@ -97,7 +97,7 @@ async function computeClinicWatch(supabaseAdmin: any): Promise<string[]> {
     supabaseAdmin.from('appointments').select('profile_id, created_at')
       .gte('created_at', iso(now - 30 * day)).limit(2000),
     supabaseAdmin.from('appointments').select('profile_id, status, total_amount')
-      .gte('start_time', iso(now)).lte('start_time', iso(now + 60 * day)).limit(2000),
+      .gte('scheduled_date', iso(now).slice(0, 10)).lte('scheduled_date', iso(now + 60 * day).slice(0, 10)).limit(2000),
   ])
 
   const names = new Map<string, string>(

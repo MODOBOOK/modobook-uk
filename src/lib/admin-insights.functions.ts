@@ -105,9 +105,9 @@ export const adminInsights = createServerFn({ method: "GET" })
       fetchAll((f, t) =>
         supabaseAdmin
           .from("appointments")
-          .select("id, profile_id, start_time, status, total_amount")
-          .gte("start_time", iso(now))
-          .lte("start_time", iso(now + 60 * day))
+          .select("id, profile_id, scheduled_date, status, total_amount")
+          .gte("scheduled_date", iso(now).slice(0, 10))
+          .lte("scheduled_date", iso(now + 60 * day).slice(0, 10))
           .range(f, t),
         3,
       ),
