@@ -2771,8 +2771,7 @@ function BookPage() {
       {/* Floating book CTA — once the client starts scrolling, until the
           booking options are on screen; the sticky booking bar takes over
           once something is selected. */}
-      {bookCtaOn && locationGateOpen && practitionerGateOpen
-        && scrolled && !bookingAreaVisible
+      {bookCtaOn && scrolled && !bookingAreaVisible
         && selectedIds.length === 0 && selectedPackageIds.length === 0 && (
         <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">
           <button
