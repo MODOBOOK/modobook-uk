@@ -388,11 +388,18 @@ function MultiBookPage() {
       if (start >= end) continue;
       const visitIds: Record<string, string> = {};
       picked.forEach((v, i) => { visitIds[clinicVisitItems[i]!.treatment_id] = v!.visit_id; });
-      // How many people the prescriber can see that day sets how many start
-      // times we offer, regardless of how long the treatment itself takes.
+      // The full number of places the prescriber set for that day fixes the
+      // grid of start times. Using the places still left would shuffle the
+      // times every time someone books, so already-taken times would reappear
+      // and later ones vanish. Times already taken are removed further down.
       const capacity = Math.max(
         1,
-        Math.min(...picked.map((v) => Number(v!.remaining_capacity ?? 1) || 1)),
+        Math.min(
+          ...picked.map((v) => {
+            const total = Number((v as { total_capacity?: number | null }).total_capacity ?? 0);
+            return total > 0 ? total : Number(v!.remaining_capacity ?? 1) || 1;
+          }),
+        ),
       );
       map.set(day, { start, end, capacity, visitIds });
     }
@@ -581,7 +588,20 @@ function MultiBookPage() {
         if (t >= end && i > 0) break;
         times.push(fromMinutes(t));
       }
-      let list = Array.from(new Set(times)).sort();
+      // Anything already in the diary on that day is taken, so it can't be
+      // offered again — a prescribing clinic day is still one person at a time.
+      const hold = Math.max(1, Math.min(Math.round(step) || 1, totalDuration || 1));
+      let list = Array.from(new Set(times))
+        .sort()
+        .filter((s) => {
+          const t = toMinutes(s);
+          return !busy.some(
+            (b) =>
+              (!locationId || !b.locId || b.locId === locationId) &&
+              t < b.end &&
+              t + hold > b.start,
+          );
+        });
       const n = new Date();
       const todayIso = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
       if (date === todayIso) {
