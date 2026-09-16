@@ -2,16 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  BarChart3,
-  CalendarPlus,
-  CreditCard,
-  ShieldAlert,
-  Sparkles,
-  TriangleAlert,
-  UserPlus,
-  Repeat,
-} from "lucide-react";
+import { BarChart3, ShieldAlert, TriangleAlert } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -25,7 +16,6 @@ import {
 } from "recharts";
 import {
   adminInsights,
-  type ActivityEvent,
   type ClinicHealth,
   type TrendDay,
 } from "@/lib/admin-insights.functions";
@@ -53,26 +43,14 @@ export const Route = createFileRoute("/_authenticated/admin/insights")({
   component: InsightsPage,
 });
 
-function when(iso: string) {
-  return new Date(iso).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
-}
-
 function dayLabel(d: string) {
   return new Date(`${d}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
 const money = (n: number) => `£${n.toFixed(2)}`;
 
-const EVENT_ICON: Record<ActivityEvent["kind"], { icon: typeof CalendarPlus; cls: string }> = {
-  booking: { icon: CalendarPlus, cls: "bg-blue-100 text-blue-700" },
-  payment: { icon: CreditCard, cls: "bg-emerald-100 text-emerald-700" },
-  signup: { icon: UserPlus, cls: "bg-amber-100 text-amber-700" },
-  membership: { icon: Repeat, cls: "bg-violet-100 text-violet-700" },
-};
-
 function InsightsPage() {
   const data = Route.useLoaderData() as {
-    activity: ActivityEvent[];
     clinics: ClinicHealth[];
     trends: TrendDay[];
     totals: { clinics: number; bookings_30d: number; revenue_30d: number };
@@ -183,41 +161,6 @@ function InsightsPage() {
           </Card>
         ))}
       </div>
-
-      {/* Activity feed */}
-      <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-        <Sparkles className="h-4 w-4" /> Latest activity
-      </h2>
-      <Card>
-        <CardContent className="divide-y p-0">
-          {data.activity.length === 0 && (
-            <p className="p-6 text-sm text-muted-foreground">No activity in the last two weeks.</p>
-          )}
-          {data.activity.map((e, i) => {
-            const meta = EVENT_ICON[e.kind];
-            const Icon = meta.icon;
-            return (
-              <div key={`${e.kind}-${e.at}-${i}`} className="flex items-center gap-3 px-4 py-2.5 text-sm">
-                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${meta.cls}`}>
-                  <Icon className="h-3.5 w-3.5" />
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate">
-                    {e.text}
-                    <span className="text-muted-foreground"> · {e.clinic}</span>
-                  </p>
-                </div>
-                {e.amount != null && e.amount > 0 && (
-                  <span className="ml-auto shrink-0 font-medium">{money(e.amount)}</span>
-                )}
-                <span className={`shrink-0 text-xs text-muted-foreground ${e.amount != null && e.amount > 0 ? "" : "ml-auto"}`}>
-                  {when(e.at)}
-                </span>
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
     </AdminShell>
   );
 }
