@@ -581,10 +581,14 @@ function MultiBookPage() {
       const end = toMinutes(visitWindow.end);
       const span = Math.max(0, end - start);
       const count = Math.max(1, Math.floor(visitWindow.capacity));
-      const step = count > 1 ? span / count : span;
+      // Keep the start times on a tidy 5 minute grid rather than an exact
+      // fraction of the window, so patients see 18:30 / 18:35 / 18:40 and not
+      // 18:36 / 18:41 / 18:47.
+      const rawStep = count > 1 ? span / count : span;
+      const step = Math.max(5, Math.floor(rawStep / 5) * 5);
       const times: string[] = [];
       for (let i = 0; i < count; i++) {
-        const t = Math.round(start + step * i);
+        const t = start + step * i;
         if (t >= end && i > 0) break;
         times.push(fromMinutes(t));
       }
