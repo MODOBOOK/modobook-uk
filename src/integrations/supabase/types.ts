@@ -10270,6 +10270,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      health_digest_recipients: {
+        Args: never
+        Returns: {
+          email: string
+        }[]
+      }
       hold_bulk_marketing_emails: { Args: never; Returns: number }
       increment_package_claim: {
         Args: { p_package_id: string }
