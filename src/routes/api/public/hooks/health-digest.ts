@@ -156,13 +156,19 @@ export const Route = createFileRoute('/api/public/hooks/health-digest')({
           for (let i = 0; i < list.length; i++) {
             const to = String(list[i]?.email ?? '').trim().toLowerCase()
             if (!to) continue
-            const messageId = `health-digest-${today}-${i}`
+            // Unique key per run: if a previous run's send failed, the email
+            // API refuses the same idempotency key forever, so a fresh key is
+            // the only way a retry can succeed.
+            const messageId = `health-digest-${today}-${i}-${crypto.randomUUID().slice(0, 8)}`
 
-          // One digest per recipient per day.
+            // One successfully sent digest per recipient per day.
             const { data: already } = await supabaseAdmin
               .from('email_send_log')
               .select('id')
-              .eq('message_id', messageId)
+              .eq('template_name', LABEL)
+              .eq('recipient_email', to)
+              .eq('status', 'sent')
+              .gte('created_at', `${today}T00:00:00Z`)
               .limit(1)
               .maybeSingle()
             if (already) continue
