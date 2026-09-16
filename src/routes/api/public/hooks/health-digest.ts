@@ -158,7 +158,7 @@ export const Route = createFileRoute('/api/public/hooks/health-digest')({
             if (!to) continue
             const messageId = `health-digest-${today}-${i}`
 
-            // One digest per recipient per day.
+          // One digest per recipient per day.
             const { data: already } = await supabaseAdmin
               .from('email_send_log')
               .select('id')
@@ -166,6 +166,21 @@ export const Route = createFileRoute('/api/public/hooks/health-digest')({
               .limit(1)
               .maybeSingle()
             if (already) continue
+
+            // The email API requires an unsubscribe token on every message.
+            let unsubscribeToken = crypto.randomUUID().replace(/-/g, '')
+            const { data: tokenRow } = await supabaseAdmin
+              .from('email_unsubscribe_tokens')
+              .select('token')
+              .eq('email', to)
+              .maybeSingle()
+            if (tokenRow?.token) {
+              unsubscribeToken = tokenRow.token
+            } else {
+              await supabaseAdmin
+                .from('email_unsubscribe_tokens')
+                .insert({ token: unsubscribeToken, email: to })
+            }
 
             await supabaseAdmin.from('email_send_log').insert({
               message_id: messageId, template_name: LABEL, recipient_email: to, status: 'pending',
