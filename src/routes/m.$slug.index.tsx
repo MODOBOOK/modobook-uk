@@ -1194,9 +1194,6 @@ function BookPage() {
       { threshold: 0 },
     );
     if (heroEl) heroObs.observe(heroEl);
-    // Booking area only counts as "on screen" once it reaches the upper part
-    // of the viewport, so the pill stays handy while the pickers are still
-    // down at the bottom edge.
     const areaEls = document.querySelectorAll(
       "#treatment-menu, [data-section='locations'], [data-section='practitioners'], #booking-chooser",
     );
@@ -1208,7 +1205,7 @@ function BookPage() {
         }
         setBookingAreaVisible(visible.size > 0);
       },
-      { threshold: 0, rootMargin: "0px 0px -55% 0px" },
+      { threshold: 0 },
     );
     areaEls.forEach((el) => areaObs.observe(el));
     return () => {
