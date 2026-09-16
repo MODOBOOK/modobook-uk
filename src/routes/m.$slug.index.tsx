@@ -1188,16 +1188,6 @@ function BookPage() {
   useEffect(() => {
     if (!bookCtaOn) return;
     const visible = new Set<Element>();
-    const obs = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) visible.add(e.target);
-          else visible.delete(e.target);
-        }
-        setBookingAreaVisible(visible.size > 0);
-      },
-      { threshold: 0 },
-    );
     const heroEl = document.getElementById("modo-hero");
     const heroObs = new IntersectionObserver(
       (entries) => setHeroVisible(entries[0]?.isIntersecting ?? false),
