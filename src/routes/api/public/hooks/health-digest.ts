@@ -29,7 +29,7 @@ const SEV_STYLE: Record<string, { label: string; color: string; bg: string }> = 
   info: { label: 'Info', color: '#334155', bg: '#f1f5f9' },
 }
 
-function buildHtml(findings: Finding[], infoCount: number): string {
+function buildHtml(findings: Finding[], infoCount: number, clinicWatch: string[]): string {
   const rows = findings
     .map((f) => {
       const sev = SEV_STYLE[f.severity] ?? SEV_STYLE['info']!
@@ -48,6 +48,14 @@ function buildHtml(findings: Finding[], infoCount: number): string {
 
   const infoLine = infoCount > 0
     ? `<p style="margin:12px 0 0;color:#64748b;font-size:13px">Plus ${infoCount} lower-priority note${infoCount === 1 ? '' : 's'} on the health page.</p>`
+    : ''
+
+  const watchSection = clinicWatch.length > 0
+    ? `<h3 style="font-size:15px;color:#0f172a;margin:24px 0 6px">Clinic watch</h3>
+  <p style="margin:0 0 8px;color:#64748b;font-size:12px">Privacy-safe counts only — no client details.</p>
+  <ul style="margin:0;padding-left:18px;color:#334155;font-size:13px;line-height:1.6">
+    ${clinicWatch.map((w) => `<li>${esc(w)}</li>`).join('\n')}
+  </ul>`
     : ''
 
   return `<div style="font-family:Helvetica,Arial,sans-serif;max-width:640px;margin:0 auto">
