@@ -1215,8 +1215,6 @@ function BookPage() {
   }, [bookCtaOn, locationGateOpen, practitionerGateOpen, chooserOn, mode, concernsConfirmed, pickedConcernIds]);
 
   return (
-
-  return (
     <main className="min-h-screen pb-16" style={pageStyle}>
       <style>{`
         .modo-btn { background-color: var(--btn-color); color: var(--btn-text); border-radius: var(--btn-radius); ${btnUppercase ? "text-transform: uppercase; letter-spacing: 0.05em;" : ""} }
