@@ -2768,10 +2768,10 @@ function BookPage() {
         );
       })()}
 
-      {/* Floating book CTA — only while the booking area is off-screen and
-          nothing is selected (the sticky booking bar takes over then). */}
+      {/* Floating book CTA — only while the hero and the booking area are
+          both off-screen and nothing is selected (the sticky booking bar
+          takes over once something is selected). */}
       {bookCtaOn && locationGateOpen && practitionerGateOpen
-        && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0))
         && !heroVisible && !bookingAreaVisible
         && selectedIds.length === 0 && selectedPackageIds.length === 0 && (
         <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">
