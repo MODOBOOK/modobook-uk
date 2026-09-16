@@ -112,6 +112,8 @@ export type CommissionStaffRow = {
   ownerShare: number;
   /** Positive: owner owes the practitioner. Negative: practitioner owes the owner. */
   owedToPractitioner: number;
+  /** Set to their own account but none connected — money actually landed in the clinic account. */
+  accountNotConnected?: boolean;
 };
 
 /** Commission earned per team member over a date range. Owner-only. */
