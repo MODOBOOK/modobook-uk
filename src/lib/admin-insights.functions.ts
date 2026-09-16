@@ -191,7 +191,7 @@ export const adminInsights = createServerFn({ method: "GET" })
     }
 
     return {
-      activity: activity.slice(0, 60),
+      
       clinics,
       trends: [...buckets.values()],
       totals: {
