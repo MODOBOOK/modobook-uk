@@ -36,6 +36,8 @@ type PractitionerInput = {
   bio?: string | null;
   active?: boolean;
   display_order?: number;
+  /** Own minimum booking notice in hours; null means use the clinic setting. */
+  booking_min_notice_hours?: number | null;
   location_ids?: string[];
   treatment_ids?: string[] | null;
 };
@@ -57,6 +59,10 @@ export const upsertPractitioner = createServerFn({ method: "POST" })
       bio: data.bio ?? null,
       active: data.active ?? true,
       display_order: data.display_order ?? 0,
+      booking_min_notice_hours:
+        data.booking_min_notice_hours == null || Number.isNaN(Number(data.booking_min_notice_hours))
+          ? null
+          : Math.max(0, Math.min(720, Math.round(Number(data.booking_min_notice_hours)))),
     };
 
     let row;

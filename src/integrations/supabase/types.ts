@@ -6563,6 +6563,7 @@ export type Database = {
         Row: {
           active: boolean
           bio: string | null
+          booking_min_notice_hours: number | null
           created_at: string
           display_order: number
           id: string
@@ -6576,6 +6577,7 @@ export type Database = {
         Insert: {
           active?: boolean
           bio?: string | null
+          booking_min_notice_hours?: number | null
           created_at?: string
           display_order?: number
           id?: string
@@ -6589,6 +6591,7 @@ export type Database = {
         Update: {
           active?: boolean
           bio?: string | null
+          booking_min_notice_hours?: number | null
           created_at?: string
           display_order?: number
           id?: string

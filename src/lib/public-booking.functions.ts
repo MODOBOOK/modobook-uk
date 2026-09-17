@@ -142,6 +142,14 @@ export const getBookingContext = createServerFn({ method: "GET" })
       settings,
       rotaAnchor,
       practitionerTreatments: practTreatRows ?? [],
+      // Per-team-member minimum notice (null = use the clinic-wide setting).
+      practitionerNotice:
+        (
+          await sb
+            .from("practitioners")
+            .select("id, booking_min_notice_hours")
+            .eq("profile_id", profile.id)
+        ).data ?? [],
     };
   });
 
@@ -345,6 +353,14 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
       treatments: treatments ?? [],
       pricing: pricing ?? [],
       practitionerTreatments,
+      // Per-team-member minimum notice (null = use the clinic-wide setting).
+      practitionerNotice:
+        (
+          await sb
+            .from("practitioners")
+            .select("id, booking_min_notice_hours")
+            .eq("profile_id", profile.id)
+        ).data ?? [],
       locations: bookableLocations,
       rules: rules ?? [],
       theme: theme ?? null,
