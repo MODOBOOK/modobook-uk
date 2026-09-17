@@ -660,6 +660,7 @@ function CategoryCard({
   onReorderTreatsByIds,
   onMoveTreatTo,
   onMoveCatTo,
+  onReorderCatsByIds,
   isUncategorised,
 }: {
   node: CatNode;
@@ -673,8 +674,10 @@ function CategoryCard({
   onReorderTreatsByIds: (ids: string[]) => void;
   onMoveTreatTo: (t: Treat) => void;
   onMoveCatTo: (c: Cat) => void;
+  onReorderCatsByIds: (ids: string[]) => void;
   isUncategorised?: boolean;
 }) {
+
   const [open, setOpen] = useState(false);
   const expanded = forceOpen || open;
   const treatsHere = node.treatments.filter(matchTreat);
