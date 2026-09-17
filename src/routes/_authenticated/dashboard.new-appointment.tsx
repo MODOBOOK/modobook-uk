@@ -724,6 +724,11 @@ function NewAppointmentPage() {
           {date && items.length > 0 && !items[0].startTime && (
             <div>
               <Label>Available start times for first treatment</Label>
+              {isClinicVisitBooking && clinicVisitDay && (
+                <p className="mb-1 text-xs text-muted-foreground">
+                  Prescribing clinic {clinicVisitDay.start}–{clinicVisitDay.end} — only these times can be booked.
+                </p>
+              )}
               {loadingSlots ? (
                 <p className="text-sm text-muted-foreground">Loading…</p>
               ) : slots.length === 0 ? (
