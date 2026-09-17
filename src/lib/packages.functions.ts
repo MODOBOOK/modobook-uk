@@ -108,8 +108,10 @@ async function ensurePackageService(
   packageId: string,
   data: PackageInput,
 ): Promise<void> {
-  const customs = (data.custom_items ?? []).map((s) => s.trim()).filter(Boolean);
-  if (customs.length === 0) return;
+  // Runs whenever a package has no real services attached — whether it is made
+  // of free-typed items or just a description — so it can always be booked.
+
+
 
   const { data: pkg } = await supabase
     .from("packages")
