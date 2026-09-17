@@ -889,6 +889,15 @@ function SubcategorySection({
               <DropdownMenuItem onSelect={() => onAddService(child.id)}>
                 <Plus className="mr-2 h-4 w-4" /> Add service
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled={!canMoveUp} onSelect={() => onMove?.(-1)}>
+                <ArrowUp className="mr-2 h-4 w-4" /> Move up
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={!canMoveDown} onSelect={() => onMove?.(1)}>
+                <ArrowDown className="mr-2 h-4 w-4" /> Move down
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+
               <DropdownMenuItem onSelect={() => onEditCat(child)}>
                 <Pencil className="mr-2 h-4 w-4" /> Edit
               </DropdownMenuItem>
