@@ -42,7 +42,14 @@ export const Route = createFileRoute("/_authenticated/dashboard/new-appointment"
   component: NewAppointmentPage,
 });
 
-type Treatment = { id: string; name: string; price: number | null; duration: number | null; category_id: string | null };
+type Treatment = {
+  id: string;
+  name: string;
+  price: number | null;
+  duration: number | null;
+  category_id: string | null;
+  prescriber_routing?: string | null;
+};
 type Location = { id: string; name: string };
 type Category = { id: string; name: string; sort_order: number | null };
 type ModelSlot = {
@@ -168,7 +175,7 @@ function NewAppointmentPage() {
     (async () => {
       const { data: t } = await supabase
         .from("treatments")
-        .select("id,name,price,duration,category_id")
+        .select("id,name,price,duration,category_id,prescriber_routing")
         .eq("profile_id", profile.id)
         .eq("active", true)
         .order("name");
@@ -256,14 +263,22 @@ function NewAppointmentPage() {
   // Longest duration across selected items — used to filter available start slots
   const primaryDuration = items[0]?.duration ?? 30;
 
+  // When the first treatment is one the prescriber runs as a clinic day, the
+  // bookable times come from that day's window and places — not the normal
+  // diary. Mirrors what patients see on the public booking page.
+  const firstTreatment = treatments.find((t) => t.id === items[0]?.treatmentId) ?? null;
+  const isClinicVisitBooking = firstTreatment?.prescriber_routing === "clinic_visit";
+  const [clinicVisitDay, setClinicVisitDay] = useState<{ start: string; end: string } | null>(null);
+
   // Recompute available slots when date/location changes
   useEffect(() => {
-    if (!date) { setSlots([]); return; }
+    if (!date) { setSlots([]); setClinicVisitDay(null); return; }
     (async () => {
       setLoadingSlots(true);
       try {
         const dow = new Date(date + "T00:00:00").getDay();
         const matchLoc = (rowLoc: string | null) => !locationId || !rowLoc || rowLoc === locationId;
+
 
         const [{ data: rules }, { data: overrides }, { data: blocked }, { data: blockedT }, { data: appts }] = await Promise.all([
           supabase.from("availability_rules").select("start_time,end_time,slot_interval,location_id,day_of_week").eq("profile_id", profile.id).eq("day_of_week", dow),
@@ -285,6 +300,37 @@ function NewAppointmentPage() {
           ...(blockedT ?? []).filter((b) => matchLoc(b.location_id)).map((b) => ({ start_time: b.start_time, end_time: b.end_time, location_id: b.location_id })),
         ];
 
+        if (isClinicVisitBooking && firstTreatment) {
+          const { data: visits } = await supabase
+            .from("prescriber_clinic_visits")
+            .select("start_time,end_time,capacity,location_id")
+            .eq("treatment_id", firstTreatment.id)
+            .eq("visit_date", date);
+          const visit = (visits ?? []).find((v) => matchLoc(v.location_id)) ?? null;
+          if (!visit) { setClinicVisitDay(null); setSlots([]); return; }
+          setClinicVisitDay({ start: visit.start_time.slice(0, 5), end: visit.end_time.slice(0, 5) });
+          const s = toMin(visit.start_time);
+          const e = toMin(visit.end_time);
+          const count = Math.max(1, Number(visit.capacity ?? 1) || 1);
+          const rawStep = count > 1 ? (e - s) / count : e - s;
+          const stepMins = Math.max(5, Math.floor(rawStep / 5) * 5);
+          const hold = Math.max(1, Math.min(stepMins, primaryDuration || stepMins));
+          const times: string[] = [];
+          for (let i = 0; i < count; i++) {
+            const t = s + stepMins * i;
+            if (t >= e && i > 0) break;
+            times.push(fromMin(t));
+          }
+          setSlots(
+            [...new Set(times)].sort().filter((time) => {
+              const ts = toMin(time);
+              return !busy.some((b) => ts < toMin(b.end_time) && ts + hold > toMin(b.start_time));
+            }),
+          );
+          return;
+        }
+        setClinicVisitDay(null);
+
         const candidates = new Set<string>();
         for (const w of windows) {
           const interval = w.slot_interval ?? 30;
@@ -304,7 +350,8 @@ function NewAppointmentPage() {
         setLoadingSlots(false);
       }
     })();
-  }, [date, locationId, primaryDuration, profile.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date, locationId, primaryDuration, profile.id, isClinicVisitBooking, firstTreatment?.id]);
 
   function computeEndFromStart(time: string, mins: number): string {
     const [h, m] = time.split(":").map(Number);
@@ -677,11 +724,18 @@ function NewAppointmentPage() {
           {date && items.length > 0 && !items[0].startTime && (
             <div>
               <Label>Available start times for first treatment</Label>
+              {isClinicVisitBooking && clinicVisitDay && (
+                <p className="mb-1 text-xs text-muted-foreground">
+                  Prescribing clinic {clinicVisitDay.start}–{clinicVisitDay.end} — only these times can be booked.
+                </p>
+              )}
               {loadingSlots ? (
                 <p className="text-sm text-muted-foreground">Loading…</p>
               ) : slots.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No available slots for this date. You can still type a time manually below.
+                  {isClinicVisitBooking
+                    ? "No prescribing clinic places left on this date. Pick another date, or type a time manually below."
+                    : "No available slots for this date. You can still type a time manually below."}
                 </p>
               ) : (
                 <div className="flex flex-wrap gap-2">
