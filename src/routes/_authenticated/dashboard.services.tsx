@@ -835,6 +835,9 @@ function SubcategorySection({
   onDeleteTreat,
   onReorderTreatsByIds,
   onMoveTreatTo,
+  canMoveUp,
+  canMoveDown,
+  onMove,
 }: {
   child: CatNode;
   forceOpen?: boolean;
@@ -845,7 +848,11 @@ function SubcategorySection({
   onDeleteTreat: (t: Treat) => void;
   onReorderTreatsByIds: (ids: string[]) => void;
   onMoveTreatTo: (t: Treat) => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+  onMove?: (dir: -1 | 1) => void;
 }) {
+
   const [open, setOpen] = useState(false);
   const expanded = forceOpen || open;
   const treats = child.treatments.filter(matchTreat);
