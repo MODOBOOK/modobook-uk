@@ -1183,11 +1183,10 @@ function BookTreatmentPage() {
         value={paymentChoice}
         onChange={setPaymentChoice}
         accent={brand}
-        depositOverrideCents={
-          Number((treatment as { deposit_amount?: number | null }).deposit_amount ?? 0) > 0
-            ? Math.round(Number((treatment as { deposit_amount?: number | null }).deposit_amount) * 100)
-            : null
-        }
+        depositOverrideCents={(() => {
+          const override = (treatment as { deposit_amount?: number | null }).deposit_amount;
+          return override != null ? Math.max(0, Math.round(Number(override) * 100)) : null;
+        })()}
         splitInfo={splitAllowed && paymentPlan === "split" ? { sessionCount } : null}
       />
 
