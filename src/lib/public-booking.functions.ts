@@ -1282,18 +1282,38 @@ async function maybeCreateBookingCheckout(args: {
     if (args.appointmentIds.length === 0) return 0;
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: rows } = await supabaseAdmin
+      const { data: rows, error: appointmentError } = await supabaseAdmin
         .from("appointments")
-        .select("total_amount, model_slot_id, treatments(deposit_amount, price)")
+        .select("treatment_id, total_amount, model_slot_id")
         .in("id", args.appointmentIds);
+      if (appointmentError) throw appointmentError;
+
+      const treatmentIds = Array.from(new Set(
+        (rows ?? [])
+          .map((row) => (row as { treatment_id?: string | null }).treatment_id)
+          .filter((id): id is string => Boolean(id)),
+      ));
+      const { data: treatmentRows, error: treatmentError } = treatmentIds.length > 0
+        ? await supabaseAdmin
+            .from("treatments")
+            .select("id, deposit_amount, price")
+            .in("id", treatmentIds)
+        : { data: [], error: null };
+      if (treatmentError) throw treatmentError;
+      const treatmentsById = new Map(
+        (treatmentRows ?? []).map((treatment) => [
+          (treatment as { id: string }).id,
+          treatment as { deposit_amount?: number | null; price?: number | null },
+        ]),
+      );
       let total = 0;
       for (const r of rows ?? []) {
         const row = r as {
+          treatment_id?: string | null;
           total_amount?: number | null;
           model_slot_id?: string | null;
-          treatments?: { deposit_amount?: number | null; price?: number | null } | null;
         };
-        const t = row.treatments;
+        const t = row.treatment_id ? treatmentsById.get(row.treatment_id) : undefined;
         const overrideRaw = t?.deposit_amount != null ? Math.round(Number(t.deposit_amount) * 100) : null;
         // Null means "use the clinic default"; zero is an explicit waiver.
         // Legacy default-zero rows were normalised to null when that default
