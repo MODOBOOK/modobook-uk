@@ -728,7 +728,9 @@ function NewAppointmentPage() {
                 <p className="text-sm text-muted-foreground">Loading…</p>
               ) : slots.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No available slots for this date. You can still type a time manually below.
+                  {isClinicVisitBooking
+                    ? "No prescribing clinic places left on this date. Pick another date, or type a time manually below."
+                    : "No available slots for this date. You can still type a time manually below."}
                 </p>
               ) : (
                 <div className="flex flex-wrap gap-2">
