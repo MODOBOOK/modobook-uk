@@ -782,7 +782,7 @@ function CategoryCard({
 
         {node.children.length > 0 && (
           <div className="mt-4 space-y-2">
-            {node.children.map((child) => (
+            {node.children.map((child, childIdx) => (
               <SubcategorySection
                 key={child.id}
                 child={child}
@@ -794,8 +794,18 @@ function CategoryCard({
                 onDeleteTreat={onDeleteTreat}
                 onReorderTreatsByIds={onReorderTreatsByIds}
                 onMoveTreatTo={onMoveTreatTo}
+                canMoveUp={childIdx > 0}
+                canMoveDown={childIdx < node.children.length - 1}
+                onMove={(dir) => {
+                  const next = node.children.slice();
+                  const swap = childIdx + dir;
+                  if (swap < 0 || swap >= next.length) return;
+                  [next[childIdx], next[swap]] = [next[swap], next[childIdx]];
+                  onReorderCatsByIds(next.map((c) => c.id));
+                }}
               />
             ))}
+
           </div>
         )}
       </div>
