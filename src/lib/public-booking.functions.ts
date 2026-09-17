@@ -1409,8 +1409,17 @@ async function maybeCreateBookingCheckout(args: {
   // the same short window => Stripe returns the FIRST object instead of a
   // second payable one. This is what prevents a double click / double tab /
   // retried request from producing two chargeable payments.
+  // The key must also cover the payload we send, otherwise a fresh submission
+  // for the same slot (new appointment ids) reuses the key with different
+  // parameters and Stripe rejects it, leaving the patient with no card form.
+  const paramsFingerprint = (() => {
+    const s = JSON.stringify(metadata);
+    let h = 5381;
+    for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+    return h.toString(36);
+  })();
   const idempotencyKey = args.dedupeKey
-    ? `modo:${args.dedupeKey}:${kind}:${amountCents + surchargeCents}:${[...methodTypes].sort().join("-")}:${Math.floor(Date.now() / (10 * 60 * 1000))}`
+    ? `modo:${args.dedupeKey}:${kind}:${amountCents + surchargeCents}:${[...methodTypes].sort().join("-")}:${paramsFingerprint}:${Math.floor(Date.now() / (10 * 60 * 1000))}`
     : undefined;
 
 
