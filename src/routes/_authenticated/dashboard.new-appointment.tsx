@@ -42,7 +42,14 @@ export const Route = createFileRoute("/_authenticated/dashboard/new-appointment"
   component: NewAppointmentPage,
 });
 
-type Treatment = { id: string; name: string; price: number | null; duration: number | null; category_id: string | null };
+type Treatment = {
+  id: string;
+  name: string;
+  price: number | null;
+  duration: number | null;
+  category_id: string | null;
+  prescriber_routing?: string | null;
+};
 type Location = { id: string; name: string };
 type Category = { id: string; name: string; sort_order: number | null };
 type ModelSlot = {
