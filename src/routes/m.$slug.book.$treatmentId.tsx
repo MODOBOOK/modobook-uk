@@ -92,7 +92,7 @@ function BookTreatmentPage() {
   const reqDob = settings?.require_dob !== false;
   const reqAddress = settings?.require_address !== false;
   const maxLeadDays = settings?.booking_max_lead_days ?? 90;
-  const minNoticeHours = settings?.booking_min_notice_hours ?? 0;
+  const clinicMinNoticeHours = settings?.booking_min_notice_hours ?? 0;
   const smartTimes = settings?.booking_smart_times_enabled === true;
   const redirectPath = `/m/${slug}/book/${treatment.id}`;
   const duration = treatment.duration ?? 30;
@@ -103,6 +103,16 @@ function BookTreatmentPage() {
     if (typeof window === "undefined") return;
     setChosenPractitionerId(window.sessionStorage.getItem(`modo:practitionerId:${slug}`) || null);
   }, [slug]);
+
+  // A team member can require more (or less) notice than the clinic default.
+  const minNoticeHours = (() => {
+    if (!chosenPractitionerId) return clinicMinNoticeHours;
+    const rows =
+      (ctx as { practitionerNotice?: Array<{ id: string; booking_min_notice_hours: number | null }> })
+        .practitionerNotice ?? [];
+    const own = rows.find((r) => r.id === chosenPractitionerId)?.booking_min_notice_hours;
+    return own == null ? clinicMinNoticeHours : own;
+  })();
 
   const practPriceCents = (() => {
     if (!chosenPractitionerId) return null;

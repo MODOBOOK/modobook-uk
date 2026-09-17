@@ -38,7 +38,7 @@ export interface SmsTemplateMeta {
 // Links are never sent by text (UK carriers content-filter them), so {link}
 // isn't offered. {location} inserts the location name; {address} inserts the
 // full address and is only used on messages the patient needs it for.
-export const MERGE_TAGS = ['{name}', '{clinic}', '{location}', '{address}', '{date}', '{time}'] as const
+export const MERGE_TAGS = ['{name}', '{clinic}', '{practitioner}', '{location}', '{address}', '{date}', '{time}'] as const
 
 /** Messages where the full address is allowed (the patient needs to travel). */
 export const ADDRESS_KINDS: SmsTemplateKey[] = [
@@ -71,14 +71,14 @@ export const SMS_TEMPLATES: SmsTemplateMeta[] = [
     key: 'booking-confirmation',
     label: 'Booking confirmation',
     hint: 'Sent as soon as a booking is made.',
-    tags: ['{name}', '{clinic}', '{location}', '{address}', '{date}', '{time}'],
+    tags: ['{name}', '{clinic}', '{practitioner}', '{location}', '{address}', '{date}', '{time}'],
     default: "Hi {name}, you're booked in with {clinic} at {location} on {date} at {time}. {address}",
   },
   {
     key: 'appointment-reminder',
     label: 'Appointment reminder',
     hint: 'Follows your email reminder timings.',
-    tags: ['{name}', '{clinic}', '{location}', '{address}', '{date}', '{time}'],
+    tags: ['{name}', '{clinic}', '{practitioner}', '{location}', '{address}', '{date}', '{time}'],
     default: 'Hi {name}, reminder: your appointment with {clinic} at {location} on {date} at {time}. {address}',
   },
   {
@@ -93,7 +93,7 @@ export const SMS_TEMPLATES: SmsTemplateMeta[] = [
     key: 'booking-reschedule',
     label: 'Reschedule',
     hint: 'Sent when an appointment is moved.',
-    tags: ['{name}', '{clinic}', '{location}', '{address}', '{date}', '{time}'],
+    tags: ['{name}', '{clinic}', '{practitioner}', '{location}', '{address}', '{date}', '{time}'],
     default: 'Hi {name}, your appointment with {clinic} at {location} has moved to {date} at {time}. {address}',
   },
   // The four below are kept for template storage/back-compat but are
@@ -184,6 +184,8 @@ export function renderSmsTemplate(
   let out = template
   // Drop "at {location}" entirely when there is no location for the booking.
   if (!map['{location}']) out = out.replace(/\s*\bat\s+\{location\}/gi, '')
+  // Same for "with {practitioner}" when nobody is set against the booking.
+  if (!map['{practitioner}']) out = out.replace(/\s*\bwith\s+\{practitioner\}/gi, '')
   for (const [tag, val] of Object.entries(map)) {
     out = out.split(tag).join(val)
   }

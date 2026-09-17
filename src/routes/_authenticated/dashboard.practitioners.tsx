@@ -160,6 +160,10 @@ function PractitionersPage() {
           photo_url: draft.photo_url ?? null,
           bio: draft.bio ?? null,
           active: draft.active !== false,
+          booking_min_notice_hours:
+            draft.booking_min_notice_hours == null || String(draft.booking_min_notice_hours) === ""
+              ? null
+              : Number(draft.booking_min_notice_hours),
           location_ids: draft.location_ids ?? [],
           treatment_ids: draft.treatment_ids ?? [],
         },
@@ -325,6 +329,25 @@ function PractitionersPage() {
                 previewClass="mt-2 h-24 w-24 object-cover rounded-full"
               />
             )}
+            <div className="space-y-1.5">
+              <Label htmlFor="notice">Minimum notice for their bookings (hours)</Label>
+              <Input
+                id="notice"
+                type="number"
+                min={0}
+                placeholder="Leave blank to use the clinic setting"
+                value={draft.booking_min_notice_hours ?? ""}
+                onChange={(e) =>
+                  setDraft((d) => ({
+                    ...d,
+                    booking_min_notice_hours: e.target.value === "" ? null : Number(e.target.value),
+                  }))
+                }
+              />
+              <p className="text-xs text-muted-foreground">
+                How far ahead clients must book with this person. Blank means the clinic-wide setting applies.
+              </p>
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="bio">Short bio</Label>
               <Textarea id="bio" rows={3} value={draft.bio ?? ""} onChange={(e) => setDraft((d) => ({ ...d, bio: e.target.value }))} />

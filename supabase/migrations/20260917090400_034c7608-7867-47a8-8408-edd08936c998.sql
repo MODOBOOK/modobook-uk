@@ -1,0 +1,1 @@
+ALTER TABLE public.practitioners ADD COLUMN IF NOT EXISTS booking_min_notice_hours integer;
