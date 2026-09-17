@@ -155,12 +155,19 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
           .eq("profile_id", profile.id)
           .eq("active", true);
         if (!pracs?.length) return;
-        const { data: existingLinks } = await supabase
+        const { data: allLinks } = await supabase
           .from("practitioner_treatments")
-          .select("practitioner_id")
-          .eq("treatment_id", treatmentId);
-        const have = new Set((existingLinks ?? []).map((l) => l.practitioner_id));
-        const missing = pracs.filter((p) => !have.has(p.id));
+          .select("practitioner_id, treatment_id")
+          .eq("profile_id", profile.id);
+        const have = new Set(
+          (allLinks ?? []).filter((l) => l.treatment_id === treatmentId).map((l) => l.practitioner_id),
+        );
+        // A team member with no service list already offers everything. Adding
+        // a link here would turn that into a list of exactly one service and
+        // hide all their other treatments, so only top up members who already
+        // have their own list.
+        const hasOwnList = new Set((allLinks ?? []).map((l) => l.practitioner_id));
+        const missing = pracs.filter((p) => !have.has(p.id) && hasOwnList.has(p.id));
         if (!missing.length) return;
         await supabase.from("practitioner_treatments").insert(
           missing.map((p) => ({
