@@ -350,7 +350,8 @@ function NewAppointmentPage() {
         setLoadingSlots(false);
       }
     })();
-  }, [date, locationId, primaryDuration, profile.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date, locationId, primaryDuration, profile.id, isClinicVisitBooking, firstTreatment?.id]);
 
   function computeEndFromStart(time: string, mins: number): string {
     const [h, m] = time.split(":").map(Number);
