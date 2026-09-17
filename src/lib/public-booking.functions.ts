@@ -1288,9 +1288,10 @@ async function maybeCreateBookingCheckout(args: {
         };
         const t = row.treatments;
         const overrideRaw = t?.deposit_amount != null ? Math.round(Number(t.deposit_amount) * 100) : null;
-        // Only a positive amount counts as an override — the column used to
-        // default to 0, which silently waived deposits for every treatment.
-        const override = overrideRaw != null && overrideRaw > 0 ? overrideRaw : null;
+        // Null means "use the clinic default"; zero is an explicit waiver.
+        // Legacy default-zero rows were normalised to null when that default
+        // was removed, so newly saved zero values are intentional.
+        const override = overrideRaw != null && overrideRaw >= 0 ? overrideRaw : null;
         if (override != null) {
           total += override;
         } else if (depositTypeMode === "percent" && depositPct > 0) {
