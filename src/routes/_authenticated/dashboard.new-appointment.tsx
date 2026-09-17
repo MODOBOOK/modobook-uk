@@ -300,6 +300,37 @@ function NewAppointmentPage() {
           ...(blockedT ?? []).filter((b) => matchLoc(b.location_id)).map((b) => ({ start_time: b.start_time, end_time: b.end_time, location_id: b.location_id })),
         ];
 
+        if (isClinicVisitBooking && firstTreatment) {
+          const { data: visits } = await supabase
+            .from("prescriber_clinic_visits")
+            .select("start_time,end_time,capacity,location_id")
+            .eq("treatment_id", firstTreatment.id)
+            .eq("visit_date", date);
+          const visit = (visits ?? []).find((v) => matchLoc(v.location_id)) ?? null;
+          if (!visit) { setClinicVisitDay(null); setSlots([]); return; }
+          setClinicVisitDay({ start: visit.start_time.slice(0, 5), end: visit.end_time.slice(0, 5) });
+          const s = toMin(visit.start_time);
+          const e = toMin(visit.end_time);
+          const count = Math.max(1, Number(visit.capacity ?? 1) || 1);
+          const rawStep = count > 1 ? (e - s) / count : e - s;
+          const stepMins = Math.max(5, Math.floor(rawStep / 5) * 5);
+          const hold = Math.max(1, Math.min(stepMins, primaryDuration || stepMins));
+          const times: string[] = [];
+          for (let i = 0; i < count; i++) {
+            const t = s + stepMins * i;
+            if (t >= e && i > 0) break;
+            times.push(fromMin(t));
+          }
+          setSlots(
+            [...new Set(times)].sort().filter((time) => {
+              const ts = toMin(time);
+              return !busy.some((b) => ts < toMin(b.end_time) && ts + hold > toMin(b.start_time));
+            }),
+          );
+          return;
+        }
+        setClinicVisitDay(null);
+
         const candidates = new Set<string>();
         for (const w of windows) {
           const interval = w.slot_interval ?? 30;
