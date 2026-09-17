@@ -1027,6 +1027,7 @@ export const requestBooking = createServerFn({ method: "POST" })
     // Optional Stripe payment for deposit / full payment (hosted checkout or
     // embedded Payment Element depending on the save-card-on-file setting).
     let payment: BookingPaymentResult | null = null;
+    const payNotes: { waived?: boolean } = {};
     try {
       payment = await maybeCreateBookingCheckout({
         profile: await resolvePayoutProfile(prof, data.profileId, data.practitionerId ?? null),
@@ -1035,6 +1036,7 @@ export const requestBooking = createServerFn({ method: "POST" })
         patientEmail: data.patientEmail,
         description: `Booking with ${prof?.clinic_name ?? "clinic"}`,
         choice: paymentChoice,
+        notes: payNotes,
         dedupeKey: bookingDedupeKey({
           profileId: data.profileId,
           patientEmail: data.patientEmail,
@@ -1055,7 +1057,7 @@ export const requestBooking = createServerFn({ method: "POST" })
         throw new Error("Card payment could not be started. Please try again — your appointment has not been confirmed.");
       }
     }
-    if (!payment && bookingNeedsStripePayment(prof, paymentChoice, data.basePrice)) {
+    if (!payment && !payNotes.waived && bookingNeedsStripePayment(prof, paymentChoice, data.basePrice)) {
       await supabaseAdmin
         .from("appointments")
         .update({ status: "cancelled", payment_hold_expires_at: null } as never)
@@ -1188,16 +1190,21 @@ async function maybeCreateBookingCheckout(args: {
   // amount and payment method it becomes the Stripe idempotency key, so two
   // concurrent submissions of the same booking share ONE payable session.
   dedupeKey?: string;
+  // Set by this function when there is intentionally nothing to charge (free
+  // booking, cash, or a £0 deposit waiver). The caller must then confirm the
+  // booking instead of treating the null result as a payment failure.
+  notes?: { waived?: boolean };
 }): Promise<BookingPaymentResult | null> {
   const p = args.profile;
+  const waive = () => { if (args.notes) args.notes.waived = true; return null; };
   if (!p) return null;
   // Free bookings (£0) never require a deposit or checkout, regardless of the
   // clinic's default deposit policy — the treatment itself has no charge.
-  if (!(args.totalAmount > 0)) return null;
+  if (!(args.totalAmount > 0)) return waive();
 
   // Patient chose to pay in cash at the appointment — nothing is charged and no
   // card is stored. The booking is simply confirmed and settled in clinic.
-  if (args.choice?.mode === "cash") return null;
+  if (args.choice?.mode === "cash") return waive();
   if (!p.stripe_connect_account_id) return null;
   if (p.stripe_connect_onboarding_status && p.stripe_connect_onboarding_status !== "active") return null;
 
@@ -1337,9 +1344,9 @@ async function maybeCreateBookingCheckout(args: {
       if (args.choice?.mode === "full" && fullEnabled) {
         amountCents = Math.round(args.totalAmount * 100);
         kind = "checkout";
-        if (amountCents < 100) return null;
+        if (amountCents < 100) return waive();
       } else {
-        return null;
+        return waive();
       }
     } else {
       kind = "deposit";
@@ -1349,9 +1356,9 @@ async function maybeCreateBookingCheckout(args: {
     amountCents = Math.round(args.totalAmount * 100);
     kind = "checkout";
   } else {
-    return null;
+    return waive();
   }
-  if (amountCents < 100) return null;
+  if (amountCents < 100) return waive();
 
 
   // Build allowed methods. When the patient picked one, restrict Stripe to
@@ -1918,6 +1925,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     }
 
     let payment: BookingPaymentResult | null = null;
+    const payNotes: { waived?: boolean } = {};
     try {
       const totalAmount = data.bookings.reduce((sum, b) => sum + b.priceCents / 100, 0);
       payment = await maybeCreateBookingCheckout({
@@ -1927,6 +1935,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         patientEmail: data.patientEmail,
         description: `Booking with ${prof?.clinic_name ?? "clinic"}`,
         choice: paymentChoice,
+        notes: payNotes,
         dedupeKey: bookingDedupeKey({
           profileId: data.profileId,
           patientEmail: data.patientEmail,
@@ -1942,13 +1951,11 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         await supabaseAdmin
           .from("appointments")
           .update({ status: "cancelled", payment_hold_expires_at: null } as never)
-          .in("id", created.map((c) => c.id))
-          .eq("status", "pending")
-          .eq("payment_status", "pending");
+          .in("id", created.map((c) => c.id));
         throw new Error("Card payment could not be started. Please try again — your appointments have not been confirmed.");
       }
     }
-    if (!payment && bookingNeedsStripePayment(prof, paymentChoice, data.bookings.reduce((s, b) => s + b.priceCents / 100, 0)) && created.length > 0) {
+    if (!payment && !payNotes.waived && bookingNeedsStripePayment(prof, paymentChoice, data.bookings.reduce((s, b) => s + b.priceCents / 100, 0)) && created.length > 0) {
       await supabaseAdmin
         .from("appointments")
         .update({ status: "cancelled", payment_hold_expires_at: null } as never)
