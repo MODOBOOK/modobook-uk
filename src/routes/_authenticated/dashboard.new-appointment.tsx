@@ -263,14 +263,22 @@ function NewAppointmentPage() {
   // Longest duration across selected items — used to filter available start slots
   const primaryDuration = items[0]?.duration ?? 30;
 
+  // When the first treatment is one the prescriber runs as a clinic day, the
+  // bookable times come from that day's window and places — not the normal
+  // diary. Mirrors what patients see on the public booking page.
+  const firstTreatment = treatments.find((t) => t.id === items[0]?.treatmentId) ?? null;
+  const isClinicVisitBooking = firstTreatment?.prescriber_routing === "clinic_visit";
+  const [clinicVisitDay, setClinicVisitDay] = useState<{ start: string; end: string } | null>(null);
+
   // Recompute available slots when date/location changes
   useEffect(() => {
-    if (!date) { setSlots([]); return; }
+    if (!date) { setSlots([]); setClinicVisitDay(null); return; }
     (async () => {
       setLoadingSlots(true);
       try {
         const dow = new Date(date + "T00:00:00").getDay();
         const matchLoc = (rowLoc: string | null) => !locationId || !rowLoc || rowLoc === locationId;
+
 
         const [{ data: rules }, { data: overrides }, { data: blocked }, { data: blockedT }, { data: appts }] = await Promise.all([
           supabase.from("availability_rules").select("start_time,end_time,slot_interval,location_id,day_of_week").eq("profile_id", profile.id).eq("day_of_week", dow),
