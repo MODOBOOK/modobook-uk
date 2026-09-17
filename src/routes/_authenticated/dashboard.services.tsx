@@ -500,7 +500,9 @@ function ServicesPage() {
               onReorderTreatsByIds={reorderTreatsByIds}
               onMoveTreatTo={(t) => setMoveTreatState(t)}
               onMoveCatTo={() => {}}
+              onReorderCatsByIds={() => {}}
             />
+
           )}
         </div>
       )}
