@@ -472,6 +472,8 @@ function ServicesPage() {
               onReorderTreatsByIds={reorderTreatsByIds}
               onMoveTreatTo={(t) => setMoveTreatState(t)}
               onMoveCatTo={(c) => setMoveCatState(c)}
+              onReorderCatsByIds={reorderCatsByIds}
+
             />
           ))}
           {uncategorised.filter(matchTreat).length > 0 && (
