@@ -175,7 +175,7 @@ function NewAppointmentPage() {
     (async () => {
       const { data: t } = await supabase
         .from("treatments")
-        .select("id,name,price,duration,category_id")
+        .select("id,name,price,duration,category_id,prescriber_routing")
         .eq("profile_id", profile.id)
         .eq("active", true)
         .order("name");
