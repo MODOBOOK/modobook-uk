@@ -472,6 +472,8 @@ function ServicesPage() {
               onReorderTreatsByIds={reorderTreatsByIds}
               onMoveTreatTo={(t) => setMoveTreatState(t)}
               onMoveCatTo={(c) => setMoveCatState(c)}
+              onReorderCatsByIds={reorderCatsByIds}
+
             />
           ))}
           {uncategorised.filter(matchTreat).length > 0 && (
@@ -498,7 +500,9 @@ function ServicesPage() {
               onReorderTreatsByIds={reorderTreatsByIds}
               onMoveTreatTo={(t) => setMoveTreatState(t)}
               onMoveCatTo={() => {}}
+              onReorderCatsByIds={() => {}}
             />
+
           )}
         </div>
       )}
@@ -656,6 +660,7 @@ function CategoryCard({
   onReorderTreatsByIds,
   onMoveTreatTo,
   onMoveCatTo,
+  onReorderCatsByIds,
   isUncategorised,
 }: {
   node: CatNode;
@@ -669,8 +674,10 @@ function CategoryCard({
   onReorderTreatsByIds: (ids: string[]) => void;
   onMoveTreatTo: (t: Treat) => void;
   onMoveCatTo: (c: Cat) => void;
+  onReorderCatsByIds: (ids: string[]) => void;
   isUncategorised?: boolean;
 }) {
+
   const [open, setOpen] = useState(false);
   const expanded = forceOpen || open;
   const treatsHere = node.treatments.filter(matchTreat);
@@ -775,7 +782,7 @@ function CategoryCard({
 
         {node.children.length > 0 && (
           <div className="mt-4 space-y-2">
-            {node.children.map((child) => (
+            {node.children.map((child, childIdx) => (
               <SubcategorySection
                 key={child.id}
                 child={child}
@@ -787,8 +794,18 @@ function CategoryCard({
                 onDeleteTreat={onDeleteTreat}
                 onReorderTreatsByIds={onReorderTreatsByIds}
                 onMoveTreatTo={onMoveTreatTo}
+                canMoveUp={childIdx > 0}
+                canMoveDown={childIdx < node.children.length - 1}
+                onMove={(dir) => {
+                  const next = node.children.slice();
+                  const swap = childIdx + dir;
+                  if (swap < 0 || swap >= next.length) return;
+                  [next[childIdx], next[swap]] = [next[swap], next[childIdx]];
+                  onReorderCatsByIds(next.map((c) => c.id));
+                }}
               />
             ))}
+
           </div>
         )}
       </div>
@@ -818,6 +835,9 @@ function SubcategorySection({
   onDeleteTreat,
   onReorderTreatsByIds,
   onMoveTreatTo,
+  canMoveUp,
+  canMoveDown,
+  onMove,
 }: {
   child: CatNode;
   forceOpen?: boolean;
@@ -828,7 +848,11 @@ function SubcategorySection({
   onDeleteTreat: (t: Treat) => void;
   onReorderTreatsByIds: (ids: string[]) => void;
   onMoveTreatTo: (t: Treat) => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+  onMove?: (dir: -1 | 1) => void;
 }) {
+
   const [open, setOpen] = useState(false);
   const expanded = forceOpen || open;
   const treats = child.treatments.filter(matchTreat);
@@ -865,6 +889,15 @@ function SubcategorySection({
               <DropdownMenuItem onSelect={() => onAddService(child.id)}>
                 <Plus className="mr-2 h-4 w-4" /> Add service
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled={!canMoveUp} onSelect={() => onMove?.(-1)}>
+                <ArrowUp className="mr-2 h-4 w-4" /> Move up
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={!canMoveDown} onSelect={() => onMove?.(1)}>
+                <ArrowDown className="mr-2 h-4 w-4" /> Move down
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+
               <DropdownMenuItem onSelect={() => onEditCat(child)}>
                 <Pencil className="mr-2 h-4 w-4" /> Edit
               </DropdownMenuItem>
