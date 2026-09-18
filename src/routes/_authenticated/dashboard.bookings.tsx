@@ -1439,8 +1439,23 @@ function UnblockDialog({
   const [repeat, setRepeat] = useState<"none" | "weekly" | "fortnightly" | "monthly">("none");
   const [repeatCount, setRepeatCount] = useState(4);
   const [busy, setBusy] = useState(false);
+  // Optional "goes live" moment — clients can't see these times until then.
+  const [goLive, setGoLive] = useState("");
+  const [slug, setSlug] = useState<string | null>(null);
+  const fetchProfile = useServerFn(getMyProfile);
+  const scheduledOn = scheduledAvailabilityEnabled(slug);
 
   useEffect(() => { if (open) setLocationId(defaultLocationId); }, [open, defaultLocationId]);
+
+  useEffect(() => {
+    if (!open || slug !== null) return;
+    (async () => {
+      try {
+        const p = await fetchProfile();
+        setSlug(((p as { slug?: string | null } | null)?.slug) ?? "");
+      } catch { setSlug(""); }
+    })();
+  }, [open, slug, fetchProfile]);
 
   useEffect(() => {
     if (open && seed) {
