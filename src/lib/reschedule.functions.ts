@@ -118,7 +118,8 @@ export const getRescheduleSlotsByToken = createServerFn({ method: "GET" })
           .from("availability_overrides")
           .select("start_time, end_time, slot_interval, location_id, practitioner_id")
           .eq("profile_id", appt.profile_id)
-          .eq("date", data.date),
+          .eq("date", data.date)
+          .or(`publish_at.is.null,publish_at.lte.${new Date().toISOString()}`),
         supabaseAdmin
           .from("blocked_dates")
           .select("location_id, practitioner_id")

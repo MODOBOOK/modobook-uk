@@ -476,11 +476,13 @@ export const getDayAvailability = createServerFn({ method: "GET" })
     }));
 
 
+    // Scheduled one-off windows stay hidden from clients until their go-live moment.
     const { data: overrides } = await sb
       .from("availability_overrides")
       .select("start_time,end_time,slot_interval,location_id,practitioner_id")
       .eq("profile_id", data.profileId)
-      .eq("date", data.date);
+      .eq("date", data.date)
+      .or(`publish_at.is.null,publish_at.lte.${new Date().toISOString()}`);
 
     const { data: blockedTimes } = await sb
       .from("blocked_times")
@@ -560,7 +562,8 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       .select("date,location_id,practitioner_id")
       .eq("profile_id", data.profileId)
       .gte("date", startIso)
-      .lte("date", endIso);
+      .lte("date", endIso)
+      .or(`publish_at.is.null,publish_at.lte.${new Date().toISOString()}`);
 
     const { data: anchorRes } = await sb.rpc("get_rota_anchor", { p_profile_id: data.profileId });
     const anchorIso = (anchorRes as string | null) ?? null;
