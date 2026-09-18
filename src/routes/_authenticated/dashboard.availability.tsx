@@ -21,7 +21,6 @@ import {
   listAvailabilityOverrides,
   addAvailabilityOverride,
   setOverridePublishAt,
-  // eslint-disable-next-line no-irregular-whitespace
   deleteAvailabilityOverride,
   listBlockedDates,
   addBlockedDate,
@@ -38,6 +37,8 @@ import {
   updateRotaPeriod,
   deleteRotaPeriod,
 } from "@/lib/availability.functions";
+import { getMyProfile } from "@/lib/profiles.functions";
+import { scheduledAvailabilityEnabled } from "@/lib/feature-flags";
 import { listMyLocations } from "@/lib/locations.functions";
 import { WEEK_LETTERS, weekLetterFor, toMondayIso } from "@/lib/rota";
 import { cn } from "@/lib/utils";
