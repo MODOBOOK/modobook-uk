@@ -399,6 +399,8 @@ type OverrideInput = {
   slot_interval?: number;
   location_id?: string | null;
   practitioner_id?: string | null;
+  /** Hide these times from clients until this moment (ISO). Null = live straight away. */
+  publish_at?: string | null;
 };
 
 export const listAvailabilityOverrides = createServerFn({ method: "GET" })
@@ -435,11 +437,32 @@ export const addAvailabilityOverride = createServerFn({ method: "POST" })
         slot_interval: data.slot_interval ?? 30,
         location_id: data.location_id ?? null,
         practitioner_id: (await getScope(supabase, userId)).ownPractitionerId ?? data.practitioner_id ?? null,
+        publish_at: data.publish_at || null,
       })
       .select()
       .single();
     if (error) throw error;
     return row;
+  });
+
+/** Change (or clear) when a one-off window becomes visible to clients. */
+export const setOverridePublishAt = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string; publish_at: string | null }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const profileId = await getProfileId(supabase, userId);
+    if (!profileId) throw new Error("Profile not found");
+    const { ownPractitionerId } = await getScope(supabase, userId);
+    let q = supabase
+      .from("availability_overrides")
+      .update({ publish_at: data.publish_at || null })
+      .eq("id", data.id)
+      .eq("profile_id", profileId);
+    if (ownPractitionerId) q = q.eq("practitioner_id", ownPractitionerId);
+    const { error } = await q;
+    if (error) throw error;
+    return { ok: true };
   });
 
 export const deleteAvailabilityOverride = createServerFn({ method: "POST" })
