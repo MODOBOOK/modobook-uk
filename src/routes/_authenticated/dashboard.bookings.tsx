@@ -1617,6 +1617,16 @@ function UnblockDialog({
               )}
             </div>
 
+            {scheduledOn && (
+              <div>
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Goes live (optional)</Label>
+                <Input type="datetime-local" value={goLive} onChange={(e) => setGoLive(e.target.value)} />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Leave blank to open straight away. Set a date and time and clients won't see these times until then — you can still book people in yourself.
+                </p>
+              </div>
+            )}
+
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button onClick={openSlots} disabled={busy} className="gap-1">
