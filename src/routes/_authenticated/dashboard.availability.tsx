@@ -1030,8 +1030,18 @@ function AvailabilityPage() {
                         <span className="text-muted-foreground ml-3">every {o.slot_interval} min</span>
                         {locName(o.location_id) && <span className="ml-3 text-xs rounded bg-muted px-2 py-0.5">{locName(o.location_id)}</span>}
                         {o.practitioner_id && <span className="ml-2 text-xs rounded bg-muted px-2 py-0.5">{pracName(o.practitioner_id)}</span>}
+                        {o.publish_at && new Date(o.publish_at) > new Date() && (
+                          <span className="ml-2 text-xs rounded bg-amber-100 text-amber-900 px-2 py-0.5">
+                            Goes live {new Date(o.publish_at).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        )}
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => removeOverride(o.id)}><Trash2 className="h-4 w-4" /></Button>
+                      <div className="flex items-center gap-1">
+                        {o.publish_at && new Date(o.publish_at) > new Date() && (
+                          <Button variant="outline" size="sm" onClick={() => publishOverrideNow(o.id)}>Go live now</Button>
+                        )}
+                        <Button variant="ghost" size="icon" onClick={() => removeOverride(o.id)}><Trash2 className="h-4 w-4" /></Button>
+                      </div>
                     </div>
                   ))}
                 </div>
