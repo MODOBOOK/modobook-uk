@@ -629,14 +629,16 @@ function MultiBookPage() {
       ...overrideRules.map((o) => ({ start_time: o.start_time, end_time: o.end_time, slot_interval: o.slot_interval })),
     ];
     const out: string[] = [];
+    // Only bookings at the same location should pull times towards them.
+    const anchors = busy.filter((b) => !locationId || !b.locId || b.locId === locationId);
     for (const r of allRules) {
       const step = r.slot_interval ?? 15;
       const start = toMinutes(r.start_time);
       const end = toMinutes(r.end_time);
       const candidates = new Set<number>();
-      if (smartTimes && busy.length > 0) {
+      if (smartTimes && anchors.length > 0) {
         const WINDOW = 60;
-        for (const b of busy) {
+        for (const b of anchors) {
           for (let t = b.start - totalDuration; t >= b.start - totalDuration - WINDOW && t >= start; t -= step) {
             if (t + totalDuration <= end) candidates.add(t);
           }
@@ -644,7 +646,10 @@ function MultiBookPage() {
             if (t >= start) candidates.add(t);
           }
         }
-      } else {
+      }
+      // A window with nothing booked near it would otherwise vanish, so fall
+      // back to the normal grid for that window on its own.
+      if (candidates.size === 0) {
         for (let t = start; t + totalDuration <= end; t += step) candidates.add(t);
       }
       for (const t of Array.from(candidates).sort((a, z) => a - z)) {
