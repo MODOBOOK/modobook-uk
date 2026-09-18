@@ -55,6 +55,8 @@ import {
   undoCheckoutAppointment,
 } from "@/lib/availability.functions";
 import { ruleAppliesOnDate } from "@/lib/rota";
+import { getMyProfile } from "@/lib/profiles.functions";
+import { scheduledAvailabilityEnabled } from "@/lib/feature-flags";
 import {
   createPaymentLink,
   emailPaymentLink,
@@ -1437,8 +1439,23 @@ function UnblockDialog({
   const [repeat, setRepeat] = useState<"none" | "weekly" | "fortnightly" | "monthly">("none");
   const [repeatCount, setRepeatCount] = useState(4);
   const [busy, setBusy] = useState(false);
+  // Optional "goes live" moment — clients can't see these times until then.
+  const [goLive, setGoLive] = useState("");
+  const [slug, setSlug] = useState<string | null>(null);
+  const fetchProfile = useServerFn(getMyProfile);
+  const scheduledOn = scheduledAvailabilityEnabled(slug);
 
   useEffect(() => { if (open) setLocationId(defaultLocationId); }, [open, defaultLocationId]);
+
+  useEffect(() => {
+    if (!open || slug !== null) return;
+    (async () => {
+      try {
+        const p = await fetchProfile();
+        setSlug(((p as { slug?: string | null } | null)?.slug) ?? "");
+      } catch { setSlug(""); }
+    })();
+  }, [open, slug, fetchProfile]);
 
   useEffect(() => {
     if (open && seed) {
@@ -1475,6 +1492,7 @@ function UnblockDialog({
     if (!dates.length) return toast.error("Add at least one date");
     if (!start || !end || start >= end) return toast.error("Pick a valid start/end time");
     setBusy(true);
+    const goLiveIso = scheduledOn && goLive ? new Date(goLive).toISOString() : null;
     try {
       const all = expandDates(dates);
       const locIds: (string | null)[] =
@@ -1483,10 +1501,14 @@ function UnblockDialog({
           : [locationId];
       for (const date of all) {
         for (const loc of locIds) {
-          await addOverride({ data: { date, start_time: start, end_time: end, slot_interval: interval, location_id: loc, practitioner_id: practitionerId ?? null } });
+          await addOverride({ data: { date, start_time: start, end_time: end, slot_interval: interval, location_id: loc, practitioner_id: practitionerId ?? null, publish_at: goLiveIso } });
         }
       }
-      toast.success(`Opened ${all.length} day${all.length === 1 ? "" : "s"} · ${start}–${end}`);
+      toast.success(
+        goLiveIso
+          ? `Opened ${all.length} day${all.length === 1 ? "" : "s"} — clients will see them from ${new Date(goLiveIso).toLocaleString()}`
+          : `Opened ${all.length} day${all.length === 1 ? "" : "s"} · ${start}–${end}`,
+      );
       await onOpened?.();
       onOpenChange(false);
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
@@ -1594,6 +1616,16 @@ function UnblockDialog({
                 </div>
               )}
             </div>
+
+            {scheduledOn && (
+              <div>
+                <Label className="text-xs uppercase tracking-wide text-muted-foreground">Goes live (optional)</Label>
+                <Input type="datetime-local" value={goLive} onChange={(e) => setGoLive(e.target.value)} />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Leave blank to open straight away. Set a date and time and clients won't see these times until then — you can still book people in yourself.
+                </p>
+              </div>
+            )}
 
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>

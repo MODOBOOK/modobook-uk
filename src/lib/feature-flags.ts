@@ -176,3 +176,13 @@ export const BOOK_CTA_SLUGS = ["aestheticsbynurseryan"];
 export function bookCtaEnabled(slug?: string | null) {
   return isFeatureLive(BOOK_CTA_SLUGS, slug);
 }
+
+/**
+ * Scheduled availability — set a "goes live" date/time on one-off opening
+ * hours so clients only see them from that moment. Pilot account only.
+ */
+export const SCHEDULED_AVAILABILITY_SLUGS = ["aestheticsbynurseryan"];
+
+export function scheduledAvailabilityEnabled(slug?: string | null) {
+  return isFeatureLive(SCHEDULED_AVAILABILITY_SLUGS, slug);
+}
