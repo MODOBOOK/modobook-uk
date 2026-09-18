@@ -1227,6 +1227,7 @@ export type Database = {
           location_id: string | null
           practitioner_id: string | null
           profile_id: string
+          publish_at: string | null
           slot_interval: number
           start_time: string
           updated_at: string
@@ -1239,6 +1240,7 @@ export type Database = {
           location_id?: string | null
           practitioner_id?: string | null
           profile_id: string
+          publish_at?: string | null
           slot_interval?: number
           start_time: string
           updated_at?: string
@@ -1251,6 +1253,7 @@ export type Database = {
           location_id?: string | null
           practitioner_id?: string | null
           profile_id?: string
+          publish_at?: string | null
           slot_interval?: number
           start_time?: string
           updated_at?: string

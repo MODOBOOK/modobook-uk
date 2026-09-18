@@ -169,7 +169,7 @@ export const getTrainingAvailability = createServerFn({ method: "GET" })
 
     const [rulesR, overridesR, blockedR, blockedTimesR, apptsR] = await Promise.all([
       supabase.from("availability_rules").select("day_of_week,start_time,end_time,slot_interval,location_id").eq("profile_id", profileId).eq("day_of_week", dow),
-      supabase.from("availability_overrides").select("start_time,end_time,slot_interval,location_id").eq("profile_id", profileId).eq("date", data.date),
+      supabase.from("availability_overrides").select("start_time,end_time,slot_interval,location_id").eq("profile_id", profileId).eq("date", data.date).or(`publish_at.is.null,publish_at.lte.${new Date().toISOString()}`),
       supabase.from("blocked_dates").select("id,location_id").eq("profile_id", profileId).eq("date", data.date),
       supabase.from("blocked_times").select("start_time,end_time,location_id").eq("profile_id", profileId).eq("date", data.date),
       supabaseAdmin.from("appointments").select("start_time,end_time,location_id,status").eq("profile_id", profileId).eq("scheduled_date", data.date).neq("status", "cancelled"),
@@ -243,7 +243,7 @@ export const getTrainingAvailableDays = createServerFn({ method: "GET" })
 
     const [rulesR, overridesR, blockedR, blockedTimesR, apptsR] = await Promise.all([
       supabase.from("availability_rules").select("day_of_week,start_time,end_time,slot_interval,location_id").eq("profile_id", profileId),
-      supabase.from("availability_overrides").select("date,start_time,end_time,slot_interval,location_id").eq("profile_id", profileId).gte("date", from).lte("date", to),
+      supabase.from("availability_overrides").select("date,start_time,end_time,slot_interval,location_id").eq("profile_id", profileId).gte("date", from).lte("date", to).or(`publish_at.is.null,publish_at.lte.${new Date().toISOString()}`),
       supabase.from("blocked_dates").select("date,location_id").eq("profile_id", profileId).gte("date", from).lte("date", to),
       supabase.from("blocked_times").select("date,start_time,end_time,location_id").eq("profile_id", profileId).gte("date", from).lte("date", to),
       supabaseAdmin.from("appointments").select("scheduled_date,start_time,end_time,location_id,status").eq("profile_id", profileId).gte("scheduled_date", from).lte("scheduled_date", to).neq("status", "cancelled"),

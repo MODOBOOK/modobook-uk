@@ -20,6 +20,7 @@ import {
   deleteAvailabilityRule,
   listAvailabilityOverrides,
   addAvailabilityOverride,
+  setOverridePublishAt,
   deleteAvailabilityOverride,
   listBlockedDates,
   addBlockedDate,
@@ -153,6 +154,7 @@ type Practitioner = { id: string; name: string };
 type Override = {
   id: string; date: string; start_time: string; end_time: string;
   slot_interval: number; location_id: string | null; practitioner_id?: string | null;
+  publish_at?: string | null;
 };
 type Blocked = { id: string; date: string; reason: string | null; location_id: string | null; practitioner_id?: string | null };
 type BlockedTime = { id: string; date: string; start_time: string; end_time: string; reason: string | null; location_id: string | null; practitioner_id?: string | null };
@@ -166,6 +168,7 @@ function AvailabilityPage() {
   const listOv = useServerFn(listAvailabilityOverrides);
   const addOv = useServerFn(addAvailabilityOverride);
   const delOv = useServerFn(deleteAvailabilityOverride);
+  const setPublishAt = useServerFn(setOverridePublishAt);
   const listBl = useServerFn(listBlockedDates);
   const addBl = useServerFn(addBlockedDate);
   const delBl = useServerFn(deleteBlockedDate);
@@ -240,6 +243,8 @@ function AvailabilityPage() {
   const [ovInterval, setOvInterval] = useState("30");
   const [ovLocs, setOvLocs] = useState<string[]>([]);
   const [ovPracts, setOvPracts] = useState<string[]>([]);
+  // Optional "goes live" moment — clients can't see these times until then.
+  const [ovGoLive, setOvGoLive] = useState("");
 
   
   const [blReason, setBlReason] = useState("");
@@ -432,19 +437,33 @@ function AvailabilityPage() {
     if (ovStart >= ovEnd) { toast.error("End time must be after start"); return; }
     const targets: (string | null)[] = ovLocs.length ? ovLocs : [null];
     const pracTargets: (string | null)[] = ovPracts.length ? ovPracts : [null];
+    // "Goes live" is typed in clinic local time; store the exact moment.
+    const goLiveIso = ovGoLive ? new Date(ovGoLive).toISOString() : null;
     try {
       for (const loc of targets) {
         for (const prac of pracTargets) {
-          await addOv({ data: { date: ovDate, start_time: ovStart, end_time: ovEnd, slot_interval: Number(ovInterval), location_id: loc, practitioner_id: prac } });
+          await addOv({ data: { date: ovDate, start_time: ovStart, end_time: ovEnd, slot_interval: Number(ovInterval), location_id: loc, practitioner_id: prac, publish_at: goLiveIso } });
         }
       }
-      toast.success(pracTargets.length > 1 ? `One-off slot added for ${pracTargets.length} people` : "One-off slot added");
+      toast.success(
+        goLiveIso
+          ? `Added — clients will see it from ${new Date(goLiveIso).toLocaleString()}`
+          : pracTargets.length > 1 ? `One-off slot added for ${pracTargets.length} people` : "One-off slot added",
+      );
       await refresh();
     } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
 
   async function removeOverride(id: string) {
     try { await delOv({ data: { id } }); await refresh(); } catch (err: any) { toast.error(err?.message ?? "Failed"); }
+  }
+
+  async function publishOverrideNow(id: string) {
+    try {
+      await setPublishAt({ data: { id, publish_at: null } });
+      toast.success("Now showing to clients");
+      await refresh();
+    } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
   function fmtISO(d: Date) {
     const y = d.getFullYear();
@@ -990,6 +1009,13 @@ function AvailabilityPage() {
                     <PractitionerPicker practitioners={practitioners} value={ovPracts} onChange={setOvPracts} />
                   </div>
                 )}
+                <div className="sm:col-span-2 md:col-span-4">
+                  <Label>Goes live (optional)</Label>
+                  <Input type="datetime-local" value={ovGoLive} onChange={(e) => setOvGoLive(e.target.value)} />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Leave blank to go live straight away. Set a date and time and clients won't see these times until then — you can still book people in yourself.
+                  </p>
+                </div>
                 <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add</Button>
               </form>
               {overrides.length === 0 ? (
@@ -1004,8 +1030,18 @@ function AvailabilityPage() {
                         <span className="text-muted-foreground ml-3">every {o.slot_interval} min</span>
                         {locName(o.location_id) && <span className="ml-3 text-xs rounded bg-muted px-2 py-0.5">{locName(o.location_id)}</span>}
                         {o.practitioner_id && <span className="ml-2 text-xs rounded bg-muted px-2 py-0.5">{pracName(o.practitioner_id)}</span>}
+                        {o.publish_at && new Date(o.publish_at) > new Date() && (
+                          <span className="ml-2 text-xs rounded bg-amber-100 text-amber-900 px-2 py-0.5">
+                            Goes live {new Date(o.publish_at).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        )}
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => removeOverride(o.id)}><Trash2 className="h-4 w-4" /></Button>
+                      <div className="flex items-center gap-1">
+                        {o.publish_at && new Date(o.publish_at) > new Date() && (
+                          <Button variant="outline" size="sm" onClick={() => publishOverrideNow(o.id)}>Go live now</Button>
+                        )}
+                        <Button variant="ghost" size="icon" onClick={() => removeOverride(o.id)}><Trash2 className="h-4 w-4" /></Button>
+                      </div>
                     </div>
                   ))}
                 </div>
