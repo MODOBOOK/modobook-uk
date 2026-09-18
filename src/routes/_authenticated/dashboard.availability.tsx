@@ -21,6 +21,7 @@ import {
   listAvailabilityOverrides,
   addAvailabilityOverride,
   setOverridePublishAt,
+  // eslint-disable-next-line no-irregular-whitespace
   deleteAvailabilityOverride,
   listBlockedDates,
   addBlockedDate,
