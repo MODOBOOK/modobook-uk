@@ -169,6 +169,17 @@ function AvailabilityPage() {
   const addOv = useServerFn(addAvailabilityOverride);
   const delOv = useServerFn(deleteAvailabilityOverride);
   const setPublishAt = useServerFn(setOverridePublishAt);
+  const fetchProfile = useServerFn(getMyProfile);
+  const [slug, setSlug] = useState<string | null>(null);
+  const scheduledOn = scheduledAvailabilityEnabled(slug);
+  useEffect(() => {
+    (async () => {
+      try {
+        const p = await fetchProfile();
+        setSlug(((p as { slug?: string | null } | null)?.slug) ?? "");
+      } catch { setSlug(""); }
+    })();
+  }, [fetchProfile]);
   const listBl = useServerFn(listBlockedDates);
   const addBl = useServerFn(addBlockedDate);
   const delBl = useServerFn(deleteBlockedDate);
@@ -1009,7 +1020,7 @@ function AvailabilityPage() {
                     <PractitionerPicker practitioners={practitioners} value={ovPracts} onChange={setOvPracts} />
                   </div>
                 )}
-                <div className="sm:col-span-2 md:col-span-4">
+                <div className={`sm:col-span-2 md:col-span-4 ${scheduledOn ? "" : "hidden"}`}>
                   <Label>Goes live (optional)</Label>
                   <Input type="datetime-local" value={ovGoLive} onChange={(e) => setOvGoLive(e.target.value)} />
                   <p className="mt-1 text-xs text-muted-foreground">
