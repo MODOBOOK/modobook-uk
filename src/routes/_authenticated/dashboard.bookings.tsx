@@ -1492,6 +1492,7 @@ function UnblockDialog({
     if (!dates.length) return toast.error("Add at least one date");
     if (!start || !end || start >= end) return toast.error("Pick a valid start/end time");
     setBusy(true);
+    const goLiveIso = scheduledOn && goLive ? new Date(goLive).toISOString() : null;
     try {
       const all = expandDates(dates);
       const locIds: (string | null)[] =
