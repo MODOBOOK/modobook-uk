@@ -55,6 +55,8 @@ import {
   undoCheckoutAppointment,
 } from "@/lib/availability.functions";
 import { ruleAppliesOnDate } from "@/lib/rota";
+import { getMyProfile } from "@/lib/profiles.functions";
+import { scheduledAvailabilityEnabled } from "@/lib/feature-flags";
 import {
   createPaymentLink,
   emailPaymentLink,
