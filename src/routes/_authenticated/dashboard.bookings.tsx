@@ -1500,10 +1500,14 @@ function UnblockDialog({
           : [locationId];
       for (const date of all) {
         for (const loc of locIds) {
-          await addOverride({ data: { date, start_time: start, end_time: end, slot_interval: interval, location_id: loc, practitioner_id: practitionerId ?? null } });
+          await addOverride({ data: { date, start_time: start, end_time: end, slot_interval: interval, location_id: loc, practitioner_id: practitionerId ?? null, publish_at: goLiveIso } });
         }
       }
-      toast.success(`Opened ${all.length} day${all.length === 1 ? "" : "s"} · ${start}–${end}`);
+      toast.success(
+        goLiveIso
+          ? `Opened ${all.length} day${all.length === 1 ? "" : "s"} — clients will see them from ${new Date(goLiveIso).toLocaleString()}`
+          : `Opened ${all.length} day${all.length === 1 ? "" : "s"} · ${start}–${end}`,
+      );
       await onOpened?.();
       onOpenChange(false);
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
