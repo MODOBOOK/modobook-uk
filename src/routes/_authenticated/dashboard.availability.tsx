@@ -20,6 +20,7 @@ import {
   deleteAvailabilityRule,
   listAvailabilityOverrides,
   addAvailabilityOverride,
+  setOverridePublishAt,
   deleteAvailabilityOverride,
   listBlockedDates,
   addBlockedDate,
@@ -167,6 +168,7 @@ function AvailabilityPage() {
   const listOv = useServerFn(listAvailabilityOverrides);
   const addOv = useServerFn(addAvailabilityOverride);
   const delOv = useServerFn(deleteAvailabilityOverride);
+  const setPublishAt = useServerFn(setOverridePublishAt);
   const listBl = useServerFn(listBlockedDates);
   const addBl = useServerFn(addBlockedDate);
   const delBl = useServerFn(deleteBlockedDate);
