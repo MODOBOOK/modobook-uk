@@ -153,6 +153,7 @@ type Practitioner = { id: string; name: string };
 type Override = {
   id: string; date: string; start_time: string; end_time: string;
   slot_interval: number; location_id: string | null; practitioner_id?: string | null;
+  publish_at?: string | null;
 };
 type Blocked = { id: string; date: string; reason: string | null; location_id: string | null; practitioner_id?: string | null };
 type BlockedTime = { id: string; date: string; start_time: string; end_time: string; reason: string | null; location_id: string | null; practitioner_id?: string | null };
@@ -240,6 +241,8 @@ function AvailabilityPage() {
   const [ovInterval, setOvInterval] = useState("30");
   const [ovLocs, setOvLocs] = useState<string[]>([]);
   const [ovPracts, setOvPracts] = useState<string[]>([]);
+  // Optional "goes live" moment — clients can't see these times until then.
+  const [ovGoLive, setOvGoLive] = useState("");
 
   
   const [blReason, setBlReason] = useState("");
