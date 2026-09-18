@@ -438,10 +438,14 @@ function AvailabilityPage() {
     try {
       for (const loc of targets) {
         for (const prac of pracTargets) {
-          await addOv({ data: { date: ovDate, start_time: ovStart, end_time: ovEnd, slot_interval: Number(ovInterval), location_id: loc, practitioner_id: prac } });
+          await addOv({ data: { date: ovDate, start_time: ovStart, end_time: ovEnd, slot_interval: Number(ovInterval), location_id: loc, practitioner_id: prac, publish_at: goLiveIso } });
         }
       }
-      toast.success(pracTargets.length > 1 ? `One-off slot added for ${pracTargets.length} people` : "One-off slot added");
+      toast.success(
+        goLiveIso
+          ? `Added — clients will see it from ${new Date(goLiveIso).toLocaleString()}`
+          : pracTargets.length > 1 ? `One-off slot added for ${pracTargets.length} people` : "One-off slot added",
+      );
       await refresh();
     } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
