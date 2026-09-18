@@ -435,6 +435,8 @@ function AvailabilityPage() {
     if (ovStart >= ovEnd) { toast.error("End time must be after start"); return; }
     const targets: (string | null)[] = ovLocs.length ? ovLocs : [null];
     const pracTargets: (string | null)[] = ovPracts.length ? ovPracts : [null];
+    // "Goes live" is typed in clinic local time; store the exact moment.
+    const goLiveIso = ovGoLive ? new Date(ovGoLive).toISOString() : null;
     try {
       for (const loc of targets) {
         for (const prac of pracTargets) {
@@ -452,6 +454,14 @@ function AvailabilityPage() {
 
   async function removeOverride(id: string) {
     try { await delOv({ data: { id } }); await refresh(); } catch (err: any) { toast.error(err?.message ?? "Failed"); }
+  }
+
+  async function publishOverrideNow(id: string) {
+    try {
+      await setPublishAt({ data: { id, publish_at: null } });
+      toast.success("Now showing to clients");
+      await refresh();
+    } catch (err: any) { toast.error(err?.message ?? "Failed"); }
   }
   function fmtISO(d: Date) {
     const y = d.getFullYear();
