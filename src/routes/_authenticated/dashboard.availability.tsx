@@ -1009,6 +1009,13 @@ function AvailabilityPage() {
                     <PractitionerPicker practitioners={practitioners} value={ovPracts} onChange={setOvPracts} />
                   </div>
                 )}
+                <div className="sm:col-span-2 md:col-span-4">
+                  <Label>Goes live (optional)</Label>
+                  <Input type="datetime-local" value={ovGoLive} onChange={(e) => setOvGoLive(e.target.value)} />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Leave blank to go live straight away. Set a date and time and clients won't see these times until then — you can still book people in yourself.
+                  </p>
+                </div>
                 <Button type="submit"><Plus className="h-4 w-4 mr-1" />Add</Button>
               </form>
               {overrides.length === 0 ? (
