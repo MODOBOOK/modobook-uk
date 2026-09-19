@@ -165,18 +165,17 @@ function CategoryDescription({ text, color }: { text: string; color: string }) {
       >
         {text}
       </div>
-      <button
-        type="button"
+      <span
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
           setExpanded((v) => !v);
         }}
-        className="mt-1 text-xs font-semibold underline underline-offset-4 opacity-90"
+        className="mt-1 inline-block cursor-pointer text-xs font-semibold underline underline-offset-4 opacity-90"
         style={{ color }}
       >
         {expanded ? "Show less" : "Read more"}
-      </button>
+      </span>
     </div>
   );
 }
