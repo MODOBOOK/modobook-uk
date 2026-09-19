@@ -1768,14 +1768,15 @@ function MultiBookPage() {
                       value={paymentChoice}
                       onChange={setPaymentChoice}
                       accent={brand}
-                      depositOverrideCents={(() => {
-                        const values = treatments.map((t) => (t as { deposit_amount?: number | null }).deposit_amount);
-                        // Null uses the clinic default; a saved zero explicitly
-                        // waives the deposit for the selected treatment/package.
-                        const overrides = values.filter((v): v is number => v != null && v >= 0);
-                        if (overrides.length === 0) return null;
-                        return Math.round(overrides.reduce((a, b) => a + b, 0) * 100);
-                      })()}
+                      depositItems={treatments.map((t) => {
+                        const override = (t as { deposit_amount?: number | null }).deposit_amount;
+                        // Null uses the clinic default for that treatment; a
+                        // saved zero waives only that treatment's deposit.
+                        return {
+                          overrideCents: override != null ? Math.max(0, Math.round(Number(override) * 100)) : null,
+                          priceCents: Math.round(Number((t as { price?: number | null }).price ?? 0) * 100),
+                        };
+                      })}
 
                       splitInfo={anySplit ? { sessionCount: maxSessions, remainingPerSessionCents: Math.round(remainingPerSession * 100) } : null}
                     />

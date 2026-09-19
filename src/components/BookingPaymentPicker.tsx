@@ -47,6 +47,10 @@ type Props = {
   accent?: string;
   /** Optional per-treatment deposit total in pence, overrides clinic default. */
   depositOverrideCents?: number | null;
+  /** Multi-treatment bookings: one entry per treatment. overrideCents null means
+   *  "use the clinic default" for that treatment; an explicit 0 waives just that
+   *  treatment's deposit. Takes precedence over depositOverrideCents. */
+  depositItems?: { overrideCents: number | null; priceCents: number }[];
   /** When set, totalAmount is treated as the per-session amount for a split plan.
    *  Optional remainingPerSessionCents overrides the "then £X per session" copy
    *  (useful when only some treatments are split). */
@@ -58,7 +62,7 @@ function formatGBP(pence: number) {
   return `£${(pence / 100).toFixed(2)}`;
 }
 
-export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accent, depositOverrideCents, splitInfo }: Props) {
+export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accent, depositOverrideCents, depositItems, splitInfo }: Props) {
   const fn = useServerFn(getPublicPaymentOptions);
   const q = useQuery({
     queryKey: ["publicPaymentOptions", slug],
@@ -73,18 +77,39 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
   // Null means "use the clinic default"; an explicit zero means this treatment
   // has had its deposit waived.
   const effectiveOverride = depositOverrideCents != null && depositOverrideCents >= 0 ? depositOverrideCents : null;
-  const depositWaived = effectiveOverride === 0;
+  // The deposit is waived only when EVERY selected treatment has an explicit
+  // £0 override — a single waived treatment must not cancel the deposits of
+  // the rest of the basket.
+  const allItemsWaived = !!depositItems && depositItems.length > 0
+    && depositItems.every((it) => it.overrideCents != null && it.overrideCents <= 0);
+  const depositWaived = depositItems ? allItemsWaived : effectiveOverride === 0;
 
   const effectiveDepositCents = useMemo(() => {
     if (!configured) return 0;
-    if (depositWaived) return 0;
     const o = opts as ConfiguredOptions;
+    // Multi-treatment: per treatment, use its override when set (zero waives
+    // just that treatment), otherwise the clinic default for that treatment —
+    // mirroring the server-side calculation.
+    if (depositItems) {
+      let total = 0;
+      for (const it of depositItems) {
+        if (it.overrideCents != null) {
+          total += Math.max(0, Math.round(it.overrideCents));
+        } else if (o.depositType === "percent" && o.depositPercent > 0) {
+          total += Math.round((Math.max(0, it.priceCents) * o.depositPercent) / 100);
+        } else {
+          total += o.depositCents;
+        }
+      }
+      return total;
+    }
+    if (depositWaived) return 0;
     if (effectiveOverride != null) return effectiveOverride;
     if (o.depositType === "percent" && o.depositPercent > 0) {
       return Math.round((treatmentTotalCents * o.depositPercent) / 100);
     }
     return o.depositCents;
-  }, [configured, opts, depositOverrideCents, depositWaived, treatmentTotalCents]);
+  }, [configured, opts, depositOverrideCents, depositItems, depositWaived, effectiveOverride, treatmentTotalCents]);
 
 
   const availableModes = useMemo(() => {
