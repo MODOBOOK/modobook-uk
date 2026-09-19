@@ -273,6 +273,7 @@ export const completeAppointmentCheckout = createServerFn({ method: "POST" })
     // Only stamp the method when the caller actually took a payment action —
     // saving notes on its own must not rewrite how the booking was paid.
     if (data.method) patch.checkout_method = data.method;
+    let settledNowCents = 0;
     if (data.markPaid) {
       patch.payment_status = "paid";
       patch.payment_method = data.method;
@@ -289,6 +290,7 @@ export const completeAppointmentCheckout = createServerFn({ method: "POST" })
       const already = Number((cur as { amount_paid_cents?: number } | null)?.amount_paid_cents ?? 0);
       const discount = Number(data.discountCents ?? 0);
       const remaining = Math.max(0, totalCents - already - discount);
+      settledNowCents = remaining;
       patch.amount_paid_cents = already + remaining;
     }
 
@@ -299,6 +301,22 @@ export const completeAppointmentCheckout = createServerFn({ method: "POST" })
       .eq("profile_id", profile.id);
 
     if (error) throw error;
+
+    // Settling in clinic (cash, card machine, bank transfer) must also land in
+    // the payment ledger, otherwise the money shows on the booking but is
+    // missing from reports and reconciliation.
+    if (data.markPaid) {
+      const amountCents = Math.max(0, settledNowCents);
+      if (amountCents > 0) {
+        await context.supabase.from("payments").insert({
+          profile_id: profile.id,
+          appointment_id: data.appointmentId,
+          amount: amountCents / 100,
+          status: "succeeded",
+          stripe_payment_intent_id: `manual:${data.method ?? "in_person"}:${crypto.randomUUID()}`,
+        } as never);
+      }
+    }
     return { ok: true };
   });
 
