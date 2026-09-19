@@ -11,6 +11,13 @@ const SITE_NAME = 'MODO Book'
 const SENDER_DOMAIN = 'notify.modobook.uk'
 const FROM_DOMAIN = 'modobook.uk'
 
+// Some bookings are typed in by hand at the clinic and the email box gets a
+// placeholder like "LB" or "xx". Those can never be delivered — sending them
+// only burns retries and raises a false "email failed" alarm.
+function looksLikeEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)
+}
+
 function generateToken() {
   const bytes = new Uint8Array(32)
   crypto.getRandomValues(bytes)
@@ -39,6 +46,16 @@ export async function enqueueAppEmail(
 
   const recipient = (template.to || input.recipientEmail || '').trim()
   if (!recipient) return { ok: false, error: 'recipientEmail required' }
+  if (!looksLikeEmail(recipient)) {
+    await supabase.from('email_send_log').insert({
+      message_id: input.messageId || crypto.randomUUID(),
+      template_name: input.templateName as string,
+      recipient_email: recipient,
+      status: 'suppressed',
+      error_message: 'Not a valid email address — nothing was sent',
+    })
+    return { ok: false, skipped: 'invalid-recipient' }
+  }
   const normalized = recipient.toLowerCase()
 
   // Clinic-level emergency stop. This is checked centrally so confirmations,

@@ -299,6 +299,25 @@ export const completeAppointmentCheckout = createServerFn({ method: "POST" })
       .eq("profile_id", profile.id);
 
     if (error) throw error;
+
+    // Settling in clinic (cash, card machine, bank transfer) must also land in
+    // the payment ledger, otherwise the money shows on the booking but is
+    // missing from reports and reconciliation.
+    if (data.markPaid) {
+      const settledCents = Number(patch.amount_paid_cents ?? 0) - Number(
+        (patch as { _prev?: number })._prev ?? 0,
+      );
+      const amountCents = Math.max(0, settledCents);
+      if (amountCents > 0) {
+        await context.supabase.from("payments").insert({
+          profile_id: profile.id,
+          appointment_id: data.appointmentId,
+          amount: amountCents / 100,
+          status: "succeeded",
+          stripe_payment_intent_id: `manual:${data.method ?? "in_person"}:${crypto.randomUUID()}`,
+        } as never);
+      }
+    }
     return { ok: true };
   });
 
