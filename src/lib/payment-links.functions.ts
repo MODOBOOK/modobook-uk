@@ -273,6 +273,7 @@ export const completeAppointmentCheckout = createServerFn({ method: "POST" })
     // Only stamp the method when the caller actually took a payment action —
     // saving notes on its own must not rewrite how the booking was paid.
     if (data.method) patch.checkout_method = data.method;
+    let settledNowCents = 0;
     if (data.markPaid) {
       patch.payment_status = "paid";
       patch.payment_method = data.method;
