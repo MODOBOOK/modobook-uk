@@ -47,6 +47,10 @@ type Props = {
   accent?: string;
   /** Optional per-treatment deposit total in pence, overrides clinic default. */
   depositOverrideCents?: number | null;
+  /** Multi-treatment bookings: one entry per treatment. overrideCents null means
+   *  "use the clinic default" for that treatment; an explicit 0 waives just that
+   *  treatment's deposit. Takes precedence over depositOverrideCents. */
+  depositItems?: { overrideCents: number | null; priceCents: number }[];
   /** When set, totalAmount is treated as the per-session amount for a split plan.
    *  Optional remainingPerSessionCents overrides the "then £X per session" copy
    *  (useful when only some treatments are split). */
