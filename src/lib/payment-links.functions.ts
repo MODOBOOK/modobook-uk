@@ -306,10 +306,7 @@ export const completeAppointmentCheckout = createServerFn({ method: "POST" })
     // the payment ledger, otherwise the money shows on the booking but is
     // missing from reports and reconciliation.
     if (data.markPaid) {
-      const settledCents = Number(patch.amount_paid_cents ?? 0) - Number(
-        (patch as { _prev?: number })._prev ?? 0,
-      );
-      const amountCents = Math.max(0, settledCents);
+      const amountCents = Math.max(0, settledNowCents);
       if (amountCents > 0) {
         await context.supabase.from("payments").insert({
           profile_id: profile.id,
