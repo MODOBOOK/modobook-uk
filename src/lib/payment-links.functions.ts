@@ -290,6 +290,7 @@ export const completeAppointmentCheckout = createServerFn({ method: "POST" })
       const already = Number((cur as { amount_paid_cents?: number } | null)?.amount_paid_cents ?? 0);
       const discount = Number(data.discountCents ?? 0);
       const remaining = Math.max(0, totalCents - already - discount);
+      settledNowCents = remaining;
       patch.amount_paid_cents = already + remaining;
     }
 
