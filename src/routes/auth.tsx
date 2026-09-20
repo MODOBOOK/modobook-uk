@@ -209,7 +209,7 @@ function AuthPage() {
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full rounded-full" disabled={loading}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Sign in
               </Button>
@@ -221,7 +221,7 @@ function AuthPage() {
                 Forgot password?
               </button>
               {forgotOpen && (
-                <div className="border p-3" style={{ borderColor: "var(--hairline)", background: "var(--paper)" }}>
+                <div className="rounded-xl border p-3" style={{ borderColor: "var(--hairline)", background: "var(--paper)" }}>
                   <Label htmlFor="forgot-email" className="text-xs">Send a reset link to</Label>
                   <div className="mt-1 flex gap-2">
                     <Input id="forgot-email" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="you@example.com" />
