@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import brandBoards from "@/assets/modo-brand-boards.png.asset.json";
 import consultationHero from "@/assets/modo-consultation-hero.jpeg.asset.json";
@@ -111,84 +111,29 @@ function LandingPage() {
       <SiteHeader />
 
       <main>
-        {/* HERO — editorial serif statement */}
-        <header className="relative overflow-hidden border-b border-[color:var(--hairline)]">
-          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8 lg:py-36">
-            <div className="max-w-3xl">
-              <div className="mb-6 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-[color:var(--accent)]">
-                <span className="h-px w-8 bg-[color:var(--taupe)]" />
-                Built exclusively for aesthetics
-              </div>
+        {/* HERO — centred editorial statement */}
+        <Hero />
 
-              <h1 className="font-display text-4xl leading-[1.12] text-[color:var(--ink)] sm:text-6xl lg:text-7xl">
-                Not another generic <span className="italic">booking app.</span>
-              </h1>
-
-              <p className="mt-7 max-w-xl text-lg font-light leading-relaxed text-[color:var(--ink-soft)] sm:text-xl">
-                The UK booking, consultation and clinical platform designed only for
-                aesthetics — records, consent, face mapping, payments and a prescriber hub,
-                designed by clinicians who still run clinics themselves.
-              </p>
-
-              <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <Link
-                  to="/auth"
-                  className="inline-flex h-14 items-center justify-center bg-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--paper)] transition-colors hover:bg-[color:var(--accent)] sm:h-13"
-                >
-                  Create your account
-                </Link>
-                <Link
-                  to="/demo"
-                  className="inline-flex h-14 items-center justify-center border border-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--ink)] transition-colors hover:bg-[color:var(--ink)] hover:text-[color:var(--paper)] sm:h-13"
-                >
-                  Try the demo
-                </Link>
-              </div>
-
-              <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:gap-4">
-                <a
-                  href="https://modobook.uk/m/aestheticsbynurseryan"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--ink)]"
-                >
-                  Live clinic 1
-                  <ArrowRight className="h-3.5 w-3.5 text-[color:var(--accent)] transition-transform group-hover:translate-x-0.5" />
-                </a>
-                <a
-                  href="https://modobook.uk/m/aesthetiqbyjen"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--ink)]"
-                >
-                  Live clinic 2
-                  <ArrowRight className="h-3.5 w-3.5 text-[color:var(--accent)] transition-transform group-hover:translate-x-0.5" />
-                </a>
-              </div>
-
-              <p className="mt-8 text-xs leading-relaxed text-[color:var(--ink-soft)]">
-                <span className="font-semibold text-[color:var(--ink)]">First month free · No card details required.</span>{" "}
-                Open to every aesthetics practitioner — sign up in minutes, cancel anytime.
-              </p>
-            </div>
-          </div>
-        </header>
-
-        {/* STATS RIBBON — black band */}
-        <section className="bg-[color:var(--ink)] py-14 text-[color:var(--paper)] sm:py-16">
+        {/* STATS RIBBON — quiet beige band */}
+        <section className="border-b border-[color:var(--hairline)] bg-[color:var(--secondary)] py-14 sm:py-16">
           <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 px-4 sm:px-6 md:grid-cols-4 lg:px-8">
             {[
               { k: "0%", v: "Booking fees" },
               { k: "5–8h", v: "Saved per week" },
               { k: "1 link", v: "Whole clinic" },
               { k: "UK/EU", v: "Data residency" },
-            ].map((s) => (
-              <div key={s.v} className="space-y-2">
-                <div className="font-display text-3xl sm:text-4xl">{s.k}</div>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--paper)]/60">
-                  {s.v}
+            ].map((s, i) => (
+              <Reveal key={s.v} delay={i * 90}>
+                <div className="group space-y-2">
+                  <div className="font-display text-4xl text-[color:var(--ink)] transition-transform duration-500 group-hover:-translate-y-0.5 sm:text-5xl">
+                    {s.k}
+                  </div>
+                  <div className="h-px w-8 bg-[color:var(--taupe)] transition-all duration-500 group-hover:w-16" />
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--ink-soft)]">
+                    {s.v}
+                  </div>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </section>
