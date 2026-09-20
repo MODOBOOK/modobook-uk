@@ -5,7 +5,6 @@ import { signUpFromWaitlist } from "@/lib/waitlist.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { Loader2 } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
@@ -115,31 +114,45 @@ function AuthPage() {
 
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/50 px-4 py-12">
+    <div className="modo-marketing flex min-h-screen items-center justify-center px-4 py-12" style={{ background: "var(--grad-page)" }}>
       <div className="w-full max-w-md">
-        <div className="mb-8 flex items-center justify-center">
-          <BrandMark size="lg" />
-        </div>
-
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle>Create your MODO account</CardTitle>
-            <CardDescription>
+        <div className="mb-10 flex flex-col items-center gap-5">
+          <Link to="/" aria-label="MODO home">
+            <BrandMark size="lg" />
+          </Link>
+          <div className="text-center">
+            <p className="text-[11px] font-medium uppercase tracking-[0.28em]" style={{ color: "var(--muted-foreground)" }}>
+              {mode === "signin" ? "Welcome back" : "Now open"}
+            </p>
+            <h1 className="mt-3 font-display text-3xl leading-tight" style={{ color: "var(--ink)" }}>
+              {mode === "signin" ? (
+                <>Sign in to <em className="italic">your clinic.</em></>
+              ) : (
+                <>Create your <em className="italic">account.</em></>
+              )}
+            </h1>
+            <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
               {mode === "signin"
                 ? "Sign in to your practitioner account."
                 : "Open to all aesthetics practitioners — first month free, no card details required."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-4">
-            <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+            </p>
+          </div>
+        </div>
+
+        <div className="border bg-card" style={{ borderColor: "var(--hairline)" }}>
+          <div className="space-y-5 p-6 sm:p-8">
+            <div className="grid grid-cols-2 gap-px border" style={{ borderColor: "var(--hairline)", background: "var(--hairline)" }}>
               {(["signup", "signin"] as const).map((m) => (
                 <button
                   key={m}
                   type="button"
                   onClick={() => setMode(m)}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                    mode === m ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-                  }`}
+                  className="px-3 py-2.5 text-[11px] font-medium uppercase tracking-[0.18em] transition-colors"
+                  style={
+                    mode === m
+                      ? { background: "var(--ink)", color: "var(--paper)" }
+                      : { background: "var(--card)", color: "var(--muted-foreground)" }
+                  }
                 >
                   {m === "signin" ? "Sign in" : "Create account"}
                 </button>
@@ -181,7 +194,7 @@ function AuthPage() {
                   <p className="text-xs text-primary">Referred — 25% off your first 3 paid months will apply automatically.</p>
                 )}
               </div>
-              <label className="flex items-start gap-3 rounded-lg border bg-muted/30 p-3 text-xs leading-relaxed">
+              <label className="flex items-start gap-3 border p-3 text-xs leading-relaxed" style={{ borderColor: "var(--hairline)", background: "var(--paper)" }}>
                 <Checkbox
                   checked={acceptedTerms}
                   onCheckedChange={(v) => setAcceptedTerms(Boolean(v))}
@@ -226,7 +239,7 @@ function AuthPage() {
                 Forgot password?
               </button>
               {forgotOpen && (
-                <div className="rounded-md border bg-muted/40 p-3">
+                <div className="border p-3" style={{ borderColor: "var(--hairline)", background: "var(--paper)" }}>
                   <Label htmlFor="forgot-email" className="text-xs">Send a reset link to</Label>
                   <div className="mt-1 flex gap-2">
                     <Input id="forgot-email" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="you@example.com" />
@@ -237,7 +250,7 @@ function AuthPage() {
             </form>
             )}
 
-            <div className="rounded-lg border border-dashed bg-muted/40 p-3 text-center text-xs text-muted-foreground">
+            <div className="border border-dashed p-3 text-center text-xs" style={{ borderColor: "var(--hairline)", color: "var(--muted-foreground)" }}>
               MODO is now open to every aesthetics practitioner. Your first month is free
               and we don&rsquo;t ask for card details to start. Questions?{" "}
               <a
@@ -255,8 +268,12 @@ function AuthPage() {
               By continuing you agree to our{" "}
               <Link to="/terms" className="underline">Terms &amp; Conditions</Link>.
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+
+        <p className="mt-6 text-center text-[11px] uppercase tracking-[0.18em]" style={{ color: "var(--muted-foreground)" }}>
+          <Link to="/" className="underline underline-offset-4 hover:opacity-70">← Back to modobook.uk</Link>
+        </p>
       </div>
     </div>
   );
