@@ -5,7 +5,6 @@ import { signUpFromWaitlist } from "@/lib/waitlist.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { Loader2 } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
@@ -195,7 +194,7 @@ function AuthPage() {
                   <p className="text-xs text-primary">Referred — 25% off your first 3 paid months will apply automatically.</p>
                 )}
               </div>
-              <label className="flex items-start gap-3 rounded-lg border bg-muted/30 p-3 text-xs leading-relaxed">
+              <label className="flex items-start gap-3 border p-3 text-xs leading-relaxed" style={{ borderColor: "var(--hairline)", background: "var(--paper)" }}>
                 <Checkbox
                   checked={acceptedTerms}
                   onCheckedChange={(v) => setAcceptedTerms(Boolean(v))}
@@ -240,7 +239,7 @@ function AuthPage() {
                 Forgot password?
               </button>
               {forgotOpen && (
-                <div className="rounded-md border bg-muted/40 p-3">
+                <div className="border p-3" style={{ borderColor: "var(--hairline)", background: "var(--paper)" }}>
                   <Label htmlFor="forgot-email" className="text-xs">Send a reset link to</Label>
                   <div className="mt-1 flex gap-2">
                     <Input id="forgot-email" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="you@example.com" />
@@ -251,7 +250,7 @@ function AuthPage() {
             </form>
             )}
 
-            <div className="rounded-lg border border-dashed bg-muted/40 p-3 text-center text-xs text-muted-foreground">
+            <div className="border border-dashed p-3 text-center text-xs" style={{ borderColor: "var(--hairline)", color: "var(--muted-foreground)" }}>
               MODO is now open to every aesthetics practitioner. Your first month is free
               and we don&rsquo;t ask for card details to start. Questions?{" "}
               <a
