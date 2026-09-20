@@ -17,7 +17,6 @@ import {
   FileSignature,
   Layers,
   CheckCircle2,
-  Lock,
   Network,
   Syringe,
   ArrowRight,
