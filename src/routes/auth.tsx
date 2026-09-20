@@ -122,19 +122,19 @@ function AuthPage() {
           </Link>
         </div>
 
-        <div className="border bg-card" style={{ borderColor: "var(--hairline)" }}>
+        <div className="rounded-2xl border bg-card shadow-[0_18px_40px_-24px_rgba(14,13,11,0.18)]" style={{ borderColor: "var(--hairline)" }}>
           <div className="space-y-5 p-6 sm:p-8">
-            <div className="grid grid-cols-2 gap-px border" style={{ borderColor: "var(--hairline)", background: "var(--hairline)" }}>
+            <div className="grid grid-cols-2 gap-1 rounded-full p-1" style={{ background: "var(--secondary)" }}>
               {(["signup", "signin"] as const).map((m) => (
                 <button
                   key={m}
                   type="button"
                   onClick={() => setMode(m)}
-                  className="px-3 py-2.5 text-[11px] font-medium uppercase tracking-[0.18em] transition-colors"
+                  className={`rounded-full px-3 py-2 text-xs font-medium tracking-wide transition-all ${mode === m ? "shadow-sm" : ""}`}
                   style={
                     mode === m
-                      ? { background: "var(--ink)", color: "var(--paper)" }
-                      : { background: "var(--card)", color: "var(--muted-foreground)" }
+                      ? { background: "var(--card)", color: "var(--foreground)" }
+                      : { color: "var(--muted-foreground)" }
                   }
                 >
                   {m === "signin" ? "Sign in" : "Create account"}
@@ -176,13 +176,13 @@ function AuthPage() {
                   <p className="text-xs text-primary">Referred — 25% off your first 3 paid months will apply automatically.</p>
                 )}
               </div>
-              <label className="flex items-start gap-3 border p-3 text-xs leading-relaxed" style={{ borderColor: "var(--hairline)", background: "var(--paper)" }}>
+              <label className="flex items-start gap-3 rounded-xl border p-3 text-xs leading-relaxed" style={{ borderColor: "var(--hairline)", background: "var(--paper)" }}>
                 <Checkbox
                   checked={acceptedTerms}
                   onCheckedChange={(v) => setAcceptedTerms(Boolean(v))}
                   className="mt-0.5"
                 />
-                <span>
+                <span className="text-muted-foreground">
                   I have read and accept the{" "}
                   <Link to="/terms" target="_blank" className="font-medium text-foreground underline underline-offset-2">
                     Terms &amp; Conditions
@@ -193,7 +193,7 @@ function AuthPage() {
                   </Link>.
                 </span>
               </label>
-              <Button type="submit" className="w-full" disabled={loading || !acceptedTerms}>
+              <Button type="submit" className="w-full rounded-full" disabled={loading || !acceptedTerms}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Create my account
               </Button>
@@ -209,7 +209,7 @@ function AuthPage() {
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full rounded-full" disabled={loading}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Sign in
               </Button>
@@ -221,7 +221,7 @@ function AuthPage() {
                 Forgot password?
               </button>
               {forgotOpen && (
-                <div className="border p-3" style={{ borderColor: "var(--hairline)", background: "var(--paper)" }}>
+                <div className="rounded-xl border p-3" style={{ borderColor: "var(--hairline)", background: "var(--paper)" }}>
                   <Label htmlFor="forgot-email" className="text-xs">Send a reset link to</Label>
                   <div className="mt-1 flex gap-2">
                     <Input id="forgot-email" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="you@example.com" />
@@ -235,7 +235,7 @@ function AuthPage() {
           </div>
         </div>
 
-        <p className="mt-6 text-center text-[11px] uppercase tracking-[0.18em]" style={{ color: "var(--muted-foreground)" }}>
+        <p className="mt-6 text-center text-xs tracking-wide" style={{ color: "var(--muted-foreground)" }}>
           <Link to="/" className="underline underline-offset-4 hover:opacity-70">← Back to modobook.uk</Link>
         </p>
       </div>
