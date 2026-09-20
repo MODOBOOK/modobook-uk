@@ -17,6 +17,8 @@ import {
   deleteAudit,
   saveAction,
   deleteAction,
+  saveComplianceNote,
+  deleteComplianceNote,
 } from "@/lib/compliance.functions";
 import {
   AUDIT_PRESETS,
@@ -53,6 +55,8 @@ import {
 import {
   CheckCircle2,
   ClipboardCheck,
+  NotebookPen,
+  Pencil,
   Plus,
   ShieldCheck,
   Thermometer,
@@ -111,6 +115,8 @@ function Page() {
   const removeAudit = useServerFn(deleteAudit);
   const putAction = useServerFn(saveAction);
   const removeAction = useServerFn(deleteAction);
+  const putNote = useServerFn(saveComplianceNote);
+  const removeNote = useServerFn(deleteComplianceNote);
 
   const [checkOpen, setCheckOpen] = useState<Any | null>(null);
   const [checkValues, setCheckValues] = useState<Record<string, any>>({});
@@ -126,6 +132,7 @@ function Page() {
   const [editCheck, setEditCheck] = useState<Any | null>(null);
   const [editAudit, setEditAudit] = useState<Any | null>(null);
   const [newAction, setNewAction] = useState({ description: "", owner_name: "", due_on: "" });
+  const [editNote, setEditNote] = useState<Any | null>(null);
   const [busy, setBusy] = useState(false);
 
   const today = data?.today ?? todayIso();
@@ -274,8 +281,67 @@ function Page() {
           <TabsTrigger value="checks">Checks</TabsTrigger>
           <TabsTrigger value="audits">Audits</TabsTrigger>
           <TabsTrigger value="actions">Action plan</TabsTrigger>
+          <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
+
+        {/* ---- Notes board ---- */}
+        <TabsContent value="notes" className="mt-4 space-y-3">
+          <Card className="border-dashed">
+            <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+              <div>
+                <p className="font-medium">Notes board</p>
+                <p className="text-xs text-muted-foreground">
+                  Jot down anything you&apos;ve added or changed in the clinic — new fridge fitted, new product
+                  stocked, a policy updated. Each note is dated and kept with your records.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => setEditNote({ title: "", body: "", noted_on: today })}
+              >
+                <Plus className="mr-1.5 h-4 w-4" /> Add note
+              </Button>
+            </CardContent>
+          </Card>
+
+          {!(data?.notes ?? []).length ? (
+            <Empty text="No notes yet." />
+          ) : (
+            (data?.notes ?? []).map((n: Any) => (
+              <Card key={n.id}>
+                <CardContent className="flex flex-wrap items-start justify-between gap-3 p-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <NotebookPen className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">{n.title}</span>
+                      <Badge variant="outline">{n.noted_on}</Badge>
+                    </div>
+                    {n.body && <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{n.body}</p>}
+                    {n.created_by_name && (
+                      <p className="mt-1 text-xs text-muted-foreground">Added by {n.created_by_name}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setEditNote(n)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        if (confirm(`Delete note "${n.title}"?`))
+                          run(() => removeNote({ data: { id: n.id } }), "Note deleted");
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </TabsContent>
 
         {/* ---- Due ---- */}
         <TabsContent value="due" className="mt-4 space-y-3">
@@ -384,10 +450,17 @@ function Page() {
 
         {/* ---- Audits ---- */}
         <TabsContent value="audits" className="mt-4 space-y-3">
-          <div className="flex justify-end">
+          <Card className="border-dashed">
+            <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+              <div>
+                <p className="font-medium">Build your own audit</p>
+                <p className="text-xs text-muted-foreground">
+                  Anyone on the team can create an audit from scratch — name it, add your own standards to check,
+                  and choose how often it repeats.
+                </p>
+              </div>
             <Button
               size="sm"
-              variant="outline"
               onClick={() =>
                 setEditAudit({
                   name: "",
@@ -407,7 +480,8 @@ function Page() {
             >
               <Plus className="mr-1.5 h-4 w-4" /> New audit
             </Button>
-          </div>
+            </CardContent>
+          </Card>
           {(data?.auditTemplates ?? []).map((t: Any) => (
             <Card key={t.id}>
               <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
@@ -627,6 +701,66 @@ function Page() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* ---- Note dialog ---- */}
+      <Dialog open={!!editNote} onOpenChange={(o) => !o && setEditNote(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editNote?.id ? "Edit note" : "Add note"}</DialogTitle>
+            <DialogDescription>Record something you&apos;ve added or changed in the clinic.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Title</Label>
+              <Input
+                value={editNote?.title ?? ""}
+                placeholder="New fridge fitted"
+                onChange={(e) => setEditNote({ ...editNote, title: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Date</Label>
+              <Input
+                type="date"
+                value={editNote?.noted_on ?? today}
+                onChange={(e) => setEditNote({ ...editNote, noted_on: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Details (optional)</Label>
+              <Textarea
+                rows={4}
+                value={editNote?.body ?? ""}
+                placeholder="Serial number, supplier, where it's kept…"
+                onChange={(e) => setEditNote({ ...editNote, body: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              disabled={busy || !editNote?.title?.trim()}
+              onClick={async () => {
+                const ok = await run(
+                  () =>
+                    putNote({
+                      data: {
+                        id: editNote?.id,
+                        title: editNote?.title ?? "",
+                        body: editNote?.body ?? "",
+                        noted_on: editNote?.noted_on || today,
+                      },
+                    }),
+                  "Note saved",
+                );
+                if (ok) setEditNote(null);
+              }}
+            >
+              Save note
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       {/* ---- Complete check dialog ---- */}
       <Dialog open={!!checkOpen} onOpenChange={(o) => !o && setCheckOpen(null)}>
