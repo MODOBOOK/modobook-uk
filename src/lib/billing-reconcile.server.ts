@@ -12,13 +12,18 @@
 const LIVE_STATUSES = ["active", "trialing", "past_due", "unpaid", "incomplete"];
 
 export async function reconcileSubscriptionFromStripe(
-  supabase: any,
+  _supabase: any,
   profileId: string,
   email?: string | null,
 ): Promise<boolean> {
   try {
     const { getStripe } = await import("./stripe.server");
     const stripe = getStripe();
+    // Writes must bypass RLS: practitioners may only SELECT their own
+    // subscription row, so healing with the caller's client silently failed
+    // and paid clinics stayed locked out.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabase = supabaseAdmin as any;
 
     const { data: row } = await supabase
       .from("practitioner_subscriptions")
