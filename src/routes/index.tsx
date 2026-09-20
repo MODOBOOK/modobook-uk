@@ -135,15 +135,6 @@ function LandingPage() {
           </div>
         </section>
 
-        {/* IMAGE BAND */}
-        <section className="relative overflow-hidden">
-          <img
-            src={consultationHero.url}
-            alt="A practitioner and patient using MODO on a tablet during consultation"
-            className="h-[300px] w-full object-cover object-top sm:h-[420px]"
-          />
-        </section>
-
         {/* FEATURES — six essentials */}
         <section className="border-b border-[color:var(--hairline)]">
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
