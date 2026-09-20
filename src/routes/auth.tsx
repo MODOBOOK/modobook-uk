@@ -235,7 +235,7 @@ function AuthPage() {
           </div>
         </div>
 
-        <p className="mt-6 text-center text-[11px] uppercase tracking-[0.18em]" style={{ color: "var(--muted-foreground)" }}>
+        <p className="mt-6 text-center text-xs tracking-wide" style={{ color: "var(--muted-foreground)" }}>
           <Link to="/" className="underline underline-offset-4 hover:opacity-70">← Back to modobook.uk</Link>
         </p>
       </div>
