@@ -194,8 +194,9 @@ function LandingPage() {
               <GridFeature icon={CreditCard} title="Payments" desc="Deposits, card capture, pay-in-clinic and Klarna & Clearpay buy-now-pay-later — 0% booking fees." />
               <GridFeature icon={Sparkles} title="Built-in AI" desc="Treatment descriptions, consent forms and aftercare written for you in seconds." />
               <GridFeature icon={Network} title="Prescriber Hub" desc="A shared, traceable prescribing record — requests, notes and batch numbers in one place." />
-              <GridFeature icon={Users} title="Model slots" desc="Discounted model windows to fill quiet hours — with optional fixed dates and times." />
+              <GridFeature icon={ShieldCheck} title="Clinic compliance" desc="Checks, audits and a notes board to keep your clinic inspection-ready — switch it on only if you want it." />
               <GridFeature icon={Bell} title="Aftercare & reviews" desc="Aftercare instructions and review requests go out automatically after every visit." />
+              <GridFeature icon={Users} title="Memberships" desc="Monthly membership plans your clients sign up to online — agreements, payments and renewals handled." />
             </div>
 
             <Reveal>
