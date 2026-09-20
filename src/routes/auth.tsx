@@ -176,13 +176,13 @@ function AuthPage() {
                   <p className="text-xs text-primary">Referred — 25% off your first 3 paid months will apply automatically.</p>
                 )}
               </div>
-              <label className="flex items-start gap-3 border p-3 text-xs leading-relaxed" style={{ borderColor: "var(--hairline)", background: "var(--paper)" }}>
+              <label className="flex items-start gap-3 rounded-xl border p-3 text-xs leading-relaxed" style={{ borderColor: "var(--hairline)", background: "var(--paper)" }}>
                 <Checkbox
                   checked={acceptedTerms}
                   onCheckedChange={(v) => setAcceptedTerms(Boolean(v))}
                   className="mt-0.5"
                 />
-                <span>
+                <span className="text-muted-foreground">
                   I have read and accept the{" "}
                   <Link to="/terms" target="_blank" className="font-medium text-foreground underline underline-offset-2">
                     Terms &amp; Conditions
@@ -193,7 +193,7 @@ function AuthPage() {
                   </Link>.
                 </span>
               </label>
-              <Button type="submit" className="w-full" disabled={loading || !acceptedTerms}>
+              <Button type="submit" className="w-full rounded-full" disabled={loading || !acceptedTerms}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 Create my account
               </Button>
