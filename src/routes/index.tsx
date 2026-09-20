@@ -192,8 +192,11 @@ function LandingPage() {
               <GridFeature icon={ClipboardList} title="Consultations" desc="Screening, assessment, plan, photos and product log in one flow." />
               <GridFeature icon={FileSignature} title="Consent & medical" desc="Use ours or build your own — auto-sent, signed and filed." />
               <GridFeature icon={Camera} title="Face mapping" desc="Pin-drop product tags with units and before/after imagery." />
-              <GridFeature icon={CreditCard} title="Payments" desc="Card, deposits, pay-in-clinic — and 0% booking fees." />
-              <GridFeature icon={Lock} title="GDPR-ready records" desc="Encrypted, UK/EU residency, consent split out properly." />
+              <GridFeature icon={CreditCard} title="Payments" desc="Deposits, card capture, pay-in-clinic and Klarna & Clearpay buy-now-pay-later — 0% booking fees." />
+              <GridFeature icon={Sparkles} title="Built-in AI" desc="Treatment descriptions, consent forms and aftercare written for you in seconds." />
+              <GridFeature icon={Network} title="Prescriber Hub" desc="A shared, traceable prescribing record — requests, notes and batch numbers in one place." />
+              <GridFeature icon={Users} title="Model slots" desc="Discounted model windows to fill quiet hours — with optional fixed dates and times." />
+              <GridFeature icon={Bell} title="Aftercare & reviews" desc="Aftercare instructions and review requests go out automatically after every visit." />
             </div>
 
             <Reveal>
