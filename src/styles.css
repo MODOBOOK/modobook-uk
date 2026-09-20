@@ -232,7 +232,7 @@
 
 
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Libre Baskerville", Georgia, "Times New Roman", serif;
+  --font-display: "Cormorant Garamond", "Libre Baskerville", Georgia, serif;
 
   background-color: var(--background);
   color: var(--foreground);
@@ -244,16 +244,48 @@
 .modo-marketing h2,
 .modo-marketing h3 {
   font-family: var(--font-display);
-  letter-spacing: -0.01em;
-  font-weight: 700;
+  letter-spacing: -0.005em;
+  font-weight: 500;
   text-wrap: balance;
 }
 
 /* Fluid, mobile-first marketing headings */
-.modo-marketing h1 { font-size: clamp(2rem, 7.5vw, 4rem); line-height: 1.05; }
-.modo-marketing h2 { font-size: clamp(1.6rem, 5.5vw, 2.75rem); line-height: 1.1; }
-.modo-marketing h3 { font-size: clamp(1.15rem, 4vw, 1.5rem); line-height: 1.2; }
+.modo-marketing h1 { font-size: clamp(2.5rem, 9vw, 5.25rem); line-height: 1.02; }
+.modo-marketing h2 { font-size: clamp(1.9rem, 6vw, 3.25rem); line-height: 1.08; }
+.modo-marketing h3 { font-size: clamp(1.25rem, 4vw, 1.65rem); line-height: 1.2; }
 .modo-marketing p { overflow-wrap: break-word; }
+
+/* --- Interaction layer ------------------------------------------ */
+.modo-marketing .reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.modo-marketing .reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+.modo-marketing .link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 1px;
+  transition: background-size 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.modo-marketing .link-underline:hover { background-size: 100% 1px; }
+.modo-marketing .lift {
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.35s ease, box-shadow 0.45s ease;
+}
+.modo-marketing .lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 28px 60px -42px color-mix(in oklab, var(--ink) 80%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .modo-marketing .reveal { opacity: 1; transform: none; transition: none; }
+  .modo-marketing .lift:hover { transform: none; }
+}
 
 @layer components {
 /* --- Editorial clinical bento kit ------------------------------- */

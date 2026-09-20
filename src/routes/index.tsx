@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import brandBoards from "@/assets/modo-brand-boards.png.asset.json";
 import consultationHero from "@/assets/modo-consultation-hero.jpeg.asset.json";
@@ -111,84 +111,29 @@ function LandingPage() {
       <SiteHeader />
 
       <main>
-        {/* HERO — editorial serif statement */}
-        <header className="relative overflow-hidden border-b border-[color:var(--hairline)]">
-          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8 lg:py-36">
-            <div className="max-w-3xl">
-              <div className="mb-6 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-[color:var(--accent)]">
-                <span className="h-px w-8 bg-[color:var(--taupe)]" />
-                Built exclusively for aesthetics
-              </div>
+        {/* HERO — centred editorial statement */}
+        <Hero />
 
-              <h1 className="font-display text-4xl leading-[1.12] text-[color:var(--ink)] sm:text-6xl lg:text-7xl">
-                Not another generic <span className="italic">booking app.</span>
-              </h1>
-
-              <p className="mt-7 max-w-xl text-lg font-light leading-relaxed text-[color:var(--ink-soft)] sm:text-xl">
-                The UK booking, consultation and clinical platform designed only for
-                aesthetics — records, consent, face mapping, payments and a prescriber hub,
-                designed by clinicians who still run clinics themselves.
-              </p>
-
-              <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <Link
-                  to="/auth"
-                  className="inline-flex h-14 items-center justify-center bg-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--paper)] transition-colors hover:bg-[color:var(--accent)] sm:h-13"
-                >
-                  Create your account
-                </Link>
-                <Link
-                  to="/demo"
-                  className="inline-flex h-14 items-center justify-center border border-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--ink)] transition-colors hover:bg-[color:var(--ink)] hover:text-[color:var(--paper)] sm:h-13"
-                >
-                  Try the demo
-                </Link>
-              </div>
-
-              <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:gap-4">
-                <a
-                  href="https://modobook.uk/m/aestheticsbynurseryan"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--ink)]"
-                >
-                  Live clinic 1
-                  <ArrowRight className="h-3.5 w-3.5 text-[color:var(--accent)] transition-transform group-hover:translate-x-0.5" />
-                </a>
-                <a
-                  href="https://modobook.uk/m/aesthetiqbyjen"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--ink)]"
-                >
-                  Live clinic 2
-                  <ArrowRight className="h-3.5 w-3.5 text-[color:var(--accent)] transition-transform group-hover:translate-x-0.5" />
-                </a>
-              </div>
-
-              <p className="mt-8 text-xs leading-relaxed text-[color:var(--ink-soft)]">
-                <span className="font-semibold text-[color:var(--ink)]">First month free · No card details required.</span>{" "}
-                Open to every aesthetics practitioner — sign up in minutes, cancel anytime.
-              </p>
-            </div>
-          </div>
-        </header>
-
-        {/* STATS RIBBON — black band */}
-        <section className="bg-[color:var(--ink)] py-14 text-[color:var(--paper)] sm:py-16">
+        {/* STATS RIBBON — quiet beige band */}
+        <section className="border-b border-[color:var(--hairline)] bg-[color:var(--secondary)] py-14 sm:py-16">
           <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 px-4 sm:px-6 md:grid-cols-4 lg:px-8">
             {[
               { k: "0%", v: "Booking fees" },
               { k: "5–8h", v: "Saved per week" },
               { k: "1 link", v: "Whole clinic" },
               { k: "UK/EU", v: "Data residency" },
-            ].map((s) => (
-              <div key={s.v} className="space-y-2">
-                <div className="font-display text-3xl sm:text-4xl">{s.k}</div>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--paper)]/60">
-                  {s.v}
+            ].map((s, i) => (
+              <Reveal key={s.v} delay={i * 90}>
+                <div className="group space-y-2">
+                  <div className="font-display text-4xl text-[color:var(--ink)] transition-transform duration-500 group-hover:-translate-y-0.5 sm:text-5xl">
+                    {s.k}
+                  </div>
+                  <div className="h-px w-8 bg-[color:var(--taupe)] transition-all duration-500 group-hover:w-16" />
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--ink-soft)]">
+                    {s.v}
+                  </div>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </section>
@@ -266,32 +211,7 @@ function LandingPage() {
                 for solo practitioners and multi-location clinics.
               </p>
             </div>
-            <div className="grid gap-px border border-[color:var(--hairline)] bg-[color:var(--hairline)] md:grid-cols-2">
-              <WhoPanel
-                tag="HCPs"
-                icon={Syringe}
-                title="Nurses, Doctors, Dentists, Pharmacists, Paramedics & Midwives"
-                blurb="Prescriber-grade consultation notes, medical screening, and integrated prescribing — with the Prescriber Hub for the non-HCPs you support."
-                points={[
-                  "Prescriber-grade consultation notes & treatment plans",
-                  "Photo, social and marketing consent split out properly",
-                  "Prescriber Hub — support the non-HCPs you work with",
-                  "Multi-location, multi-practitioner clinics supported",
-                ]}
-              />
-              <WhoPanel
-                tag="Non-HCPs"
-                icon={Sparkles}
-                title="Aesthetics Practitioners, Skin & Other Injectors"
-                blurb="Streamlined bookings, medical screening and consent, plus a Prescriber Hub link to refer to the clinicians who cover you."
-                points={[
-                  "Full medical screening & consent before every appointment",
-                  "Refer in your prescriber via the Prescriber Hub",
-                  "Photo consent, aftercare and review periods built in",
-                  "Look every bit as professional as a full clinic",
-                ]}
-              />
-            </div>
+            <WhoSwitcher />
           </div>
         </section>
 
@@ -434,6 +354,258 @@ function LandingPage() {
   );
 }
 
+/* -------- Interaction helpers -------- */
+
+function Reveal({
+  children,
+  delay = 0,
+  className = "",
+}: {
+  children: ReactNode;
+  delay?: number;
+  className?: string;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [shown, setShown] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setShown(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            setShown(true);
+            io.disconnect();
+          }
+        }
+      },
+      { rootMargin: "0px 0px -10% 0px", threshold: 0.08 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`reveal ${shown ? "is-in" : ""} ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  );
+}
+
+const HERO_AUDIENCES = [
+  {
+    id: "solo",
+    label: "Solo practitioner",
+    line: "Your whole practice — bookings, consultations, consent and payments — behind one beautiful link.",
+  },
+  {
+    id: "clinic",
+    label: "Clinic & team",
+    line: "Every room, every practitioner and every location in one calm diary, with clinical records that keep up.",
+  },
+  {
+    id: "prescriber",
+    label: "Prescriber",
+    line: "Support the practitioners you cover on a shared, traceable record — prescribing and notes in one place.",
+  },
+] as const;
+
+function Hero() {
+  const [audience, setAudience] = useState<string>(HERO_AUDIENCES[0].id);
+  const active = HERO_AUDIENCES.find((a) => a.id === audience) ?? HERO_AUDIENCES[0];
+
+  return (
+    <header className="relative overflow-hidden border-b border-[color:var(--hairline)]">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-[-18rem] h-[36rem] w-[36rem] -translate-x-1/2 rounded-full opacity-70 blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle, color-mix(in oklab, var(--taupe) 55%, transparent), transparent 70%)",
+        }}
+      />
+      <div className="relative mx-auto max-w-4xl px-4 py-24 text-center sm:px-6 sm:py-32 lg:py-40">
+        <Reveal>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.42em] text-[color:var(--accent)]">
+            Built exclusively for aesthetics
+          </div>
+        </Reveal>
+
+        <Reveal delay={90}>
+          <h1 className="mt-7 font-display text-[color:var(--ink)]">
+            The clinic,
+            <br />
+            <span className="italic font-light text-[color:var(--ink-soft)]">beautifully run.</span>
+          </h1>
+        </Reveal>
+
+        <Reveal delay={180}>
+          <p className="mx-auto mt-8 max-w-xl text-base font-light leading-relaxed text-[color:var(--ink-soft)] sm:text-lg">
+            The UK booking, consultation and clinical platform designed only for aesthetics —
+            records, consent, face mapping, payments and a prescriber hub, designed by
+            clinicians who still run clinics themselves.
+          </p>
+        </Reveal>
+
+        {/* Interactive audience pill */}
+        <Reveal delay={260}>
+          <div className="mt-10 flex justify-center">
+            <div className="inline-flex flex-wrap justify-center gap-1 rounded-full border border-[color:var(--hairline)] bg-[color:var(--card)] p-1">
+              {HERO_AUDIENCES.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => setAudience(a.id)}
+                  aria-pressed={audience === a.id}
+                  className={`rounded-full px-5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.18em] transition-all duration-400 ${
+                    audience === a.id
+                      ? "bg-[color:var(--ink)] text-[color:var(--paper)]"
+                      : "text-[color:var(--ink-soft)] hover:text-[color:var(--ink)]"
+                  }`}
+                >
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p
+            key={active.id}
+            className="mx-auto mt-6 max-w-lg text-sm leading-relaxed text-[color:var(--ink-soft)] animate-in fade-in slide-in-from-bottom-1 duration-500"
+          >
+            {active.line}
+          </p>
+        </Reveal>
+
+        <Reveal delay={340}>
+          <div className="mt-11 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link
+              to="/auth"
+              className="inline-flex h-14 items-center justify-center bg-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--paper)] transition-colors hover:bg-[color:var(--accent)]"
+            >
+              Create your account
+            </Link>
+            <Link
+              to="/demo"
+              className="inline-flex h-14 items-center justify-center border border-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--ink)] transition-colors hover:bg-[color:var(--ink)] hover:text-[color:var(--paper)]"
+            >
+              Try the demo
+            </Link>
+          </div>
+        </Reveal>
+
+        <Reveal delay={420}>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
+            <a
+              href="https://modobook.uk/m/aestheticsbynurseryan"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="link-underline group inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--ink)]"
+            >
+              Live clinic 1
+              <ArrowRight className="h-3.5 w-3.5 text-[color:var(--accent)] transition-transform group-hover:translate-x-0.5" />
+            </a>
+            <a
+              href="https://modobook.uk/m/aesthetiqbyjen"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="link-underline group inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--ink)]"
+            >
+              Live clinic 2
+              <ArrowRight className="h-3.5 w-3.5 text-[color:var(--accent)] transition-transform group-hover:translate-x-0.5" />
+            </a>
+          </div>
+
+          <p className="mx-auto mt-8 max-w-md text-xs leading-relaxed text-[color:var(--ink-soft)]">
+            <span className="font-semibold text-[color:var(--ink)]">
+              First month free · No card details required.
+            </span>{" "}
+            Open to every aesthetics practitioner — sign up in minutes, cancel anytime.
+          </p>
+        </Reveal>
+      </div>
+    </header>
+  );
+}
+
+const WHO_TABS = [
+  {
+    id: "hcp",
+    tag: "HCPs",
+    icon: Syringe,
+    title: "Nurses, Doctors, Dentists, Pharmacists, Paramedics & Midwives",
+    blurb:
+      "Prescriber-grade consultation notes, medical screening, and integrated prescribing — with the Prescriber Hub for the non-HCPs you support.",
+    points: [
+      "Prescriber-grade consultation notes & treatment plans",
+      "Photo, social and marketing consent split out properly",
+      "Prescriber Hub — support the non-HCPs you work with",
+      "Multi-location, multi-practitioner clinics supported",
+    ],
+  },
+  {
+    id: "non-hcp",
+    tag: "Non-HCPs",
+    icon: Sparkles,
+    title: "Aesthetics Practitioners, Skin & Other Injectors",
+    blurb:
+      "Streamlined bookings, medical screening and consent, plus a Prescriber Hub link to refer to the clinicians who cover you.",
+    points: [
+      "Full medical screening & consent before every appointment",
+      "Refer in your prescriber via the Prescriber Hub",
+      "Photo consent, aftercare and review periods built in",
+      "Look every bit as professional as a full clinic",
+    ],
+  },
+] as const;
+
+function WhoSwitcher() {
+  const [tab, setTab] = useState<string>(WHO_TABS[0].id);
+  const active = WHO_TABS.find((t) => t.id === tab) ?? WHO_TABS[0];
+
+  return (
+    <div>
+      <div className="flex flex-wrap gap-2">
+        {WHO_TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            aria-pressed={tab === t.id}
+            className={`border px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 ${
+              tab === t.id
+                ? "border-[color:var(--ink)] bg-[color:var(--ink)] text-[color:var(--paper)]"
+                : "border-[color:var(--hairline)] text-[color:var(--ink-soft)] hover:border-[color:var(--ink)] hover:text-[color:var(--ink)]"
+            }`}
+          >
+            {t.tag}
+          </button>
+        ))}
+      </div>
+
+      <div
+        key={active.id}
+        className="mt-6 border border-[color:var(--hairline)] bg-[color:var(--paper)] animate-in fade-in slide-in-from-bottom-2 duration-500"
+      >
+        <WhoPanel
+          tag={active.tag}
+          icon={active.icon}
+          title={active.title}
+          blurb={active.blurb}
+          points={[...active.points]}
+        />
+      </div>
+    </div>
+  );
+}
+
 /* -------- Landing building blocks -------- */
 
 function GridFeature({
@@ -446,9 +618,10 @@ function GridFeature({
   desc: string;
 }) {
   return (
-    <div className="group bg-[color:var(--paper)] p-8 transition-colors hover:bg-[color:var(--secondary)] sm:p-10">
-      <Icon className="mb-5 h-5 w-5 text-[color:var(--accent)]" />
+    <div className="lift group relative bg-[color:var(--paper)] p-8 hover:bg-[color:var(--secondary)] sm:p-10">
+      <Icon className="mb-5 h-5 w-5 text-[color:var(--accent)] transition-transform duration-500 group-hover:-translate-y-0.5" />
       <h3 className="font-display text-xl text-[color:var(--ink)]">{title}</h3>
+      <div className="mt-3 h-px w-6 bg-[color:var(--taupe)] transition-all duration-500 group-hover:w-14" />
       <p className="mt-3 text-sm leading-relaxed text-[color:var(--ink-soft)]">{desc}</p>
     </div>
   );
