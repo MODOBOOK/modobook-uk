@@ -405,130 +405,126 @@ function Hero() {
   );
 }
 
-const WHO_TABS = [
+const PRICE_ROWS = [
   {
-    id: "hcp",
-    tag: "HCPs",
-    icon: Syringe,
-    title: "Nurses, Doctors, Dentists, Pharmacists, Paramedics & Midwives",
-    blurb:
-      "Prescriber-grade consultation notes, medical screening, and integrated prescribing — with the Prescriber Hub for the non-HCPs you support.",
+    name: "MODO Clinic",
+    tag: "Core subscription",
+    now: "£29.99",
+    was: "£39.99",
+    unit: "per month",
     points: [
-      "Prescriber-grade consultation notes & treatment plans",
-      "Photo, social and marketing consent split out properly",
-      "Prescriber Hub — support the non-HCPs you work with",
-      "Multi-location, multi-practitioner clinics supported",
+      "First month free — no card required",
+      "Unlimited patients & appointments",
+      "0% booking fees",
+      "Records, consent, face mapping & prescriber hub",
     ],
+    highlight: true,
   },
   {
-    id: "non-hcp",
-    tag: "Non-HCPs",
-    icon: Sparkles,
-    title: "Aesthetics Practitioners, Skin & Other Injectors",
-    blurb:
-      "Streamlined bookings, medical screening and consent, plus a Prescriber Hub link to refer to the clinicians who cover you.",
-    points: [
-      "Full medical screening & consent before every appointment",
-      "Refer in your prescriber via the Prescriber Hub",
-      "Photo consent, aftercare and review periods built in",
-      "Look every bit as professional as a full clinic",
-    ],
+    name: "Extra team member",
+    tag: "Add-on",
+    now: "£9.99",
+    was: "£14.99",
+    unit: "per member / month",
+    points: ["Own calendar & login", "Own patient list & notes", "1 practitioner included"],
+  },
+  {
+    name: "Extra location",
+    tag: "Limited time",
+    now: "Free",
+    was: "£4.99",
+    unit: "per location / month",
+    points: ["Separate hours & availability", "Location booking links", "1 location included"],
   },
 ] as const;
 
-function WhoSwitcher() {
-  const [tab, setTab] = useState<string>(WHO_TABS[0].id);
-  const active = WHO_TABS.find((t) => t.id === tab) ?? WHO_TABS[0];
-
+function PricingBand() {
   return (
-    <div>
-      <div className="flex flex-wrap gap-2">
-        {WHO_TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            aria-pressed={tab === t.id}
-            className={`border px-6 py-3 text-[10px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 ${
-              tab === t.id
-                ? "border-[color:var(--ink)] bg-[color:var(--ink)] text-[color:var(--paper)]"
-                : "border-[color:var(--hairline)] text-[color:var(--ink-soft)] hover:border-[color:var(--ink)] hover:text-[color:var(--ink)]"
-            }`}
-          >
-            {t.tag}
-          </button>
-        ))}
+    <section className="border-b border-[color:var(--hairline)] bg-[color:var(--secondary)]">
+      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+        <Reveal>
+          <div className="mx-auto mb-14 max-w-xl text-center">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[color:var(--accent)]">
+              Pricing
+            </div>
+            <p className="mt-6 font-display text-3xl leading-tight text-[color:var(--ink)] sm:text-4xl">
+              One simple price. No booking fees.
+            </p>
+          </div>
+        </Reveal>
+
+        <div className="grid gap-6 md:grid-cols-3">
+          {PRICE_ROWS.map((t, i) => (
+            <Reveal key={t.name} delay={i * 90}>
+              <div
+                className={`lift flex h-full flex-col border p-8 ${
+                  t.highlight
+                    ? "border-[color:var(--ink)] bg-[color:var(--ink)] text-[color:var(--paper)]"
+                    : "border-[color:var(--hairline)] bg-[color:var(--paper)]"
+                }`}
+              >
+                <div
+                  className={`text-[10px] font-bold uppercase tracking-[0.2em] ${
+                    t.highlight ? "text-[color:var(--taupe)]" : "text-[color:var(--accent)]"
+                  }`}
+                >
+                  {t.tag}
+                </div>
+                <h3
+                  className={`mt-4 font-display text-2xl ${
+                    t.highlight ? "text-[color:var(--paper)]" : "text-[color:var(--ink)]"
+                  }`}
+                >
+                  {t.name}
+                </h3>
+                <div className="mt-5 flex items-baseline gap-2">
+                  <span className="font-display text-4xl">{t.now}</span>
+                  <span
+                    className={`text-sm line-through ${
+                      t.highlight ? "text-[color:var(--paper)]/45" : "text-[color:var(--ink-soft)]/60"
+                    }`}
+                  >
+                    {t.was}
+                  </span>
+                </div>
+                <div
+                  className={`mt-1 text-[11px] uppercase tracking-[0.16em] ${
+                    t.highlight ? "text-[color:var(--paper)]/60" : "text-[color:var(--ink-soft)]"
+                  }`}
+                >
+                  {t.unit}
+                </div>
+                <ul className="mt-7 space-y-3">
+                  {t.points.map((p) => (
+                    <li
+                      key={p}
+                      className={`flex items-start gap-3 text-sm ${
+                        t.highlight ? "text-[color:var(--paper)]/75" : "text-[color:var(--ink-soft)]"
+                      }`}
+                    >
+                      <span className="mt-2 h-px w-4 shrink-0 bg-[color:var(--taupe)]" />
+                      <span>{p}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal>
+          <div className="mt-10 text-center">
+            <Link
+              to="/pricing"
+              className="link-underline group inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--ink)]"
+            >
+              Full pricing detail
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </div>
+        </Reveal>
       </div>
-
-      <div
-        key={active.id}
-        className="mt-6 border border-[color:var(--hairline)] bg-[color:var(--paper)] animate-in fade-in slide-in-from-bottom-2 duration-500"
-      >
-        <WhoPanel
-          tag={active.tag}
-          icon={active.icon}
-          title={active.title}
-          blurb={active.blurb}
-          points={[...active.points]}
-        />
-      </div>
-    </div>
-  );
-}
-
-/* -------- Landing building blocks -------- */
-
-function GridFeature({
-  icon: Icon,
-  title,
-  desc,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <div className="lift group relative bg-[color:var(--paper)] p-8 hover:bg-[color:var(--secondary)] sm:p-10">
-      <Icon className="mb-5 h-5 w-5 text-[color:var(--accent)] transition-transform duration-500 group-hover:-translate-y-0.5" />
-      <h3 className="font-display text-xl text-[color:var(--ink)]">{title}</h3>
-      <div className="mt-3 h-px w-6 bg-[color:var(--taupe)] transition-all duration-500 group-hover:w-14" />
-      <p className="mt-3 text-sm leading-relaxed text-[color:var(--ink-soft)]">{desc}</p>
-    </div>
-  );
-}
-
-function WhoPanel({
-  tag,
-  icon: Icon,
-  title,
-  blurb,
-  points,
-}: {
-  tag: string;
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  blurb: string;
-  points: string[];
-}) {
-  return (
-    <div className="bg-[color:var(--paper)] p-8 sm:p-12">
-      <div className="mb-6 flex items-center justify-between">
-        <span className="inline-flex items-center gap-2 border border-[color:var(--hairline)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[color:var(--accent)]">
-          {tag}
-        </span>
-        <Icon className="h-5 w-5 text-[color:var(--accent)]" />
-      </div>
-      <h3 className="font-display text-xl leading-snug text-[color:var(--ink)] sm:text-2xl">{title}</h3>
-      <p className="mt-3 text-sm text-[color:var(--ink-soft)]">{blurb}</p>
-      <ul className="mt-7 space-y-3">
-        {points.map((p) => (
-          <li key={p} className="flex items-start gap-3 text-sm text-[color:var(--ink-soft)]">
-            <span className="mt-2 h-px w-4 shrink-0 bg-[color:var(--taupe)]" />
-            <span>{p}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    </section>
   );
 }
 
