@@ -292,6 +292,15 @@ function Hero() {
           </p>
         </Reveal>
 
+        <Reveal delay={220}>
+          <p className="mx-auto mt-5 max-w-xl font-display text-lg leading-relaxed text-[color:var(--ink)] sm:text-xl">
+            If you do aesthetics, it's for you —{" "}
+            <span className="italic text-[color:var(--ink-soft)]">
+              with safety and compliance built into every step.
+            </span>
+          </p>
+        </Reveal>
+
         {/* Interactive audience pill */}
         <Reveal delay={260}>
           <div className="mt-10 flex justify-center">
@@ -532,7 +541,6 @@ function PricingBand() {
 const NAV_PAGES = [
   { to: "/features", label: "Features" },
   { to: "/prescriber-hub", label: "Prescriber Hub" },
-  { to: "/who-its-for", label: "Who it's for" },
   { to: "/rewards", label: "Rewards" },
   { to: "/pricing", label: "Pricing" },
   { to: "/faq", label: "FAQ" },
@@ -604,7 +612,6 @@ export function SiteFooter() {
           { label: "Pricing", to: "/pricing" },
           { label: "Prescriber Hub", to: "/prescriber-hub" },
           { label: "Rewards", to: "/rewards" },
-          { label: "Who it's for", to: "/who-its-for" },
         ]} />
 
         <FooterCol title="Join us" links={[
