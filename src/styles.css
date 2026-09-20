@@ -231,8 +231,8 @@
   --gold: var(--taupe);
 
 
-  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Cormorant Garamond", "Libre Baskerville", Georgia, serif;
+  --font-sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Instrument Serif", Georgia, serif;
 
   background-color: var(--background);
   color: var(--foreground);
@@ -244,8 +244,8 @@
 .modo-marketing h2,
 .modo-marketing h3 {
   font-family: var(--font-display);
-  letter-spacing: -0.005em;
-  font-weight: 500;
+  letter-spacing: -0.01em;
+  font-weight: 400;
   text-wrap: balance;
 }
 
