@@ -311,9 +311,9 @@ function Hero() {
 
         <Reveal delay={90}>
           <h1 className="mt-7 font-display text-[color:var(--ink)]">
-            The clinic,
+            Aesthetics,
             <br />
-            <span className="italic font-light text-[color:var(--ink-soft)]">beautifully run.</span>
+            <span className="italic text-[color:var(--ink-soft)]">run properly.</span>
           </h1>
         </Reveal>
 
