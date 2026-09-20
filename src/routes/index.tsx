@@ -211,32 +211,7 @@ function LandingPage() {
                 for solo practitioners and multi-location clinics.
               </p>
             </div>
-            <div className="grid gap-px border border-[color:var(--hairline)] bg-[color:var(--hairline)] md:grid-cols-2">
-              <WhoPanel
-                tag="HCPs"
-                icon={Syringe}
-                title="Nurses, Doctors, Dentists, Pharmacists, Paramedics & Midwives"
-                blurb="Prescriber-grade consultation notes, medical screening, and integrated prescribing — with the Prescriber Hub for the non-HCPs you support."
-                points={[
-                  "Prescriber-grade consultation notes & treatment plans",
-                  "Photo, social and marketing consent split out properly",
-                  "Prescriber Hub — support the non-HCPs you work with",
-                  "Multi-location, multi-practitioner clinics supported",
-                ]}
-              />
-              <WhoPanel
-                tag="Non-HCPs"
-                icon={Sparkles}
-                title="Aesthetics Practitioners, Skin & Other Injectors"
-                blurb="Streamlined bookings, medical screening and consent, plus a Prescriber Hub link to refer to the clinicians who cover you."
-                points={[
-                  "Full medical screening & consent before every appointment",
-                  "Refer in your prescriber via the Prescriber Hub",
-                  "Photo consent, aftercare and review periods built in",
-                  "Look every bit as professional as a full clinic",
-                ]}
-              />
-            </div>
+            <WhoSwitcher />
           </div>
         </section>
 
@@ -391,9 +366,10 @@ function GridFeature({
   desc: string;
 }) {
   return (
-    <div className="group bg-[color:var(--paper)] p-8 transition-colors hover:bg-[color:var(--secondary)] sm:p-10">
-      <Icon className="mb-5 h-5 w-5 text-[color:var(--accent)]" />
+    <div className="lift group relative bg-[color:var(--paper)] p-8 hover:bg-[color:var(--secondary)] sm:p-10">
+      <Icon className="mb-5 h-5 w-5 text-[color:var(--accent)] transition-transform duration-500 group-hover:-translate-y-0.5" />
       <h3 className="font-display text-xl text-[color:var(--ink)]">{title}</h3>
+      <div className="mt-3 h-px w-6 bg-[color:var(--taupe)] transition-all duration-500 group-hover:w-14" />
       <p className="mt-3 text-sm leading-relaxed text-[color:var(--ink-soft)]">{desc}</p>
     </div>
   );
