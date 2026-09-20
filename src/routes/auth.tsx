@@ -115,31 +115,45 @@ function AuthPage() {
 
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/50 px-4 py-12">
+    <div className="modo-marketing flex min-h-screen items-center justify-center px-4 py-12" style={{ background: "var(--grad-page)" }}>
       <div className="w-full max-w-md">
-        <div className="mb-8 flex items-center justify-center">
-          <BrandMark size="lg" />
-        </div>
-
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle>Create your MODO account</CardTitle>
-            <CardDescription>
+        <div className="mb-10 flex flex-col items-center gap-5">
+          <Link to="/" aria-label="MODO home">
+            <BrandMark size="lg" />
+          </Link>
+          <div className="text-center">
+            <p className="text-[11px] font-medium uppercase tracking-[0.28em]" style={{ color: "var(--muted-foreground)" }}>
+              {mode === "signin" ? "Welcome back" : "Now open"}
+            </p>
+            <h1 className="mt-3 font-display text-3xl leading-tight" style={{ color: "var(--ink)" }}>
+              {mode === "signin" ? (
+                <>Sign in to <em className="italic">your clinic.</em></>
+              ) : (
+                <>Create your <em className="italic">account.</em></>
+              )}
+            </h1>
+            <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
               {mode === "signin"
                 ? "Sign in to your practitioner account."
                 : "Open to all aesthetics practitioners — first month free, no card details required."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-4">
-            <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+            </p>
+          </div>
+        </div>
+
+        <div className="border bg-card" style={{ borderColor: "var(--hairline)" }}>
+          <div className="space-y-5 p-6 sm:p-8">
+            <div className="grid grid-cols-2 gap-px border" style={{ borderColor: "var(--hairline)", background: "var(--hairline)" }}>
               {(["signup", "signin"] as const).map((m) => (
                 <button
                   key={m}
                   type="button"
                   onClick={() => setMode(m)}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                    mode === m ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-                  }`}
+                  className="px-3 py-2.5 text-[11px] font-medium uppercase tracking-[0.18em] transition-colors"
+                  style={
+                    mode === m
+                      ? { background: "var(--ink)", color: "var(--paper)" }
+                      : { background: "var(--card)", color: "var(--muted-foreground)" }
+                  }
                 >
                   {m === "signin" ? "Sign in" : "Create account"}
                 </button>
