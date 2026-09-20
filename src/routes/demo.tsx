@@ -1,12 +1,18 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowRight, ArrowUpRight, CalendarCheck, ExternalLink, HeartPulse, Loader2, ShieldCheck, Sparkles, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ArrowRight, ArrowUpRight, CalendarCheck, HeartPulse, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { SiteHeader, SiteFooter } from "./index";
 import { startPublicDemo } from "@/lib/demo-public.functions";
-import consultationHero from "@/assets/modo-consultation-hero.jpeg.asset.json";
+import {
+  MarketingPage,
+  PageHero,
+  SectionHead,
+  HairlineGrid,
+  Reveal,
+  CtaBand,
+} from "@/components/marketing-kit";
 
 export const Route = createFileRoute("/demo")({
   head: () => ({
@@ -24,8 +30,10 @@ export const Route = createFileRoute("/demo")({
           "A live sandbox of MODO: bookings, medical records, consent, payments and the patient portal. No sign-up needed.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://modobook.uk/demo" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://modobook.uk/demo" }],
   }),
   component: DemoPage,
 });
@@ -46,200 +54,137 @@ function DemoPage() {
   }
 
   return (
-    <div className="modo-marketing min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
+    <MarketingPage>
       <SiteHeader />
 
-      <main>
-        {/* Hero */}
-        <section className="mx-auto max-w-6xl px-6 pb-10 pt-16 sm:pt-24">
-          <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-            <div>
-              <div className="eyebrow">Live sandbox · no sign-up</div>
-              <h1 className="mt-5 text-4xl font-semibold leading-[1.05] tracking-tight text-[color:var(--ink)] sm:text-6xl">
-                Take MODO for a <span className="gold-underline">test drive</span>
-              </h1>
-              <p className="mt-6 max-w-xl text-base leading-relaxed text-[color:var(--ink-soft)] sm:text-lg">
-                A fully populated demo clinic — real treatments, patients, consultations, consent forms and
-                bookings. Click in, click around, break whatever you like. Everything resets overnight and no
-                emails or payments ever leave the sandbox.
-              </p>
-              <div className="mt-8 flex flex-wrap items-center gap-4 text-sm text-[color:var(--ink-soft)]">
-                <span className="inline-flex items-center gap-2">
-                  <span className="pulse-dot" /> Live right now
-                </span>
-                <span className="inline-flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-[color:var(--accent)]" /> Resets nightly
-                </span>
-                <span className="inline-flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-[color:var(--accent)]" /> No card required
-                </span>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)] shadow-xl shadow-[color:var(--ink)]/10">
-                <img
-                  src={consultationHero.url}
-                  alt="A practitioner consulting with a patient inside the MODO demo clinic"
-                  className="aspect-[4/3] w-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-              <div className="absolute -bottom-5 -left-5 hidden tile px-4 sm:px-6 py-4 shadow-lg backdrop-blur sm:block">
-                <p className="text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--ink-soft)]">MODO Demo Clinic</p>
-                <p className="mt-1 text-sm font-semibold text-[color:var(--ink)]">Seeded with a real clinic workflow</p>
-              </div>
-            </div>
+      <main className="flex-1">
+        <PageHero
+          eyebrow="Live sandbox · no sign-up"
+          title="Take MODO for"
+          accent="a test drive."
+          blurb="A fully populated demo clinic — real treatments, patients, consultations, consent forms and bookings. Click in, click around, change whatever you like. Everything resets overnight, and no emails or payments ever leave the sandbox."
+        >
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">
+            <span>Live right now</span>
+            <span>Resets nightly</span>
+            <span>No card required</span>
           </div>
-        </section>
+        </PageHero>
 
         {/* Launch cards */}
-        <section className="mx-auto max-w-6xl px-6 pb-6">
-          <div className="eyebrow mb-5">§ Pick a door</div>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <DemoCard
-              icon={<CalendarCheck className="h-5 w-5 text-[color:var(--accent)]" />}
-              title="Practitioner dashboard"
-              blurb="The clinic side: diary, patient records, consultations, face mapping, consent, payments, marketing and reporting."
-              cta="Open the dashboard"
-              loading={busy === "practitioner"}
-              disabled={busy !== null}
-              onClick={() => open("practitioner")}
+        <section className="border-b border-[color:var(--hairline)]">
+          <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+            <SectionHead
+              eyebrow="Pick a door"
+              title="See it from both sides."
+              blurb="Open the clinic side or the patient side — no sign-in needed."
             />
-            <DemoCard
-              icon={<HeartPulse className="h-5 w-5 text-[color:var(--accent)]" />}
-              title="Patient account"
-              blurb="What your clients see: their appointments, treatment history, medical forms, reward points and gift cards."
-              cta="Open the patient view"
-              loading={busy === "patient"}
-              disabled={busy !== null}
-              onClick={() => open("patient")}
-            />
+            <HairlineGrid cols={2}>
+              <DemoCard
+                icon={CalendarCheck}
+                title="Practitioner dashboard"
+                blurb="The clinic side: diary, patient records, consultations, face mapping, consent, payments, marketing and reporting."
+                cta="Open the dashboard"
+                loading={busy === "practitioner"}
+                disabled={busy !== null}
+                onClick={() => open("practitioner")}
+              />
+              <DemoCard
+                icon={HeartPulse}
+                title="Patient account"
+                blurb="What your clients see: their appointments, treatment history, medical forms, reward points and gift cards."
+                cta="Open the patient view"
+                loading={busy === "patient"}
+                disabled={busy !== null}
+                onClick={() => open("patient")}
+              />
+            </HairlineGrid>
           </div>
         </section>
 
         {/* Team & roles */}
-        <section className="mx-auto max-w-6xl px-6 py-10">
-          <div className="eyebrow mb-5">§ Your team</div>
-          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-            <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-[color:var(--ink)] sm:text-3xl">
-                Built for clinics with more than one pair of hands
-              </h2>
-              <p className="mt-4 text-sm leading-relaxed text-[color:var(--ink-soft)] sm:text-base">
-                The demo clinic comes with a full team already set up. Sign in as the owner and you'll see every
-                diary; each practitioner only sees their own. Front-of-house staff can take bookings and payments
-                without ever opening a medical record.
-              </p>
-              <ul className="mt-6 space-y-3 text-sm text-[color:var(--ink-soft)]">
-                <li className="flex gap-3">
-                  <Users className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--accent)]" />
-                  Separate calendars and rotas per practitioner, with shared clinic opening hours.
-                </li>
-                <li className="flex gap-3">
-                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--accent)]" />
-                  Role-based access — the owner decides who sees money, records and settings.
-                </li>
-                <li className="flex gap-3">
-                  <CalendarCheck className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--accent)]" />
-                  Clients can book with a named team member from the same booking page.
-                </li>
-              </ul>
-              <p className="mt-6 text-xs text-[color:var(--ink-soft)]">
-                In the demo dashboard, open <span className="font-medium text-[color:var(--ink)]">Team</span> to see
-                the roles below, and use the practitioner filter on the calendar to switch diaries.
-              </p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
+        <section
+          className="border-b border-[color:var(--hairline)]"
+          style={{ background: "var(--grad-band)" }}
+        >
+          <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+            <SectionHead
+              eyebrow="Your team"
+              title="Built for clinics with more than one pair of hands."
+              blurb="The demo clinic comes with a full team already set up. The owner sees every diary; each practitioner sees only their own. Front-of-house can take bookings and payments without opening a medical record."
+            />
+            <HairlineGrid cols={2}>
               {[
                 { name: "Nurse Amelia Hart", role: "Practitioner", blurb: "Own diary and own patients. Clinical notes, consent and consultations — no billing or settings." },
                 { name: "Dr Priya Raman", role: "Practitioner", blurb: "Second diary with a different rota, so Thursdays run late without touching anyone else's hours." },
                 { name: "Jess Okoro", role: "Receptionist", blurb: "Front of house: books, reschedules, takes payments and gift cards. Medical records stay closed." },
                 { name: "Marta Kowal", role: "Clinic admin", blurb: "Everything except owner-only areas like billing, branding and the team list itself." },
               ].map((m) => (
-                <div key={m.name} className="tile p-5 shadow-sm">
-                  <p className="text-sm font-semibold text-[color:var(--ink)]">{m.name}</p>
-                  <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-[color:var(--accent)]">
+                <div key={m.name} className="lift bg-[color:var(--paper)] p-8 sm:p-10">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[color:var(--accent)]">
                     {m.role}
+                  </div>
+                  <h3 className="mt-3 font-display text-xl text-[color:var(--ink)]">{m.name}</h3>
+                  <div className="mt-3 h-px w-6 bg-[color:var(--taupe)]" />
+                  <p className="mt-3 text-sm leading-relaxed text-[color:var(--ink-soft)]">
+                    {m.blurb}
                   </p>
-                  <p className="mt-3 text-sm leading-relaxed text-[color:var(--ink-soft)]">{m.blurb}</p>
                 </div>
               ))}
-            </div>
+            </HairlineGrid>
           </div>
         </section>
 
-
-
-        {/* Booking page shortcut */}
-        <section className="mx-auto max-w-6xl px-6 py-8">
-          <div className="tile p-7 shadow-sm sm:p-9">
-            <div className="flex flex-wrap items-center justify-between gap-6">
-              <div className="max-w-xl">
-                <h2 className="text-xl font-semibold text-[color:var(--ink)]">Just want to see the booking page?</h2>
-                <p className="mt-2 text-sm leading-relaxed text-[color:var(--ink-soft)]">
-                  The customer-facing booking page needs no sign-in at all — this is the link a clinic shares with
-                  its clients.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <a href="/m/demo-clinic" target="_blank" rel="noopener noreferrer">
-                  <Button
-                    variant="outline"
-                    className="rounded-full border-[color:var(--hairline)] bg-white text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)]"
-                  >
-                    Demo booking page <ExternalLink className="ml-1 h-4 w-4" />
-                  </Button>
-                </a>
-                <a href="https://modobook.uk/m/aestheticsbynurseryan" target="_blank" rel="noopener noreferrer">
-                  <Button
-                    variant="outline"
-                    className="rounded-full border-[color:var(--hairline)] bg-white text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)]"
-                  >
-                    A real live clinic <ExternalLink className="ml-1 h-4 w-4" />
-                  </Button>
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Reassurance + CTA */}
-        <section className="mx-auto max-w-6xl px-6 pb-20">
-          <div className="rounded-3xl border border-[color:var(--hairline)] bg-[color:var(--muted)] p-7 sm:p-9">
-            <p className="flex items-start gap-3 text-sm leading-relaxed text-[color:var(--ink-soft)]">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--accent)]" />
-              <span>
-                The demo is shared by everyone who visits this page, so please don't store anything personal or real
-                in it. All patient details are fictional, outbound email and SMS are disabled, and the clinic is
-                wiped and rebuilt every night.
-              </span>
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link to="/auth">
-                <Button className="rounded-full bg-[color:var(--ink)] px-7 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90">
-                  Create your account
-                </Button>
-              </Link>
-              <Link to="/pricing">
-                <Button
-                  variant="outline"
-                  className="rounded-full border-[color:var(--hairline)] bg-white px-7 text-sm font-medium text-[color:var(--ink)] hover:bg-white/80"
+        {/* Booking pages + reassurance */}
+        <section className="border-b border-[color:var(--hairline)]">
+          <div className="mx-auto max-w-4xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
+            <SectionHead
+              eyebrow="Just the booking page?"
+              title="This is the link a clinic shares with its clients."
+            />
+            <Reveal>
+              <div className="flex flex-col justify-center gap-3 sm:flex-row">
+                <a
+                  href="/m/demo-clinic"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-14 items-center justify-center border border-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--ink)] transition-colors hover:bg-[color:var(--ink)] hover:text-[color:var(--paper)]"
                 >
-                  See pricing <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
+                  Demo booking page
+                </a>
+                <a
+                  href="https://modobook.uk/m/aestheticsbynurseryan"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-14 items-center justify-center border border-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--ink)] transition-colors hover:bg-[color:var(--ink)] hover:text-[color:var(--paper)]"
+                >
+                  A real live clinic
+                </a>
+              </div>
+            </Reveal>
+            <Reveal>
+              <p className="mx-auto mt-12 flex max-w-xl items-start gap-3 text-sm leading-relaxed text-[color:var(--ink-soft)]">
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--accent)]" />
+                <span>
+                  The demo is shared by everyone who visits this page, so please don't store
+                  anything personal or real in it. All patient details are fictional, outbound email
+                  and text messages are switched off, and the clinic is wiped and rebuilt every night.
+                </span>
+              </p>
+            </Reveal>
           </div>
         </section>
+
+        <CtaBand />
       </main>
 
       <SiteFooter />
-    </div>
+    </MarketingPage>
   );
 }
 
 function DemoCard({
-  icon,
+  icon: Icon,
   title,
   blurb,
   cta,
@@ -247,7 +192,7 @@ function DemoCard({
   disabled,
   onClick,
 }: {
-  icon: React.ReactNode;
+  icon: React.ComponentType<{ className?: string }>;
   title: string;
   blurb: string;
   cta: string;
@@ -256,17 +201,19 @@ function DemoCard({
   onClick: () => void;
 }) {
   return (
-    <div className="group flex flex-col tile p-7 shadow-sm transition-shadow hover:shadow-lg hover:shadow-[color:var(--ink)]/5 sm:p-8">
+    <div className="lift group flex flex-col bg-[color:var(--paper)] p-8 hover:bg-[color:var(--secondary)] sm:p-10">
       <div className="flex items-start justify-between">
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[color:var(--muted)]">{icon}</div>
-        <ArrowUpRight className="h-5 w-5 text-[color:var(--ink-soft)] opacity-0 transition-opacity group-hover:opacity-100" />
+        <Icon className="h-5 w-5 text-[color:var(--accent)]" />
+        <ArrowUpRight className="h-5 w-5 text-[color:var(--taupe)] opacity-0 transition-opacity group-hover:opacity-100" />
       </div>
-      <h2 className="mt-5 text-xl font-semibold text-[color:var(--ink)]">{title}</h2>
-      <p className="mt-2 flex-1 text-sm leading-relaxed text-[color:var(--ink-soft)]">{blurb}</p>
-      <Button
+      <h3 className="mt-5 font-display text-xl text-[color:var(--ink)]">{title}</h3>
+      <div className="mt-3 h-px w-6 bg-[color:var(--taupe)] transition-all duration-500 group-hover:w-14" />
+      <p className="mt-3 flex-1 text-sm leading-relaxed text-[color:var(--ink-soft)]">{blurb}</p>
+      <button
+        type="button"
         onClick={onClick}
         disabled={disabled}
-        className="mt-6 w-full rounded-full bg-[color:var(--ink)] text-sm font-medium text-white hover:bg-[color:var(--ink)]/90"
+        className="mt-8 inline-flex h-14 items-center justify-center bg-[color:var(--ink)] px-8 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--paper)] transition-colors hover:bg-[color:var(--accent)] disabled:opacity-60"
       >
         {loading ? (
           <>
@@ -274,10 +221,10 @@ function DemoCard({
           </>
         ) : (
           <>
-            {cta} <ArrowRight className="ml-1 h-4 w-4" />
+            {cta} <ArrowRight className="ml-2 h-4 w-4" />
           </>
         )}
-      </Button>
+      </button>
     </div>
   );
 }

@@ -1,11 +1,17 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "./index";
-import foundersSuits from "@/assets/modo-founders-scrubs.png.asset.json";
-import builtForPhoto from "@/assets/modo-built-for.png.asset.json";
+import {
+  MarketingPage,
+  PageHero,
+  SectionHead,
+  HairlineGrid,
+  Reveal,
+  CtaBand,
+  SolidLink,
+  OutlineLink,
+} from "@/components/marketing-kit";
 
-import { Syringe, Sparkles, Stethoscope, Users, MapPin, HeartHandshake, CheckCircle2 } from "lucide-react";
+import { Syringe, Sparkles, Stethoscope, Users, MapPin, HeartHandshake } from "lucide-react";
 
 export const Route = createFileRoute("/who-its-for")({
   head: () => ({
@@ -31,8 +37,8 @@ const personas = [
     points: [
       "Full prescribing-grade consultation flow",
       "Product log and treatment plans against every visit",
-      "Manage non-HCPs you support in the Prescriber Hub",
-      "Branded booking page on modo.app/your-clinic",
+      "Support non-HCPs you cover in the Prescriber Hub",
+      "Branded booking page on your own MODO link",
     ],
   },
   {
@@ -74,7 +80,7 @@ const personas = [
     title: "Aesthetics Practitioners",
     points: [
       "Mandatory medical screening before every appointment",
-      "Refer in your prescriber via the Hub",
+      "Bring your prescriber in via the Hub",
       "Photo consent, aftercare and review periods built in",
       "Look as professional as any clinic",
     ],
@@ -82,7 +88,7 @@ const personas = [
   {
     icon: Users,
     tag: "Non-HCP",
-    title: "Skin Injectors & Other Injectors",
+    title: "Skin & Other Injectors",
     points: [
       "Treatment menu, packages and add-ons",
       "Patient-facing concern picker and treatment menu",
@@ -98,81 +104,86 @@ const personas = [
       "Multiple locations and travel days",
       "Take deposits to protect your time",
       "Consent and forms completed before arrival",
-      "Map-pin face mapping and photos on iPad",
+      "Face mapping and photos on your iPad",
     ],
   },
 ];
 
 function WhoPage() {
   return (
-    <div className="modo-marketing min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
+    <MarketingPage>
       <SiteHeader />
-      <main>
-        <section className="border-b border-[color:var(--hairline)]">
-          <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14 lg:px-8 lg:py-20">
-            <div>
-              <div className="eyebrow">§ Who it's for</div>
-              <h1 className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                One platform for every aesthetics practitioner.
-              </h1>
-              <p className="mt-5 max-w-lg text-base text-[color:var(--ink-soft)] sm:text-lg">
-                MODO isn't medics-only. It isn't a salon app. It's built for the whole
-                aesthetics industry — HCPs and non-HCPs — under one safer clinical standard.
-              </p>
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <Link to="/auth"><Button size="lg" className="w-full rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90 sm:w-auto">Create your account</Button></Link>
-                <Link to="/prescriber-hub"><Button size="lg" variant="outline" className="w-full rounded-full border-[color:var(--hairline)] bg-white px-8 sm:w-auto">Prescriber Hub</Button></Link>
-              </div>
-            </div>
-            <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
-              <img src={foundersSuits.url} alt="MODO founders" className="aspect-[3/4] w-full object-cover object-top" loading="lazy" />
-            </div>
+      <main className="flex-1">
+        <PageHero
+          eyebrow="Who it's for"
+          title="One platform for every"
+          accent="aesthetics practitioner."
+          blurb="MODO isn't medics-only, and it isn't a salon app. It's built for the whole aesthetics industry — HCPs and non-HCPs — under one safer clinical standard."
+        >
+          <div className="mt-11 flex flex-col justify-center gap-3 sm:flex-row">
+            <SolidLink to="/auth">Create your account</SolidLink>
+            <OutlineLink to="/prescriber-hub">Prescriber Hub</OutlineLink>
           </div>
-        </section>
+        </PageHero>
 
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 py-14 lg:px-8">
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {personas.map((p) => (
-              <Card key={p.title} className="h-full">
-                <CardHeader>
-                  <div className="mb-2 inline-flex w-fit items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                    <p.icon className="h-3.5 w-3.5" /> {p.tag}
+        <section className="border-b border-[color:var(--hairline)]">
+          <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+            <SectionHead
+              eyebrow="The industry, covered"
+              title="Whoever you are in aesthetics, MODO fits."
+            />
+            <HairlineGrid>
+              {personas.map((p) => (
+                <div
+                  key={p.title}
+                  className="lift group bg-[color:var(--paper)] p-8 hover:bg-[color:var(--secondary)] sm:p-10"
+                >
+                  <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[color:var(--accent)]">
+                    <p.icon className="h-4 w-4" /> {p.tag}
                   </div>
-                  <CardTitle>{p.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-sm">
+                  <h3 className="mt-4 font-display text-xl text-[color:var(--ink)]">{p.title}</h3>
+                  <div className="mt-3 h-px w-6 bg-[color:var(--taupe)] transition-all duration-500 group-hover:w-14" />
+                  <ul className="mt-4 space-y-3">
                     {p.points.map((pt) => (
-                      <li key={pt} className="flex gap-2">
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <li
+                        key={pt}
+                        className="flex items-start gap-3 text-sm leading-relaxed text-[color:var(--ink-soft)]"
+                      >
+                        <span className="mt-2 h-px w-4 shrink-0 bg-[color:var(--taupe)]" />
                         <span>{pt}</span>
                       </li>
                     ))}
                   </ul>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+              ))}
+            </HairlineGrid>
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 pb-4 lg:px-8">
-          <div className="overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
-            <img src={builtForPhoto.url} alt="Built exclusively for aesthetics" className="aspect-[21/9] w-full object-cover" loading="lazy" />
+        <section
+          className="border-b border-[color:var(--hairline)]"
+          style={{ background: "var(--grad-band)" }}
+        >
+          <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 sm:py-24 lg:px-8">
+            <Reveal>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[color:var(--accent)]">
+                One standard
+              </div>
+              <p className="mt-6 font-display text-3xl leading-tight sm:text-4xl">
+                Safer care, whoever holds the needle.
+              </p>
+              <p className="mx-auto mt-6 max-w-lg text-sm leading-relaxed text-[color:var(--ink-soft)]">
+                Medical screening, consent, photographs, aftercare and a traceable product log come
+                as standard on every MODO account — so the same clinical standard runs through the
+                whole industry, not just part of it.
+              </p>
+            </Reveal>
           </div>
         </section>
 
-        <section className="border-t border-[color:var(--hairline)] bg-white">
-          <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16 text-center lg:px-8">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Ready to join MODO?</h2>
-            <p className="mt-3 text-[color:var(--ink-soft)]">We're opening up to founding clinics over the next few weeks. Create your account and we'll be in touch as soon as your account is ready.</p>
-            <Link to="/auth"><Button size="lg" className="mt-6 rounded-full bg-[color:var(--ink)] px-8 text-white hover:bg-[color:var(--ink)]/90">Create your account</Button></Link>
-
-          </div>
-        </section>
-
+        <CtaBand />
       </main>
       <SiteFooter />
-    </div>
+    </MarketingPage>
   );
 }
