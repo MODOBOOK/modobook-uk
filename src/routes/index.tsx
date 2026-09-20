@@ -1,9 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import brandBoards from "@/assets/modo-brand-boards.png.asset.json";
-import consultationHero from "@/assets/modo-consultation-hero.jpeg.asset.json";
-import tabletPlatform from "@/assets/modo-founders-scrubs.png.asset.json";
 import wordmark from "@/assets/modo-wordmark.png.asset.json";
 
 import {
