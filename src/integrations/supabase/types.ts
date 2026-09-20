@@ -3034,6 +3034,50 @@ export type Database = {
           },
         ]
       }
+      compliance_notes: {
+        Row: {
+          body: string | null
+          created_at: string
+          created_by: string | null
+          created_by_name: string | null
+          id: string
+          noted_on: string
+          profile_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          id?: string
+          noted_on?: string
+          profile_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          id?: string
+          noted_on?: string
+          profile_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_notes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       concern_areas: {
         Row: {
           created_at: string

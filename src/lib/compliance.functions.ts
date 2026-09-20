@@ -128,6 +128,7 @@ export const getCompliance = createServerFn({ method: "GET" })
         records: [],
         audits: [],
         actions: [],
+        notes: [] as any[],
         today: todayIso(),
       };
     }
@@ -150,7 +151,7 @@ export const getCompliance = createServerFn({ method: "GET" })
       }
     }
 
-    const [checks, audits, records, auditRuns, actions] = await Promise.all([
+    const [checks, audits, records, auditRuns, actions, notes] = await Promise.all([
 
       db.from("compliance_check_templates").select("*").eq("profile_id", a.profileId).order("sort_order").order("name"),
       db.from("compliance_audit_templates").select("*").eq("profile_id", a.profileId).order("name"),
@@ -172,6 +173,13 @@ export const getCompliance = createServerFn({ method: "GET" })
         .eq("profile_id", a.profileId)
         .order("due_on", { ascending: true })
         .limit(300),
+      db
+        .from("compliance_notes")
+        .select("*")
+        .eq("profile_id", a.profileId)
+        .order("noted_on", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(300),
     ]);
 
     return {
@@ -183,6 +191,7 @@ export const getCompliance = createServerFn({ method: "GET" })
       records: records.data ?? [],
       audits: auditRuns.data ?? [],
       actions: actions.data ?? [],
+      notes: notes.data ?? [],
       today: todayIso(),
     };
   });
@@ -582,6 +591,53 @@ export const deleteAction = createServerFn({ method: "POST" })
     const a = await access(context as Ctx);
     const { error } = await db
       .from("compliance_actions")
+      .delete()
+      .eq("id", data.id)
+      .eq("profile_id", a.profileId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+// ---- Notes board ----------------------------------------------------------
+// Free-typed dated notes the clinic keeps alongside its checks and audits
+// (e.g. "new fridge fitted", "new product added").
+
+export const saveComplianceNote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id?: string; title: string; body?: string | null; noted_on?: string | null }) => i)
+  .handler(async ({ data, context }) => {
+    const db = context.supabase as any;
+    const a = await access(context as Ctx);
+    const title = String(data.title ?? "").trim();
+    if (!title) throw new Error("Give the note a short title.");
+
+    const row: Record<string, any> = {
+      profile_id: a.profileId,
+      title,
+      body: data.body?.toString().trim() || null,
+      noted_on: data.noted_on || todayIso(),
+    };
+    if (!data.id) {
+      row.created_by = context.userId;
+      row.created_by_name = await actorName(context as Ctx, a.profileId);
+    }
+
+    const q = data.id
+      ? db.from("compliance_notes").update(row).eq("id", data.id).eq("profile_id", a.profileId)
+      : db.from("compliance_notes").insert(row);
+    const { data: saved, error } = await q.select("*").single();
+    if (error) throw error;
+    return saved;
+  });
+
+export const deleteComplianceNote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string }) => i)
+  .handler(async ({ data, context }) => {
+    const db = context.supabase as any;
+    const a = await access(context as Ctx);
+    const { error } = await db
+      .from("compliance_notes")
       .delete()
       .eq("id", data.id)
       .eq("profile_id", a.profileId);
