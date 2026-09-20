@@ -12,13 +12,18 @@
 const LIVE_STATUSES = ["active", "trialing", "past_due", "unpaid", "incomplete"];
 
 export async function reconcileSubscriptionFromStripe(
-  supabase: any,
+  _supabase: any,
   profileId: string,
   email?: string | null,
 ): Promise<boolean> {
   try {
     const { getStripe } = await import("./stripe.server");
     const stripe = getStripe();
+    // Writes must bypass RLS: practitioners may only SELECT their own
+    // subscription row, so healing with the caller's client silently failed
+    // and paid clinics stayed locked out.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabase = supabaseAdmin as any;
 
     const { data: row } = await supabase
       .from("practitioner_subscriptions")
@@ -60,9 +65,15 @@ export async function reconcileSubscriptionFromStripe(
         stripe_subscription_id: live.id,
         status: live.status,
         cancel_at_period_end: live.cancel_at_period_end,
-        current_period_end: (live as any).current_period_end
-          ? new Date((live as any).current_period_end * 1000).toISOString()
-          : null,
+        // Newer Stripe API versions expose the period end on the subscription
+        // item rather than the subscription itself.
+        current_period_end: (() => {
+          const ts =
+            (live as any).current_period_end ??
+            (live.items.data[0] as any)?.current_period_end ??
+            null;
+          return ts ? new Date(ts * 1000).toISOString() : null;
+        })(),
         trial_end: live.trial_end ? new Date(live.trial_end * 1000).toISOString() : null,
         stripe_addon_items: live.items.data.map((item) => ({
           id: item.id,
