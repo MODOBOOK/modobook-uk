@@ -291,14 +291,6 @@ function Hero() {
       className="relative overflow-hidden border-b border-[color:var(--hairline)]"
       style={{ background: "var(--grad-hero)" }}
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[-18rem] h-[36rem] w-[36rem] -translate-x-1/2 rounded-full opacity-70 blur-3xl"
-        style={{
-          background:
-            "radial-gradient(circle, color-mix(in oklab, var(--taupe) 55%, transparent), transparent 70%)",
-        }}
-      />
       <div className="relative mx-auto max-w-4xl px-4 py-24 text-center sm:px-6 sm:py-32 lg:py-40">
         <Reveal>
           <div className="text-[11px] font-semibold uppercase tracking-[0.42em] text-[color:var(--accent)]">
