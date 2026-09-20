@@ -1,9 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import brandBoards from "@/assets/modo-brand-boards.png.asset.json";
-import consultationHero from "@/assets/modo-consultation-hero.jpeg.asset.json";
-import tabletPlatform from "@/assets/modo-founders-scrubs.png.asset.json";
 import wordmark from "@/assets/modo-wordmark.png.asset.json";
 
 import {
@@ -107,7 +104,10 @@ function LandingPage() {
   }, [navigate]);
 
   return (
-    <div className="modo-marketing min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
+    <div
+      className="modo-marketing min-h-screen text-[color:var(--ink)]"
+      style={{ background: "var(--grad-page)" }}
+    >
       <SiteHeader />
 
       <main>
@@ -115,7 +115,10 @@ function LandingPage() {
         <Hero />
 
         {/* STATS RIBBON — quiet beige band */}
-        <section className="border-b border-[color:var(--hairline)] bg-[color:var(--secondary)] py-14 sm:py-16">
+        <section
+          className="border-b border-[color:var(--hairline)] py-14 sm:py-16"
+          style={{ background: "var(--grad-band)" }}
+        >
           <div className="mx-auto grid max-w-6xl grid-cols-2 gap-10 px-4 sm:px-6 md:grid-cols-4 lg:px-8">
             {[
               { k: "0%", v: "Booking fees" },
@@ -136,15 +139,6 @@ function LandingPage() {
               </Reveal>
             ))}
           </div>
-        </section>
-
-        {/* IMAGE BAND */}
-        <section className="relative overflow-hidden">
-          <img
-            src={consultationHero.url}
-            alt="A practitioner and patient using MODO on a tablet during consultation"
-            className="h-[300px] w-full object-cover object-top sm:h-[420px]"
-          />
         </section>
 
         {/* FEATURES — six essentials */}
@@ -293,15 +287,10 @@ function Hero() {
   const active = HERO_AUDIENCES.find((a) => a.id === audience) ?? HERO_AUDIENCES[0];
 
   return (
-    <header className="relative overflow-hidden border-b border-[color:var(--hairline)]">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[-18rem] h-[36rem] w-[36rem] -translate-x-1/2 rounded-full opacity-70 blur-3xl"
-        style={{
-          background:
-            "radial-gradient(circle, color-mix(in oklab, var(--taupe) 55%, transparent), transparent 70%)",
-        }}
-      />
+    <header
+      className="relative overflow-hidden border-b border-[color:var(--hairline)]"
+      style={{ background: "var(--grad-hero)" }}
+    >
       <div className="relative mx-auto max-w-4xl px-4 py-24 text-center sm:px-6 sm:py-32 lg:py-40">
         <Reveal>
           <div className="text-[11px] font-semibold uppercase tracking-[0.42em] text-[color:var(--accent)]">
@@ -469,7 +458,10 @@ function GridFeature({
 
 function PricingBand() {
   return (
-    <section className="border-b border-[color:var(--hairline)] bg-[color:var(--secondary)]">
+    <section
+      className="border-b border-[color:var(--hairline)]"
+      style={{ background: "var(--grad-band)" }}
+    >
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
         <Reveal>
           <div className="mx-auto mb-14 max-w-xl text-center">
