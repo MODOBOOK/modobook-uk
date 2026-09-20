@@ -1169,8 +1169,8 @@ function BookPage() {
     </section>
   );
 
-  // "Book a treatment now" quick-scroll CTA (pilot flag): a subtle button in
-  // the hero plus a floating pill once the booking area is off-screen. The
+  // "Book a treatment" quick-scroll CTA (pilot flag): a floating pill once the
+  // booking area is off-screen. The
   // scroll target is whichever booking step is showing: the treatment menu,
   // or the location / practitioner / chooser pickers that precede it.
   const bookCtaOn = bookCtaEnabled(slug);
