@@ -1473,17 +1473,6 @@ function BookPage() {
                     </Link>
                   )}
 
-                  {bookCtaOn && (
-                    <button
-                      type="button"
-                      onClick={scrollToMenu}
-                      className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors hover:bg-white/10"
-                      style={{ borderColor: heroDivider, color: heroTextColor }}
-                    >
-                      <CalendarDays className="h-4 w-4" />
-                      Book a treatment now
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
