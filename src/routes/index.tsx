@@ -145,7 +145,7 @@ function LandingPage() {
               </h1>
 
               <p className="mt-5 max-w-xl text-base leading-relaxed text-[color:var(--ink-soft)] sm:text-lg">
-                The UK booking, consultation and clinical platform built <em className="not-italic text-[color:var(--ink)]">only</em> for
+                The UK booking, consultation and clinical platform designed <em className="not-italic text-[color:var(--ink)]">only</em> for
                 aesthetics — records, consent, face mapping, payments and a prescriber hub,
                 designed by clinicians who still run clinics themselves.
               </p>
@@ -455,7 +455,7 @@ function LandingPage() {
                   Aesthetics-only
                 </div>
                 <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
-                  UK-built
+                  UK-designed
                 </div>
                 <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
                   Founding-clinic pricing
@@ -727,7 +727,7 @@ export function SiteFooter() {
           </Link>
 
           <p className="mt-4 max-w-xs text-sm text-[color:var(--ink-soft)]">
-            The aesthetics-only booking & clinical platform. UK-built by clinicians who still run clinics themselves.
+            The aesthetics-only booking & clinical platform. UK-designed by clinicians who still run clinics themselves.
           </p>
         </div>
         <FooterCol title="Platform" links={[
