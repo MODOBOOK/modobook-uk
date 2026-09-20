@@ -151,7 +151,6 @@ function AuthPage() {
               <div className="space-y-2">
                 <Label htmlFor="signup-email">Work email</Label>
                 <Input id="signup-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@clinic.co.uk" />
-                <p className="text-xs text-muted-foreground">Your first month is free — no card details needed.</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-password">Password</Label>
@@ -233,24 +232,6 @@ function AuthPage() {
             </form>
             )}
 
-            <div className="border border-dashed p-3 text-center text-xs" style={{ borderColor: "var(--hairline)", color: "var(--muted-foreground)" }}>
-              MODO is now open to every aesthetics practitioner. Your first month is free
-              and we don&rsquo;t ask for card details to start. Questions?{" "}
-              <a
-                href="mailto:info@modobook.co.uk"
-                className="font-medium text-foreground underline underline-offset-2"
-              >
-                Email us →
-              </a>
-            </div>
-
-
-
-
-            <p className="text-center text-xs text-muted-foreground">
-              By continuing you agree to our{" "}
-              <Link to="/terms" className="underline">Terms &amp; Conditions</Link>.
-            </p>
           </div>
         </div>
 
