@@ -18,6 +18,7 @@ import {
   Layers,
   CheckCircle2,
   Network,
+  ShieldCheck,
   Syringe,
   ArrowRight,
 } from "lucide-react";
