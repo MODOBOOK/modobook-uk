@@ -145,35 +145,7 @@ function LandingPage() {
           </div>
         </section>
 
-
-        {/* STATS RIBBON — quiet beige band */}
-        <section
-          className="border-b border-[color:var(--hairline)] py-14 sm:py-16"
-          style={{ background: "var(--grad-band)" }}
-        >
-          <div className="mx-auto grid max-w-6xl grid-cols-2 gap-10 px-4 sm:px-6 md:grid-cols-4 lg:px-8">
-            {[
-              { k: "0%", v: "Booking fees" },
-              { k: "5–8h", v: "Saved per week" },
-              { k: "1 link", v: "Whole clinic" },
-              { k: "UK/EU", v: "Data residency" },
-            ].map((s, i) => (
-              <Reveal key={s.v} delay={i * 90}>
-                <div className="group space-y-2">
-                  <div className="font-display text-4xl text-[color:var(--ink)] transition-transform duration-500 group-hover:-translate-y-0.5 sm:text-5xl">
-                    {s.k}
-                  </div>
-                  <div className="h-px w-8 bg-[color:var(--taupe)] transition-all duration-500 group-hover:w-16" />
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--ink-soft)]">
-                    {s.v}
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </section>
-
-        {/* FEATURES — six essentials */}
+        {/* FEATURES */}
         <section className="border-b border-[color:var(--hairline)]">
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
             <Reveal>
@@ -317,6 +289,15 @@ function Hero() {
             The UK booking, consultation and clinical platform designed only for aesthetics —
             records, consent, face mapping, payments and a prescriber hub, designed by
             clinicians who still run clinics themselves.
+          </p>
+        </Reveal>
+
+        <Reveal delay={220}>
+          <p className="mx-auto mt-5 max-w-xl font-display text-lg leading-relaxed text-[color:var(--ink)] sm:text-xl">
+            If you do aesthetics, it's for you —{" "}
+            <span className="italic text-[color:var(--ink-soft)]">
+              with safety and compliance built into every step.
+            </span>
           </p>
         </Reveal>
 
@@ -560,7 +541,6 @@ function PricingBand() {
 const NAV_PAGES = [
   { to: "/features", label: "Features" },
   { to: "/prescriber-hub", label: "Prescriber Hub" },
-  { to: "/who-its-for", label: "Who it's for" },
   { to: "/rewards", label: "Rewards" },
   { to: "/pricing", label: "Pricing" },
   { to: "/faq", label: "FAQ" },
@@ -632,7 +612,6 @@ export function SiteFooter() {
           { label: "Pricing", to: "/pricing" },
           { label: "Prescriber Hub", to: "/prescriber-hub" },
           { label: "Rewards", to: "/rewards" },
-          { label: "Who it's for", to: "/who-its-for" },
         ]} />
 
         <FooterCol title="Join us" links={[

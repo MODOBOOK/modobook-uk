@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WhoItsForRouteImport } from './routes/who-its-for'
 import { Route as WaitlistRouteImport } from './routes/waitlist'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as TlaCompetitionRouteImport } from './routes/tla-competition'
@@ -201,11 +200,6 @@ import { Route as AuthenticatedDashboardPatientsIdInvoicesRouteImport } from './
 import { Route as AuthenticatedDashboardPatientsIdDetailsRouteImport } from './routes/_authenticated/dashboard.patients.$id.details'
 import { Route as AuthenticatedDashboardMarketingCampaignsIdRouteImport } from './routes/_authenticated/dashboard.marketing.campaigns.$id'
 
-const WhoItsForRoute = WhoItsForRouteImport.update({
-  id: '/who-its-for',
-  path: '/who-its-for',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const WaitlistRoute = WaitlistRouteImport.update({
   id: '/waitlist',
   path: '/waitlist',
@@ -1297,7 +1291,6 @@ export interface FileRoutesByFullPath {
   '/tla-competition': typeof TlaCompetitionRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/waitlist': typeof WaitlistRoute
-  '/who-its-for': typeof WhoItsForRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
@@ -1489,7 +1482,6 @@ export interface FileRoutesByTo {
   '/tla-competition': typeof TlaCompetitionRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/waitlist': typeof WaitlistRoute
-  '/who-its-for': typeof WhoItsForRoute
   '/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/book/$slug': typeof BookSlugRoute
@@ -1671,7 +1663,6 @@ export interface FileRoutesById {
   '/tla-competition': typeof TlaCompetitionRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/waitlist': typeof WaitlistRoute
-  '/who-its-for': typeof WhoItsForRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/admin-prescribers': typeof AuthenticatedAdminPrescribersRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
@@ -1865,7 +1856,6 @@ export interface FileRouteTypes {
     | '/tla-competition'
     | '/unsubscribe'
     | '/waitlist'
-    | '/who-its-for'
     | '/admin'
     | '/admin-prescribers'
     | '/dashboard'
@@ -2057,7 +2047,6 @@ export interface FileRouteTypes {
     | '/tla-competition'
     | '/unsubscribe'
     | '/waitlist'
-    | '/who-its-for'
     | '/admin-prescribers'
     | '/onboarding'
     | '/book/$slug'
@@ -2238,7 +2227,6 @@ export interface FileRouteTypes {
     | '/tla-competition'
     | '/unsubscribe'
     | '/waitlist'
-    | '/who-its-for'
     | '/_authenticated/admin'
     | '/_authenticated/admin-prescribers'
     | '/_authenticated/dashboard'
@@ -2432,7 +2420,6 @@ export interface RootRouteChildren {
   TlaCompetitionRoute: typeof TlaCompetitionRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   WaitlistRoute: typeof WaitlistRoute
-  WhoItsForRoute: typeof WhoItsForRoute
   BookSlugRoute: typeof BookSlugRoute
   CTokenRoute: typeof CTokenRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
@@ -2469,13 +2456,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/who-its-for': {
-      id: '/who-its-for'
-      path: '/who-its-for'
-      fullPath: '/who-its-for'
-      preLoaderRoute: typeof WhoItsForRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/waitlist': {
       id: '/waitlist'
       path: '/waitlist'
@@ -4328,7 +4308,6 @@ const rootRouteChildren: RootRouteChildren = {
   TlaCompetitionRoute: TlaCompetitionRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   WaitlistRoute: WaitlistRoute,
-  WhoItsForRoute: WhoItsForRoute,
   BookSlugRoute: BookSlugRoute,
   CTokenRoute: CTokenRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
