@@ -104,7 +104,10 @@ function LandingPage() {
   }, [navigate]);
 
   return (
-    <div className="modo-marketing min-h-screen bg-[color:var(--paper)] text-[color:var(--ink)]">
+    <div
+      className="modo-marketing min-h-screen text-[color:var(--ink)]"
+      style={{ background: "var(--grad-page)" }}
+    >
       <SiteHeader />
 
       <main>

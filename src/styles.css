@@ -234,6 +234,11 @@
   --font-sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Instrument Serif", Georgia, serif;
 
+  /* Soft gradient washes — ivory into beige, never brown */
+  --grad-page: linear-gradient(180deg, #faf7f0 0%, #f5f1e8 34%, #efe7d8 68%, #e8dfcf 100%);
+  --grad-hero: radial-gradient(120% 90% at 50% 0%, #faf7f0 0%, #f5f1e8 45%, #ece3d2 100%);
+  --grad-band: linear-gradient(180deg, #ece3d2 0%, #e8dfcf 100%);
+
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
