@@ -201,37 +201,38 @@
  * Typography: Inter throughout.
  * ------------------------------------------------------------- */
 .modo-marketing {
-  /* Warm sand + bronze/copper — matches the MODO monogram */
-  --background: oklch(0.972 0.012 75);
-  --foreground: oklch(0.24 0.02 55);
-  --card: oklch(0.995 0.006 80);
-  --card-foreground: oklch(0.24 0.02 55);
-  --popover: oklch(0.995 0.006 80);
-  --popover-foreground: oklch(0.24 0.02 55);
-  --primary: oklch(0.28 0.022 55);
-  --primary-foreground: oklch(0.985 0.006 80);
-  --secondary: oklch(0.93 0.014 70);
-  --secondary-foreground: oklch(0.28 0.022 55);
-  --muted: oklch(0.94 0.012 72);
-  --muted-foreground: oklch(0.48 0.02 58);
-  --accent: oklch(0.58 0.10 55);
-  --accent-foreground: oklch(0.985 0.006 80);
-  --border: oklch(0.88 0.014 70);
-  --input: oklch(0.9 0.014 70);
-  --ring: oklch(0.58 0.10 55);
+  /* Gallery Noir — deep black, warm ivory, soft beige, taupe */
+  --background: #f5f1e8;
+  --foreground: #0e0d0b;
+  --card: #faf7f0;
+  --card-foreground: #0e0d0b;
+  --popover: #faf7f0;
+  --popover-foreground: #0e0d0b;
+  --primary: #0e0d0b;
+  --primary-foreground: #f5f1e8;
+  --secondary: #e8dfcf;
+  --secondary-foreground: #0e0d0b;
+  --muted: #ede6d8;
+  --muted-foreground: #55504a;
+  --accent: #6b6256;
+  --accent-foreground: #f5f1e8;
+  --border: #dcd2be;
+  --input: #dcd2be;
+  --ring: #c9bba3;
 
-  --paper: oklch(0.972 0.012 75);
-  --ink: oklch(0.22 0.02 55);
-  --ink-soft: oklch(0.48 0.02 58);
-  --hairline: oklch(0.88 0.014 70);
-  /* Legacy token names kept for compatibility — remapped to copper */
-  --clinical-blue: oklch(0.58 0.10 55);
-  --clinical-blue-soft: oklch(0.94 0.028 70);
-  --gold: var(--clinical-blue);
+  --paper: #f5f1e8;
+  --ink: #0e0d0b;
+  --ink-soft: #55504a;
+  --hairline: #dcd2be;
+  --taupe: #c9bba3;
+  /* Legacy token names kept for compatibility — remapped to deep taupe */
+  --clinical-blue: #6b6256;
+  --clinical-blue-soft: #e8dfcf;
+  --gold: var(--taupe);
 
 
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Helvetica Neue", Helvetica, Arial, ui-sans-serif, sans-serif;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Libre Baskerville", Georgia, "Times New Roman", serif;
 
   background-color: var(--background);
   color: var(--foreground);
