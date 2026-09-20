@@ -122,19 +122,19 @@ function AuthPage() {
           </Link>
         </div>
 
-        <div className="border bg-card" style={{ borderColor: "var(--hairline)" }}>
+        <div className="rounded-2xl border bg-card shadow-[0_18px_40px_-24px_rgba(14,13,11,0.18)]" style={{ borderColor: "var(--hairline)" }}>
           <div className="space-y-5 p-6 sm:p-8">
-            <div className="grid grid-cols-2 gap-px border" style={{ borderColor: "var(--hairline)", background: "var(--hairline)" }}>
+            <div className="grid grid-cols-2 gap-1 rounded-full p-1" style={{ background: "var(--secondary)" }}>
               {(["signup", "signin"] as const).map((m) => (
                 <button
                   key={m}
                   type="button"
                   onClick={() => setMode(m)}
-                  className="px-3 py-2.5 text-[11px] font-medium uppercase tracking-[0.18em] transition-colors"
+                  className={`rounded-full px-3 py-2 text-xs font-medium tracking-wide transition-all ${mode === m ? "shadow-sm" : ""}`}
                   style={
                     mode === m
-                      ? { background: "var(--ink)", color: "var(--paper)" }
-                      : { background: "var(--card)", color: "var(--muted-foreground)" }
+                      ? { background: "var(--card)", color: "var(--foreground)" }
+                      : { color: "var(--muted-foreground)" }
                   }
                 >
                   {m === "signin" ? "Sign in" : "Create account"}
