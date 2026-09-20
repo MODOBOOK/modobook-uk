@@ -115,7 +115,10 @@ function LandingPage() {
         <Hero />
 
         {/* STATS RIBBON — quiet beige band */}
-        <section className="border-b border-[color:var(--hairline)] bg-[color:var(--secondary)] py-14 sm:py-16">
+        <section
+          className="border-b border-[color:var(--hairline)] py-14 sm:py-16"
+          style={{ background: "var(--grad-band)" }}
+        >
           <div className="mx-auto grid max-w-6xl grid-cols-2 gap-10 px-4 sm:px-6 md:grid-cols-4 lg:px-8">
             {[
               { k: "0%", v: "Booking fees" },
@@ -284,7 +287,10 @@ function Hero() {
   const active = HERO_AUDIENCES.find((a) => a.id === audience) ?? HERO_AUDIENCES[0];
 
   return (
-    <header className="relative overflow-hidden border-b border-[color:var(--hairline)]">
+    <header
+      className="relative overflow-hidden border-b border-[color:var(--hairline)]"
+      style={{ background: "var(--grad-hero)" }}
+    >
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-1/2 top-[-18rem] h-[36rem] w-[36rem] -translate-x-1/2 rounded-full opacity-70 blur-3xl"
@@ -460,7 +466,10 @@ function GridFeature({
 
 function PricingBand() {
   return (
-    <section className="border-b border-[color:var(--hairline)] bg-[color:var(--secondary)]">
+    <section
+      className="border-b border-[color:var(--hairline)]"
+      style={{ background: "var(--grad-band)" }}
+    >
       <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
         <Reveal>
           <div className="mx-auto mb-14 max-w-xl text-center">
