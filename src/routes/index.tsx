@@ -592,6 +592,17 @@ export function SiteFooter() {
   );
 }
 
+export function IconTile({ icon: Icon, label }: { icon: React.ComponentType<{ className?: string }>; label: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 border border-[color:var(--hairline)] bg-[color:var(--paper)] p-4 text-center sm:gap-3 sm:p-6">
+      <div className="flex h-10 w-10 items-center justify-center bg-[color:var(--secondary)] text-[color:var(--ink)] sm:h-12 sm:w-12">
+        <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+      </div>
+      <span className="text-xs font-medium sm:text-sm">{label}</span>
+    </div>
+  );
+}
+
 function FooterCol({ title, links }: { title: string; links: { label: string; to: string }[] }) {
   return (
     <div className="text-sm">
