@@ -115,28 +115,11 @@ function AuthPage() {
 
   return (
     <div className="modo-marketing flex min-h-screen items-center justify-center px-4 py-12" style={{ background: "var(--grad-page)" }}>
-      <div className="w-full max-w-md">
-        <div className="mb-10 flex flex-col items-center gap-5">
+      <div className="w-full max-w-sm">
+        <div className="mb-8 flex flex-col items-center gap-6">
           <Link to="/" aria-label="MODO home">
             <BrandMark size="lg" />
           </Link>
-          <div className="text-center">
-            <p className="text-[11px] font-medium uppercase tracking-[0.28em]" style={{ color: "var(--muted-foreground)" }}>
-              {mode === "signin" ? "Welcome back" : "Now open"}
-            </p>
-            <h1 className="mt-3 font-display text-3xl leading-tight" style={{ color: "var(--ink)" }}>
-              {mode === "signin" ? (
-                <>Sign in to <em className="italic">your clinic.</em></>
-              ) : (
-                <>Create your <em className="italic">account.</em></>
-              )}
-            </h1>
-            <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
-              {mode === "signin"
-                ? "Sign in to your practitioner account."
-                : "Open to all aesthetics practitioners — first month free, no card details required."}
-            </p>
-          </div>
         </div>
 
         <div className="border bg-card" style={{ borderColor: "var(--hairline)" }}>
@@ -168,7 +151,6 @@ function AuthPage() {
               <div className="space-y-2">
                 <Label htmlFor="signup-email">Work email</Label>
                 <Input id="signup-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@clinic.co.uk" />
-                <p className="text-xs text-muted-foreground">Your first month is free — no card details needed.</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="signup-password">Password</Label>
@@ -250,24 +232,6 @@ function AuthPage() {
             </form>
             )}
 
-            <div className="border border-dashed p-3 text-center text-xs" style={{ borderColor: "var(--hairline)", color: "var(--muted-foreground)" }}>
-              MODO is now open to every aesthetics practitioner. Your first month is free
-              and we don&rsquo;t ask for card details to start. Questions?{" "}
-              <a
-                href="mailto:info@modobook.co.uk"
-                className="font-medium text-foreground underline underline-offset-2"
-              >
-                Email us →
-              </a>
-            </div>
-
-
-
-
-            <p className="text-center text-xs text-muted-foreground">
-              By continuing you agree to our{" "}
-              <Link to="/terms" className="underline">Terms &amp; Conditions</Link>.
-            </p>
           </div>
         </div>
 
