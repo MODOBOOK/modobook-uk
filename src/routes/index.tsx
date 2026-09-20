@@ -405,7 +405,17 @@ function Hero() {
   );
 }
 
-const PRICE_ROWS = [
+type PriceRow = {
+  name: string;
+  tag: string;
+  now: string;
+  was: string;
+  unit: string;
+  points: string[];
+  highlight?: boolean;
+};
+
+const PRICE_ROWS: PriceRow[] = [
   {
     name: "MODO Clinic",
     tag: "Core subscription",
@@ -436,7 +446,26 @@ const PRICE_ROWS = [
     unit: "per location / month",
     points: ["Separate hours & availability", "Location booking links", "1 location included"],
   },
-] as const;
+];
+
+function GridFeature({
+  icon: Icon,
+  title,
+  desc,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <div className="lift group relative bg-[color:var(--paper)] p-8 hover:bg-[color:var(--secondary)] sm:p-10">
+      <Icon className="mb-5 h-5 w-5 text-[color:var(--accent)] transition-transform duration-500 group-hover:-translate-y-0.5" />
+      <h3 className="font-display text-xl text-[color:var(--ink)]">{title}</h3>
+      <div className="mt-3 h-px w-6 bg-[color:var(--taupe)] transition-all duration-500 group-hover:w-14" />
+      <p className="mt-3 text-sm leading-relaxed text-[color:var(--ink-soft)]">{desc}</p>
+    </div>
+  );
+}
 
 function PricingBand() {
   return (
