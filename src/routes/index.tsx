@@ -1,24 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import brandBoards from "@/assets/modo-brand-boards.png.asset.json";
 import consultationHero from "@/assets/modo-consultation-hero.jpeg.asset.json";
 import tabletPlatform from "@/assets/modo-founders-scrubs.png.asset.json";
 import wordmark from "@/assets/modo-wordmark.png.asset.json";
-
-
-
 
 import {
   Calendar,
@@ -37,11 +23,8 @@ import {
   Lock,
   Network,
   Syringe,
-  HandshakeIcon,
   ArrowRight,
 } from "lucide-react";
-
-// Icon-led visuals — no AI imagery used in hero blocks for now.
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -92,7 +75,6 @@ export const Route = createFileRoute("/")({
 function LandingPage() {
   const navigate = useNavigate();
 
-
   // If launched from Home Screen (PWA standalone) and a session is present,
   // send practitioners straight to their dashboard so a force-close feels like
   // "still logged in" rather than dropping onto the marketing page.
@@ -129,253 +111,138 @@ function LandingPage() {
       <SiteHeader />
 
       <main>
-        {/* HERO — editorial clinical bento */}
-        <header className="relative overflow-hidden">
-          <div className="mx-auto max-w-7xl px-4 pt-8 pb-10 sm:px-6 lg:grid lg:max-w-7xl lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:px-8 lg:pt-20 lg:pb-20">
-            <div>
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--accent)]">
-                <span className="pulse-dot" />
+        {/* HERO — editorial serif statement */}
+        <header className="relative overflow-hidden border-b border-[color:var(--hairline)]">
+          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8 lg:py-36">
+            <div className="max-w-3xl">
+              <div className="mb-6 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-[color:var(--accent)]">
+                <span className="h-px w-8 bg-[color:var(--taupe)]" />
                 Built exclusively for aesthetics
               </div>
 
-              <h1 className="text-[2.15rem] font-extrabold leading-[0.98] tracking-tight text-[color:var(--ink)] sm:text-6xl lg:text-[4.25rem]">
-                Not another
-                <br />
-                generic <span className="text-[color:var(--accent)]">booking app.</span>
+              <h1 className="font-display text-4xl leading-[1.12] text-[color:var(--ink)] sm:text-6xl lg:text-7xl">
+                Not another generic <span className="italic">booking app.</span>
               </h1>
 
-              <p className="mt-5 max-w-xl text-base leading-relaxed text-[color:var(--ink-soft)] sm:text-lg">
-                The UK booking, consultation and clinical platform designed <em className="not-italic text-[color:var(--ink)]">only</em> for
+              <p className="mt-7 max-w-xl text-lg font-light leading-relaxed text-[color:var(--ink-soft)] sm:text-xl">
+                The UK booking, consultation and clinical platform designed only for
                 aesthetics — records, consent, face mapping, payments and a prescriber hub,
                 designed by clinicians who still run clinics themselves.
               </p>
 
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                <Link to="/auth" className="w-full sm:w-auto">
-                  <Button
-                    size="lg"
-                    className="h-14 w-full rounded-2xl bg-[color:var(--ink)] px-8 text-base font-semibold text-[color:var(--paper)] shadow-xl shadow-[color:var(--ink)]/10 transition-transform active:scale-[0.98] hover:bg-[color:var(--ink)]/90 sm:h-12 sm:w-auto sm:text-sm"
-                  >
-                    Create your account
-                  </Button>
+              <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <Link
+                  to="/auth"
+                  className="inline-flex h-14 items-center justify-center bg-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--paper)] transition-colors hover:bg-[color:var(--accent)] sm:h-13"
+                >
+                  Create your account
                 </Link>
-                <Link to="/demo" className="w-full sm:w-auto">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="h-14 w-full rounded-2xl border-[color:var(--hairline)] bg-transparent px-8 text-base font-semibold text-[color:var(--ink)] transition-transform active:scale-[0.98] hover:bg-white/60 sm:h-12 sm:w-auto sm:text-sm"
-                  >
-                    Try the demo <ArrowRight className="ml-1 h-4 w-4" />
-                  </Button>
+                <Link
+                  to="/demo"
+                  className="inline-flex h-14 items-center justify-center border border-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--ink)] transition-colors hover:bg-[color:var(--ink)] hover:text-[color:var(--paper)] sm:h-13"
+                >
+                  Try the demo
                 </Link>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:gap-4">
                 <a
                   href="https://modobook.uk/m/aestheticsbynurseryan"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="tile flex items-center justify-between gap-2 !py-3 text-xs font-semibold text-[color:var(--ink)]"
+                  className="group inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--ink)]"
                 >
-                  Live clinic 1 <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[color:var(--accent)]" />
+                  Live clinic 1
+                  <ArrowRight className="h-3.5 w-3.5 text-[color:var(--accent)] transition-transform group-hover:translate-x-0.5" />
                 </a>
                 <a
                   href="https://modobook.uk/m/aesthetiqbyjen"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="tile flex items-center justify-between gap-2 !py-3 text-xs font-semibold text-[color:var(--ink)]"
+                  className="group inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--ink)]"
                 >
-                  Live clinic 2 <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[color:var(--accent)]" />
+                  Live clinic 2
+                  <ArrowRight className="h-3.5 w-3.5 text-[color:var(--accent)] transition-transform group-hover:translate-x-0.5" />
                 </a>
               </div>
 
-              <p className="mt-5 text-xs leading-relaxed text-[color:var(--ink-soft)]">
-                <span className="font-semibold text-[color:var(--accent)]">First month free · No card details required.</span>{" "}
+              <p className="mt-8 text-xs leading-relaxed text-[color:var(--ink-soft)]">
+                <span className="font-semibold text-[color:var(--ink)]">First month free · No card details required.</span>{" "}
                 Open to every aesthetics practitioner — sign up in minutes, cancel anytime.
               </p>
-            </div>
-
-            {/* Branded product showcase */}
-            <div className="relative mt-8 lg:mt-0">
-              <div className="relative overflow-hidden rounded-[1.75rem] border border-[color:var(--hairline)] bg-[color:var(--muted)] shadow-[0_30px_60px_-30px_rgba(60,40,20,0.35)] sm:rounded-[2rem]">
-                <img
-                  src={consultationHero.url}
-                  alt="A practitioner and patient using MODO on a tablet during consultation"
-                  className="aspect-[4/5] w-full object-cover object-top"
-                />
-
-                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-3 rounded-2xl bg-white/95 px-4 py-3 backdrop-blur">
-                  <div className="min-w-0">
-                    <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">The platform</div>
-                    <div className="truncate text-sm font-semibold text-[color:var(--ink)]">Built only for aesthetics</div>
-                  </div>
-                  <img src={wordmark.url} alt="MODO" className="h-6 w-auto shrink-0 object-contain" />
-                </div>
-              </div>
             </div>
           </div>
         </header>
 
-        {/* BENTO — capability tiles */}
-        <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8 lg:pb-16">
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-            <div className="tile tile-accent col-span-2 row-span-2 flex min-h-[160px] flex-col justify-between lg:min-h-0">
-              <span className="tile-icon">
-                <ClipboardList className="h-5 w-5" />
-              </span>
-              <div className="mt-4">
-                <h3 className="font-display text-xl font-bold leading-tight sm:text-2xl">Clinical safety first</h3>
-                <p className="mt-2 text-sm leading-snug text-[color:var(--paper)]/85">
-                  Compliant medical records, screening and automated consent — built into every
-                  booking rather than bolted on afterwards.
-                </p>
-              </div>
-            </div>
-
-            <div className="tile tile-compact flex items-center gap-3">
-              <span className="tile-icon">
-                <Calendar className="h-4 w-4" />
-              </span>
-              <h4 className="font-display text-sm font-bold leading-tight text-[color:var(--ink)]">
-                Smart bookings
-              </h4>
-            </div>
-
-            <div className="tile tile-compact tile-ink flex items-center gap-3">
-              <span className="tile-icon">
-                <CreditCard className="h-4 w-4" />
-              </span>
-              <h4 className="font-display text-sm font-bold leading-tight">Payments</h4>
-            </div>
-
-            <div className="tile tile-compact flex items-center gap-3">
-              <span className="tile-icon">
-                <Camera className="h-4 w-4" />
-              </span>
-              <h4 className="font-display text-sm font-bold leading-tight text-[color:var(--ink)]">
-                Face mapping
-              </h4>
-            </div>
-
-            <div className="tile tile-compact tile-soft flex items-center gap-3">
-              <span className="tile-icon">
-                <Network className="h-4 w-4" />
-              </span>
-              <h4 className="font-display text-sm font-bold leading-tight text-[color:var(--ink)]">
-                Prescriber hub
-              </h4>
-            </div>
-          </div>
-        </section>
-
-
-        {/* THE GAP — editorial band with brand board photo */}
-        <section className="relative my-12 overflow-hidden bg-[color:var(--ink)] px-4 py-14 sm:px-6 sm:py-24 lg:px-8">
-          <img
-            src={brandBoards.url}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 h-full w-full object-cover opacity-20"
-          />
-          <div className="relative mx-auto max-w-4xl text-center">
-            <h2 className="text-[11px] font-bold uppercase tracking-[0.24em] text-[color:var(--accent)]">
-              Not another booking app
-            </h2>
-            <p className="mt-6 text-3xl font-medium leading-snug text-white md:text-5xl">
-              Bridging the gap between aesthetic artistry and medical protocol.
-              <span className="text-white/60"> Precision at every appointment.</span>
-            </p>
-            <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {[
-                { k: "0%", v: "Booking fees" },
-                { k: "5–8h", v: "Saved / week" },
-                { k: "1 link", v: "Whole clinic" },
-                { k: "UK/EU", v: "Data residency" },
-              ].map((s) => (
-                <div key={s.v} className="rounded-xl border border-white/10 bg-white/[0.04] p-4 text-left backdrop-blur">
-                  <div className="text-2xl font-bold tracking-tight text-white">{s.k}</div>
-                  <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/60">
-                    {s.v}
-                  </div>
+        {/* STATS RIBBON — black band */}
+        <section className="bg-[color:var(--ink)] py-14 text-[color:var(--paper)] sm:py-16">
+          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-10 px-4 sm:px-6 md:grid-cols-4 lg:px-8">
+            {[
+              { k: "0%", v: "Booking fees" },
+              { k: "5–8h", v: "Saved per week" },
+              { k: "1 link", v: "Whole clinic" },
+              { k: "UK/EU", v: "Data residency" },
+            ].map((s) => (
+              <div key={s.v} className="space-y-2">
+                <div className="font-display text-3xl sm:text-4xl">{s.k}</div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--paper)]/60">
+                  {s.v}
                 </div>
-              ))}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* IMAGE BAND */}
+        <section className="relative overflow-hidden">
+          <img
+            src={consultationHero.url}
+            alt="A practitioner and patient using MODO on a tablet during consultation"
+            className="h-[320px] w-full object-cover object-top sm:h-[440px]"
+          />
+          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3 bg-[color:var(--paper)]/95 px-5 py-4 backdrop-blur sm:left-8 sm:right-auto sm:min-w-[320px]">
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--accent)]">The platform</div>
+              <div className="font-display text-base text-[color:var(--ink)]">Built only for aesthetics</div>
             </div>
+            <img src={wordmark.url} alt="MODO" className="h-6 w-auto shrink-0 object-contain" />
           </div>
         </section>
 
-
-        {/* WHO IT'S FOR — two spec-sheet cards */}
-        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
-          <div className="mb-12 text-center">
-            <div className="eyebrow">§ Who it's for</div>
-            <h2 className="mt-4 text-3xl font-bold tracking-tight text-[color:var(--ink)] sm:text-4xl">
-              Designed for practitioners.
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-[color:var(--ink-soft)]">
-              One clinical standard for the whole industry — for HCPs, for non-HCPs,
-              for solo practitioners and multi-location clinics.
-            </p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2">
-            <ClinicalWhoCard
-              tag="HCPs"
-              icon={Syringe}
-              title="Nurses, Doctors, Dentists, Pharmacists, Paramedics & Midwives"
-              blurb="Prescriber-grade consultation notes, medical screening, and integrated prescribing — with the Prescriber Hub for the non-HCPs you support."
-              points={[
-                "Prescriber-grade consultation notes & treatment plans",
-                "Photo, social and marketing consent split out properly",
-                "Prescriber Hub — support the non-HCPs you work with",
-                "Multi-location, multi-practitioner clinics supported",
-              ]}
-              accent
-            />
-            <ClinicalWhoCard
-              tag="Non-HCPs"
-              icon={Sparkles}
-              title="Aesthetics Practitioners, Skin & Other Injectors"
-              blurb="Streamlined bookings, medical screening and consent, plus a Prescriber Hub link to refer to the clinicians who cover you."
-              points={[
-                "Full medical screening & consent before every appointment",
-                "Refer in your prescriber via the Prescriber Hub",
-                "Photo consent, aftercare and review periods built in",
-                "Look every bit as professional as a full clinic",
-              ]}
-            />
-          </div>
-        </section>
-
-        {/* FEATURES GRID — clinical rows */}
-        <section className="border-t border-[color:var(--hairline)] bg-white">
-          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
-            <div className="mb-12 max-w-2xl">
-              <div className="eyebrow">§ The platform</div>
-              <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-                Everything a clinic runs on — <span className="text-[color:var(--ink-soft)]">in one calm system.</span>
+        {/* FEATURES — hairline grid */}
+        <section className="border-b border-[color:var(--hairline)]">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+            <div className="mb-14">
+              <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-[color:var(--accent)]">
+                The platform
               </h2>
-              <p className="mt-4 text-[color:var(--ink-soft)]">
+              <div className="mt-4 h-px w-20 bg-[color:var(--taupe)]" />
+              <p className="mt-6 max-w-2xl font-display text-2xl leading-snug text-[color:var(--ink)] sm:text-3xl">
+                Everything a clinic runs on — in one calm system.
+              </p>
+              <p className="mt-3 max-w-xl text-[color:var(--ink-soft)]">
                 Replace five or six tools with one workflow, designed around how
                 aesthetics actually works.
               </p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <ClinicalFeature icon={Palette} title="Fully branded page" desc="Your colours, fonts, hero, logo and welcome — looks like your brand, not ours." />
-              <ClinicalFeature icon={Link2} title="Your own MODO link" desc="modobook.uk/your-clinic. One link for Instagram, TikTok, web and Google." />
-              <ClinicalFeature icon={Calendar} title="Smart availability" desc="Schedules, buffers, daily caps, lead times and model slots." />
-              <ClinicalFeature icon={ClipboardList} title="8-step consultation" desc="Screening, assessment, plan, consent, photos, product log, invoice." />
-              <ClinicalFeature icon={FileSignature} title="Consent & medical" desc="Build your own or use ours. Auto-sent, auto-signed, auto-filed." />
-              <ClinicalFeature icon={Camera} title="Face mapping & photos" desc="Pin-drop product tags with units and before/after imagery." />
-              <ClinicalFeature icon={Users} title="Patient records" desc="History, allergies, notes, photos, forms and messages in one place." />
-              <ClinicalFeature icon={Layers} title="Packages & courses" desc="Bundles, top-ups, add-ons and split payments — without the spreadsheet." />
-              <ClinicalFeature icon={CreditCard} title="Payments your way" desc="Card, deposits, pay-in-clinic, Klarna, Clearpay — fees can be passed on." />
-              <ClinicalFeature icon={Bell} title="Reminders that work" desc="Automated email reminders. Cancellation rules enforced automatically." />
-              <ClinicalFeature icon={MessageSquare} title="Marketing built-in" desc="Email your list, follow up after treatment, drive rebooks and reviews." />
-              <ClinicalFeature icon={Lock} title="GDPR-ready storage" desc="Encrypted at rest, UK/EU residency, granular photo & marketing consent." />
+            <div className="grid gap-px border border-[color:var(--hairline)] bg-[color:var(--hairline)] sm:grid-cols-2 lg:grid-cols-3">
+              <GridFeature icon={Palette} title="Fully branded page" desc="Your colours, fonts, hero, logo and welcome — looks like your brand, not ours." />
+              <GridFeature icon={Link2} title="Your own MODO link" desc="modobook.uk/your-clinic. One link for Instagram, TikTok, web and Google." />
+              <GridFeature icon={Calendar} title="Smart availability" desc="Schedules, buffers, daily caps, lead times and model slots." />
+              <GridFeature icon={ClipboardList} title="8-step consultation" desc="Screening, assessment, plan, consent, photos, product log, invoice." />
+              <GridFeature icon={FileSignature} title="Consent & medical" desc="Build your own or use ours. Auto-sent, auto-signed, auto-filed." />
+              <GridFeature icon={Camera} title="Face mapping & photos" desc="Pin-drop product tags with units and before/after imagery." />
+              <GridFeature icon={Users} title="Patient records" desc="History, allergies, notes, photos, forms and messages in one place." />
+              <GridFeature icon={Layers} title="Packages & courses" desc="Bundles, top-ups, add-ons and split payments — without the spreadsheet." />
+              <GridFeature icon={CreditCard} title="Payments your way" desc="Card, deposits, pay-in-clinic, Klarna, Clearpay — fees can be passed on." />
+              <GridFeature icon={Bell} title="Reminders that work" desc="Automated email reminders. Cancellation rules enforced automatically." />
+              <GridFeature icon={MessageSquare} title="Marketing built-in" desc="Email your list, follow up after treatment, drive rebooks and reviews." />
+              <GridFeature icon={Lock} title="GDPR-ready storage" desc="Encrypted at rest, UK/EU residency, granular photo & marketing consent." />
             </div>
 
             <div className="mt-10">
-              <Link to="/features" className="group inline-flex items-center gap-2 text-sm font-semibold text-[color:var(--clinical-blue)]">
+              <Link to="/features" className="group inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--ink)]">
                 See every feature
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
@@ -383,43 +250,89 @@ function LandingPage() {
           </div>
         </section>
 
-        {/* PRESCRIBER HUB */}
-        <section className="border-y border-[color:var(--hairline)] bg-[color:var(--paper)]">
-          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 sm:py-20 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16 lg:px-8">
-            <div>
-              <div className="eyebrow">§ Prescriber Hub</div>
-              <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-                Prescribers and practitioners, <span className="text-[color:var(--ink-soft)]">on the same record.</span>
+        {/* WHO IT'S FOR — two spec-sheet cards */}
+        <section className="border-b border-[color:var(--hairline)]">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+            <div className="mb-14">
+              <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-[color:var(--accent)]">
+                Who it's for
               </h2>
-              <p className="mt-5 max-w-md text-[color:var(--ink-soft)]">
+              <div className="mt-4 h-px w-20 bg-[color:var(--taupe)]" />
+              <p className="mt-6 max-w-2xl font-display text-2xl leading-snug text-[color:var(--ink)] sm:text-3xl">
+                Designed for practitioners.
+              </p>
+              <p className="mt-3 max-w-xl text-[color:var(--ink-soft)]">
+                One clinical standard for the whole industry — for HCPs, for non-HCPs,
+                for solo practitioners and multi-location clinics.
+              </p>
+            </div>
+            <div className="grid gap-px border border-[color:var(--hairline)] bg-[color:var(--hairline)] md:grid-cols-2">
+              <WhoPanel
+                tag="HCPs"
+                icon={Syringe}
+                title="Nurses, Doctors, Dentists, Pharmacists, Paramedics & Midwives"
+                blurb="Prescriber-grade consultation notes, medical screening, and integrated prescribing — with the Prescriber Hub for the non-HCPs you support."
+                points={[
+                  "Prescriber-grade consultation notes & treatment plans",
+                  "Photo, social and marketing consent split out properly",
+                  "Prescriber Hub — support the non-HCPs you work with",
+                  "Multi-location, multi-practitioner clinics supported",
+                ]}
+              />
+              <WhoPanel
+                tag="Non-HCPs"
+                icon={Sparkles}
+                title="Aesthetics Practitioners, Skin & Other Injectors"
+                blurb="Streamlined bookings, medical screening and consent, plus a Prescriber Hub link to refer to the clinicians who cover you."
+                points={[
+                  "Full medical screening & consent before every appointment",
+                  "Refer in your prescriber via the Prescriber Hub",
+                  "Photo consent, aftercare and review periods built in",
+                  "Look every bit as professional as a full clinic",
+                ]}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* PRESCRIBER HUB — black statement band */}
+        <section className="bg-[color:var(--ink)] text-[color:var(--paper)]">
+          <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16 lg:px-8">
+            <div>
+              <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-[color:var(--taupe)]">
+                Prescriber Hub
+              </h2>
+              <div className="mt-4 h-px w-20 bg-[color:var(--taupe)]" />
+              <p className="mt-6 font-display text-3xl leading-snug sm:text-4xl">
+                Prescribers and practitioners, on the same record.
+              </p>
+              <p className="mt-5 max-w-md text-[color:var(--paper)]/70">
                 One safe, traceable place for prescribers and the practitioners they
                 support. Shared patient records and collaborative notes — linked to
                 the booking that started it.
               </p>
-              <div className="mt-8">
-                <Link to="/prescriber-hub">
-                  <Button
-                    size="lg"
-                    className="rounded-full bg-[color:var(--clinical-blue)] px-8 text-sm font-medium text-white hover:bg-[color:var(--clinical-blue)]/90"
-                  >
-                    Learn about the Hub <ArrowRight className="ml-1 h-4 w-4" />
-                  </Button>
+              <div className="mt-9">
+                <Link
+                  to="/prescriber-hub"
+                  className="inline-flex h-13 items-center justify-center border border-[color:var(--paper)]/40 px-8 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--paper)] transition-colors hover:bg-[color:var(--paper)] hover:text-[color:var(--ink)]"
+                >
+                  Learn about the Hub
                 </Link>
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-px border border-[color:var(--paper)]/15 bg-[color:var(--paper)]/15">
               {[
                 { icon: ClipboardList, title: "Shared record", desc: "Medical form, consultation, photos — with consent." },
                 { icon: Network, title: "Connected teams", desc: "Prescribers support many; practitioners refer to many." },
-                { icon: HandshakeIcon, title: "Collaborative care", desc: "One workflow for HCPs and non-HCPs alike." },
+                { icon: CheckCircle2, title: "Collaborative care", desc: "One workflow for HCPs and non-HCPs alike." },
               ].map((c) => (
-                <div key={c.title} className="tile p-6">
-                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[color:var(--clinical-blue-soft)] text-[color:var(--clinical-blue)]">
-                    <c.icon className="h-5 w-5" />
+                <div key={c.title} className="flex items-start gap-4 bg-[color:var(--ink)] p-6">
+                  <c.icon className="mt-0.5 h-5 w-5 shrink-0 text-[color:var(--taupe)]" />
+                  <div>
+                    <div className="font-display text-lg">{c.title}</div>
+                    <p className="mt-1 text-sm text-[color:var(--paper)]/60">{c.desc}</p>
                   </div>
-                  <div className="text-base font-semibold">{c.title}</div>
-                  <p className="mt-2 text-sm text-[color:var(--ink-soft)]">{c.desc}</p>
                 </div>
               ))}
             </div>
@@ -427,135 +340,103 @@ function LandingPage() {
         </section>
 
         {/* FOUNDERS BAND */}
-        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-20 lg:px-8">
-          <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-14">
-            <div className="relative overflow-hidden rounded-3xl border border-[color:var(--hairline)]">
+        <section className="border-b border-[color:var(--hairline)]">
+          <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 lg:px-8">
+            <div className="relative overflow-hidden border border-[color:var(--hairline)]">
               <img
                 src={tabletPlatform.url}
                 alt="MODO's founders"
                 className="aspect-[3/4] w-full object-cover object-top"
               />
-
             </div>
             <div>
-              <div className="eyebrow">§ For practitioners, by practitioners</div>
-              <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+              <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-[color:var(--accent)]">
+                For practitioners, by practitioners
+              </h2>
+              <div className="mt-4 h-px w-20 bg-[color:var(--taupe)]" />
+              <p className="mt-6 font-display text-3xl leading-snug text-[color:var(--ink)] sm:text-4xl">
                 Built by clinicians.
                 <br />
-                <span className="text-[color:var(--ink-soft)]">Built for your clinic.</span>
-              </h2>
-              <p className="mt-5 text-[color:var(--ink-soft)]">
+                <span className="italic text-[color:var(--ink-soft)]">Built for your clinic.</span>
+              </p>
+              <p className="mt-5 max-w-lg text-[color:var(--ink-soft)]">
                 MODO is designed by people who still run aesthetics clinics themselves — every
                 workflow, consent flow and consultation step comes from real practice, not a
                 product manager's whiteboard. MODO the platform is a software product; our
                 founders' individual clinical registrations sit with them, not with MODO.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
-                  Aesthetics-only
-                </div>
-                <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
-                  UK-designed
-                </div>
-                <div className="rounded-full border border-[color:var(--hairline)] bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--ink)]">
-                  Founding-clinic pricing
-                </div>
+                {["Aesthetics-only", "UK-designed", "Founding-clinic pricing"].map((b) => (
+                  <div
+                    key={b}
+                    className="border border-[color:var(--hairline)] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--ink)]"
+                  >
+                    {b}
+                  </div>
+                ))}
               </div>
-
             </div>
           </div>
         </section>
 
-
-        {/* WAITLIST */}
-        <WaitlistSection />
-
-        {/* CTA */}
-
-
-        <section className="bg-white">
-          <div className="mx-auto max-w-4xl px-4 py-14 sm:px-6 sm:py-24 text-center lg:px-8">
-            <div className="eyebrow">Now open</div>
-            <h2 className="mt-4 text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-              MODO is live
-              <br />
-              <span className="text-[color:var(--ink-soft)]">and open to everyone.</span>
+        {/* STATEMENT BAND */}
+        <section className="relative overflow-hidden bg-[color:var(--ink)] px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
+          <img
+            src={brandBoards.url}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover opacity-15"
+          />
+          <div className="relative mx-auto max-w-4xl text-center">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.3em] text-[color:var(--taupe)]">
+              Not another booking app
             </h2>
+            <p className="mt-6 font-display text-3xl leading-snug text-[color:var(--paper)] md:text-5xl">
+              Bridging the gap between aesthetic artistry and medical protocol.
+              <span className="text-[color:var(--paper)]/50"> Precision at every appointment.</span>
+            </p>
+          </div>
+        </section>
+
+        {/* FINAL CTA */}
+        <section className="bg-[color:var(--secondary)]">
+          <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 sm:py-28 lg:px-8">
+            <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-[color:var(--accent)]">
+              Now open
+            </h2>
+            <p className="mt-6 font-display text-4xl leading-[1.15] text-[color:var(--ink)] sm:text-5xl">
+              Elevate your clinical practice today.
+            </p>
             <p className="mx-auto mt-5 max-w-lg text-[color:var(--ink-soft)]">
               Anyone can join MODO today — no waitlist and no card details. Your first month
               is free, you keep 100% of your booking revenue, and you can cancel anytime.
             </p>
-            <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link to="/auth" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  className="w-full rounded-full bg-[color:var(--ink)] px-10 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90 sm:w-auto"
-                >
-                  Start your free month
-                </Button>
+            <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link
+                to="/auth"
+                className="inline-flex h-14 items-center justify-center bg-[color:var(--ink)] px-12 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--paper)] transition-colors hover:bg-[color:var(--accent)]"
+              >
+                Start your free month
               </Link>
-              <Link to="/who-its-for" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  variant="ghost"
-                  className="w-full rounded-full px-8 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
-                >
-                  Is MODO right for me?
-                </Button>
+              <Link
+                to="/who-its-for"
+                className="inline-flex h-14 items-center justify-center border border-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--ink)] transition-colors hover:bg-[color:var(--ink)] hover:text-[color:var(--paper)]"
+              >
+                Is MODO right for me?
               </Link>
             </div>
           </div>
         </section>
       </main>
 
-
       <SiteFooter />
     </div>
   );
 }
 
-/* -------- Clinical building blocks (scoped to landing) -------- */
+/* -------- Landing building blocks -------- */
 
-function ClinicalWhoCard({
-  tag,
-  icon: Icon,
-  title,
-  blurb,
-  points,
-  accent,
-}: {
-  tag: string;
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  blurb: string;
-  points: string[];
-  accent?: boolean;
-}) {
-  return (
-    <div className="group tile p-8 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-[color:var(--clinical-blue)]/5 sm:p-10">
-      <div className="mb-6 flex items-center justify-between">
-        <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] ${accent ? "bg-[color:var(--clinical-blue-soft)] text-[color:var(--clinical-blue)]" : "bg-[color:var(--muted)] text-[color:var(--ink-soft)]"}`}>
-          {tag}
-        </span>
-        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${accent ? "bg-[color:var(--clinical-blue-soft)] text-[color:var(--clinical-blue)]" : "bg-[color:var(--muted)] text-[color:var(--ink-soft)]"}`}>
-          <Icon className="h-5 w-5" />
-        </div>
-      </div>
-      <h3 className="text-xl font-bold leading-snug sm:text-2xl">{title}</h3>
-      <p className="mt-3 text-sm text-[color:var(--ink-soft)]">{blurb}</p>
-      <ul className="mt-6 space-y-3">
-        {points.map((p) => (
-          <li key={p} className="flex items-start gap-3 text-sm text-[color:var(--ink-soft)]">
-            <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${accent ? "bg-[color:var(--clinical-blue)]" : "bg-[color:var(--ink-soft)]/40"}`} />
-            <span>{p}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function ClinicalFeature({
+function GridFeature({
   icon: Icon,
   title,
   desc,
@@ -565,148 +446,98 @@ function ClinicalFeature({
   desc: string;
 }) {
   return (
-    <div className="group tile p-6 transition-all hover:border-[color:var(--clinical-blue)]/30 hover:shadow-lg hover:shadow-[color:var(--clinical-blue)]/5">
-      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[color:var(--muted)] text-[color:var(--ink)] transition-colors group-hover:bg-[color:var(--clinical-blue)] group-hover:text-white">
-        <Icon className="h-5 w-5" />
-      </div>
-      <div className="text-base font-semibold">{title}</div>
-      <p className="mt-2 text-sm leading-relaxed text-[color:var(--ink-soft)]">{desc}</p>
+    <div className="group bg-[color:var(--paper)] p-8 transition-colors hover:bg-[color:var(--secondary)] sm:p-10">
+      <Icon className="mb-5 h-5 w-5 text-[color:var(--accent)]" />
+      <h3 className="font-display text-xl text-[color:var(--ink)]">{title}</h3>
+      <p className="mt-3 text-sm leading-relaxed text-[color:var(--ink-soft)]">{desc}</p>
     </div>
   );
 }
 
-function WaitlistSection() {
+function WhoPanel({
+  tag,
+  icon: Icon,
+  title,
+  blurb,
+  points,
+}: {
+  tag: string;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  blurb: string;
+  points: string[];
+}) {
   return (
-    <section className="scroll-mt-24 border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 sm:py-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16 lg:px-8">
-        <div>
-          <div className="eyebrow">§ Now open to everyone</div>
-          <h2 className="mt-4 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-            MODO is open
-            <br />
-            <span className="text-[color:var(--ink-soft)]">to every practitioner.</span>
-          </h2>
-          <p className="mt-5 max-w-md text-[color:var(--ink-soft)]">
-            No waitlist, no sales call, no card details. Create your account, set up your
-            clinic and take your first booking today — your first month is completely free.
-          </p>
-        </div>
-
-        <div className="tile p-6 shadow-sm sm:p-8">
-          <div className="py-4 text-center sm:py-6">
-            <div className="mx-auto mb-4 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent)]/25 bg-[color:var(--clinical-blue-soft)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
-              First month free · No card required
-            </div>
-            <h3 className="text-xl font-semibold">Create your account</h3>
-            <p className="mx-auto mt-2 max-w-sm text-sm text-[color:var(--ink-soft)]">
-              Full access to bookings, consultations, consent, payments and the prescriber
-              hub — set up your clinic in minutes.
-            </p>
-            <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              <Link to="/auth" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  className="w-full rounded-full bg-[color:var(--ink)] px-8 text-sm font-medium text-white hover:bg-[color:var(--ink)]/90 sm:w-auto"
-                >
-                  Start free <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
-              </Link>
-              <Link to="/pricing" className="w-full sm:w-auto">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full rounded-full border-[color:var(--hairline)] px-8 text-sm font-medium text-[color:var(--ink)] hover:bg-[color:var(--muted)] sm:w-auto"
-                >
-                  View pricing
-                </Button>
-              </Link>
-            </div>
-            <p className="mt-4 text-[11px] text-[color:var(--ink-soft)]">
-              Open to all UK aesthetics practitioners. Cancel anytime. UK/EU data residency.
-            </p>
-          </div>
-        </div>
+    <div className="bg-[color:var(--paper)] p-8 sm:p-12">
+      <div className="mb-6 flex items-center justify-between">
+        <span className="inline-flex items-center gap-2 border border-[color:var(--hairline)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[color:var(--accent)]">
+          {tag}
+        </span>
+        <Icon className="h-5 w-5 text-[color:var(--accent)]" />
       </div>
-    </section>
+      <h3 className="font-display text-xl leading-snug text-[color:var(--ink)] sm:text-2xl">{title}</h3>
+      <p className="mt-3 text-sm text-[color:var(--ink-soft)]">{blurb}</p>
+      <ul className="mt-7 space-y-3">
+        {points.map((p) => (
+          <li key={p} className="flex items-start gap-3 text-sm text-[color:var(--ink-soft)]">
+            <span className="mt-2 h-px w-4 shrink-0 bg-[color:var(--taupe)]" />
+            <span>{p}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
+/* -------- Shared site chrome (used by sibling marketing pages) -------- */
 
-
+const NAV_PAGES = [
+  { to: "/features", label: "Features" },
+  { to: "/prescriber-hub", label: "Prescriber Hub" },
+  { to: "/who-its-for", label: "Who it's for" },
+  { to: "/rewards", label: "Rewards" },
+  { to: "/pricing", label: "Pricing" },
+  { to: "/faq", label: "FAQ" },
+  { to: "/demo", label: "Demo" },
+];
 
 export function SiteHeader() {
-  const pages = [
-    { to: "/", label: "Home" },
-    { to: "/features", label: "Features" },
-    { to: "/prescriber-hub", label: "Prescriber Hub" },
-    { to: "/rewards", label: "Rewards" },
-    { to: "/who-its-for", label: "Who it's for" },
-    { to: "/pricing", label: "Pricing" },
-    { to: "/faq", label: "FAQ" },
-    { to: "/demo", label: "Try the demo" },
-
-
-    { to: "/auth", label: "Sign in" },
-  ];
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[color:var(--hairline)] bg-[color:var(--paper)]/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link to="/" aria-label="MODO home" className="flex items-center">
+    <header className="sticky top-0 z-50 w-full border-b border-[color:var(--hairline)] bg-[color:var(--paper)]/90 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-4 sm:h-20 sm:px-6 lg:px-8">
+        <Link to="/" aria-label="MODO home" className="flex shrink-0 items-center">
           <img
             src={wordmark.url}
             alt="MODO"
-            className="h-10 w-auto object-contain sm:h-12"
+            className="h-9 w-auto object-contain sm:h-11"
             draggable={false}
           />
         </Link>
 
-
-        <div className="flex items-center gap-2">
-          <Link to="/auth" className="hidden sm:inline-flex">
-            <Button
-              size="sm"
-              className="rounded-full bg-[color:var(--ink)] px-4 sm:px-6 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--paper)] hover:bg-[color:var(--ink)]/90"
+        {/* Top bar nav — no dropdown. Scrolls sideways on small screens. */}
+        <nav
+          aria-label="Main"
+          className="flex flex-1 items-center justify-end gap-6 overflow-x-auto whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink-soft)] sm:gap-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {NAV_PAGES.map((p) => (
+            <Link
+              key={p.to}
+              to={p.to}
+              className="py-2 transition-colors hover:text-[color:var(--ink)]"
             >
-              Create account
-            </Button>
+              {p.label}
+            </Link>
+          ))}
+          <Link to="/auth" className="py-2 transition-colors hover:text-[color:var(--ink)]">
+            Sign in
           </Link>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 rounded-full border-[color:var(--hairline)] bg-white px-4 text-xs font-medium uppercase tracking-[0.14em] text-[color:var(--ink)] hover:bg-[color:var(--muted)]"
-              >
-                <span className="flex h-3 w-4 flex-col justify-between">
-                  <span className="h-[1.5px] w-full bg-current" />
-                  <span className="h-[1.5px] w-full bg-current" />
-                  <span className="h-[1.5px] w-3/4 bg-current" />
-                </span>
-                Menu
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 rounded-2xl border-[color:var(--hairline)] bg-white p-2">
-              <DropdownMenuLabel className="px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[color:var(--accent)]">
-                Explore MODO
-              </DropdownMenuLabel>
-              {pages.map((p) => (
-                <DropdownMenuItem key={p.to} asChild className="rounded-lg">
-                  <Link to={p.to} className="cursor-pointer px-3 py-2 text-sm font-medium text-[color:var(--ink)]">
-                    {p.label}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator className="my-1 bg-[color:var(--hairline)]" />
-              <DropdownMenuItem asChild className="rounded-lg">
-                <Link to="/auth" className="cursor-pointer px-3 py-2 text-sm font-semibold text-[color:var(--accent)]">
-                  Create your account →
-                </Link>
-              </DropdownMenuItem>
-
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+          <Link
+            to="/auth"
+            className="hidden shrink-0 bg-[color:var(--ink)] px-5 py-2.5 text-[color:var(--paper)] transition-colors hover:bg-[color:var(--accent)] sm:inline-flex"
+          >
+            Create account
+          </Link>
+        </nav>
       </div>
     </header>
   );
@@ -715,7 +546,7 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
         <div>
           <Link to="/" aria-label="MODO home" className="flex items-center">
             <img
@@ -761,6 +592,17 @@ export function SiteFooter() {
   );
 }
 
+export function IconTile({ icon: Icon, label }: { icon: React.ComponentType<{ className?: string }>; label: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 border border-[color:var(--hairline)] bg-[color:var(--paper)] p-4 text-center sm:gap-3 sm:p-6">
+      <div className="flex h-10 w-10 items-center justify-center bg-[color:var(--secondary)] text-[color:var(--ink)] sm:h-12 sm:w-12">
+        <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+      </div>
+      <span className="text-xs font-medium sm:text-sm">{label}</span>
+    </div>
+  );
+}
+
 function FooterCol({ title, links }: { title: string; links: { label: string; to: string }[] }) {
   return (
     <div className="text-sm">
@@ -775,127 +617,3 @@ function FooterCol({ title, links }: { title: string; links: { label: string; to
     </div>
   );
 }
-
-
-function Feature({ icon: Icon, title, desc }: { icon: React.ComponentType<{ className?: string }>; title: string; desc: string }) {
-  return (
-    <Card>
-      <CardHeader>
-        <Icon className="mb-2 h-7 w-7 text-primary" />
-        <CardTitle className="text-lg">{title}</CardTitle>
-        <CardDescription>{desc}</CardDescription>
-      </CardHeader>
-    </Card>
-  );
-}
-
-function Compare({ before, after }: { before: string; after: string }) {
-  return (
-    <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
-      <div className="pt-0.5 text-muted-foreground line-through">✗</div>
-      <div className="text-muted-foreground line-through">{before}</div>
-      <div className="pt-0.5 text-primary">✓</div>
-      <div className="font-medium">{after}</div>
-    </div>
-  );
-}
-
-function Benefit({ value, label }: { value: string; label: string }) {
-  return (
-    <Card>
-      <CardContent className="pt-6 text-center">
-        <div className="text-3xl font-bold tracking-tight text-primary">{value}</div>
-        <p className="mt-2 text-sm text-muted-foreground">{label}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function WhoCard({ title, points }: { title: string; points: string[] }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-xl">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ul className="space-y-2 text-sm">
-          {points.map((p) => (
-            <li key={p} className="flex gap-2">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <span>{p}</span>
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ForCard({
-  icon: Icon,
-  tag,
-  title,
-  points,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  tag: string;
-  title: string;
-  points: string[];
-}) {
-  return (
-    <Card className="h-full">
-      <CardHeader>
-        <div className="mb-2 inline-flex w-fit items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-          <Icon className="h-3.5 w-3.5" /> {tag}
-        </div>
-        <CardTitle className="text-2xl">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ul className="space-y-2 text-sm">
-          {points.map((p) => (
-            <li key={p} className="flex gap-2">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <span>{p}</span>
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
-  );
-}
-
-function HubCard({ icon: Icon, title, desc }: { icon: React.ComponentType<{ className?: string }>; title: string; desc: string }) {
-  return (
-    <Card>
-      <CardHeader>
-        <Icon className="mb-2 h-7 w-7 text-primary" />
-        <CardTitle className="text-base">{title}</CardTitle>
-        <CardDescription className="text-sm">{desc}</CardDescription>
-      </CardHeader>
-    </Card>
-  );
-}
-
-function Badge({ icon: Icon, label }: { icon: React.ComponentType<{ className?: string }>; label: string }) {
-  return (
-    <div className="inline-flex items-center gap-2 rounded-full border bg-background px-3 py-1.5">
-      <Icon className="h-4 w-4 text-primary" />
-      <span className="font-medium">{label}</span>
-    </div>
-  );
-}
-
-// Re-exports used by sibling marketing pages
-export { Feature as MarketingFeature, Benefit as MarketingBenefit, WhoCard as MarketingWhoCard, HubCard as MarketingHubCard, Compare as MarketingCompare };
-
-export function IconTile({ icon: Icon, label }: { icon: React.ComponentType<{ className?: string }>; label: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-background/80 p-4 text-center shadow-sm ring-1 ring-black/5 backdrop-blur sm:gap-3 sm:p-6">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary sm:h-12 sm:w-12">
-        <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
-      </div>
-      <span className="text-xs font-medium sm:text-sm">{label}</span>
-    </div>
-  );
-}
-
