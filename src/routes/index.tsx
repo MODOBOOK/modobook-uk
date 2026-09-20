@@ -213,36 +213,6 @@ function LandingPage() {
         {/* PRICING */}
         <PricingBand />
 
-        {/* FINAL CTA */}
-        <section className="bg-[color:var(--ink)] text-[color:var(--paper)]">
-          <div className="mx-auto max-w-3xl px-4 py-24 text-center sm:px-6 sm:py-32 lg:px-8">
-            <Reveal>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[color:var(--taupe)]">
-                Now open
-              </div>
-              <p className="mt-6 font-display text-4xl leading-tight sm:text-5xl">
-                Start your first month free.
-              </p>
-              <p className="mx-auto mt-5 max-w-md text-sm text-[color:var(--paper)]/70">
-                No waitlist, no card details, no booking fees. Cancel anytime.
-              </p>
-              <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
-                <Link
-                  to="/auth"
-                  className="inline-flex h-14 items-center justify-center bg-[color:var(--paper)] px-12 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--ink)] transition-colors hover:bg-[color:var(--taupe)]"
-                >
-                  Create your account
-                </Link>
-                <Link
-                  to="/demo"
-                  className="inline-flex h-14 items-center justify-center border border-[color:var(--paper)]/40 px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--paper)] transition-colors hover:bg-[color:var(--paper)] hover:text-[color:var(--ink)]"
-                >
-                  Try the demo
-                </Link>
-              </div>
-            </Reveal>
-          </div>
-        </section>
       </main>
 
       <SiteFooter />
