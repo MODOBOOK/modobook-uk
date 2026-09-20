@@ -1169,8 +1169,8 @@ function BookPage() {
     </section>
   );
 
-  // "Book a treatment now" quick-scroll CTA (pilot flag): a subtle button in
-  // the hero plus a floating pill once the booking area is off-screen. The
+  // "Book a treatment" quick-scroll CTA (pilot flag): a floating pill once the
+  // booking area is off-screen. The
   // scroll target is whichever booking step is showing: the treatment menu,
   // or the location / practitioner / chooser pickers that precede it.
   const bookCtaOn = bookCtaEnabled(slug);
@@ -1473,17 +1473,6 @@ function BookPage() {
                     </Link>
                   )}
 
-                  {bookCtaOn && (
-                    <button
-                      type="button"
-                      onClick={scrollToMenu}
-                      className="mt-5 inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors hover:bg-white/10"
-                      style={{ borderColor: heroDivider, color: heroTextColor }}
-                    >
-                      <CalendarDays className="h-4 w-4" />
-                      Book a treatment now
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
