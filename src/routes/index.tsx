@@ -370,7 +370,7 @@ function PricingBand() {
               Pricing
             </div>
             <p className="mt-6 font-display text-3xl leading-tight text-[color:var(--ink)] sm:text-4xl">
-              One simple price. No booking fees.
+              Everything you need, nothing you don't
             </p>
           </div>
         </Reveal>
