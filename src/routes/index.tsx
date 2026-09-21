@@ -298,8 +298,7 @@ const PRICE_ROWS: PriceRow[] = [
   {
     name: "MODO Clinic",
     tag: "For independent practitioners",
-    now: "£29.99",
-    was: "£39.99",
+    now: "£39.99",
     unit: "per month",
     points: [
       "First month free — no card required",
