@@ -163,7 +163,7 @@ function LandingPage() {
             </Reveal>
 
             <div className="grid gap-px border border-[color:var(--hairline)] bg-[color:var(--hairline)] sm:grid-cols-2 lg:grid-cols-3">
-              <GridFeature icon={Calendar} title="Bookings & availability" desc="Your own MODO link, smart schedules, deposits and reminders." />
+              <GridFeature icon={Calendar} title="Bookings & availability" desc="Smart scheduling, SMS reminders, and a personalised booking URL." />
               <GridFeature icon={ClipboardList} title="Consultations" desc="Screening, assessment, plan, photos and product log in one flow." />
               <GridFeature icon={FileSignature} title="Consent & medical" desc="Use ours or build your own — auto-sent, signed and filed." />
               <GridFeature icon={Camera} title="Face mapping" desc="Pin-drop product tags with units and before/after imagery." />
