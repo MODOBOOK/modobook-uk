@@ -11,7 +11,6 @@ import {
   Sparkles,
   Users,
   ClipboardList,
-  Smile,
   Bell,
   MessageSquare,
   FileSignature,
@@ -337,6 +336,26 @@ const PRICE_ROWS: PriceRow[] = [
     ],
   },
 ];
+
+function FaceOutline({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M12 2.5c4.1 0 7 3.3 7 8 0 4.9-3.1 11-7 11s-7-6.1-7-11c0-4.7 2.9-8 7-8Z" />
+      <path d="M9.5 10.5h.01" />
+      <path d="M14.5 10.5h.01" />
+      <path d="M10 15.5c1.2 1 2.8 1 4 0" />
+    </svg>
+  );
+}
 
 function GridFeature({
   icon: Icon,
