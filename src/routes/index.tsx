@@ -166,7 +166,7 @@ function LandingPage() {
               <GridFeature icon={ClipboardList} title="Consultations" desc="Assess, plan, photograph and document." />
               <GridFeature icon={FileSignature} title="Consent and Medical Forms" desc="Create, send, sign and securely stored." />
               <GridFeature icon={FaceOutline} title="Face mapping" desc="Document treatments precisely with interactive face mapping." />
-              <GridFeature icon={CreditCard} title="Payments" desc="Deposits, card capture, pay-in-clinic and Klarna & Clearpay buy-now-pay-later — 0% booking fees." />
+              <GridFeature icon={CreditCard} title="Payments" desc="Deposits, card capture, Klarna & Clearpay and pay in clinic options." />
               <GridFeature icon={Sparkles} title="Built-in AI" desc="Treatment descriptions, consent forms and aftercare written for you in seconds." />
               <GridFeature icon={Network} title="Prescriber Hub" desc="A shared, traceable prescribing record — requests, notes and batch numbers in one place." />
               <GridFeature icon={ShieldCheck} title="Clinic compliance" desc="Checks, audits and a notes board to keep your clinic inspection-ready — switch it on only if you want it." />
