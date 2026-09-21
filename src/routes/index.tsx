@@ -154,7 +154,7 @@ function LandingPage() {
             <Reveal>
               <div className="mx-auto mb-14 max-w-xl text-center">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[color:var(--accent)]">
-                  The platform
+                  Inside MODO
                 </div>
                 <p className="mt-6 font-display text-3xl leading-tight text-[color:var(--ink)] sm:text-4xl">
                   Everything a clinic runs on, in one calm system.
