@@ -118,7 +118,10 @@ function LandingPage() {
         <section className="bg-[color:var(--ink)] text-[color:var(--paper)]">
           <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 sm:py-24 lg:px-8">
             <Reveal>
-              <p className="font-display text-4xl leading-tight sm:text-5xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--taupe)]">
+                Join MODO
+              </p>
+              <p className="mt-5 font-display text-4xl leading-tight sm:text-5xl">
                 Start your first month free.
               </p>
               <p className="mx-auto mt-5 max-w-md text-sm text-[color:var(--paper)]/70">
