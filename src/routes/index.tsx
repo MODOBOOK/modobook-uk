@@ -138,7 +138,7 @@ function LandingPage() {
                   to="/demo"
                   className="inline-flex h-14 items-center justify-center border border-[color:var(--paper)]/40 px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--paper)] transition-colors hover:bg-[color:var(--paper)] hover:text-[color:var(--ink)]"
                 >
-                  Try the demo
+                  EXPLORE THE DEMO
                 </Link>
               </div>
             </Reveal>
