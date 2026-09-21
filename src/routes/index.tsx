@@ -416,7 +416,7 @@ function PricingBand() {
                     t.highlight ? "text-[color:var(--paper)]/60" : "text-[color:var(--ink-soft)]"
                   }`}
                 >
-                  {t.unit}
+                  {t.unit} — inc VAT
                 </div>
                 <ul className="mt-7 space-y-3">
                   {t.points.map((p) => (
