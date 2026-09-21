@@ -157,7 +157,7 @@ function LandingPage() {
                   Inside MODO
                 </div>
                 <p className="mt-6 font-display text-3xl leading-tight text-[color:var(--ink)] sm:text-4xl">
-                  Everything a clinic runs on, in one calm system.
+                  Everything your clinic needs.
                 </p>
               </div>
             </Reveal>
