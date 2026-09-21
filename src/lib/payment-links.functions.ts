@@ -11,7 +11,7 @@ async function getProfile(supabase: any, userId: string) {
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, stripe_connect_account_id, slug, clinic_name, full_name, payment_pass_fees_to_customer, payment_surcharge_card_enabled, payment_surcharge_card_percent, stripe_fee_pass_to_patient, stripe_fee_card_percent, stripe_fee_card_fixed_cents",
+      "id, stripe_connect_account_id, slug, clinic_name, full_name, payment_pass_fees_to_customer, payment_surcharge_card_enabled, payment_surcharge_card_percent, stripe_fee_pass_to_patient, stripe_fee_card_percent, stripe_fee_card_fixed_cents, payment_klarna_enabled, payment_clearpay_enabled",
     )
     .eq("id", await __activeProfileId(supabase, userId))
     .single();
@@ -96,6 +96,8 @@ export const createPaymentLink = createServerFn({ method: "POST" })
       description: data.description,
       surchargeCents,
       descriptorName: profile.clinic_name ?? profile.full_name,
+      clearpayEnabled: !!(profile as { payment_clearpay_enabled?: boolean }).payment_clearpay_enabled,
+      klarnaEnabled: !!(profile as { payment_klarna_enabled?: boolean }).payment_klarna_enabled,
       metadata: {
         profile_id: profile.id,
         appointment_id: data.appointmentId ?? "",
