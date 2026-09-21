@@ -518,6 +518,27 @@ export function SiteFooter() {
           <p className="mt-4 max-w-xs text-sm text-[color:var(--ink-soft)]">
             The booking & clinical platform built exclusively for aesthetics. Designed in the UK by practitioners who understand the industry.
           </p>
+
+          <div className="mt-6 flex items-center gap-3">
+            <a
+              href="https://www.instagram.com/modobook.uk"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="MODO on Instagram"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--hairline)] text-[color:var(--ink-soft)] transition-colors hover:border-[color:var(--taupe)] hover:text-[color:var(--ink)]"
+            >
+              <Instagram className="h-[18px] w-[18px]" />
+            </a>
+            <a
+              href="https://wa.me/447000000000"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="MODO on WhatsApp"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--hairline)] text-[color:var(--ink-soft)] transition-colors hover:border-[color:var(--taupe)] hover:text-[color:var(--ink)]"
+            >
+              <WhatsAppIcon className="h-[18px] w-[18px]" />
+            </a>
+          </div>
         </div>
         <FooterCol title="Platform" links={[
           { label: "Features", to: "/features" },
