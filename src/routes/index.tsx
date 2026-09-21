@@ -547,7 +547,7 @@ export function SiteFooter() {
           { label: "Rewards", to: "/rewards" },
         ]} />
 
-        <FooterCol title="Join us" links={[
+        <FooterCol title="Account" links={[
           { label: "Create your account", to: "/auth" },
           { label: "Sign in", to: "/auth" },
         ]} />
