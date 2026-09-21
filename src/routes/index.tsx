@@ -587,14 +587,18 @@ export function IconTile({ icon: Icon, label }: { icon: React.ComponentType<{ cl
   );
 }
 
-function FooterCol({ title, links }: { title: string; links: { label: string; to: string }[] }) {
+function FooterCol({ title, links }: { title: string; links: { label: string; to?: string; href?: string }[] }) {
   return (
     <div className="text-sm">
       <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[color:var(--accent)]">{title}</div>
       <ul className="mt-3 space-y-2">
         {links.map((l) => (
-          <li key={l.to + l.label}>
-            <Link to={l.to} className="text-[color:var(--ink-soft)] transition-colors hover:text-[color:var(--ink)]">{l.label}</Link>
+          <li key={l.to ?? l.href ?? l.label}>
+            {l.href ? (
+              <a href={l.href} className="text-[color:var(--ink-soft)] transition-colors hover:text-[color:var(--ink)]">{l.label}</a>
+            ) : (
+              <Link to={l.to!} className="text-[color:var(--ink-soft)] transition-colors hover:text-[color:var(--ink)]">{l.label}</Link>
+            )}
           </li>
         ))}
       </ul>
