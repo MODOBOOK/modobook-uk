@@ -180,6 +180,7 @@ function LandingPage() {
               <GridFeature icon={ShieldCheck} title="Clinic compliance" desc="Audits, checks, and action notes designed to keep you clinic inspection-ready." />
               <GridFeature icon={Bell} title="Aftercare & Reviews" desc="Automatically send aftercare and review requests following every treatment." />
               <GridFeature icon={Users} title="Memberships" desc="Build recurring revenue with memberships that run seamlessly." />
+              <GridFeature icon={Building2} title="Room Rental" desc="Manage room availability, bookings and rental income — all within MODO." />
             </div>
 
             <Reveal>
