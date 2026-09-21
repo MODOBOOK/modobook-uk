@@ -612,15 +612,14 @@ export async function createConnectedPaymentLink(params: {
       : {}),
   };
 
-  // Offer buy-now-pay-later (Clearpay / Klarna) alongside card on the link the
-  // patient receives. Clearpay only supports GBP between £1 and £1,000, so we
-  // only ask for it when the total qualifies — and if the connected account
-  // hasn't enabled a method, we quietly fall back to the account's defaults so
-  // the link is still created.
+  // Offer buy-now-pay-later on the link only when the practitioner has switched
+  // it on in their MODO booking settings. Clearpay and Klarna only support GBP
+  // between £1 and £1,000, so we only ask when the total qualifies.
   const total = params.amountCents + Math.max(0, Math.round(params.surchargeCents ?? 0));
   const bnpl: Stripe.PaymentLinkCreateParams.PaymentMethodType[] = [];
   if (currency === "gbp" && total >= 100 && total <= 100000) {
-    bnpl.push("afterpay_clearpay", "klarna");
+    if (params.clearpayEnabled) bnpl.push("afterpay_clearpay");
+    if (params.klarnaEnabled) bnpl.push("klarna");
   }
 
   if (bnpl.length > 0) {
