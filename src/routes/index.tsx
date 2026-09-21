@@ -283,9 +283,9 @@ function Hero() {
 
         <Reveal delay={180}>
           <p className="mx-auto mt-8 max-w-xl text-base font-light leading-relaxed text-[color:var(--ink-soft)] sm:text-lg">
-            The UK booking, consultation and clinical platform designed only for aesthetics —
-            records, consent, face mapping, payments and a prescriber hub, designed by
-            clinicians who still run clinics themselves.
+            The UK booking system, designed by aesthetics practitioners — manage
+            bookings, client records, consent forms, treatment plans, payments, SMS
+            reminders and more.
           </p>
         </Reveal>
 
