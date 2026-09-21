@@ -145,6 +145,9 @@ function LandingPage() {
           </div>
         </section>
 
+        {/* PRICING */}
+        <PricingBand />
+
         {/* FEATURES */}
         <section className="border-b border-[color:var(--hairline)]">
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
@@ -185,9 +188,6 @@ function LandingPage() {
             </Reveal>
           </div>
         </section>
-
-        {/* PRICING */}
-        <PricingBand />
 
       </main>
 
