@@ -239,23 +239,7 @@ function Reveal({
   );
 }
 
-const HERO_AUDIENCES = [
-  {
-    id: "solo",
-    label: "Solo practitioner",
-    line: "Your whole practice — bookings, consultations, consent and payments — behind one beautiful link.",
-  },
-  {
-    id: "clinic",
-    label: "Clinic & team",
-    line: "Every room, every practitioner and every location in one calm diary, with clinical records that keep up.",
-  },
-] as const;
-
 function Hero() {
-  const [audience, setAudience] = useState<string>(HERO_AUDIENCES[0].id);
-  const active = HERO_AUDIENCES.find((a) => a.id === audience) ?? HERO_AUDIENCES[0];
-
   return (
     <header
       className="relative overflow-hidden border-b border-[color:var(--hairline)]"
