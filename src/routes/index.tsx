@@ -317,14 +317,6 @@ const PRICE_ROWS: PriceRow[] = [
     unit: "per member / month",
     points: ["Own calendar & login", "Own patient list & notes", "1 practitioner included"],
   },
-  {
-    name: "Extra location",
-    tag: "Limited time",
-    now: "Free",
-    was: "£4.99",
-    unit: "per location / month",
-    points: ["Separate hours & availability", "Location booking links", "1 location included"],
-  },
 ];
 
 function GridFeature({
