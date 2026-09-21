@@ -250,11 +250,6 @@ const HERO_AUDIENCES = [
     label: "Clinic & team",
     line: "Every room, every practitioner and every location in one calm diary, with clinical records that keep up.",
   },
-  {
-    id: "prescriber",
-    label: "Prescriber",
-    line: "Support the practitioners you cover on a shared, traceable record — prescribing and notes in one place.",
-  },
 ] as const;
 
 function Hero() {
