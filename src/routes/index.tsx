@@ -326,12 +326,15 @@ const PRICE_ROWS: PriceRow[] = [
     ],
   },
   {
-    name: "Extra team member",
+    name: "Additional Practitioner",
     tag: "Add-on",
     now: "£9.99",
-    was: "£14.99",
-    unit: "per member / month",
-    points: ["Own calendar & login", "Own patient list & notes", "1 practitioner included"],
+    unit: "per practitioner / month",
+    points: [
+      "Individual calendar and login",
+      "Dedicated patient list and records",
+      "1 practitioner included",
+    ],
   },
 ];
 
