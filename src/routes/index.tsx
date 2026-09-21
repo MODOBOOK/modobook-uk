@@ -20,7 +20,16 @@ import {
   ShieldCheck,
   Syringe,
   ArrowRight,
+  Instagram,
 } from "lucide-react";
+
+function WhatsAppIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.45 9.9-9.91A9.85 9.85 0 0 0 12.04 2Zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24a8.2 8.2 0 0 1 8.24 8.25c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.13-1.47-.72-1.69-.8-.23-.09-.4-.13-.56.12-.17.25-.64.8-.78.97-.14.16-.29.18-.54.06-.25-.13-1.05-.39-2-1.23a7.55 7.55 0 0 1-1.38-1.73c-.15-.25-.02-.38.11-.51.11-.11.25-.29.37-.44.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.44-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.87.86-.87 2.09 0 1.24.9 2.43 1.02 2.6.12.16 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.23-.16-.48-.29Z" />
+    </svg>
+  );
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -165,7 +174,6 @@ function LandingPage() {
               <GridFeature icon={Calendar} title="Bookings & Availability" desc="Smart scheduling, SMS reminders, and a personalised booking URL." />
               <GridFeature icon={ClipboardList} title="Consultations" desc="Assess, plan, photograph, face map and document." />
               <GridFeature icon={FileSignature} title="Consent and Medical Forms" desc="Create, send, sign and securely stored." />
-              <GridFeature icon={FaceOutline} title="Face Mapping" desc="Document treatments precisely with interactive face mapping." />
               <GridFeature icon={CreditCard} title="Payments" desc="Deposits, card capture, Klarna & Clearpay and pay in clinic options." />
               <GridFeature icon={Sparkles} title="MODO AI" desc="Create treatment plans, treatment descriptions, and forms in seconds." />
               <GridFeature icon={Network} title="Prescriber Hub" desc="Prescribing requests and notes — connected in one secure record." />
@@ -336,26 +344,6 @@ const PRICE_ROWS: PriceRow[] = [
     ],
   },
 ];
-
-function FaceOutline({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M12 2.5c4.1 0 7 3.3 7 8 0 4.9-3.1 11-7 11s-7-6.1-7-11c0-4.7 2.9-8 7-8Z" />
-      <path d="M9.5 10.5h.01" />
-      <path d="M14.5 10.5h.01" />
-      <path d="M10 15.5c1.2 1 2.8 1 4 0" />
-    </svg>
-  );
-}
 
 function GridFeature({
   icon: Icon,
@@ -539,6 +527,27 @@ export function SiteFooter() {
           <p className="mt-4 max-w-xs text-sm text-[color:var(--ink-soft)]">
             The booking & clinical platform built exclusively for aesthetics. Designed in the UK by practitioners who understand the industry.
           </p>
+
+          <div className="mt-6 flex items-center gap-3">
+            <a
+              href="https://www.instagram.com/modobook.uk"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="MODO on Instagram"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--hairline)] text-[color:var(--ink-soft)] transition-colors hover:border-[color:var(--taupe)] hover:text-[color:var(--ink)]"
+            >
+              <Instagram className="h-[18px] w-[18px]" />
+            </a>
+            <a
+              href="https://wa.me/447000000000"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="MODO on WhatsApp"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--hairline)] text-[color:var(--ink-soft)] transition-colors hover:border-[color:var(--taupe)] hover:text-[color:var(--ink)]"
+            >
+              <WhatsAppIcon className="h-[18px] w-[18px]" />
+            </a>
+          </div>
         </div>
         <FooterCol title="Platform" links={[
           { label: "Features", to: "/features" },
