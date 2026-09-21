@@ -168,7 +168,7 @@ function LandingPage() {
               <GridFeature icon={FaceOutline} title="Face mapping" desc="Document treatments precisely with interactive face mapping." />
               <GridFeature icon={CreditCard} title="Payments" desc="Deposits, card capture, Klarna & Clearpay and pay in clinic options." />
               <GridFeature icon={Sparkles} title="MODO AI" desc="Create treatment plans, treatment descriptions, and forms in seconds." />
-              <GridFeature icon={Network} title="Prescriber Hub" desc="A shared, traceable prescribing record — requests, notes and batch numbers in one place." />
+              <GridFeature icon={Network} title="Prescriber Hub" desc="Prescribing requests and notes — connected in one secure record." />
               <GridFeature icon={ShieldCheck} title="Clinic compliance" desc="Checks, audits and a notes board to keep your clinic inspection-ready — switch it on only if you want it." />
               <GridFeature icon={Bell} title="Aftercare & reviews" desc="Aftercare instructions and review requests go out automatically after every visit." />
               <GridFeature icon={Users} title="Memberships" desc="Monthly membership plans your clients sign up to online — agreements, payments and renewals handled." />
