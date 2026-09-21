@@ -170,7 +170,7 @@ function LandingPage() {
               <GridFeature icon={Sparkles} title="MODO AI" desc="Create treatment plans, treatment descriptions, and forms in seconds." />
               <GridFeature icon={Network} title="Prescriber Hub" desc="Prescribing requests and notes — connected in one secure record." />
               <GridFeature icon={ShieldCheck} title="Clinic compliance" desc="Audits, checks, and action notes designed to keep you clinic inspection-ready." />
-              <GridFeature icon={Bell} title="Aftercare & reviews" desc="Aftercare instructions and review requests go out automatically after every visit." />
+              <GridFeature icon={Bell} title="Aftercare & Reviews" desc="Aftercare instructions and review requests go out automatically after every visit." />
               <GridFeature icon={Users} title="Memberships" desc="Monthly membership plans your clients sign up to online — agreements, payments and renewals handled." />
             </div>
 
