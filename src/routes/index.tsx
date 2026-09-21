@@ -555,6 +555,7 @@ export function SiteFooter() {
         <FooterCol title="Legal" links={[
           { label: "Privacy Policy", to: "/privacy" },
           { label: "Terms & Conditions", to: "/terms" },
+          { label: "Cookie Policy", to: "/privacy/cookies" },
         ]} />
       </div>
       <div className="border-t border-[color:var(--hairline)] py-6 text-center text-xs uppercase tracking-[0.2em] text-[color:var(--ink-soft)]">
