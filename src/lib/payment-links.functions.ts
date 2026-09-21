@@ -11,7 +11,7 @@ async function getProfile(supabase: any, userId: string) {
   const { data } = await supabase
     .from("profiles")
     .select(
-      "id, stripe_connect_account_id, slug, clinic_name, full_name, payment_pass_fees_to_customer, payment_surcharge_card_enabled, payment_surcharge_card_percent, stripe_fee_pass_to_patient, stripe_fee_card_percent, stripe_fee_card_fixed_cents",
+      "id, stripe_connect_account_id, slug, clinic_name, full_name, payment_pass_fees_to_customer, payment_surcharge_card_enabled, payment_surcharge_card_percent, stripe_fee_pass_to_patient, stripe_fee_card_percent, stripe_fee_card_fixed_cents, payment_klarna_enabled, payment_clearpay_enabled",
     )
     .eq("id", await __activeProfileId(supabase, userId))
     .single();
