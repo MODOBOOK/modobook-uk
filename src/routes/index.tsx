@@ -11,7 +11,6 @@ import {
   Sparkles,
   Users,
   ClipboardList,
-  Smile,
   Bell,
   MessageSquare,
   FileSignature,
@@ -166,7 +165,7 @@ function LandingPage() {
               <GridFeature icon={Calendar} title="Bookings & Availability" desc="Smart scheduling, SMS reminders, and a personalised booking URL." />
               <GridFeature icon={ClipboardList} title="Consultations" desc="Assess, plan, photograph and document" />
               <GridFeature icon={FileSignature} title="Consent and Medical Forms" desc="Create, send, sign and securely stored" />
-              <GridFeature icon={Smile} title="Face mapping" desc="Document treatments precisely with interactive face mapping." />
+              <GridFeature icon={FaceOutline} title="Face mapping" desc="Document treatments precisely with interactive face mapping." />
               <GridFeature icon={CreditCard} title="Payments" desc="Deposits, card capture, pay-in-clinic and Klarna & Clearpay buy-now-pay-later — 0% booking fees." />
               <GridFeature icon={Sparkles} title="Built-in AI" desc="Treatment descriptions, consent forms and aftercare written for you in seconds." />
               <GridFeature icon={Network} title="Prescriber Hub" desc="A shared, traceable prescribing record — requests, notes and batch numbers in one place." />
@@ -337,6 +336,26 @@ const PRICE_ROWS: PriceRow[] = [
     ],
   },
 ];
+
+function FaceOutline({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M12 2.5c4.1 0 7 3.3 7 8 0 4.9-3.1 11-7 11s-7-6.1-7-11c0-4.7 2.9-8 7-8Z" />
+      <path d="M9.5 10.5h.01" />
+      <path d="M14.5 10.5h.01" />
+      <path d="M10 15.5c1.2 1 2.8 1 4 0" />
+    </svg>
+  );
+}
 
 function GridFeature({
   icon: Icon,
