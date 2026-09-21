@@ -335,7 +335,10 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                 // Rate limiting is a provider-side pause, not a fault of this
                 // message — it must NOT consume the message's retry budget,
                 // otherwise busy periods dead-letter booking emails.
-                const retryAfterSecs = Math.min(getRetryAfterSeconds(error), 30)
+                // Honour the provider's Retry-After instead of retrying every
+                // ~30s: hammering the same message keeps the workspace limit
+                // saturated and starves booking emails behind it.
+                const retryAfterSecs = Math.min(Math.max(getRetryAfterSeconds(error), 60), 300)
                 await supabase
                   .from('email_send_state')
                   .update({

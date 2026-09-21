@@ -836,10 +836,11 @@ async function resolveAutomationRecipients(supabase: any, automation: any): Prom
   const cfg = automation.config || {}
 
   // Base opted-in clients
-  const { data: baseClients } = await supabase.from('clinic_clients')
-    .select('id, email, full_name, date_of_birth')
+  const { data: baseClients, error: baseClientsError } = await supabase.from('clinic_clients')
+    .select('id, email, full_name, date_of_birth:dob')
     .eq('profile_id', pid).eq('marketing_opt_in', true).eq('archived', false)
     .eq('is_blocked', false).not('email', 'is', null)
+  if (baseClientsError) throw new Error(baseClientsError.message)
   const clients = (baseClients || []) as Array<{ id: string; email: string; full_name: string; date_of_birth: string | null }>
 
   const mapClient = (c: typeof clients[number], extra: { last_treatment?: string; dedup_key: string }) => ({
