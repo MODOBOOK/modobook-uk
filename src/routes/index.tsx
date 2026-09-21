@@ -21,6 +21,7 @@ import {
   Syringe,
   ArrowRight,
   Instagram,
+  Building2,
 } from "lucide-react";
 
 function WhatsAppIcon({ className }: { className?: string }) {
