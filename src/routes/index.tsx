@@ -530,7 +530,7 @@ export function SiteFooter() {
 
           <div className="mt-6 flex items-center gap-3">
             <a
-              href="https://www.instagram.com/modobook.uk"
+              href="https://www.instagram.com/modo.bookingplatform"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="MODO on Instagram"
