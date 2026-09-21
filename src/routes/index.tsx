@@ -277,7 +277,7 @@ function Hero() {
           <h1 className="mt-7 font-display text-[color:var(--ink)]">
             Aesthetics,
             <br />
-            <span className="italic text-[color:var(--ink-soft)]">run properly.</span>
+            <span className="italic text-[color:var(--ink-soft)]">beautifully managed.</span>
           </h1>
         </Reveal>
 
