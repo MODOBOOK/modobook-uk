@@ -288,7 +288,7 @@ type PriceRow = {
   name: string;
   tag: string;
   now: string;
-  was: string;
+  was?: string;
   unit: string;
   points: string[];
   highlight?: boolean;
@@ -308,6 +308,20 @@ const PRICE_ROWS: PriceRow[] = [
       "Records, consent, face mapping & prescriber hub",
     ],
     highlight: true,
+  },
+  {
+    name: "MODO Collective",
+    tag: "For clinic owners",
+    now: "£59.99",
+    unit: "per month",
+    points: [
+      "Everything in MODO Solo",
+      "4 practitioners included",
+      "Compliance suite for clinical governance",
+      "Room rental & diary management",
+      "Associate onboarding & permissions",
+      "Training link for your training academy",
+    ],
   },
   {
     name: "Extra team member",
@@ -382,13 +396,15 @@ function PricingBand() {
                 </h3>
                 <div className="mt-5 flex items-baseline gap-2">
                   <span className="font-display text-4xl">{t.now}</span>
-                  <span
-                    className={`text-sm line-through ${
-                      t.highlight ? "text-[color:var(--paper)]/45" : "text-[color:var(--ink-soft)]/60"
-                    }`}
-                  >
-                    {t.was}
-                  </span>
+                  {t.was && (
+                    <span
+                      className={`text-sm line-through ${
+                        t.highlight ? "text-[color:var(--paper)]/45" : "text-[color:var(--ink-soft)]/60"
+                      }`}
+                    >
+                      {t.was}
+                    </span>
+                  )}
                 </div>
                 <div
                   className={`mt-1 text-[11px] uppercase tracking-[0.16em] ${
