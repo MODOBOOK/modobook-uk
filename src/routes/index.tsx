@@ -539,7 +539,7 @@ export function SiteFooter() {
               <Instagram className="h-[18px] w-[18px]" />
             </a>
             <a
-              href="https://wa.me/447000000000"
+              href="https://wa.me/447385790119"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="MODO on WhatsApp"
