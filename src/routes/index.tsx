@@ -292,35 +292,6 @@ function Hero() {
           </p>
         </Reveal>
 
-        {/* Interactive audience pill */}
-        <Reveal delay={260}>
-          <div className="mt-10 flex justify-center">
-            <div className="inline-flex flex-wrap justify-center gap-1 rounded-full border border-[color:var(--hairline)] bg-[color:var(--card)] p-1">
-              {HERO_AUDIENCES.map((a) => (
-                <button
-                  key={a.id}
-                  type="button"
-                  onClick={() => setAudience(a.id)}
-                  aria-pressed={audience === a.id}
-                  className={`rounded-full px-5 py-2.5 text-[10px] font-semibold uppercase tracking-[0.18em] transition-all duration-400 ${
-                    audience === a.id
-                      ? "bg-[color:var(--ink)] text-[color:var(--paper)]"
-                      : "text-[color:var(--ink-soft)] hover:text-[color:var(--ink)]"
-                  }`}
-                >
-                  {a.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <p
-            key={active.id}
-            className="mx-auto mt-6 max-w-lg text-sm leading-relaxed text-[color:var(--ink-soft)] animate-in fade-in slide-in-from-bottom-1 duration-500"
-          >
-            {active.line}
-          </p>
-        </Reveal>
-
       </div>
     </header>
   );
