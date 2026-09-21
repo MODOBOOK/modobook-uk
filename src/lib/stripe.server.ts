@@ -622,6 +622,21 @@ export async function createConnectedPaymentLink(params: {
   }
 
   if (bnpl.length > 0) {
+    // Buy-now-pay-later is a MODO feature, so we turn the capability on for
+    // the clinic's connected account rather than waiting for them to do it in
+    // Stripe. Some account types don't allow this from the platform — in that
+    // case we simply try the link anyway.
+    try {
+      await stripe.accounts.update(params.accountId, {
+        capabilities: {
+          afterpay_clearpay_payments: { requested: true },
+          klarna_payments: { requested: true },
+        },
+      });
+    } catch {
+      /* capability can't be requested from the platform — continue */
+    }
+
     try {
       const link = await stripe.paymentLinks.create(
         { ...base, payment_method_types: ["card", ...bnpl] },
@@ -629,7 +644,7 @@ export async function createConnectedPaymentLink(params: {
       );
       return { id: link.id, url: link.url };
     } catch {
-      /* method not enabled on this account — fall through to defaults */
+      /* method not available on this account — fall through to defaults */
     }
   }
 
