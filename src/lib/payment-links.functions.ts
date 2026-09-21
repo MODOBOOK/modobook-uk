@@ -96,6 +96,8 @@ export const createPaymentLink = createServerFn({ method: "POST" })
       description: data.description,
       surchargeCents,
       descriptorName: profile.clinic_name ?? profile.full_name,
+      clearpayEnabled: !!(profile as { payment_clearpay_enabled?: boolean }).payment_clearpay_enabled,
+      klarnaEnabled: !!(profile as { payment_klarna_enabled?: boolean }).payment_klarna_enabled,
       metadata: {
         profile_id: profile.id,
         appointment_id: data.appointmentId ?? "",
