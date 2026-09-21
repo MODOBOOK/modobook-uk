@@ -381,7 +381,7 @@ function PricingBand() {
               <div
                 className={`lift flex h-full flex-col border p-8 ${
                   t.highlight
-                    ? "border-[color:var(--ink)] bg-[color:var(--ink)] text-[color:var(--paper)]"
+                    ? "border-[color:var(--ink-soft)] bg-[color:var(--ink-soft)] text-[color:var(--paper)]"
                     : "border-[color:var(--hairline)] bg-[color:var(--paper)]"
                 }`}
               >
