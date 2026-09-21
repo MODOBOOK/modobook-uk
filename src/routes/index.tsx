@@ -396,13 +396,15 @@ function PricingBand() {
                 </h3>
                 <div className="mt-5 flex items-baseline gap-2">
                   <span className="font-display text-4xl">{t.now}</span>
-                  <span
-                    className={`text-sm line-through ${
-                      t.highlight ? "text-[color:var(--paper)]/45" : "text-[color:var(--ink-soft)]/60"
-                    }`}
-                  >
-                    {t.was}
-                  </span>
+                  {t.was && (
+                    <span
+                      className={`text-sm line-through ${
+                        t.highlight ? "text-[color:var(--paper)]/45" : "text-[color:var(--ink-soft)]/60"
+                      }`}
+                    >
+                      {t.was}
+                    </span>
+                  )}
                 </div>
                 <div
                   className={`mt-1 text-[11px] uppercase tracking-[0.16em] ${
