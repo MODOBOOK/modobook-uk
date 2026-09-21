@@ -602,16 +602,38 @@ export async function createConnectedPaymentLink(params: {
   }
 
   const suffix = buildStatementDescriptorSuffix(params.descriptorName);
-  const link = await stripe.paymentLinks.create(
-    {
-      line_items: lineItems,
-      metadata: params.metadata,
-      ...(suffix
-        ? { payment_intent_data: { statement_descriptor: suffix } }
-        : {}),
-    },
-    opts,
-  );
+  const base: Stripe.PaymentLinkCreateParams = {
+    line_items: lineItems,
+    metadata: params.metadata,
+    ...(suffix
+      ? { payment_intent_data: { statement_descriptor: suffix } }
+      : {}),
+  };
+
+  // Offer buy-now-pay-later (Clearpay / Klarna) alongside card on the link the
+  // patient receives. Clearpay only supports GBP between £1 and £1,000, so we
+  // only ask for it when the total qualifies — and if the connected account
+  // hasn't enabled a method, we quietly fall back to the account's defaults so
+  // the link is still created.
+  const total = params.amountCents + Math.max(0, Math.round(params.surchargeCents ?? 0));
+  const bnpl: Stripe.PaymentLinkCreateParams.PaymentMethodType[] = [];
+  if (currency === "gbp" && total >= 100 && total <= 100000) {
+    bnpl.push("afterpay_clearpay", "klarna");
+  }
+
+  if (bnpl.length > 0) {
+    try {
+      const link = await stripe.paymentLinks.create(
+        { ...base, payment_method_types: ["card", ...bnpl] },
+        opts,
+      );
+      return { id: link.id, url: link.url };
+    } catch {
+      /* method not enabled on this account — fall through to defaults */
+    }
+  }
+
+  const link = await stripe.paymentLinks.create(base, opts);
   return { id: link.id, url: link.url };
 }
 
