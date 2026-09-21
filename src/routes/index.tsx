@@ -557,6 +557,11 @@ export function SiteFooter() {
           { label: "Terms & Conditions", to: "/terms" },
           { label: "Cookie Policy", to: "/privacy/cookies" },
         ]} />
+
+        <FooterCol title="Support" links={[
+          { label: "Contact", href: "mailto:info@modobook.co.uk" },
+          { label: "FAQ", to: "/faq" },
+        ]} />
       </div>
       <div className="border-t border-[color:var(--hairline)] py-6 text-center text-xs uppercase tracking-[0.2em] text-[color:var(--ink-soft)]">
         <div>© {new Date().getFullYear()} MODO · For practitioners, by practitioners</div>
