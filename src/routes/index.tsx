@@ -288,7 +288,7 @@ type PriceRow = {
   name: string;
   tag: string;
   now: string;
-  was: string;
+  was?: string;
   unit: string;
   points: string[];
   highlight?: boolean;
@@ -308,6 +308,20 @@ const PRICE_ROWS: PriceRow[] = [
       "Records, consent, face mapping & prescriber hub",
     ],
     highlight: true,
+  },
+  {
+    name: "MODO Collective",
+    tag: "For clinic owners",
+    now: "£59.99",
+    unit: "per month",
+    points: [
+      "Everything in MODO Solo",
+      "4 practitioners included",
+      "Compliance suite for clinical governance",
+      "Room rental & diary management",
+      "Associate onboarding & permissions",
+      "Training link for your training academy",
+    ],
   },
   {
     name: "Extra team member",
