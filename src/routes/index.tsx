@@ -513,8 +513,8 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-5 lg:px-8">
-        <div>
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-x-6 gap-y-10 px-4 py-14 sm:px-6 lg:grid-cols-5 lg:px-8">
+        <div className="col-span-2 lg:col-span-1">
           <Link to="/" aria-label="MODO home" className="flex items-center">
             <img
               src={wordmark.url}
