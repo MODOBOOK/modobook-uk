@@ -525,7 +525,7 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="border-t border-[color:var(--hairline)] bg-[color:var(--paper)]">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-5 lg:px-8">
         <div>
           <Link to="/" aria-label="MODO home" className="flex items-center">
             <img
@@ -557,6 +557,11 @@ export function SiteFooter() {
           { label: "Terms & Conditions", to: "/terms" },
           { label: "Cookie Policy", to: "/privacy/cookies" },
         ]} />
+
+        <FooterCol title="Support" links={[
+          { label: "Contact", href: "mailto:info@modobook.co.uk" },
+          { label: "FAQ", to: "/faq" },
+        ]} />
       </div>
       <div className="border-t border-[color:var(--hairline)] py-6 text-center text-xs uppercase tracking-[0.2em] text-[color:var(--ink-soft)]">
         <div>© {new Date().getFullYear()} MODO · For practitioners, by practitioners</div>
@@ -582,14 +587,18 @@ export function IconTile({ icon: Icon, label }: { icon: React.ComponentType<{ cl
   );
 }
 
-function FooterCol({ title, links }: { title: string; links: { label: string; to: string }[] }) {
+function FooterCol({ title, links }: { title: string; links: { label: string; to?: string; href?: string }[] }) {
   return (
     <div className="text-sm">
       <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[color:var(--accent)]">{title}</div>
       <ul className="mt-3 space-y-2">
         {links.map((l) => (
-          <li key={l.to + l.label}>
-            <Link to={l.to} className="text-[color:var(--ink-soft)] transition-colors hover:text-[color:var(--ink)]">{l.label}</Link>
+          <li key={l.to ?? l.href ?? l.label}>
+            {l.href ? (
+              <a href={l.href} className="text-[color:var(--ink-soft)] transition-colors hover:text-[color:var(--ink)]">{l.label}</a>
+            ) : (
+              <Link to={l.to!} className="text-[color:var(--ink-soft)] transition-colors hover:text-[color:var(--ink)]">{l.label}</Link>
+            )}
           </li>
         ))}
       </ul>
