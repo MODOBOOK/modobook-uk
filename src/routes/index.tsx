@@ -540,8 +540,6 @@ function PricingBand() {
 
 const NAV_PAGES = [
   { to: "/features", label: "Features" },
-  { to: "/prescriber-hub", label: "Prescriber Hub" },
-  { to: "/rewards", label: "Rewards" },
   { to: "/pricing", label: "Pricing" },
   { to: "/faq", label: "FAQ" },
   { to: "/demo", label: "Demo" },
