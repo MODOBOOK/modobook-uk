@@ -293,7 +293,7 @@ function Hero() {
           <p className="mx-auto mt-5 max-w-xl font-display text-lg leading-relaxed text-[color:var(--ink)] sm:text-xl">
             If you do aesthetics, it's for you —{" "}
             <span className="italic text-[color:var(--ink-soft)]">
-              with safety and compliance built into every step.
+              everything you need to run a successful aesthetics clinic.
             </span>
           </p>
         </Reveal>
