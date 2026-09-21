@@ -165,7 +165,7 @@ function LandingPage() {
             <div className="grid gap-px border border-[color:var(--hairline)] bg-[color:var(--hairline)] sm:grid-cols-2 lg:grid-cols-3">
               <GridFeature icon={Calendar} title="Bookings & Availability" desc="Smart scheduling, SMS reminders, and a personalised booking URL." />
               <GridFeature icon={ClipboardList} title="Consultations" desc="Assess, plan, photograph and document" />
-              <GridFeature icon={FileSignature} title="Consent & medical" desc="Use ours or build your own — auto-sent, signed and filed." />
+              <GridFeature icon={FileSignature} title="Consent & medical" desc="Create, send, sign and securely stored" />
               <GridFeature icon={Camera} title="Face mapping" desc="Pin-drop product tags with units and before/after imagery." />
               <GridFeature icon={CreditCard} title="Payments" desc="Deposits, card capture, pay-in-clinic and Klarna & Clearpay buy-now-pay-later — 0% booking fees." />
               <GridFeature icon={Sparkles} title="Built-in AI" desc="Treatment descriptions, consent forms and aftercare written for you in seconds." />
