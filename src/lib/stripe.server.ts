@@ -570,6 +570,8 @@ export async function createConnectedPaymentLink(params: {
   metadata?: Record<string, string>;
   surchargeCents?: number;
   descriptorName?: string | null;
+  clearpayEnabled?: boolean;
+  klarnaEnabled?: boolean;
 }) {
   const stripe = getStripe();
   const opts = { stripeAccount: params.accountId } as const;
