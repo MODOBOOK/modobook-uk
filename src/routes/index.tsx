@@ -125,7 +125,7 @@ function LandingPage() {
                 Start your first month free.
               </p>
               <p className="mx-auto mt-5 max-w-md text-sm text-[color:var(--paper)]/70">
-                No waitlist, no card details, no booking fees. Cancel anytime.
+                Get started in minutes. Cancel anytime.
               </p>
               <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
                 <Link
