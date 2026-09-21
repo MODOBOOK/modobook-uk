@@ -296,7 +296,7 @@ type PriceRow = {
 
 const PRICE_ROWS: PriceRow[] = [
   {
-    name: "MODO Clinic",
+    name: "MODO Solo",
     tag: "For independent practitioners",
     now: "£39.99",
     unit: "per month",
