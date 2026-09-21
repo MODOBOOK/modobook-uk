@@ -543,7 +543,6 @@ export function SiteFooter() {
         <FooterCol title="Platform" links={[
           { label: "Features", to: "/features" },
           { label: "Pricing", to: "/pricing" },
-          { label: "FAQ", to: "/faq" },
           { label: "Demo", to: "/demo" },
         ]} />
 
