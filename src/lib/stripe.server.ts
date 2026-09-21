@@ -638,14 +638,19 @@ export async function createConnectedPaymentLink(params: {
       /* capability can't be requested from the platform — continue */
     }
 
-    try {
-      const link = await stripe.paymentLinks.create(
-        { ...base, payment_method_types: ["card", ...bnpl] },
-        opts,
-      );
-      return { id: link.id, url: link.url };
-    } catch {
-      /* method not available on this account — fall through to defaults */
+    // Try every requested method, then drop them one at a time so a single
+    // unavailable method (e.g. Klarna pending review) never removes Clearpay.
+    const attempts = [["card", ...bnpl], ...bnpl.map((m) => ["card", m])];
+    for (const methods of attempts) {
+      try {
+        const link = await stripe.paymentLinks.create(
+          { ...base, payment_method_types: methods as Stripe.PaymentLinkCreateParams.PaymentMethodType[] },
+          opts,
+        );
+        return { id: link.id, url: link.url };
+      } catch {
+        /* method not available on this account — try the next combination */
+      }
     }
   }
 
