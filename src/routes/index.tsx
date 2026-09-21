@@ -327,52 +327,6 @@ function Hero() {
           </p>
         </Reveal>
 
-        <Reveal delay={340}>
-          <div className="mt-11 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link
-              to="/auth"
-              className="inline-flex h-14 items-center justify-center bg-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--paper)] transition-colors hover:bg-[color:var(--accent)]"
-            >
-              Create your account
-            </Link>
-            <Link
-              to="/demo"
-              className="inline-flex h-14 items-center justify-center border border-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--ink)] transition-colors hover:bg-[color:var(--ink)] hover:text-[color:var(--paper)]"
-            >
-              Try the demo
-            </Link>
-          </div>
-        </Reveal>
-
-        <Reveal delay={420}>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
-            <a
-              href="https://modobook.uk/m/aestheticsbynurseryan"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-underline group inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--ink)]"
-            >
-              Live clinic 1
-              <ArrowRight className="h-3.5 w-3.5 text-[color:var(--accent)] transition-transform group-hover:translate-x-0.5" />
-            </a>
-            <a
-              href="https://modobook.uk/m/aesthetiqbyjen"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="link-underline group inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--ink)]"
-            >
-              Live clinic 2
-              <ArrowRight className="h-3.5 w-3.5 text-[color:var(--accent)] transition-transform group-hover:translate-x-0.5" />
-            </a>
-          </div>
-
-          <p className="mx-auto mt-8 max-w-md text-xs leading-relaxed text-[color:var(--ink-soft)]">
-            <span className="font-semibold text-[color:var(--ink)]">
-              First month free · No card details required.
-            </span>{" "}
-            Open to every aesthetics practitioner — sign up in minutes, cancel anytime.
-          </p>
-        </Reveal>
       </div>
     </header>
   );
