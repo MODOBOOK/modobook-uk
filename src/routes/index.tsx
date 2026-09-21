@@ -118,10 +118,7 @@ function LandingPage() {
         <section className="bg-[color:var(--ink)] text-[color:var(--paper)]">
           <div className="mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 sm:py-24 lg:px-8">
             <Reveal>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[color:var(--taupe)]">
-                Now open
-              </div>
-              <p className="mt-6 font-display text-4xl leading-tight sm:text-5xl">
+              <p className="font-display text-4xl leading-tight sm:text-5xl">
                 Start your first month free.
               </p>
               <p className="mx-auto mt-5 max-w-md text-sm text-[color:var(--paper)]/70">
