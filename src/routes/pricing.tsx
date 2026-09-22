@@ -109,7 +109,7 @@ function PricingPage() {
         <PageHero
           eyebrow="Pricing"
           title="One simple price."
-          accent="No booking fees."
+          accent="Simple pricing, no surprises."
           blurb="One flat subscription for your clinic, with your first month free. Add team members and extra locations only if you need them — and keep 100% of what your patients pay you."
         >
           <p className="mx-auto mt-8 max-w-md text-xs leading-relaxed text-[color:var(--ink-soft)]">
