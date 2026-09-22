@@ -67,7 +67,7 @@ const groups = [
       { icon: Camera, title: "Precision face mapping", desc: "Map treatments with precision using product and unit markers, drawing tools and patient imagery." },
       { icon: ImageIcon, title: "Before & after photos", desc: "Capture and store treatment photography directly within each patient record — private, organised and easy to revisit." },
       { icon: FileSignature, title: "Forms & consent", desc: "Create tailored medical and consent forms with digital signatures, dedicated permissions and effortless filing" },
-      { icon: Users, title: "Patient profiles", desc: "Allergies flagged, history, concerns, photos, forms and comms timeline in one place." },
+      { icon: Users, title: "The complete patient record", desc: "History, allergies, concerns, photography, forms and communications — together in one place." },
       { icon: Pill, title: "Batch & expiry", desc: "Record products used per session for traceability and audits." },
     ],
   },
