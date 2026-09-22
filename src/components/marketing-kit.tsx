@@ -210,7 +210,7 @@ export function StepRow({ n, title, desc }: { n: number; title: string; desc: st
 /** The single, accurate closing call-to-action used on every marketing page. */
 export function CtaBand({
   title = "Start your first month free.",
-  blurb = "MODO is open to every UK aesthetics practitioner today. No waitlist, no card details, no booking fees. Cancel anytime.",
+  blurb = "Get started in minutes. Cancel anytime.",
 }: {
   title?: string;
   blurb?: string;
