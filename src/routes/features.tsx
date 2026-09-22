@@ -63,7 +63,7 @@ const groups = [
     title: "Consultations & clinical records",
     eyebrow: "The clinical layer",
     items: [
-      { icon: ClipboardList, title: "8-step consultation flow", desc: "Medical history, concerns, assessment, plan, consent, photos, batch numbers and invoice." },
+      { icon: ClipboardList, title: "Consultation", desc: "A guided consultation journey, bringing history, concerns, assessment, consent, photography, treatment details and more into one seamless flow." },
       { icon: Camera, title: "Face mapping", desc: "Pin-drop product tags with units, drawing tool, realistic face or patient photo background." },
       { icon: ImageIcon, title: "Before & after photos", desc: "Captured per session, attached to the patient record, never to the camera roll." },
       { icon: FileSignature, title: "Consent & medical forms", desc: "Drag-and-drop builder, drawn signatures, photo and social media consent split out, auto-filing." },
