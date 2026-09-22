@@ -78,7 +78,7 @@ const groups = [
       { icon: Bot, title: "Intelligence, built in", desc: "From treatment plans, forms and aftercare to building your account for you. Upload your treatment menu, reviews or client list — as a screenshot — and the intelligent assistance extracts and organises everything for you." },
       { icon: FileSignature, title: "AI consent & medical forms", desc: "Describe the treatment and MODO drafts the form — then edit anything before you publish it." },
       { icon: MessageSquare, title: "AI aftercare", desc: "Aftercare instructions written per treatment and sent automatically after the visit." },
-      { icon: Network, title: "Prescriber Hub", desc: "A shared, traceable prescribing record — clinic days, requests, notes and batch numbers in one place." },
+      { icon: Network, title: "Prescriber Hub", desc: "A dedicated space for connected prescribing. Keep requests, practitioner notes, clinic days and treatment details together in one clear, traceable record." },
     ],
   },
   {
