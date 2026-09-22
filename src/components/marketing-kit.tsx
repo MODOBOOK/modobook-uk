@@ -91,7 +91,7 @@ export function PageHero({
 }: {
   eyebrow: string;
   title: string;
-  accent?: string;
+  accent?: ReactNode;
   blurb: string;
   children?: ReactNode;
 }) {
