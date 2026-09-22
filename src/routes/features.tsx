@@ -15,7 +15,7 @@ import {
   Palette, Link2, Calendar, ClipboardList, FileSignature, Camera, Users,
   Layers, CreditCard, Bell, MessageSquare, ShieldCheck, Sparkles, Stethoscope,
   Pill, MapPin, Star, BarChart3, Brush, FileText, Image as ImageIcon, Wallet,
-  CalendarClock, Smartphone, Network, Bot, DoorOpen,
+  CalendarClock, Smartphone, Network, Bot, DoorOpen, Repeat,
 } from "lucide-react";
 
 export const Route = createFileRoute("/features")({
@@ -79,6 +79,7 @@ const groups = [
       { icon: DoorOpen, title: "Room rental", desc: "Turn available clinic space into bookable room rental. Set your rooms, availability and rates, then manage bookings directly through MODO — without the messages, spreadsheets or separate diary." },
       { icon: MessageSquare, title: "Connected practitioners", desc: "Designed for clinical oversight where compliance matters. Authorised prescribers or clinical leads can connect with practitioners and securely access the relevant records needed to support safe, compliant practice." },
       { icon: Network, title: "Prescriber Hub", desc: "A dedicated space for connected prescribing. Keep requests, practitioner notes, clinic days and treatment details together in one clear, traceable record." },
+      { icon: Repeat, title: "Client memberships", desc: "Turn treatments into something clients can plan for. Create tailored memberships that allow clients to contribute monthly directly to your business, building a balance they can put towards future treatments." },
     ],
   },
   {
