@@ -39,7 +39,7 @@ const groups = [
     title: "Your branded booking page",
     eyebrow: "Your front door",
     items: [
-      { icon: Palette, title: "Custom branding", desc: "Six curated palettes, build-your-own colour scheme, fonts, logo, tab icon and welcome card." },
+      { icon: Palette, title: "Distinctly yours", desc: "Curate every detail with your own colours, fonts, logo and finishing touches." },
       { icon: Link2, title: "Your MODO link", desc: "Share modobook.uk/m/your-clinic on Instagram, TikTok, Google and your website." },
       { icon: Brush, title: "Hero & carousel", desc: "Classic single hero or rotating carousel. Crop on upload, mobile-friendly." },
       { icon: ImageIcon, title: "Favourite treatments", desc: "Showcase your clinic's most popular treatments in a horizontal carousel." },
