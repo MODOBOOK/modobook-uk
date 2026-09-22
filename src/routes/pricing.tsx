@@ -17,13 +17,13 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "MODO is £29.99 a month with your first month free and no booking fees. Extra team members £9.99, and extra locations are free for a limited time.",
+          "MODO Solo is £39.99 a month with your first month free. MODO Collective £59.99, extra practitioners £9.99. No booking fees — your revenue stays yours.",
       },
       { property: "og:title", content: "MODO Pricing" },
       {
         property: "og:description",
         content:
-          "£29.99/month, first month free, 0% booking fees. +£9.99 per extra team member, extra locations free for a limited time.",
+          "MODO Solo £39.99/month, MODO Collective £59.99/month, +£9.99 per additional practitioner. First month free, no booking fees.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://modobook.uk/pricing" },
@@ -197,9 +197,9 @@ function PricingPage() {
                   What's included
                 </div>
                 <p className="mt-3">
-                  All prices are in GBP and exclude VAT where applicable. Your discounted rate stays
-                  in place for as long as your subscription remains active. Cancel any time. No
-                  booking fees are ever charged on top of your subscription — your revenue is yours.
+                  All prices are in GBP and include VAT. Your first month is free, with no card
+                  required to start. Cancel any time. No booking fees are ever charged on top of
+                  your subscription — your revenue stays yours.
                 </p>
               </div>
             </Reveal>
