@@ -41,7 +41,7 @@ const groups = [
     items: [
       { icon: Palette, title: "Distinctly yours", desc: "Curate every detail with your own colours, fonts, logo and finishing touches." },
       { icon: Link2, title: "Your MODO link", desc: "One beautifully simple link, ready to share wherever your clients find you." },
-      { icon: Brush, title: "Hero & carousel", desc: "Classic single hero or rotating carousel. Crop on upload, mobile-friendly." },
+      { icon: Brush, title: "Your visual story", desc: "Set the tone with a signature hero image or curated carousel, optimised across every device." },
       { icon: ImageIcon, title: "Favourite treatments", desc: "Showcase your clinic's most popular treatments in a horizontal carousel." },
       { icon: FileText, title: "Editable welcome intro", desc: "A clean patient-facing intro block with a heading, rich text, contact details and your clinic style." },
       { icon: Smartphone, title: "Mobile-first patient flow", desc: "The booking page is built mobile-first — no app for your patients to download." },
