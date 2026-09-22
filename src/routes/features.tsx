@@ -56,7 +56,7 @@ const groups = [
       { icon: Sparkles, title: "Model appointments", desc: "Create dedicated model availability with exclusive pricing, dates and times — all within your diary." },
       { icon: MapPin, title: "Locations & practitioners", desc: "Let clients choose their preferred location and practitioner, or simply book the first available." },
       { icon: Star, title: "Book by concern", desc: "Let clients explore by what they'd like to address, making the path to the right treatment simple." },
-      { icon: Layers, title: "Packages & multi-session", desc: "Bundles, courses, top-ups, add-ons and split payments — all native." },
+      { icon: Layers, title: "Packages & courses", desc: "Create considered treatment journeys with packages, courses, add-ons, top-ups and flexible payments." },
     ],
   },
   {
