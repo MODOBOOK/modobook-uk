@@ -43,7 +43,7 @@ const groups = [
       { icon: Link2, title: "Your MODO link", desc: "One beautifully simple link, ready to share wherever your clients find you." },
       { icon: Brush, title: "Your visual story", desc: "Set the tone with a signature hero image or curated carousel, optimised across every device." },
       { icon: ImageIcon, title: "Signature treatments", desc: "Put your most sought-after treatments front and centre." },
-      { icon: FileText, title: "Editable welcome intro", desc: "A clean patient-facing intro block with a heading, rich text, contact details and your clinic style." },
+      { icon: FileText, title: "Your welcome", desc: "Introduce your clinic your way, with a personalised welcome, key details and your own brand voice." },
       { icon: Smartphone, title: "Mobile-first patient flow", desc: "The booking page is built mobile-first — no app for your patients to download." },
     ],
   },
