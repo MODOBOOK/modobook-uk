@@ -191,18 +191,6 @@ function PricingPage() {
               ))}
             </div>
 
-            <Reveal>
-              <div className="mt-10 border border-[color:var(--hairline)] bg-[color:var(--paper)] p-8 text-sm leading-relaxed text-[color:var(--ink-soft)]">
-                <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--accent)]">
-                  What's included
-                </div>
-                <p className="mt-3">
-                  All prices are in GBP and include VAT. Your first month is free, with no card
-                  required to start. Cancel any time. No booking fees are ever charged on top of
-                  your subscription — your revenue stays yours.
-                </p>
-              </div>
-            </Reveal>
           </div>
         </section>
 
