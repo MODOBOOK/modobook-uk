@@ -16,6 +16,7 @@ import {
   Layers, CreditCard, Bell, MessageSquare, ShieldCheck, Sparkles, Stethoscope,
   Pill, MapPin, Star, BarChart3, Brush, FileText, Image as ImageIcon, Wallet,
   CalendarClock, Smartphone, Network, Bot, DoorOpen, Repeat, TicketPercent,
+  CalendarCheck,
 } from "lucide-react";
 
 export const Route = createFileRoute("/features")({
