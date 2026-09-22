@@ -104,7 +104,7 @@ const groups = [
       { icon: Star, title: "Build your reputation", desc: "Turn great experiences into lasting trust with automated review requests, making it effortless to collect and showcase client feedback." },
       { icon: ImageIcon, title: "Before & after photos", desc: "Capture and store treatment photography directly within each patient record — private, organised and easy to revisit." },
       { icon: BarChart3, title: "Marketing, on autopilot", desc: "Stay front of mind without adding to your workload. Create targeted campaigns, birthday messages, treatment reminders and client win-backs, with the details handled automatically." },
-      { icon: Sparkles, title: "Rewards & referrals", desc: "Referral codes, loyalty points and reward tiers — fully optional and controlled by you." },
+      { icon: Sparkles, title: "Reward loyalty", desc: "Turn loyal clients into your biggest advocates with tailored rewards, referral codes and loyalty tiers — entirely shaped around your business." },
     ],
   },
 ];
