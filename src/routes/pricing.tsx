@@ -142,13 +142,13 @@ function PricingPage() {
                     >
                       {t.tag}
                     </div>
-                    <h2
+                    <h3
                       className={`mt-4 font-display text-2xl ${
                         t.highlight ? "text-[color:var(--paper)]" : "text-[color:var(--ink)]"
                       }`}
                     >
                       {t.name}
-                    </h2>
+                    </h3>
                     <div className="mt-5 flex items-baseline gap-2">
                       <span className="font-display text-4xl">{t.now}</span>
                     </div>
