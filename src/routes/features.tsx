@@ -120,7 +120,7 @@ function FeaturesPage() {
         >
           <div className="mt-11 flex flex-col justify-center gap-3 sm:flex-row">
             <SolidLink to="/auth">Create your account</SolidLink>
-            <OutlineLink to="/demo">Try the demo</OutlineLink>
+            <OutlineLink to="/demo">Explore the demo</OutlineLink>
           </div>
         </PageHero>
 
