@@ -72,7 +72,7 @@ const groups = [
     ],
   },
   {
-    title: "Built-in AI",
+    title: "Intelligence, built in",
     eyebrow: "What makes MODO different",
     items: [
       { icon: Bot, title: "AI treatment descriptions", desc: "Write patient-ready treatment copy for your menu in seconds, in your own tone." },
