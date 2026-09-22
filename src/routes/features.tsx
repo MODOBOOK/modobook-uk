@@ -97,7 +97,7 @@ const groups = [
   },
   {
     title: "Communication & growth",
-    eyebrow: "Keeping patients close",
+    eyebrow: "Staying connected",
     items: [
       { icon: Bell, title: "Reminders", desc: "Email and text confirmations and reminders at the hours you set, with the practitioner's name included." },
       { icon: MessageSquare, title: "Aftercare", desc: "Per-treatment aftercare sent automatically a set number of hours after the appointment." },
