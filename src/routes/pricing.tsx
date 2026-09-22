@@ -38,60 +38,51 @@ type Tier = {
   name: string;
   tag: string;
   now: string;
-  was: string;
   unit: string;
-  blurb: string;
   perks: string[];
   highlight?: boolean;
 };
 
 const tiers: Tier[] = [
   {
-    name: "MODO Clinic",
-    tag: "Core subscription",
-    now: "£29.99",
-    was: "£39.99",
+    name: "MODO Solo",
+    tag: "For independent practitioners",
+    now: "£39.99",
     unit: "per month",
-    blurb:
-      "Everything you need to run an aesthetics clinic — bookings, medical records, consent, face mapping, payments and the prescriber hub.",
     perks: [
-      "First month free — no card required",
-      "Unlimited patients & appointments",
-      "0% booking fees — keep 100% of your revenue",
-      "Full clinical records, consent & face mapping",
-      "Built-in AI for descriptions, forms & aftercare",
-      "Marketing automations & email templates",
-      "Prescriber hub included",
+      "Unlimited locations",
+      "1 practitioner included",
+      "SMS appointment reminders",
+      "Branded booking page",
+      "Consultations, consent & clinical records",
+      "Payments, deposits & cancellation rules",
+      "Prescriber hub",
     ],
     highlight: true,
   },
   {
-    name: "Extra team member",
-    tag: "Add-on",
-    now: "£9.99",
-    was: "£14.99",
-    unit: "per member / month",
-    blurb: "Give each practitioner their own calendar, login and clinical record permissions.",
+    name: "MODO Collective",
+    tag: "For clinic owners",
+    now: "£59.99",
+    unit: "per month",
     perks: [
-      "Individual practitioner calendar",
-      "Personal login & permissions",
-      "Own patient list & notes",
-      "1 practitioner included in the main subscription",
+      "Everything in MODO Solo",
+      "4 practitioners included",
+      "Compliance suite for clinical governance",
+      "Room rental & diary management",
+      "Associate onboarding & permissions",
+      "Training link for your training academy",
     ],
   },
   {
-    name: "Extra location",
-    tag: "Limited-time offer",
-    now: "Free",
-    was: "£4.99",
-    unit: "per location / month",
-    blurb:
-      "Run multiple rooms, clinics or venues from one MODO account, each with their own hours and bookings.",
+    name: "Additional Practitioner",
+    tag: "Add-on",
+    now: "£9.99",
+    unit: "per practitioner / month",
     perks: [
-      "Separate opening hours & availability",
-      "Location-specific booking links",
-      "Shared patient records across sites",
-      "1 location included in the main subscription",
+      "Individual calendar and login",
+      "Dedicated patient list and records",
+      "1 practitioner included",
     ],
   },
 ];
