@@ -1,10 +1,33 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 
 const KEY = "modo.cookie.consent.v1";
 
+// Show the banner only on MODO's own marketing pages — never on clinic
+// booking pages, demo links or other pages sent to patients.
+const MARKETING_PREFIXES = [
+  "/features",
+  "/pricing",
+  "/faq",
+  "/prescriber-hub",
+  "/rewards",
+  "/waitlist",
+  "/hair-beauty-waitlist",
+  "/tla-competition",
+  "/privacy",
+  "/terms",
+];
+
+function isMarketingPath(pathname: string) {
+  if (pathname === "/") return true;
+  return MARKETING_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
+}
+
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -21,7 +44,8 @@ export function CookieConsent() {
     setVisible(false);
   }
 
-  if (!visible) return null;
+  if (!visible || !isMarketingPath(location.pathname)) return null;
+
 
   return (
     <div
