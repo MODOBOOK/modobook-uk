@@ -440,6 +440,18 @@ function PricingBand() {
                     </li>
                   ))}
                 </ul>
+                <div className="mt-auto pt-8">
+                  <Link
+                    to="/auth"
+                    className={`block w-full px-5 py-3 text-center text-xs font-bold uppercase tracking-[0.2em] transition-colors ${
+                      t.highlight
+                        ? "bg-[color:var(--paper)] text-[color:var(--ink)] hover:bg-[color:var(--secondary)]"
+                        : "bg-[color:var(--ink)] text-[color:var(--paper)] hover:bg-[color:var(--accent)]"
+                    }`}
+                  >
+                    Start your free 30 day trial
+                  </Link>
+                </div>
               </div>
             </Reveal>
           ))}
