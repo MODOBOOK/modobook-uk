@@ -75,7 +75,7 @@ const groups = [
     title: "Beyond the booking",
     eyebrow: "What makes MODO different",
     items: [
-      { icon: Bot, title: "AI treatment descriptions", desc: "Write patient-ready treatment copy for your menu in seconds, in your own tone." },
+      { icon: Bot, title: "Intelligence, built in", desc: "Write patient-ready treatment copy for your menu in seconds, in your own tone." },
       { icon: FileSignature, title: "AI consent & medical forms", desc: "Describe the treatment and MODO drafts the form — then edit anything before you publish it." },
       { icon: MessageSquare, title: "AI aftercare", desc: "Aftercare instructions written per treatment and sent automatically after the visit." },
       { icon: Network, title: "Prescriber Hub", desc: "A shared, traceable prescribing record — clinic days, requests, notes and batch numbers in one place." },
