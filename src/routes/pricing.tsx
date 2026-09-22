@@ -114,9 +114,8 @@ function PricingPage() {
         >
           <p className="mx-auto mt-8 max-w-md text-xs leading-relaxed text-[color:var(--ink-soft)]">
             <span className="font-semibold text-[color:var(--ink)]">
-              First month free · No card details required.
-            </span>{" "}
-            Open to every UK aesthetics practitioner today. Cancel anytime.
+              First month free · Cancel anytime.
+            </span>
           </p>
         </PageHero>
 
