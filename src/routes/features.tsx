@@ -116,7 +116,7 @@ function FeaturesPage() {
           eyebrow="The platform"
           title="Every feature,"
           accent="considered."
-          blurb="The booking, consultation, clinical, payment and marketing stack — built only for aesthetics, for HCPs and non-HCPs alike."
+          blurb="Bookings, consultations, payments and growth — thoughtfully brought together in one refined platform."
         >
           <div className="mt-11 flex flex-col justify-center gap-3 sm:flex-row">
             <SolidLink to="/auth">Create your account</SolidLink>
