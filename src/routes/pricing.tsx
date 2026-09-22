@@ -17,13 +17,13 @@ export const Route = createFileRoute("/pricing")({
       {
         name: "description",
         content:
-          "MODO is £29.99 a month with your first month free and no booking fees. Extra team members £9.99, and extra locations are free for a limited time.",
+          "MODO Solo is £39.99 a month with your first month free. MODO Collective £59.99, extra practitioners £9.99. No booking fees — your revenue stays yours.",
       },
       { property: "og:title", content: "MODO Pricing" },
       {
         property: "og:description",
         content:
-          "£29.99/month, first month free, 0% booking fees. +£9.99 per extra team member, extra locations free for a limited time.",
+          "MODO Solo £39.99/month, MODO Collective £59.99/month, +£9.99 per additional practitioner. First month free, no booking fees.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://modobook.uk/pricing" },
@@ -38,60 +38,51 @@ type Tier = {
   name: string;
   tag: string;
   now: string;
-  was: string;
   unit: string;
-  blurb: string;
   perks: string[];
   highlight?: boolean;
 };
 
 const tiers: Tier[] = [
   {
-    name: "MODO Clinic",
-    tag: "Core subscription",
-    now: "£29.99",
-    was: "£39.99",
+    name: "MODO Solo",
+    tag: "For independent practitioners",
+    now: "£39.99",
     unit: "per month",
-    blurb:
-      "Everything you need to run an aesthetics clinic — bookings, medical records, consent, face mapping, payments and the prescriber hub.",
     perks: [
-      "First month free — no card required",
-      "Unlimited patients & appointments",
-      "0% booking fees — keep 100% of your revenue",
-      "Full clinical records, consent & face mapping",
-      "Built-in AI for descriptions, forms & aftercare",
-      "Marketing automations & email templates",
-      "Prescriber hub included",
+      "Unlimited locations",
+      "1 practitioner included",
+      "SMS appointment reminders",
+      "Branded booking page",
+      "Consultations, consent & clinical records",
+      "Payments, deposits & cancellation rules",
+      "Prescriber hub",
     ],
     highlight: true,
   },
   {
-    name: "Extra team member",
-    tag: "Add-on",
-    now: "£9.99",
-    was: "£14.99",
-    unit: "per member / month",
-    blurb: "Give each practitioner their own calendar, login and clinical record permissions.",
+    name: "MODO Collective",
+    tag: "For clinic owners",
+    now: "£59.99",
+    unit: "per month",
     perks: [
-      "Individual practitioner calendar",
-      "Personal login & permissions",
-      "Own patient list & notes",
-      "1 practitioner included in the main subscription",
+      "Everything in MODO Solo",
+      "4 practitioners included",
+      "Compliance suite for clinical governance",
+      "Room rental & diary management",
+      "Associate onboarding & permissions",
+      "Training link for your training academy",
     ],
   },
   {
-    name: "Extra location",
-    tag: "Limited-time offer",
-    now: "Free",
-    was: "£4.99",
-    unit: "per location / month",
-    blurb:
-      "Run multiple rooms, clinics or venues from one MODO account, each with their own hours and bookings.",
+    name: "Additional Practitioner",
+    tag: "Add-on",
+    now: "£9.99",
+    unit: "per practitioner / month",
     perks: [
-      "Separate opening hours & availability",
-      "Location-specific booking links",
-      "Shared patient records across sites",
-      "1 location included in the main subscription",
+      "Individual calendar and login",
+      "Dedicated patient list and records",
+      "1 practitioner included",
     ],
   },
 ];
@@ -160,15 +151,6 @@ function PricingPage() {
                     </h2>
                     <div className="mt-5 flex items-baseline gap-2">
                       <span className="font-display text-4xl">{t.now}</span>
-                      <span
-                        className={`text-sm line-through ${
-                          t.highlight
-                            ? "text-[color:var(--paper)]/45"
-                            : "text-[color:var(--ink-soft)]/60"
-                        }`}
-                      >
-                        {t.was}
-                      </span>
                     </div>
                     <div
                       className={`mt-1 text-[11px] uppercase tracking-[0.16em] ${
@@ -177,13 +159,6 @@ function PricingPage() {
                     >
                       {t.unit} — inc VAT
                     </div>
-                    <p
-                      className={`mt-5 text-sm leading-relaxed ${
-                        t.highlight ? "text-[color:var(--paper)]/75" : "text-[color:var(--ink-soft)]"
-                      }`}
-                    >
-                      {t.blurb}
-                    </p>
                     <ul className="mt-7 space-y-3">
                       {t.perks.map((p) => (
                         <li
@@ -222,9 +197,9 @@ function PricingPage() {
                   What's included
                 </div>
                 <p className="mt-3">
-                  All prices are in GBP and exclude VAT where applicable. Your discounted rate stays
-                  in place for as long as your subscription remains active. Cancel any time. No
-                  booking fees are ever charged on top of your subscription — your revenue is yours.
+                  All prices are in GBP and include VAT. Your first month is free, with no card
+                  required to start. Cancel any time. No booking fees are ever charged on top of
+                  your subscription — your revenue stays yours.
                 </p>
               </div>
             </Reveal>
