@@ -68,7 +68,7 @@ const groups = [
       { icon: ImageIcon, title: "Before & after photos", desc: "Capture and store treatment photography directly within each patient record — private, organised and easy to revisit." },
       { icon: FileSignature, title: "Forms & consent", desc: "Create tailored medical and consent forms with digital signatures, dedicated permissions and effortless filing" },
       { icon: Users, title: "The complete patient record", desc: "History, allergies, concerns, photography, forms and communications — together in one place." },
-      { icon: Pill, title: "Batch & expiry", desc: "Record products used per session for traceability and audits." },
+      { icon: Pill, title: "Product traceability", desc: "Record batch and expiry details with each treatment, keeping essential product information clear and traceable." },
     ],
   },
   {
