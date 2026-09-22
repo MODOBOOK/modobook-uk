@@ -15,7 +15,7 @@ import {
   Palette, Link2, Calendar, ClipboardList, FileSignature, Camera, Users,
   Layers, CreditCard, Bell, MessageSquare, ShieldCheck, Sparkles, Stethoscope,
   Pill, MapPin, Star, BarChart3, Brush, FileText, Image as ImageIcon, Wallet,
-  CalendarClock, Smartphone, Network, Bot,
+  CalendarClock, Smartphone, Network, Bot, DoorOpen,
 } from "lucide-react";
 
 export const Route = createFileRoute("/features")({
