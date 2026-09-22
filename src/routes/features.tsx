@@ -90,7 +90,7 @@ const groups = [
       { icon: Wallet, title: "Flexible payments", desc: "Choose how you take payment for every treatment — from deposits and full payment to paying in clinic. Flexible for you, effortless for your clients" },
       { icon: CreditCard, title: "More ways to pay", desc: "Offer Klarna and Clearpay at checkout, giving clients greater flexibility — with the option to automatically apply associated fees." },
       { icon: ShieldCheck, title: "Protected bookings", desc: "Secure bookings with a card on file and create your own cancellation terms, including flexible, tiered fees for late cancellations." },
-      { icon: BarChart3, title: "Discounts & promo codes", desc: "Stackable or exclusive, time-limited, treatment-specific, day-of-week rules." },
+      { icon: BarChart3, title: "Offers, your way", desc: "Create tailored offers and promotional codes with complete control over treatments, dates, availability and how they can be combined." },
       { icon: Users, title: "Staff payouts & commission", desc: "Pay into the clinic account or a team member's own account, with commission tracked per booking." },
       { icon: CreditCard, title: "0% booking fees", desc: "MODO never takes a cut of your treatment revenue — only your monthly subscription." },
     ],
