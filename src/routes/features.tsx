@@ -51,7 +51,7 @@ const groups = [
     title: "Booking & calendar",
     eyebrow: "The diary",
     items: [
-      { icon: CalendarClock, title: "Smart availability", desc: "Weekly rules, ad-hoc rota, lead times, daily caps and per-treatment buffers." },
+      { icon: CalendarClock, title: "Availability, your way", desc: "Shape your diary around the way you work, with tailored hours, lead times, booking limits and treatment buffers." },
       { icon: Calendar, title: "Scheduled availability", desc: "Open up a day now and set it to go live to patients later — you can still book people in yourself." },
       { icon: Sparkles, title: "Model slots", desc: "Open up discounted windows for model patients. Optional fixed date and time." },
       { icon: MapPin, title: "Multi-location & practitioners", desc: "Patients choose location and practitioner, or let MODO auto-assign first-available." },
