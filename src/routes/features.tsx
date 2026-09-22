@@ -114,8 +114,8 @@ function FeaturesPage() {
       <main className="flex-1">
         <PageHero
           eyebrow="The platform"
-          title="Every feature"
-          accent="in MODO."
+          title="Every feature,"
+          accent="considered."
           blurb="The booking, consultation, clinical, payment and marketing stack — built only for aesthetics, for HCPs and non-HCPs alike."
         >
           <div className="mt-11 flex flex-col justify-center gap-3 sm:flex-row">
