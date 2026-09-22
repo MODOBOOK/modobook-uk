@@ -54,7 +54,7 @@ const groups = [
       { icon: CalendarClock, title: "Availability, your way", desc: "Shape your diary around the way you work, with tailored hours, lead times, booking limits and treatment buffers." },
       { icon: Calendar, title: "Plan ahead", desc: "Prepare future availability in advance, ready to open for online booking exactly when you choose." },
       { icon: Sparkles, title: "Model appointments", desc: "Create dedicated model availability with exclusive pricing, dates and times — all within your diary." },
-      { icon: MapPin, title: "Multi-location & practitioners", desc: "Patients choose location and practitioner, or let MODO auto-assign first-available." },
+      { icon: MapPin, title: "Locations & practitioners", desc: "Let clients choose their preferred location and practitioner, or simply book the first available." },
       { icon: Star, title: "Concern picker", desc: "Patients browse by concern as well as by treatment menu." },
       { icon: Layers, title: "Packages & multi-session", desc: "Bundles, courses, top-ups, add-ons and split payments — all native." },
     ],
