@@ -163,7 +163,7 @@ export function HairlineGrid({
 }) {
   return (
     <div
-      className={`grid gap-px border border-[color:var(--hairline)] bg-[color:var(--hairline)] sm:grid-cols-2 ${
+      className={`grid gap-px bg-[color:var(--hairline)] sm:grid-cols-2 ${
         cols === 3 ? "lg:grid-cols-3" : ""
       }`}
     >
