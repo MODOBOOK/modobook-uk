@@ -101,7 +101,7 @@ const groups = [
     items: [
       { icon: Bell, title: "Stay connected", desc: "Keep clients informed with beautifully timed booking confirmations and appointment reminders, automatically sent by email or SMS." },
       { icon: MessageSquare, title: "Aftercare", desc: "Deliver the right aftercare at the right time, with treatment-specific guidance sent automatically after every appointment." },
-      { icon: Star, title: "Reviews", desc: "Patient review collection and moderation built in." },
+      { icon: Star, title: "Build your reputation", desc: "Turn great experiences into lasting trust with automated review requests, making it effortless to collect and showcase client feedback." },
       { icon: ImageIcon, title: "Before & after photos", desc: "Capture and store treatment photography directly within each patient record — private, organised and easy to revisit." },
       { icon: BarChart3, title: "Marketing & automations", desc: "Segmented campaigns, birthday emails, top-up reminders and win-backs with unsubscribes handled." },
       { icon: Sparkles, title: "Rewards & referrals", desc: "Referral codes, loyalty points and reward tiers — fully optional and controlled by you." },
