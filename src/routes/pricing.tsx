@@ -191,8 +191,16 @@ function PricingPage() {
               ))}
             </div>
 
+            <p className="mt-12 text-center text-sm font-bold text-[color:var(--ink)]">
+              Prices in GBP · Cancel anytime
+            </p>
+            <p className="mt-2 text-center text-sm text-[color:var(--ink-soft)]">
+              Your paid subscription begins automatically at the end of your 30-day free trial unless cancelled.
+            </p>
+
           </div>
         </section>
+
 
         <CtaBand
           title="Start your first month free."
