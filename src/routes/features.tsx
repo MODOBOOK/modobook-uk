@@ -84,7 +84,7 @@ const groups = [
     ],
   },
   {
-    title: "Payments & policies",
+    title: "Payments, your way",
     eyebrow: "Getting paid",
     items: [
       { icon: Wallet, title: "Deposits, full payment or pay-in-clinic", desc: "Pick your mix per treatment, including a £0 deposit where you'd rather take nothing up front." },
