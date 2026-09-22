@@ -87,7 +87,7 @@ const groups = [
     title: "Payments, your way",
     eyebrow: "Getting paid",
     items: [
-      { icon: Wallet, title: "Deposits, full payment or pay-in-clinic", desc: "Pick your mix per treatment, including a £0 deposit where you'd rather take nothing up front." },
+      { icon: Wallet, title: "Flexible payments", desc: "Choose how you take payment for every treatment — from deposits and full payment to paying in clinic. Flexible for you, effortless for your clients" },
       { icon: CreditCard, title: "Buy now, pay later", desc: "Klarna and Clearpay at checkout. Fees can be passed to the patient automatically." },
       { icon: ShieldCheck, title: "Card capture & cancellation rules", desc: "Hold a card on file and set tiered fee bands — e.g. 50% within 24h, 25% within 48h." },
       { icon: BarChart3, title: "Discounts & promo codes", desc: "Stackable or exclusive, time-limited, treatment-specific, day-of-week rules." },
