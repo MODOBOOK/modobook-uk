@@ -99,7 +99,7 @@ const groups = [
     title: "Communication & growth",
     eyebrow: "Staying connected",
     items: [
-      { icon: Bell, title: "Reminders", desc: "Email and text confirmations and reminders at the hours you set, with the practitioner's name included." },
+      { icon: Bell, title: "Stay connected", desc: "Keep clients informed with beautifully timed booking confirmations and appointment reminders, automatically sent by email or SMS." },
       { icon: MessageSquare, title: "Aftercare", desc: "Per-treatment aftercare sent automatically a set number of hours after the appointment." },
       { icon: Star, title: "Reviews", desc: "Patient review collection and moderation built in." },
       { icon: ImageIcon, title: "Before & after photos", desc: "Capture and store treatment photography directly within each patient record — private, organised and easy to revisit." },
