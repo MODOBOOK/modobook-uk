@@ -65,7 +65,7 @@ const groups = [
     items: [
       { icon: ClipboardList, title: "Consultation", desc: "A guided consultation journey, bringing history, concerns, assessment, consent, photography, treatment details and more into one seamless flow." },
       { icon: Camera, title: "Precision face mapping", desc: "Map treatments with precision using product and unit markers, drawing tools and patient imagery." },
-      { icon: ImageIcon, title: "Before & after photos", desc: "Capture and store treatment photography directly within each patient record — private, organised and easy to revisit." },
+      { icon: Stethoscope, title: "Clinic compliance", desc: "Checks, audits and a notes board for your clinic — switch it on only if you want it." },
       { icon: FileSignature, title: "Forms & consent", desc: "Create tailored medical and consent forms with digital signatures, dedicated permissions and effortless filing" },
       { icon: Users, title: "The complete patient record", desc: "History, allergies, concerns, photography, forms and communications — together in one place." },
       { icon: Pill, title: "Product traceability", desc: "Record batch and expiry details with each treatment, keeping essential product information clear and traceable." },
@@ -102,7 +102,7 @@ const groups = [
       { icon: Bell, title: "Reminders", desc: "Email and text confirmations and reminders at the hours you set, with the practitioner's name included." },
       { icon: MessageSquare, title: "Aftercare", desc: "Per-treatment aftercare sent automatically a set number of hours after the appointment." },
       { icon: Star, title: "Reviews", desc: "Patient review collection and moderation built in." },
-      { icon: Stethoscope, title: "Clinic compliance", desc: "Checks, audits and a notes board for your clinic — switch it on only if you want it." },
+      { icon: ImageIcon, title: "Before & after photos", desc: "Capture and store treatment photography directly within each patient record — private, organised and easy to revisit." },
       { icon: BarChart3, title: "Marketing & automations", desc: "Segmented campaigns, birthday emails, top-up reminders and win-backs with unsubscribes handled." },
       { icon: Sparkles, title: "Rewards & referrals", desc: "Referral codes, loyalty points and reward tiers — fully optional and controlled by you." },
     ],
