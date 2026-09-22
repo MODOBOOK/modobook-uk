@@ -16,6 +16,7 @@ import {
   Layers, CreditCard, Bell, MessageSquare, ShieldCheck, Sparkles, Stethoscope,
   Pill, MapPin, Star, BarChart3, Brush, FileText, Image as ImageIcon, Wallet,
   CalendarClock, Smartphone, Network, Bot, DoorOpen, Repeat, TicketPercent,
+  CalendarCheck,
 } from "lucide-react";
 
 export const Route = createFileRoute("/features")({
@@ -102,7 +103,7 @@ const groups = [
       { icon: Bell, title: "Stay connected", desc: "Keep clients informed with beautifully timed booking confirmations and appointment reminders, automatically sent by email or SMS." },
       { icon: MessageSquare, title: "Aftercare", desc: "Deliver the right aftercare at the right time, with treatment-specific guidance sent automatically after every appointment." },
       { icon: Star, title: "Build your reputation", desc: "Turn great experiences into lasting trust with automated review requests, making it effortless to collect and showcase client feedback." },
-      { icon: ImageIcon, title: "Bring clients back", desc: "Stay one step ahead with rebooking prompts, helping clients return at the right time for their next treatment." },
+      { icon: CalendarCheck, title: "Bring clients back", desc: "Stay one step ahead with rebooking prompts, helping clients return at the right time for their next treatment." },
       { icon: BarChart3, title: "Marketing, on autopilot", desc: "Stay front of mind without adding to your workload. Create targeted campaigns, birthday messages, treatment reminders and client win-backs, with the details handled automatically." },
       { icon: Sparkles, title: "Reward loyalty", desc: "Turn loyal clients into your biggest advocates with tailored rewards, referral codes and loyalty tiers — entirely shaped around your business." },
     ],
