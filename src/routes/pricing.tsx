@@ -140,7 +140,7 @@ function PricingPage() {
                   <div
                     className={`lift flex h-full flex-col border p-8 ${
                       t.highlight
-                        ? "border-[color:var(--ink)] bg-[color:var(--ink)] text-[color:var(--paper)]"
+                        ? "border-[color:var(--ink-soft)] bg-[color:var(--ink-soft)] text-[color:var(--paper)]"
                         : "border-[color:var(--hairline)] bg-[color:var(--paper)]"
                     }`}
                   >
@@ -175,7 +175,7 @@ function PricingPage() {
                         t.highlight ? "text-[color:var(--paper)]/60" : "text-[color:var(--ink-soft)]"
                       }`}
                     >
-                      {t.unit}
+                      {t.unit} — inc VAT
                     </div>
                     <p
                       className={`mt-5 text-sm leading-relaxed ${
@@ -184,7 +184,7 @@ function PricingPage() {
                     >
                       {t.blurb}
                     </p>
-                    <ul className="mt-6 flex-1 space-y-3">
+                    <ul className="mt-7 space-y-3">
                       {t.perks.map((p) => (
                         <li
                           key={p}
@@ -199,16 +199,18 @@ function PricingPage() {
                         </li>
                       ))}
                     </ul>
-                    <Link
-                      to="/auth"
-                      className={`mt-8 inline-flex h-13 items-center justify-center px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] transition-colors ${
-                        t.highlight
-                          ? "bg-[color:var(--paper)] text-[color:var(--ink)] hover:bg-[color:var(--taupe)]"
-                          : "border border-[color:var(--ink)] text-[color:var(--ink)] hover:bg-[color:var(--ink)] hover:text-[color:var(--paper)]"
-                      }`}
-                    >
-                      Create your account
-                    </Link>
+                    <div className="mt-auto pt-8">
+                      <Link
+                        to="/auth"
+                        className={`block w-full px-5 py-3 text-center text-xs font-bold uppercase tracking-[0.2em] transition-colors ${
+                          t.highlight
+                            ? "bg-[color:var(--paper)] text-[color:var(--ink)] hover:bg-[color:var(--secondary)]"
+                            : "bg-[color:var(--ink-soft)] text-[color:var(--paper)] hover:bg-[color:var(--accent)]"
+                        }`}
+                      >
+                        Start your free 30 day trial
+                      </Link>
+                    </div>
                   </div>
                 </Reveal>
               ))}
