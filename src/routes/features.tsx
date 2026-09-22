@@ -66,7 +66,7 @@ const groups = [
       { icon: ClipboardList, title: "Consultation", desc: "A guided consultation journey, bringing history, concerns, assessment, consent, photography, treatment details and more into one seamless flow." },
       { icon: Camera, title: "Precision face mapping", desc: "Map treatments with precision using product and unit markers, drawing tools and patient imagery." },
       { icon: ImageIcon, title: "Before & after photos", desc: "Capture and store treatment photography directly within each patient record — private, organised and easy to revisit." },
-      { icon: FileSignature, title: "Consent & medical forms", desc: "Drag-and-drop builder, drawn signatures, photo and social media consent split out, auto-filing." },
+      { icon: FileSignature, title: "Forms & consent", desc: "Create tailored medical and consent forms with digital signatures, dedicated permissions and effortless filing" },
       { icon: Users, title: "Patient profiles", desc: "Allergies flagged, history, concerns, photos, forms and comms timeline in one place." },
       { icon: Pill, title: "Batch & expiry", desc: "Record products used per session for traceability and audits." },
     ],
