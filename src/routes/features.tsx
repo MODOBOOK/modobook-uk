@@ -55,7 +55,7 @@ const groups = [
       { icon: Calendar, title: "Plan ahead", desc: "Prepare future availability in advance, ready to open for online booking exactly when you choose." },
       { icon: Sparkles, title: "Model appointments", desc: "Create dedicated model availability with exclusive pricing, dates and times — all within your diary." },
       { icon: MapPin, title: "Locations & practitioners", desc: "Let clients choose their preferred location and practitioner, or simply book the first available." },
-      { icon: Star, title: "Concern picker", desc: "Patients browse by concern as well as by treatment menu." },
+      { icon: Star, title: "Book by concern", desc: "Let clients explore by what they'd like to address, making the path to the right treatment simple." },
       { icon: Layers, title: "Packages & multi-session", desc: "Bundles, courses, top-ups, add-ons and split payments — all native." },
     ],
   },
