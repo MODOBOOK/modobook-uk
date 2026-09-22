@@ -80,6 +80,7 @@ const groups = [
       { icon: MessageSquare, title: "Connected practitioners", desc: "Designed for clinical oversight where compliance matters. Authorised prescribers or clinical leads can connect with practitioners and securely access the relevant records needed to support safe, compliant practice." },
       { icon: Network, title: "Prescriber Hub", desc: "A dedicated space for connected prescribing. Keep requests, practitioner notes, clinic days and treatment details together in one clear, traceable record." },
       { icon: Repeat, title: "Client memberships", desc: "Turn treatments into something clients can plan for. Create tailored memberships that allow clients to contribute monthly directly to your business, building a balance they can put towards future treatments." },
+      { icon: Smartphone, title: "Stay connected", desc: "Keep clients connected at every step. Send automated booking confirmations, appointment reminders and post-treatment review requests directly by SMS — reducing missed appointments." },
     ],
   },
   {
