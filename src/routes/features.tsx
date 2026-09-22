@@ -92,7 +92,7 @@ const groups = [
       { icon: ShieldCheck, title: "Protected bookings", desc: "Secure bookings with a card on file and create your own cancellation terms, including flexible, tiered fees for late cancellations." },
       { icon: BarChart3, title: "Offers, your way", desc: "Create tailored offers and promotional codes with complete control over treatments, dates, availability and how they can be combined." },
       { icon: Users, title: "Payouts & commission", desc: "Choose where payments are received and keep practitioner commission effortlessly tracked against every booking." },
-      { icon: CreditCard, title: "0% booking fees", desc: "MODO never takes a cut of your treatment revenue — only your monthly subscription." },
+      { icon: CreditCard, title: "Your revenue stays yours", desc: "No percentage taken from your treatment revenue. What you earn stays yours — you simply pay your MODO subscription." },
     ],
   },
   {
