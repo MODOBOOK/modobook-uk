@@ -64,7 +64,7 @@ const groups = [
     eyebrow: "The clinical layer",
     items: [
       { icon: ClipboardList, title: "Consultation", desc: "A guided consultation journey, bringing history, concerns, assessment, consent, photography, treatment details and more into one seamless flow." },
-      { icon: Camera, title: "Face mapping", desc: "Pin-drop product tags with units, drawing tool, realistic face or patient photo background." },
+      { icon: Camera, title: "Precision face mapping", desc: "Map treatments with precision using product and unit markers, drawing tools and patient imagery." },
       { icon: ImageIcon, title: "Before & after photos", desc: "Captured per session, attached to the patient record, never to the camera roll." },
       { icon: FileSignature, title: "Consent & medical forms", desc: "Drag-and-drop builder, drawn signatures, photo and social media consent split out, auto-filing." },
       { icon: Users, title: "Patient profiles", desc: "Allergies flagged, history, concerns, photos, forms and comms timeline in one place." },
