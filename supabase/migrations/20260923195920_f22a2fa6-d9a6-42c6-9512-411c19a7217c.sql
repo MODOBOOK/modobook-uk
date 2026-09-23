@@ -1,0 +1,2 @@
+ALTER TABLE public.business_expenses DROP CONSTRAINT IF EXISTS business_expenses_frequency_check;
+ALTER TABLE public.business_expenses ADD CONSTRAINT business_expenses_frequency_check CHECK (frequency IN ('one_off','weekly','monthly','yearly','hourly','half_hourly'));

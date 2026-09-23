@@ -17,7 +17,14 @@ import {
   Receipt,
 } from "lucide-react";
 import { getCostsForAnalytics } from "@/lib/expenses.functions";
-import { expenseOccurrences, categoryLabel } from "@/lib/expense-utils";
+import { expenseOccurrences, categoryLabel, isHourlyFreq, hourlyCostCents } from "@/lib/expense-utils";
+
+/** Minutes between two "HH:MM(:SS)" times. */
+function apptMinutes(a: { start_time?: string | null; end_time?: string | null }) {
+  if (!a.start_time || !a.end_time) return 0;
+  const toMin = (t: string) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+  return Math.max(0, toMin(a.end_time) - toMin(a.start_time));
+}
 import { getDashboardAnalytics } from "@/lib/analytics.functions";
 import {
   BarChart,
@@ -427,8 +434,16 @@ function ProfitSection({ appointments, fromIso, toIso, revenue }: { appointments
   const view = useMemo(() => {
     if (!costs || !fromIso) return null;
     const productCost = costs.purchases.filter((p) => p.purchased_at >= fromIso && p.purchased_at <= toIso).reduce((s, p) => s + p.total_cost_cents, 0) / 100;
+    const periodMinutes = appointments
+      .filter((a) => a.status !== "cancelled" && a.status !== "no_show" && a.scheduled_date >= fromIso && a.scheduled_date <= toIso)
+      .reduce((s, a) => s + apptMinutes(a), 0);
     const byCat = new Map<string, number>();
     for (const e of costs.expenses) {
+      if (isHourlyFreq(e.frequency)) {
+        const c = hourlyCostCents(e, periodMinutes);
+        if (c) byCat.set(e.category, (byCat.get(e.category) ?? 0) + c / 100);
+        continue;
+      }
       const n = expenseOccurrences(e, fromIso, toIso).length;
       if (n) byCat.set(e.category, (byCat.get(e.category) ?? 0) + (n * e.amount_cents) / 100);
     }
@@ -460,6 +475,19 @@ function ProfitSection({ appointments, fromIso, toIso, revenue }: { appointments
     const lastD = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     const last = `${months[11].key}-${String(lastD.getDate()).padStart(2, "0")}`;
     for (const e of costs.expenses) {
+      if (isHourlyFreq(e.frequency)) {
+        const minsByMonth = new Map<string, number>();
+        for (const a of appointments) {
+          if (a.status === "cancelled" || a.status === "no_show") continue;
+          const key = a.scheduled_date.slice(0, 7);
+          minsByMonth.set(key, (minsByMonth.get(key) ?? 0) + apptMinutes(a));
+        }
+        for (const [key, mins] of minsByMonth) {
+          const i = idx.get(key);
+          if (i !== undefined) months[i].costs += hourlyCostCents(e, mins) / 100;
+        }
+        continue;
+      }
       for (const day of expenseOccurrences(e, first, last)) {
         const i = idx.get(day.slice(0, 7));
         if (i !== undefined) months[i].costs += e.amount_cents / 100;

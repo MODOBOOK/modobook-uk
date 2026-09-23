@@ -11,7 +11,7 @@ export type ExpenseRow = {
   name: string;
   category: string;
   amount_cents: number;
-  frequency: "one_off" | "weekly" | "monthly" | "yearly";
+  frequency: "one_off" | "weekly" | "monthly" | "yearly" | "hourly" | "half_hourly";
   start_date: string;
   end_date: string | null;
   notes: string | null;
@@ -37,7 +37,7 @@ export const upsertExpense = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const pid = await getProfileId(context.supabase, context.userId);
     if (!pid) throw new Error("No profile");
-    const freq = ["one_off", "weekly", "monthly", "yearly"].includes(data.frequency) ? data.frequency : "one_off";
+    const freq = ["one_off", "weekly", "monthly", "yearly", "hourly", "half_hourly"].includes(data.frequency) ? data.frequency : "one_off";
     const payload = {
       profile_id: pid,
       name: data.name.trim().slice(0, 200),
@@ -45,7 +45,7 @@ export const upsertExpense = createServerFn({ method: "POST" })
       amount_cents: Math.max(0, Math.round(data.amount_cents)),
       frequency: freq,
       start_date: data.start_date,
-      end_date: freq === "one_off" ? null : data.end_date || null,
+      end_date: freq === "one_off" || freq === "hourly" || freq === "half_hourly" ? null : data.end_date || null,
       notes: data.notes?.trim() || null,
     };
     const t = context.supabase.from("business_expenses" as any);
