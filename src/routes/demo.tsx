@@ -89,9 +89,9 @@ function DemoPage() {
               />
               <DemoCard
                 icon={HeartPulse}
-                title="Patient account"
-                blurb="What your clients see: their appointments, treatment history, medical forms, reward points and gift cards."
-                cta="Open the patient view"
+                title="Client experience"
+                blurb="See MODO as your clients do - appointments, treatment history, medical forms, rewards and gift cards."
+                cta="Explore the client view"
                 loading={busy === "patient"}
                 disabled={busy !== null}
                 onClick={() => open("patient")}
