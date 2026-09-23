@@ -158,64 +158,103 @@ function DashboardLayout() {
           {(() => {
             const pilotOn = pilotFeaturesEnabled(profile?.slug);
             const clinicRole = ((profile as Record<string, unknown>)?.__clinic_role as ClinicRole) ?? "owner";
-            const visible = navItems.filter((item) => {
-if (!canAccessRoute(clinicRole, item.to, { canManageRota: Boolean((profile as Record<string, unknown>)?.__can_manage_rota), canUsePrescribing: Boolean((profile as Record<string, unknown>)?.__can_use_prescribing) })) return false;
-              if ((item as { referrals?: boolean }).referrals) return practitionerReferralsEnabled(profile?.slug);
-              // Not-yet-built features (soon: true) stay visible for everyone as a "Soon" chip.
-              if ((item as { soon?: boolean }).soon) return true;
-              // Pilot features stay visible for everyone — non-pilot clinics see
-              // a "Soon" chip and get the explainer dialog instead of the page.
-              if ((item as { pilot?: boolean }).pilot && !pilotOn) return true;
-              return !("flag" in item) || (profile as Record<string, unknown>)?.[(item as { flag: string }).flag];
-            });
-            let lastSection: string | undefined;
-            return visible.map((item) => {
-              const badge =
-                item.to === "/dashboard/reviews" && pendingReviews > 0
-                  ? pendingReviews
-                  : item.to === "/hub" && hubCounts.total > 0
-                    ? hubCounts.total
-                    : undefined;
-              const section = (item as { section?: string }).section;
-              const showHeading = Boolean(section) && section !== lastSection;
-              lastSection = section;
-              return (
-                <div key={item.to}>
-                  {showHeading && (
-                    <p className="cl-section-label px-3 pb-1.5 pt-5">
-                      {section}
-                    </p>
-                  )}
-{(item as { soon?: boolean }).soon ? (
-                    <NavSoon
-                      icon={item.icon}
-                      label={item.label}
-                      onClick={() =>
-                        setComingSoon(
-                          (item as { soonKey?: ComingSoonKey }).soonKey ?? "general",
-                        )
-                      }
-                    />
-                  ) : (item as { pilot?: boolean }).pilot && !pilotOn ? (
-                    <NavSoon
-                      icon={item.icon}
-                      label={item.label}
-                      onClick={() =>
-                        setComingSoon(
-                          item.to === "/dashboard/associates"
-                            ? "associates"
-                            : item.to === "/dashboard/notifications/sms"
-                              ? "sms-reminders"
-                              : "general",
-                        )
-                      }
-                    />
+            const access = {
+              canManageRota: Boolean((profile as Record<string, unknown>)?.__can_manage_rota),
+              canUsePrescribing: Boolean((profile as Record<string, unknown>)?.__can_use_prescribing),
+            };
+            const memberships = membershipsEnabled(profile?.slug);
+            const smsMarketing = smsMarketingEnabled(profile?.slug);
+            const gate = (item: MenuItem) => canAccessRoute(clinicRole, item.to, access);
+
+            // Desktop mirrors the phone: the sidebar is built from the exact
+            // same groups, items and order as the mobile Menu page.
+            const groups: MenuGroup[] = menuGroups
+              .map((g) => ({
+                ...g,
+                items: g.items
+                  .filter(gate)
+                  .filter((i) => (i.to === "/dashboard/compliance" ? pilotOn && (profile as Record<string, unknown>)?.compliance_enabled !== false : true))
+                  .filter((i) => (i.to === "/dashboard/memberships" ? memberships : true))
+                  .filter((i) => (i.to === "/dashboard/marketing/sms" ? smsMarketing : true))
+                  .filter((i) => (i.to === "/dashboard/associates" ? (pilotOn ? Boolean((profile as Record<string, unknown>)?.associates_enabled) : true) : true)),
+              }))
+              .filter((g) => g.items.length > 0);
+
+            // Calendar is a bottom tab on the phone — keep it as quick access under Bookings.
+            const sections: MenuGroup[] = groups.map((g) =>
+              g.title === "Bookings"
+                ? {
+                    ...g,
+                    items: [
+                      { label: "Calendar", description: "Month view of every appointment", to: "/dashboard/bookings", icon: CalendarDays, tone: "", iconColor: "" },
+                      ...g.items,
+                    ],
+                  }
+                : g,
+            );
+
+            // Desktop-only extras that sit after the shared menu on wide screens.
+            sections.push(
+              {
+                title: "Reports",
+                icon: TrendingUp,
+                blurb: "Analytics & income",
+                items: [
+                  { label: "Analytics", description: "Clinic performance", to: "/dashboard/analytics", icon: TrendingUp, tone: "", iconColor: "" },
+                  { label: "Income report", description: "Revenue over time", to: "/dashboard/income-report", icon: TrendingUp, tone: "", iconColor: "" },
+                  { label: "Commission", description: "Associate commission splits", to: "/dashboard/commission-report", icon: TrendingUp, tone: "", iconColor: "" },
+                  { label: "Team analytics", description: "Practitioner performance", to: "/dashboard/staff-analytics", icon: TrendingUp, tone: "", iconColor: "" },
+                ].filter(gate),
+              },
+              {
+                title: "Prescriber",
+                icon: Stethoscope,
+                blurb: "Prescribing workspace",
+                items: [
+                  { label: "Prescriber Hub", description: "Requests & notifications", to: "/hub", icon: Stethoscope, tone: "", iconColor: "" },
+                  { label: "Prescription requests", description: "Rx requests from clinics", to: "/dashboard/rx-requests", icon: ClipboardList, tone: "", iconColor: "" },
+                  { label: "Prescriber referrals", description: "Your prescriber referrals", to: "/dashboard/referrals", icon: ClipboardList, tone: "", iconColor: "" },
+                ].filter(gate),
+              },
+              {
+                title: "Support",
+                icon: HelpCircle,
+                blurb: "Guides & answers",
+                items: [
+                  { label: "Help", description: "Guides & FAQ", to: "/dashboard/help", icon: HelpCircle, tone: "", iconColor: "" },
+                ].filter(gate),
+              },
+            );
+            if (admin) {
+              sections.push({
+                title: "Platform",
+                icon: ShieldCheck,
+                blurb: "Admin tools",
+                items: [
+                  { label: "Platform admin", description: "Practitioners, admins & invites", to: "/admin", icon: ShieldCheck, tone: "", iconColor: "" },
+                ].filter(gate),
+              });
+            }
+
+            return sections.map((section) => (
+              <div key={section.title}>
+                <p className="cl-section-label px-3 pb-1.5 pt-5">{section.title}</p>
+                {section.items.map((item) => {
+                  const badge =
+                    item.to === "/dashboard/reviews" && pendingReviews > 0
+                      ? pendingReviews
+                      : item.to === "/hub" && hubCounts.total > 0
+                        ? hubCounts.total
+                        : undefined;
+                  const soon = getComingSoonKey(item.to, pilotOn);
+                  return soon ? (
+                    <NavSoon key={item.to} icon={item.icon} label={item.label} onClick={() => setComingSoon(soon)} />
                   ) : (
-                    <NavLink to={item.to} icon={item.icon} label={item.label} badge={badge} />
-                  )}
-                </div>
-              );
-            });
+                    <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} badge={badge} />
+                  );
+                })}
+              </div>
+            ));
           })()}
         </nav>
 
