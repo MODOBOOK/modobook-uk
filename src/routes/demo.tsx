@@ -74,8 +74,8 @@ function DemoPage() {
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
             <SectionHead
               eyebrow="Pick a door"
-              title="See it from both sides."
-              blurb="Open the clinic side or the patient side — no sign-in needed."
+              title="see MODO from both sides."
+              blurb="Experience the platform from your clinic's perspective - and your clients'"
             />
             <HairlineGrid cols={2}>
               <DemoCard
