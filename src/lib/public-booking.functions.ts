@@ -622,6 +622,15 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       }
     }
 
+    // One-off open dates add their own working windows on top of the weekly rota.
+    for (const o of scopedOverrides) {
+      if (!o.start_time || !o.end_time) continue;
+      const iso = String(o.date);
+      const arr = windowsByDate.get(iso) ?? [];
+      arr.push({ start: toMin(o.start_time as string), end: toMin(o.end_time as string) });
+      windowsByDate.set(iso, arr);
+    }
+
     // Fully booked days: every working window on that date is consumed by
     // existing appointments / blocked times, so there is nothing to offer.
     const fullDates: string[] = [];
