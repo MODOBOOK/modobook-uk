@@ -17,3 +17,10 @@ Goal: MODO runs in an app WebView; dashboard must feel native on phones.
 - [x] Prevent repeat imports recreating archived or duplicate patients
 - [x] Verify Supreme list and import behavior
 
+
+# Desktop sidebar parity with phone menu
+
+- [x] Shared menu data module (single source for phone Menu + desktop sidebar)
+- [x] Desktop sidebar rebuilt from the phone Menu groups (same items, same order)
+- [x] Mobile-only features now on desktop: Memberships, Workspace appearance, Find a prescriber, SMS Marketing, admin
+- [x] Verify signed-in in the browser

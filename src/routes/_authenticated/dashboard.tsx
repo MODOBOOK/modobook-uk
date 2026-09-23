@@ -1,47 +1,27 @@
-import { pilotFeaturesEnabled, practitionerReferralsEnabled } from "@/lib/feature-flags";
+import { membershipsEnabled, pilotFeaturesEnabled, practitionerReferralsEnabled, smsMarketingEnabled } from "@/lib/feature-flags";
 import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  DoorOpen,
-  LayoutDashboard,
-  Store,
   Scissors,
   CalendarDays,
   Users,
-  CreditCard,
-  MapPin,
-  Palette,
-  FileText,
-  FileSignature,
   LogOut,
   Package,
   Menu,
   CalendarPlus,
   CalendarClock,
-
-  Shield,
   Home,
-  Star,
   ClipboardList,
   Settings,
-  HelpCircle,
   ChevronLeft,
-  Sparkles,
-  Percent,
-  HeartPulse,
-  Info,
   Stethoscope,
-  Mail,
   Gift,
-  GraduationCap,
-  
   TrendingUp,
   MessageCircle,
+  HelpCircle,
   ShieldCheck,
-  ClipboardCheck,
-
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -65,6 +45,8 @@ import { PlatformBillingGate } from "@/components/PlatformBillingGate";
 import { ComingSoonDialog, type ComingSoonKey } from "@/components/ComingSoonDialog";
 import { ClinicSwitcher } from "@/components/ClinicSwitcher";
 import { canAccessRoute, type ClinicRole } from "@/lib/staff-nav";
+import { getComingSoonKey, menuGroups, type MenuGroup, type MenuItem } from "@/lib/menu-groups";
+import { amIAdmin } from "@/lib/admin.functions";
 
 
 
@@ -87,65 +69,6 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 
-const navItems = [
-  { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
-  { label: "Analytics", to: "/dashboard/analytics", icon: TrendingUp },
-  { label: "Income report", to: "/dashboard/income-report", icon: TrendingUp },
-  { label: "Commission", to: "/dashboard/commission-report", icon: TrendingUp },
-  { label: "Team analytics", to: "/dashboard/staff-analytics", icon: TrendingUp },
-  { label: "Import with AI", to: "/dashboard/ai-import", icon: Sparkles },
-  { label: "Clinic page", to: "/dashboard/clinic", icon: Store },
-  { label: "Welcome & policies", to: "/dashboard/policies", icon: Shield },
-  { label: "About page", to: "/dashboard/about", icon: FileText },
-  { label: "Branding", to: "/dashboard/branding", icon: Palette },
-  
-  { label: "Services", to: "/dashboard/services", icon: Scissors },
-  { label: "Training", to: "/dashboard/training", icon: GraduationCap },
-  { label: "Add-ons", to: "/dashboard/addons", icon: Sparkles },
-  { label: "Packages", to: "/dashboard/packages", icon: Package },
-  { label: "Gift cards", to: "/dashboard/gift-cards", icon: Gift },
-  { label: "Discounts", to: "/dashboard/discounts", icon: Percent },
-  { label: "Model slots", to: "/dashboard/model-slots", icon: Sparkles },
-  { label: "Locations", to: "/dashboard/locations", icon: MapPin },
-  { label: "Practitioners", to: "/dashboard/practitioners", icon: Users },
-{ label: "Staff", to: "/dashboard/staff", icon: Users },
-  { section: "Clinic owner" as const, label: "Clinic Compliance", to: "/dashboard/compliance", icon: ClipboardCheck, pilot: true, flag: "compliance_enabled" as const },
-  { section: "Clinic owner" as const, label: "Associates", to: "/dashboard/associates", icon: ShieldCheck, flag: "associates_enabled" as const, pilot: true },
-  { section: "Clinic owner" as const, label: "Room rental", to: "/dashboard/room-rental", icon: DoorOpen },
-
-
-  { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },
-  { label: "Consent forms", to: "/dashboard/consent-forms", icon: FileSignature },
-  { label: "Pre-treatment info", to: "/dashboard/pre-treatment", icon: Info },
-  { label: "Aftercare templates", to: "/dashboard/aftercare", icon: HeartPulse },
-  { label: "Attach forms", to: "/dashboard/form-allocation", icon: Sparkles },
-
-  { label: "Booking flow", to: "/dashboard/booking-flow", icon: HelpCircle },
-  { label: "Availability", to: "/dashboard/availability", icon: CalendarDays },
-  { label: "New appointment", to: "/dashboard/new-appointment", icon: CalendarPlus },
-  { label: "Bookings", to: "/dashboard/bookings", icon: Users },
-  { label: "Upcoming", to: "/dashboard/upcoming", icon: CalendarDays },
-  { label: "Patients", to: "/dashboard/patients", icon: Users },
-  { label: "Consultations", to: "/dashboard/consultations", icon: ClipboardList },
-  
-  { label: "Reviews", to: "/dashboard/reviews", icon: Star },
-  { label: "Referrals & Rewards", to: "/dashboard/rewards", icon: Gift },
-  { label: "Refer a practitioner", to: "/dashboard/partner-referrals", icon: Gift, referrals: true },
-
-{ label: "Marketing", to: "/dashboard/marketing", icon: Mail },
-  { label: "SMS Marketing", to: "/dashboard/sms-marketing", icon: MessageCircle, soon: true, soonKey: "sms-marketing" as ComingSoonKey },
-  { label: "Payments", to: "/dashboard/payments", icon: CreditCard },
-  { label: "Plan & billing", to: "/dashboard/billing", icon: CreditCard },
-  { label: "Invoices", to: "/dashboard/invoices", icon: CreditCard },
-{ label: "Booking settings", to: "/dashboard/settings", icon: Settings },
-  { section: "Patient notifications" as const, label: "Email", to: "/dashboard/notifications/email", icon: Mail },
-  { section: "Patient notifications" as const, label: "SMS", to: "/dashboard/notifications/sms", icon: MessageCircle },
-  { label: "Help", to: "/dashboard/help", icon: HelpCircle },
-  { label: "Prescriber Hub", to: "/hub", icon: Stethoscope },
-  { label: "Prescription requests", to: "/dashboard/rx-requests", icon: ClipboardList },
-  { label: "Prescriber referrals", to: "/dashboard/referrals", icon: ClipboardList },
-
-];
 
 
 const mobileTabs = [
@@ -173,12 +96,14 @@ function DashboardLayout() {
   const [pendingReviews, setPendingReviews] = useState(0);
   const [comingSoon, setComingSoon] = useState<ComingSoonKey | null>(null);
   const [hubCounts, setHubCounts] = useState<{ total: number; links: number; referrals: number; visits: number }>({ total: 0, links: 0, referrals: 0, visits: 0 });
+  const [admin, setAdmin] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   useEffect(() => {
     let alive = true;
     const load = () => {
       fetchPending().then((r) => { if (alive) setPendingReviews(r.count); }).catch(() => {});
       fetchHub().then((r) => { if (alive) setHubCounts(r); }).catch(() => {});
+      amIAdmin().then((r) => { if (alive) setAdmin(r.admin); }).catch(() => {});
     };
     load();
     const t = setInterval(load, 60_000);
@@ -235,64 +160,103 @@ function DashboardLayout() {
           {(() => {
             const pilotOn = pilotFeaturesEnabled(profile?.slug);
             const clinicRole = ((profile as Record<string, unknown>)?.__clinic_role as ClinicRole) ?? "owner";
-            const visible = navItems.filter((item) => {
-if (!canAccessRoute(clinicRole, item.to, { canManageRota: Boolean((profile as Record<string, unknown>)?.__can_manage_rota), canUsePrescribing: Boolean((profile as Record<string, unknown>)?.__can_use_prescribing) })) return false;
-              if ((item as { referrals?: boolean }).referrals) return practitionerReferralsEnabled(profile?.slug);
-              // Not-yet-built features (soon: true) stay visible for everyone as a "Soon" chip.
-              if ((item as { soon?: boolean }).soon) return true;
-              // Pilot features stay visible for everyone — non-pilot clinics see
-              // a "Soon" chip and get the explainer dialog instead of the page.
-              if ((item as { pilot?: boolean }).pilot && !pilotOn) return true;
-              return !("flag" in item) || (profile as Record<string, unknown>)?.[(item as { flag: string }).flag];
-            });
-            let lastSection: string | undefined;
-            return visible.map((item) => {
-              const badge =
-                item.to === "/dashboard/reviews" && pendingReviews > 0
-                  ? pendingReviews
-                  : item.to === "/hub" && hubCounts.total > 0
-                    ? hubCounts.total
-                    : undefined;
-              const section = (item as { section?: string }).section;
-              const showHeading = Boolean(section) && section !== lastSection;
-              lastSection = section;
-              return (
-                <div key={item.to}>
-                  {showHeading && (
-                    <p className="cl-section-label px-3 pb-1.5 pt-5">
-                      {section}
-                    </p>
-                  )}
-{(item as { soon?: boolean }).soon ? (
-                    <NavSoon
-                      icon={item.icon}
-                      label={item.label}
-                      onClick={() =>
-                        setComingSoon(
-                          (item as { soonKey?: ComingSoonKey }).soonKey ?? "general",
-                        )
-                      }
-                    />
-                  ) : (item as { pilot?: boolean }).pilot && !pilotOn ? (
-                    <NavSoon
-                      icon={item.icon}
-                      label={item.label}
-                      onClick={() =>
-                        setComingSoon(
-                          item.to === "/dashboard/associates"
-                            ? "associates"
-                            : item.to === "/dashboard/notifications/sms"
-                              ? "sms-reminders"
-                              : "general",
-                        )
-                      }
-                    />
+            const access = {
+              canManageRota: Boolean((profile as Record<string, unknown>)?.__can_manage_rota),
+              canUsePrescribing: Boolean((profile as Record<string, unknown>)?.__can_use_prescribing),
+            };
+            const memberships = membershipsEnabled(profile?.slug);
+            const smsMarketing = smsMarketingEnabled(profile?.slug);
+            const gate = (item: MenuItem) => canAccessRoute(clinicRole, item.to, access);
+
+            // Desktop mirrors the phone: the sidebar is built from the exact
+            // same groups, items and order as the mobile Menu page.
+            const groups: MenuGroup[] = menuGroups
+              .map((g) => ({
+                ...g,
+                items: g.items
+                  .filter(gate)
+                  .filter((i) => (i.to === "/dashboard/compliance" ? pilotOn && (profile as Record<string, unknown>)?.compliance_enabled !== false : true))
+                  .filter((i) => (i.to === "/dashboard/memberships" ? memberships : true))
+                  .filter((i) => (i.to === "/dashboard/marketing/sms" ? smsMarketing : true))
+                  .filter((i) => (i.to === "/dashboard/associates" ? (pilotOn ? Boolean((profile as Record<string, unknown>)?.associates_enabled) : true) : true)),
+              }))
+              .filter((g) => g.items.length > 0);
+
+            // Calendar is a bottom tab on the phone — keep it as quick access under Bookings.
+            const sections: MenuGroup[] = groups.map((g) =>
+              g.title === "Bookings"
+                ? {
+                    ...g,
+                    items: [
+                      { label: "Calendar", description: "Month view of every appointment", to: "/dashboard/bookings", icon: CalendarDays, tone: "", iconColor: "" },
+                      ...g.items,
+                    ],
+                  }
+                : g,
+            );
+
+            // Desktop-only extras that sit after the shared menu on wide screens.
+            sections.push(
+              {
+                title: "Reports",
+                icon: TrendingUp,
+                blurb: "Analytics & income",
+                items: [
+                  { label: "Analytics", description: "Clinic performance", to: "/dashboard/analytics", icon: TrendingUp, tone: "", iconColor: "" },
+                  { label: "Income report", description: "Revenue over time", to: "/dashboard/income-report", icon: TrendingUp, tone: "", iconColor: "" },
+                  { label: "Commission", description: "Associate commission splits", to: "/dashboard/commission-report", icon: TrendingUp, tone: "", iconColor: "" },
+                  { label: "Team analytics", description: "Practitioner performance", to: "/dashboard/staff-analytics", icon: TrendingUp, tone: "", iconColor: "" },
+                ].filter(gate),
+              },
+              {
+                title: "Prescriber",
+                icon: Stethoscope,
+                blurb: "Prescribing workspace",
+                items: [
+                  { label: "Prescriber Hub", description: "Requests & notifications", to: "/hub", icon: Stethoscope, tone: "", iconColor: "" },
+                  { label: "Prescription requests", description: "Rx requests from clinics", to: "/dashboard/rx-requests", icon: ClipboardList, tone: "", iconColor: "" },
+                  { label: "Prescriber referrals", description: "Your prescriber referrals", to: "/dashboard/referrals", icon: ClipboardList, tone: "", iconColor: "" },
+                ].filter(gate),
+              },
+              {
+                title: "Support",
+                icon: HelpCircle,
+                blurb: "Guides & answers",
+                items: [
+                  { label: "Help", description: "Guides & FAQ", to: "/dashboard/help", icon: HelpCircle, tone: "", iconColor: "" },
+                ].filter(gate),
+              },
+            );
+            if (admin) {
+              sections.push({
+                title: "Platform",
+                icon: ShieldCheck,
+                blurb: "Admin tools",
+                items: [
+                  { label: "Platform admin", description: "Practitioners, admins & invites", to: "/admin", icon: ShieldCheck, tone: "", iconColor: "" },
+                ].filter(gate),
+              });
+            }
+
+            return sections.map((section) => (
+              <div key={section.title}>
+                <p className="cl-section-label px-3 pb-1.5 pt-5">{section.title}</p>
+                {section.items.map((item) => {
+                  const badge =
+                    item.to === "/dashboard/reviews" && pendingReviews > 0
+                      ? pendingReviews
+                      : item.to === "/hub" && hubCounts.total > 0
+                        ? hubCounts.total
+                        : undefined;
+                  const soon = getComingSoonKey(item.to, pilotOn);
+                  return soon ? (
+                    <NavSoon key={item.to} icon={item.icon} label={item.label} onClick={() => setComingSoon(soon)} />
                   ) : (
-                    <NavLink to={item.to} icon={item.icon} label={item.label} badge={badge} />
-                  )}
-                </div>
-              );
-            });
+                    <NavLink key={item.to} to={item.to} icon={item.icon} label={item.label} badge={badge} />
+                  );
+                })}
+              </div>
+            ));
           })()}
         </nav>
 
