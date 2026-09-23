@@ -39,7 +39,7 @@ export async function syncSubscriptionSeats(supabase: any, profileId: string) {
         .in("status", ["invited", "active"]),
       supabase
         .from("subscription_plans")
-        .select("id, kind, name, amount_cents, stripe_price_id, active")
+        .select("id, kind, name, amount_cents, stripe_price_id, active, included_practitioners")
         .in("kind", ["base", "addon_location", "addon_practitioner", "addon_associates_module", "addon_associate"])
         .eq("active", true),
       supabase.from("profiles").select("associates_enabled, slug").eq("id", profileId).maybeSingle(),
@@ -54,7 +54,7 @@ export async function syncSubscriptionSeats(supabase: any, profileId: string) {
   const assocAddon = list.find((p) => p.kind === "addon_associate");
 
   const freeLocs = Math.max(0, Number(sub.free_locations ?? 0));
-  const freePracs = Math.max(0, Number(sub.free_practitioners ?? 0));
+  const freePracs = Math.max(0, Number(sub.free_practitioners ?? 0)) + Math.max(0, Number(base.included_practitioners ?? 1) - 1);
   const extraLocations = Math.max(0, (locCount ?? 0) - 1 - freeLocs);
   const extraPractitioners = Math.max(0, (pracCount ?? 0) - 1 - freePracs);
 

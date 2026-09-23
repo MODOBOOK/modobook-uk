@@ -8857,9 +8857,11 @@ export type Database = {
           default_trial_days: number
           description: string | null
           id: string
+          included_practitioners: number
           interval: string
           is_default: boolean
           kind: string
+          legacy: boolean
           name: string
           stripe_price_id: string | null
           updated_at: string
@@ -8872,9 +8874,11 @@ export type Database = {
           default_trial_days?: number
           description?: string | null
           id?: string
+          included_practitioners?: number
           interval?: string
           is_default?: boolean
           kind?: string
+          legacy?: boolean
           name: string
           stripe_price_id?: string | null
           updated_at?: string
@@ -8887,9 +8891,11 @@ export type Database = {
           default_trial_days?: number
           description?: string | null
           id?: string
+          included_practitioners?: number
           interval?: string
           is_default?: boolean
           kind?: string
+          legacy?: boolean
           name?: string
           stripe_price_id?: string | null
           updated_at?: string
