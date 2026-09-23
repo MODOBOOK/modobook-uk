@@ -851,6 +851,7 @@ function BookingsPage() {
                       const narrow = columns > 2;
                       const isCheckedOut = !!a.checked_out_at;
                       const color = a.treatments?.color || "#3b82f6";
+                      const tName = treatmentLabel(a);
                       const cardColor = isCheckedOut ? "#9ca3af" : color;
                       return (
                         <button
