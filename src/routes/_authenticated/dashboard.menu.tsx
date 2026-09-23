@@ -83,7 +83,7 @@ function MenuPage() {
 
   const openGroup = visible.find((g) => g.title === activeGroup) ?? null;
 
-  const renderItem = (item: Item, groupTitle?: string) => {
+  const renderItem = (item: MenuItem, groupTitle?: string) => {
     const soon = comingSoonFor(item.to);
     const inner = (
       <div className="flex items-center gap-4">
