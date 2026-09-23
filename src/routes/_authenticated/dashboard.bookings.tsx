@@ -889,10 +889,14 @@ function BookingsPage() {
                               )}
                             </>
                           ) : (
-                            <div className="truncate">
-                              <span className="tabular-nums opacity-75">{a.start_time.slice(0, 5)} </span>
-                              <span className="font-bold">{a.patient_name}</span>
-                              {tName ? <span className="opacity-80"> · {tName}</span> : null}
+                            <div className="flex min-w-0 items-center gap-1 whitespace-nowrap text-[9.5px]">
+                              <span className="shrink-0 tabular-nums opacity-75">{a.start_time.slice(0, 5)}</span>
+                              <span className="max-w-[38%] shrink truncate font-bold">{a.patient_name}</span>
+                              {tName ? (
+                                <span className="min-w-0 flex-1 truncate border-l border-current/25 pl-1 font-medium">
+                                  {tName}
+                                </span>
+                              ) : null}
                             </div>
                           )}
                           {a.has_allergies && height >= 50 && !narrow && (
