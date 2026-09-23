@@ -134,8 +134,8 @@ function FaqPage() {
       <main className="flex-1">
         <PageHero
           eyebrow="Frequently asked"
-          title="Everything you might"
-          accent="want to ask."
+          title="A few things"
+          accent="you might want to know."
           blurb="Answers for practitioners setting up their clinic on MODO — and for patients booking with one."
         >
           <div className="mt-10 flex flex-wrap justify-center gap-x-6 gap-y-3">
