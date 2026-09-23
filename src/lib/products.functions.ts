@@ -38,6 +38,7 @@ export type TreatmentProductLink = {
   treatment_id: string;
   product_id: string;
   cost_per_treatment_cents: number;
+  units_per_treatment: number | null;
 };
 
 export type StaffOption = { id: string; name: string };
@@ -182,19 +183,24 @@ export const adjustStock = createServerFn({ method: "POST" })
 
 export const setProductTreatmentLinks = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { product_id: string; links: { treatment_id: string; cost_per_treatment_cents: number }[] }) => input)
+  .inputValidator((input: { product_id: string; links: { treatment_id: string; units_per_treatment: number }[] }) => input)
   .handler(async ({ data, context }) => {
     const pid = await getProfileId(context.supabase, context.userId);
     if (!pid) throw new Error("No profile");
+    const { data: product, error: prodErr } = await context.supabase
+      .from("products").select("unit_cost_cents, pack_size").eq("id", data.product_id).eq("profile_id", pid).single();
+    if (prodErr || !product) throw new Error("Product not found");
+    const perUnitCents = Number(product.unit_cost_cents) / Math.max(1, Number(product.pack_size || 1));
     const { error: delErr } = await context.supabase.from("treatment_products").delete().eq("product_id", data.product_id).eq("profile_id", pid);
     if (delErr) throw delErr;
     const rows = data.links
-      .filter((l) => l.cost_per_treatment_cents > 0)
+      .filter((l) => l.units_per_treatment > 0)
       .map((l) => ({
         profile_id: pid,
         product_id: data.product_id,
         treatment_id: l.treatment_id,
-        cost_per_treatment_cents: Math.round(l.cost_per_treatment_cents),
+        units_per_treatment: l.units_per_treatment,
+        cost_per_treatment_cents: Math.round(l.units_per_treatment * perUnitCents),
       }));
     if (rows.length) {
       const { error } = await context.supabase.from("treatment_products").insert(rows);
