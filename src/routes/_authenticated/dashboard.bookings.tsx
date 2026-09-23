@@ -878,7 +878,7 @@ function BookingsPage() {
                               <div className="truncate text-[10px] tabular-nums opacity-75">
                                 {a.start_time.slice(0, 5)}
                                 {!narrow ? `–${a.end_time.slice(0, 5)}` : ""}
-                                {!narrow && a.treatments?.name ? ` · ${a.treatments.name}` : ""}
+                                {tName ? ` · ${tName}` : ""}
                               </div>
                               {!narrow && height >= 48 && (
                                 <div className="truncate text-[10px] opacity-80">
@@ -892,6 +892,7 @@ function BookingsPage() {
                             <div className="truncate">
                               <span className="tabular-nums opacity-75">{a.start_time.slice(0, 5)} </span>
                               <span className="font-bold">{a.patient_name}</span>
+                              {tName ? <span className="opacity-80"> · {tName}</span> : null}
                             </div>
                           )}
                           {a.has_allergies && height >= 50 && !narrow && (
