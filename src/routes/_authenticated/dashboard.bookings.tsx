@@ -31,7 +31,6 @@ import {
   Undo2,
   CalendarClock,
   SlidersHorizontal,
-  Banknote,
   CreditCard,
   Landmark,
 } from "lucide-react";
@@ -255,11 +254,7 @@ function PaymentMethodBadge({ method, className }: { method?: string | null; cla
     return <span title="Paid with Clearpay" className={cn(base, "bg-[#b2fce4] text-[#0f3d2e]")}>C</span>;
   }
   if (m === "cash") {
-    return (
-      <span title="Paid in cash" className={cn(base, "bg-emerald-100 text-emerald-800")}>
-        <Banknote className="h-3 w-3" />
-      </span>
-    );
+    return <span title="Paid in cash" className={cn(base, "bg-emerald-100 text-emerald-800")}>£</span>;
   }
   if (m === "bank_transfer") {
     return (
