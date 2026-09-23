@@ -252,7 +252,7 @@ function FaqPage() {
                     href="mailto:info@modobook.co.uk"
                     className="inline-flex h-14 items-center justify-center border border-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--ink)] transition-colors hover:bg-[color:var(--ink)] hover:text-[color:var(--paper)]"
                   >
-                    Email the team
+                    Contact MODO
                   </a>
                 </div>
               </div>
