@@ -155,9 +155,11 @@ const groups: FaqGroup[] = [
     id: "security",
     label: "Privacy & security",
     items: [
-      { q: "Is MODO GDPR compliant?", a: "Yes. MODO is built for UK clinical use with row-level security, encrypted storage, a full DPA, a DPIA and breach-response process. You are the data controller for your patient records; MODO is your data processor." },
-      { q: "Where is my data stored?", a: "In UK/EU data centres. Backups are encrypted at rest and access is audit-logged." },
-      { q: "Can I export my data?", a: "Yes — full CSV export of patients, appointments, treatments and revenue at any time. Your data is always yours." },
+      { q: "How does MODO protect clinic and client data?", a: "Your clinic and client information is handled using security measures designed to protect sensitive data and restrict access to authorised users. MODO is registered with the ICO - ZC209736." },
+      { q: "Where is my data stored?", a: "Your data is securely hosted in the UK, helping keep your clinic and patient information protected and handled in line with UK data protection requirements." },
+      { q: "Can I export my data?", a: "Yes. Export your patients, appointments, treatments and revenue as a CSV file whenever you need to. Your data remains yours — always." },
+      { q: "What happens to my data if I leave MODO?", a: "Your data remains yours, even if you decide to leave MODO. After your subscription ends, you'll have 30 days to request an export of your clinic data, giving you time to securely retain the records you need to meet your own legal, regulatory and professional record-keeping obligations." },
+      { q: "Is MODO GDPR compliant?", a: "Yes. MODO is built with UK data protection requirements at its core, with row-level security, encrypted storage, a comprehensive DPA, DPIA and breach-response process. You remain the data controller for your patient records, with MODO acting as your data processor." },
     ],
   },
 ];
