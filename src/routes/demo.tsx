@@ -81,8 +81,8 @@ function DemoPage() {
               <DemoCard
                 icon={CalendarCheck}
                 title="Practitioner dashboard"
-                blurb="The clinic side: diary, patient records, consultations, face mapping, consent, payments, marketing and reporting."
-                cta="Open the dashboard"
+                blurb="Everything behind your clinic - appointments, client records, consultations, face mapping, consent, payments and marketing."
+                cta="Explore the dashboard"
                 loading={busy === "practitioner"}
                 disabled={busy !== null}
                 onClick={() => open("practitioner")}
