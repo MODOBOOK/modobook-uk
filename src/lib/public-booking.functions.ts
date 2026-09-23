@@ -689,8 +689,10 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       // for the whole appointment. Fall back to a token 15 minutes when the
       // caller hasn't told us how long the booking is.
       const needed = Math.max(15, Math.round(Number(data.durationMinutes ?? 0)) || 15);
-      for (const iso of openDates) {
-        if (blockedDates.includes(iso)) continue;
+      // Check every day the patient could click: weekly rota days AND one-off
+      // open dates (clinics that work purely from one-off dates have no rota).
+      for (const iso of Array.from(new Set([...openDates, ...overrideDates]))) {
+        if (blockedDates.includes(iso) && !overrideDates.includes(iso)) continue;
         if (dailyCap != null && (countByDate.get(iso) ?? 0) >= Number(dailyCap)) {
           fullDates.push(iso);
           continue;
