@@ -65,7 +65,8 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
     const surchargeCents = Number(metadata.surcharge_cents ?? 0) || 0;
     const totalCents = Number(session.amount_total ?? 0) || 0;
     const treatmentPaidCents = Math.max(0, totalCents - surchargeCents);
-    const perAppt = Math.round(treatmentPaidCents / ids.length);
+    const { splitPaymentCents } = await import("./payment-split.server");
+    const shares = await splitPaymentCents(supabaseAdmin, ids, treatmentPaidCents);
     const kind = metadata.kind || "deposit";
     const paymentIntentId =
       typeof session.payment_intent === "string"
@@ -91,7 +92,7 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
       await supabaseAdmin.rpc("record_appointment_payment", {
         p_appointment_id: apptId,
         p_payment_intent: paymentIntentId ?? "",
-        p_amount_cents: perAppt,
+        p_amount_cents: shares.get(apptId) ?? 0,
       });
       const { error } = await supabaseAdmin
         .from("appointments")
@@ -191,7 +192,8 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
     const surchargeCents = Number(metadata.surcharge_cents ?? 0) || 0;
     const totalCents = Number(pi.amount_received ?? pi.amount ?? 0) || 0;
     const treatmentPaidCents = Math.max(0, totalCents - surchargeCents);
-    const perAppt = ids.length > 0 ? Math.round(treatmentPaidCents / ids.length) : 0;
+    const { splitPaymentCents } = await import("./payment-split.server");
+    const shares = await splitPaymentCents(supabaseAdmin, ids, treatmentPaidCents);
     const kind = metadata.kind || "deposit";
 
     const confirmedAppointmentIds: string[] = [];
@@ -210,7 +212,7 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
       await supabaseAdmin.rpc("record_appointment_payment", {
         p_appointment_id: apptId,
         p_payment_intent: pi.id,
-        p_amount_cents: perAppt,
+        p_amount_cents: shares.get(apptId) ?? 0,
       });
       const { error } = await supabaseAdmin
         .from("appointments")
