@@ -4,44 +4,22 @@ import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
-  DoorOpen,
-  Store,
-  Scissors,
-  CreditCard,
-  MapPin,
-  Palette,
-  FileText,
-  FileSignature,
-  Package,
-  Shield,
-  CalendarDays,
-  CalendarPlus,
-  ClipboardList,
-  Star,
-  HelpCircle,
   ChevronRight,
   ChevronLeft,
   ShieldCheck,
   LogOut,
   ExternalLink,
-  Percent,
-  Sparkles,
   Search,
-  Users,
-  Info,
-  Mail,
-  Megaphone,
   Gift,
-  Crown,
-  GraduationCap,
+  HelpCircle,
   MessageCircle,
-  Stethoscope,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { amIAdmin } from "@/lib/admin.functions";
 import { ComingSoonDialog, type ComingSoonKey } from "@/components/ComingSoonDialog";
 import { canAccessRoute, type ClinicRole } from "@/lib/staff-nav";
+import { getComingSoonKey, menuGroups, type MenuItem } from "@/lib/menu-groups";
 
 export const Route = createFileRoute("/_authenticated/dashboard/menu")({
   ssr: false,
