@@ -870,7 +870,7 @@ function BookingsPage() {
                             backgroundColor: hexToRgba(cardColor, isCheckedOut ? 0.25 : 0.45),
                             color: "#0f172a",
                           }}
-                          title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"}${practitioners.length > 1 ? ` · ${a.practitioners?.name ?? "Unassigned"}` : ""}${a.locations?.name ? ` · ${a.locations.name}` : ""}${isCheckedOut ? " · Checked out" : ""}`}
+                          title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${tName ?? "Treatment"}${practitioners.length > 1 ? ` · ${a.practitioners?.name ?? "Unassigned"}` : ""}${a.locations?.name ? ` · ${a.locations.name}` : ""}${isCheckedOut ? " · Checked out" : ""}`}
                         >
                           {tall ? (
                             <>
