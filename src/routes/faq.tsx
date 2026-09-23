@@ -81,10 +81,12 @@ const groups: FaqGroup[] = [
     id: "rewards",
     label: "Memberships & loyalty",
     items: [
-      { q: "Do I have to run a rewards programme?", a: "No — it's fully optional and off by default. Turn on referrals, loyalty points and reward tiers independently, in any combination you like." },
-      { q: "How do referrals work?", a: "Every patient automatically gets a 6-character referral code. When a friend uses it at their first booking, the reward posts to the referrer once that first paid appointment is completed. No manual admin." },
-      { q: "Can I use different rewards for different treatments?", a: "Yes. Points earn rates, tier redemptions and referral offers can all be scoped by treatment or category." },
-      { q: "Do points or credit expire?", a: "Not by default. You can set expiry rules per programme if you want to." },
+      { q: "Can I create client memberships?", a: "Yes. Create your own memberships and let clients subscribe with a recurring monthly payment, helping them build credit towards future treatments with you." },
+      { q: "How do monthly memberships work?", a: "You choose the membership amount and structure. The client's recurring payment is collected directly for your business, creating an ongoing balance they can use towards eligible future treatments." },
+      { q: "Do I have to offer rewards?", a: "Not at all. Rewards and loyalty features are completely optional — switch them on only if they suit your clinic." },
+      { q: "How do referrals work?", a: "Create your own referral programme and reward clients for introducing someone new to your clinic. You stay in control of how rewards are earned and what they're worth." },
+      { q: "Can I create different rewards?", a: "Yes. Tailor rewards to your clinic rather than working around a fixed loyalty programme, with different options for the treatments or offers you choose." },
+      { q: "Do points or credit expire?", a: "You control the rules of your loyalty programme, including how rewards are redeemed and, where supported, when they expire." },
     ],
   },
   {
