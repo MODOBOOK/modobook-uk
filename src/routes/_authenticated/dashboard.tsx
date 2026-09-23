@@ -96,6 +96,7 @@ function DashboardLayout() {
   const [pendingReviews, setPendingReviews] = useState(0);
   const [comingSoon, setComingSoon] = useState<ComingSoonKey | null>(null);
   const [hubCounts, setHubCounts] = useState<{ total: number; links: number; referrals: number; visits: number }>({ total: 0, links: 0, referrals: 0, visits: 0 });
+  const [admin, setAdmin] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   useEffect(() => {
     let alive = true;
