@@ -75,7 +75,7 @@ function DemoPage() {
             <SectionHead
               eyebrow="INSIDE MODO"
               title="See MODO from both sides."
-              blurb="Experience the platform from your clinic's perspective - and your clients'"
+              blurb="Experience the platform from your clinic's perspective - and your clients'."
             />
             <HairlineGrid cols={2}>
               <DemoCard
