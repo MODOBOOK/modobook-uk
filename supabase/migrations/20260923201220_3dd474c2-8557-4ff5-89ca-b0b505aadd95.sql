@@ -1,0 +1,1 @@
+ALTER TABLE public.staff_members ADD COLUMN IF NOT EXISTS deduct_product_cost boolean NOT NULL DEFAULT false;
