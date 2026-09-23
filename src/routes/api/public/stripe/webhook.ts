@@ -468,10 +468,11 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 const ids = String(metadata.appointment_ids).split(",").map((s) => s.trim()).filter(Boolean);
                 if (ids.length > 0) {
                   const kind = metadata.kind || "deposit";
-                  const perAppt = Math.round(treatmentPaidCents / ids.length);
+                  const { splitPaymentCents } = await import("@/lib/payment-split.server");
+                  const shares = await splitPaymentCents(supabaseAdmin, ids, treatmentPaidCents);
                   for (const apptId of ids) {
                     const patch = buildApptPatch(kind);
-                    await applyPayment(apptId, perAppt);
+                    await applyPayment(apptId, shares.get(apptId) ?? 0);
                     await supabaseAdmin
                       .from("appointments")
                       .update(patch as never)
@@ -659,7 +660,8 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 .split(",")
                 .map((s) => s.trim())
                 .filter(Boolean);
-              const perAppt = ids.length > 0 ? Math.round(treatmentPaidCents / ids.length) : 0;
+              const { splitPaymentCents } = await import("@/lib/payment-split.server");
+              const shares = await splitPaymentCents(supabaseAdmin, ids, treatmentPaidCents);
               for (const apptId of ids) {
                 const patch = buildApptPatch();
                 // Atomic + idempotent: a second event for the same charge is
@@ -667,7 +669,7 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 await supabaseAdmin.rpc("record_appointment_payment", {
                   p_appointment_id: apptId,
                   p_payment_intent: pi.id,
-                  p_amount_cents: perAppt,
+                  p_amount_cents: shares.get(apptId) ?? 0,
                 });
                 await supabaseAdmin
                   .from("appointments")
