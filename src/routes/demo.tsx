@@ -59,7 +59,7 @@ function DemoPage() {
 
       <main className="flex-1">
         <PageHero
-          eyebrow="Live sandbox · no sign-up"
+          eyebrow="Live demo · no sign-up"
           title="Take MODO for"
           accent="a test drive."
           blurb="A fully populated demo clinic — real treatments, patients, consultations, consent forms and bookings. Click in, click around, change whatever you like. Everything resets overnight, and no emails or payments ever leave the sandbox."
