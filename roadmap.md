@@ -24,3 +24,10 @@ Goal: MODO runs in an app WebView; dashboard must feel native on phones.
 - [x] Desktop sidebar rebuilt from the phone Menu groups (same items, same order)
 - [x] Mobile-only features now on desktop: Memberships, Workspace appearance, Find a prescriber, SMS Marketing, admin
 - [x] Verify signed-in in the browser
+
+## Products & stock section (done 23 Sep 2026)
+- [x] products / product_purchases / treatment_products tables with owner+staff RLS
+- [x] src/lib/products.functions.ts (list, upsert, delete, logPurchase, adjustStock, treatment links)
+- [x] /dashboard/products page: totals strip, product cards, purchase log, treatment-link dialog
+- [x] Menu item "Products & stock" under Payments (owner/admin only via staff-nav)
+- [ ] Commission: deduct product cost before split (next step, awaiting go-ahead)
