@@ -261,6 +261,9 @@ function AnalyticsPage() {
             <MetricCard icon={Clock} label="No-shows" value={String(totals.noShows)} tone="muted" />
           </div>
 
+          <ProfitSection appointments={data.appointments} fromIso={fromIso} toIso={toIso} revenue={totals.revenue} />
+
+
           {/* Charts */}
           <div className="grid gap-4 lg:grid-cols-2">
             <Card className="border-border/60">
@@ -417,7 +420,6 @@ function AnalyticsPage() {
             </Card>
           </div>
 
-          <ProfitSection appointments={data.appointments} fromIso={fromIso} toIso={toIso} revenue={totals.revenue} />
         </>
       )}
     </div>
@@ -516,6 +518,17 @@ function ProfitSection({ appointments, fromIso, toIso, revenue }: { appointments
         <MetricCard icon={Receipt} label="Other costs" value={formatCurrency(view.otherCost)} tone="muted" />
         <MetricCard icon={TrendingUp} label="Profit" value={formatCurrency(profit)} tone={profit < 0 ? "destructive" : "default"} />
       </div>
+      <Card className="border-border/60">
+        <CardHeader className="pb-2"><CardTitle className="font-serif text-lg">What you've made</CardTitle></CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <div className="flex justify-between"><span>Revenue (treatments)</span><span className="tabular-nums font-medium">{formatCurrency(revenue)}</span></div>
+          {view.breakdown.map((b) => (
+            <div key={b.name} className="flex justify-between text-muted-foreground"><span>− {b.name}</span><span className="tabular-nums">−{formatCurrency(b.value)}</span></div>
+          ))}
+          <div className="flex justify-between border-t border-border pt-2"><span>Total costs</span><span className="tabular-nums">−{formatCurrency(totalCosts)}</span></div>
+          <div className="flex justify-between text-base font-semibold"><span>Profit</span><span className={`tabular-nums ${profit < 0 ? "text-destructive" : ""}`}>{formatCurrency(profit)}</span></div>
+        </CardContent>
+      </Card>
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="border-border/60">
           <CardHeader className="pb-2"><CardTitle className="font-serif text-lg">Cost breakdown</CardTitle></CardHeader>
