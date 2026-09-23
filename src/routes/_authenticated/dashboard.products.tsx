@@ -365,7 +365,12 @@ function ProductsPage() {
               </div>
               <div className="space-y-1">
                 <Label>Quantity (packs)</Label>
-                <Input type="number" min="1" step="1" value={buyQty} onChange={(e) => setBuyQty(e.target.value)} />
+                <Input type="number" min="1" step="1" value={buyQty} onChange={(e) => {
+                  const v = e.target.value;
+                  setBuyQty(v);
+                  const q = Number(v);
+                  if (buyOpen && q > 0) setBuyCost(((q * (buyOpen.unit_cost_cents ?? 0)) / 100).toFixed(2));
+                }} />
               </div>
               <div className="space-y-1">
                 <Label>Total cost (£)</Label>
