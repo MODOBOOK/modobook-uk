@@ -220,7 +220,17 @@ function ModoLayout() {
           .replace(/<\/?\s*script\b[^>]*>/gi, "")
           .replace(/<!--[\s\S]*?-->/g, "")
           .slice(0, 20000);
+        // Apply the brand palette to :root in the first paint (incl. SSR) so
+        // pages, portals and dialogs never flash MODO's default colours.
+        const safeVal = (v: string) => String(v).replace(/[;{}<>]/g, "");
+        const rootVars = Object.entries(themeVars)
+          .filter(([k]) => /^--[a-zA-Z0-9-]+$/.test(k))
+          .map(([k, v]) => `${k}: ${safeVal(v)};`)
+          .join(" ");
+        const bodyBg = bgColor !== "transparent" ? `body { background-color: ${safeVal(bgColor)}; }` : "";
         return `
+          :root { ${rootVars} }
+          ${bodyBg}
           .modo-shell h1, .modo-shell h2, .modo-shell h3 { font-family: ${safeFont}; }
           ${safeCss}
         `;
