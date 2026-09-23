@@ -121,6 +121,17 @@ const groups: FaqGroup[] = [
     ],
   },
   {
+    id: "clinical-compliance",
+    label: "Clinical & compliance",
+    items: [
+      { q: "Can I store consultation and treatment records?", a: "Yes. Keep medical history, consultations, consent, treatment plans, photographs, products used and treatment records together in one patient profile." },
+      { q: "How does the Prescriber Hub work?", a: "The Prescriber Hub brings prescribing activity together in one dedicated space, with prescriptions, requests, notes and relevant treatment information organised for clearer clinical oversight and traceability." },
+      { q: "Can prescribers oversee practitioners where clinical oversight is required?", a: "Yes. Where your working arrangement requires appropriate clinical oversight, MODO allows authorised prescribers to access the relevant records and information needed to support that relationship. Access is controlled — patient records aren't simply visible to other MODO users." },
+      { q: "Can I record batch numbers and expiry dates?", a: "Yes. Record product details, including batch and expiry information, against the relevant treatment session for clear traceability and record keeping." },
+      { q: "Can I create my own consent and medical forms?", a: "Yes. Build and customise forms around your clinic and treatments, collect patient information and signatures digitally, and keep completed forms securely attached to the patient record." },
+    ],
+  },
+  {
     id: "patients",
     label: "For clients",
     items: [
