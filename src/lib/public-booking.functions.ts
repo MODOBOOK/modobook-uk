@@ -559,7 +559,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       .lte("date", endIso);
     const { data: overrides } = await sb
       .from("availability_overrides")
-      .select("date,location_id,practitioner_id")
+      .select("date,start_time,end_time,location_id,practitioner_id")
       .eq("profile_id", data.profileId)
       .gte("date", startIso)
       .lte("date", endIso)
