@@ -31,7 +31,6 @@ import {
   Undo2,
   CalendarClock,
   SlidersHorizontal,
-  Banknote,
   CreditCard,
   Landmark,
 } from "lucide-react";
