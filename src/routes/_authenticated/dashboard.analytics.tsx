@@ -13,7 +13,11 @@ import {
   TrendingUp,
   XCircle,
   Clock,
+  Package,
+  Receipt,
 } from "lucide-react";
+import { getCostsForAnalytics } from "@/lib/expenses.functions";
+import { expenseOccurrences, categoryLabel } from "@/lib/expense-utils";
 import { getDashboardAnalytics } from "@/lib/analytics.functions";
 import {
   BarChart,
@@ -71,7 +75,7 @@ function AnalyticsPage() {
       .finally(() => setLoading(false));
   }, [fetchAnalytics]);
 
-  const { filtered, totals, chartData, treatmentBreakdown, statusBreakdown } = useMemo(() => {
+  const { filtered, totals, chartData, treatmentBreakdown, statusBreakdown, fromIso, toIso } = useMemo(() => {
     if (!data) {
       return {
         filtered: [],
@@ -86,6 +90,8 @@ function AnalyticsPage() {
         chartData: [],
         treatmentBreakdown: [],
         statusBreakdown: [],
+        fromIso: "",
+        toIso: "",
       };
     }
 
@@ -208,7 +214,7 @@ function AnalyticsPage() {
     };
     const statusBreakdown = Array.from(statusMap.entries()).map(([name, value]) => ({ name, value, color: statusColors[name] ?? "#6c7a89" }));
 
-    return { filtered, totals, chartData, treatmentBreakdown, statusBreakdown };
+    return { filtered, totals, chartData, treatmentBreakdown, statusBreakdown, fromIso, toIso };
   }, [data, range]);
 
   return (
@@ -403,8 +409,134 @@ function AnalyticsPage() {
               </CardContent>
             </Card>
           </div>
+
+          <ProfitSection appointments={data.appointments} fromIso={fromIso} toIso={toIso} revenue={totals.revenue} />
         </>
       )}
+    </div>
+  );
+}
+
+function ProfitSection({ appointments, fromIso, toIso, revenue }: { appointments: Appt[]; fromIso: string; toIso: string; revenue: number }) {
+  const fetchCosts = useServerFn(getCostsForAnalytics);
+  const [costs, setCosts] = useState<Awaited<ReturnType<typeof getCostsForAnalytics>> | null>(null);
+  useEffect(() => {
+    fetchCosts().then(setCosts).catch(() => setCosts({ expenses: [], purchases: [] }));
+  }, [fetchCosts]);
+
+  const view = useMemo(() => {
+    if (!costs || !fromIso) return null;
+    const productCost = costs.purchases.filter((p) => p.purchased_at >= fromIso && p.purchased_at <= toIso).reduce((s, p) => s + p.total_cost_cents, 0) / 100;
+    const byCat = new Map<string, number>();
+    for (const e of costs.expenses) {
+      const n = expenseOccurrences(e, fromIso, toIso).length;
+      if (n) byCat.set(e.category, (byCat.get(e.category) ?? 0) + (n * e.amount_cents) / 100);
+    }
+    const otherCost = Array.from(byCat.values()).reduce((a, b) => a + b, 0);
+    const breakdown = [
+      ...(productCost ? [{ name: "Products & stock", value: productCost }] : []),
+      ...Array.from(byCat.entries()).map(([k, v]) => ({ name: categoryLabel(k), value: v })),
+    ].map((b, i) => ({ ...b, color: CHART_COLORS[i % CHART_COLORS.length] }));
+
+    // Last 12 months: income vs costs
+    const now = new Date();
+    const months: { key: string; label: string; income: number; costs: number }[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      months.push({ key, label: d.toLocaleDateString(undefined, { month: "short" }), income: 0, costs: 0 });
+    }
+    const idx = new Map(months.map((m, i) => [m.key, i]));
+    for (const a of appointments) {
+      if (a.status === "cancelled" || a.status === "no_show") continue;
+      const i = idx.get(a.scheduled_date.slice(0, 7));
+      if (i !== undefined) months[i].income += Number((a as Appt & { total_amount?: number | null }).total_amount ?? 0);
+    }
+    for (const p of costs.purchases) {
+      const i = idx.get(p.purchased_at.slice(0, 7));
+      if (i !== undefined) months[i].costs += p.total_cost_cents / 100;
+    }
+    const first = `${months[0].key}-01`;
+    const lastD = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const last = `${months[11].key}-${String(lastD.getDate()).padStart(2, "0")}`;
+    for (const e of costs.expenses) {
+      for (const day of expenseOccurrences(e, first, last)) {
+        const i = idx.get(day.slice(0, 7));
+        if (i !== undefined) months[i].costs += e.amount_cents / 100;
+      }
+    }
+    return { productCost, otherCost, breakdown, months };
+  }, [costs, fromIso, toIso, appointments]);
+
+  if (!view) return null;
+  const totalCosts = view.productCost + view.otherCost;
+  const profit = revenue - totalCosts;
+  const tip = { background: "var(--card)", border: "1px solid var(--border)", borderRadius: "0.75rem" };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="font-serif text-xl">Profit & costs</h2>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" asChild><Link to="/dashboard/products">Products</Link></Button>
+          <Button variant="outline" size="sm" asChild><Link to="/dashboard/expenses">Business costs</Link></Button>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <MetricCard icon={PoundSterling} label="Revenue" value={formatCurrency(revenue)} />
+        <MetricCard icon={Package} label="Product costs" value={formatCurrency(view.productCost)} tone="muted" />
+        <MetricCard icon={Receipt} label="Other costs" value={formatCurrency(view.otherCost)} tone="muted" />
+        <MetricCard icon={TrendingUp} label="Profit" value={formatCurrency(profit)} tone={profit < 0 ? "destructive" : "default"} />
+      </div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="border-border/60">
+          <CardHeader className="pb-2"><CardTitle className="font-serif text-lg">Cost breakdown</CardTitle></CardHeader>
+          <CardContent>
+            {view.breakdown.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">No costs recorded for this period.</p>
+            ) : (
+              <>
+                <div className="h-48 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={view.breakdown} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75} paddingAngle={2}>
+                        {view.breakdown.map((b) => <Cell key={b.name} fill={b.color} />)}
+                      </Pie>
+                      <Tooltip contentStyle={tip} formatter={(v: number) => formatCurrency(v)} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="mt-2 space-y-1.5">
+                  {view.breakdown.map((b) => (
+                    <div key={b.name} className="flex items-center gap-2 text-sm">
+                      <span className="size-2.5 rounded-full" style={{ background: b.color }} />
+                      <span className="flex-1">{b.name}</span>
+                      <span className="tabular-nums">{formatCurrency(b.value)}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+        <Card className="border-border/60 lg:col-span-2">
+          <CardHeader className="pb-2"><CardTitle className="font-serif text-lg">Income vs costs — last 12 months</CardTitle></CardHeader>
+          <CardContent className="px-2 sm:px-6">
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={view.months}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e3ded5" />
+                  <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="#8a8378" />
+                  <YAxis tick={{ fontSize: 11 }} stroke="#8a8378" tickFormatter={(v) => `£${v}`} />
+                  <Tooltip contentStyle={tip} formatter={(v: number, n: string) => [formatCurrency(v), n === "income" ? "Income" : "Costs"]} />
+                  <Bar dataKey="income" fill="#5b8a72" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="costs" fill="#d4646a" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
