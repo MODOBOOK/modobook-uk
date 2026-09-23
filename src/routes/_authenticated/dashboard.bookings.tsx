@@ -1850,7 +1850,7 @@ function CheckoutSheet({
       const row = await createLink({
         data: {
           amountCents: outstandingCents,
-          description: `${a.treatments?.name ?? "Treatment"} · ${a.patient_name}`,
+          description: `${treatmentLabel(a) ?? "Treatment"} · ${a.patient_name}`,
           kind: "checkout",
           appointmentId: a.id,
           recipientEmail: a.patient_email,
@@ -1895,7 +1895,7 @@ function CheckoutSheet({
             recipientEmail: a.patient_email,
             recipientName: a.patient_name,
             amountCents: totalCents,
-            description: a.treatments?.name ?? "your appointment",
+            description: treatmentLabel(a) ?? "your appointment",
             kind: "balance",
           },
         });
@@ -1914,7 +1914,7 @@ function CheckoutSheet({
       <div className="rounded-md border-l-4 p-2" style={{ borderLeftColor: color, backgroundColor: hexToRgba(color, 0.12) }}>
         <div className="font-semibold">{a.patient_name}</div>
         <div className="text-xs text-muted-foreground">
-          {a.start_time.slice(0, 5)}–{a.end_time.slice(0, 5)} · {a.treatments?.name ?? "Treatment"}
+          {a.start_time.slice(0, 5)}–{a.end_time.slice(0, 5)} · {treatmentLabel(a) ?? "Treatment"}
           {a.locations?.name && ` · ${a.locations.name}`}
         </div>
         {practitioners.length > 1 && (
@@ -1979,7 +1979,7 @@ function CheckoutSheet({
 
       <AppointmentExtrasPanel
         appointmentId={a.id}
-        bookedName={a.treatments?.name ?? "Treatment"}
+        bookedName={treatmentLabel(a) ?? "Treatment"}
         disabled={cancelled}
         onTotalChange={(t) => onPatch({ total_amount: t })}
         onEndTimeChange={(end) => onPatch({ end_time: `${end}:00` })}
