@@ -68,6 +68,16 @@ const groups: FaqGroup[] = [
     ],
   },
   {
+    id: "team-locations",
+    label: "Team & locations",
+    items: [
+      { q: "Can I add team members?", a: "Yes. Build your team within MODO and give each practitioner their own calendar and secure login." },
+      { q: "Can I manage multiple locations?", a: "Yes. Run multiple clinic locations from one MODO account, with availability, practitioners and appointments organised across each location." },
+      { q: "Can practitioners receive payments directly?", a: "Where your clinic structure requires it, payments can be directed to the clinic or an individual practitioner's connected account." },
+      { q: "Can I track commission?", a: "Yes. MODO can track practitioner commission against bookings, making team payments easier to manage and understand." },
+    ],
+  },
+  {
     id: "rewards",
     label: "Memberships & loyalty",
     items: [
