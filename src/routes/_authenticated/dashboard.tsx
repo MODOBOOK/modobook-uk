@@ -103,6 +103,7 @@ function DashboardLayout() {
     const load = () => {
       fetchPending().then((r) => { if (alive) setPendingReviews(r.count); }).catch(() => {});
       fetchHub().then((r) => { if (alive) setHubCounts(r); }).catch(() => {});
+      amIAdmin().then((r) => { if (alive) setAdmin(r.admin); }).catch(() => {});
     };
     load();
     const t = setInterval(load, 60_000);
