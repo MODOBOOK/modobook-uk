@@ -239,7 +239,7 @@ function FaqPage() {
                   Still have a question?
                 </p>
                 <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-[color:var(--ink-soft)]">
-                  Our team run aesthetics clinics ourselves — get in touch and we'll help you get set up.
+                  Speak to the MODO team. We know aesthetics because we work in it too — and we're here to help whenever you need us.
                 </p>
                 <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
                   <Link
