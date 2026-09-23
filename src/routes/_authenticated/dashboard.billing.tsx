@@ -70,7 +70,7 @@ function BillingPage() {
       // The plan price is collated from the account itself: chargeable seats are
       // whatever exists beyond the one included (plus any comped extras).
       const freeLocs = Math.max(0, (d.subscription as any)?.free_locations ?? 0);
-      const planForSeats: any = d.plans.find((p: any) => p.id === ((d.subscription as any)?.plan_id)) ?? base;
+      const planForSeats: any = d.plans.find((p: any) => p.id === ((d.subscription as any)?.plan_id)) ?? d.plans.find((p: any) => p.kind === "base" && p.is_default);
       const freePracs = Math.max(0, (d.subscription as any)?.free_practitioners ?? 0) + Math.max(0, (planForSeats?.included_practitioners ?? 1) - 1);
       const usedExtraLocs = Math.max(0, (d.usage?.locations ?? 0) - 1 - freeLocs);
       const usedExtraPracs = Math.max(0, (d.usage?.practitioners ?? 0) - 1 - freePracs);
