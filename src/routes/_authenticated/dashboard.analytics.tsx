@@ -475,6 +475,19 @@ function ProfitSection({ appointments, fromIso, toIso, revenue }: { appointments
     const lastD = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     const last = `${months[11].key}-${String(lastD.getDate()).padStart(2, "0")}`;
     for (const e of costs.expenses) {
+      if (isHourlyFreq(e.frequency)) {
+        const minsByMonth = new Map<string, number>();
+        for (const a of appointments) {
+          if (a.status === "cancelled" || a.status === "no_show") continue;
+          const key = a.scheduled_date.slice(0, 7);
+          minsByMonth.set(key, (minsByMonth.get(key) ?? 0) + apptMinutes(a));
+        }
+        for (const [key, mins] of minsByMonth) {
+          const i = idx.get(key);
+          if (i !== undefined) months[i].costs += hourlyCostCents(e, mins) / 100;
+        }
+        continue;
+      }
       for (const day of expenseOccurrences(e, first, last)) {
         const i = idx.get(day.slice(0, 7));
         if (i !== undefined) months[i].costs += e.amount_cents / 100;
