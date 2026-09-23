@@ -7,6 +7,7 @@ import {
   FileText,
   FileSignature,
   Package,
+  Star,
   Shield,
   CalendarDays,
   ClipboardList,
@@ -137,7 +138,7 @@ export const menuGroups: MenuGroup[] = [
     blurb: "Booking rules, deposits & reminders",
     items: [
       { label: "Booking settings", description: "Notice, buffers, deposits, reminders & patient rules", to: "/dashboard/settings", icon: Shield, ...T.mocha },
-et  ],
+    ],
   },
 ];
 
