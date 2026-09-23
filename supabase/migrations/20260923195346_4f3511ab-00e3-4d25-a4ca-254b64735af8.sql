@@ -1,0 +1,1 @@
+ALTER TABLE public.treatment_products ADD COLUMN IF NOT EXISTS units_per_treatment NUMERIC(10,2);

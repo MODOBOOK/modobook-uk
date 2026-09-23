@@ -9869,6 +9869,7 @@ export type Database = {
           product_id: string
           profile_id: string
           treatment_id: string
+          units_per_treatment: number | null
         }
         Insert: {
           cost_per_treatment_cents?: number
@@ -9877,6 +9878,7 @@ export type Database = {
           product_id: string
           profile_id: string
           treatment_id: string
+          units_per_treatment?: number | null
         }
         Update: {
           cost_per_treatment_cents?: number
@@ -9885,6 +9887,7 @@ export type Database = {
           product_id?: string
           profile_id?: string
           treatment_id?: string
+          units_per_treatment?: number | null
         }
         Relationships: [
           {
