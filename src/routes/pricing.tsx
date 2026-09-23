@@ -101,7 +101,7 @@ function PricingPage() {
           eyebrow="Pricing"
           title="Simple pricing,"
           accent="no surprises."
-          blurb="One straightforward subscription for your clinic, with your first month free. Start with what you need today, then add team members as your business grows. And MODO never takes a percentage of your treatment revenue."
+          blurb="One straightforward subscription for your clinic, with your first month free. Start with what you need today, then add team members as your business grows. And MODO never takes percentage of your treatment revenue."
         >
           <p className="mx-auto mt-8 max-w-md text-xs leading-relaxed text-[color:var(--ink-soft)]">
             <span className="font-semibold text-[color:var(--ink)]">
