@@ -275,10 +275,12 @@ function BookingsPage() {
   const [unblockSeed, setUnblockSeed] = useState<{ date: string; start: string; end: string } | undefined>(undefined);
   const [now, setNow] = useState(new Date());
   const isMobile = useIsMobile();
+  // Phone day view: roughly 4 hours fill the screen, scroll for the rest.
+  const hourH = isMobile && view === "day" ? 170 : HOUR_HEIGHT;
   const nowTop = (() => {
     const hr = now.getHours() + now.getMinutes() / 60;
     if (hr < START_HOUR || hr > END_HOUR + 1) return null;
-    return (hr - START_HOUR) * HOUR_HEIGHT;
+    return (hr - START_HOUR) * hourH;
   })();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -319,7 +321,7 @@ function BookingsPage() {
   useEffect(() => {
     if (!loading && scrollRef.current && view !== "month") {
       const targetHour = Math.max(START_HOUR, Math.min(END_HOUR, now.getHours() - 1));
-      scrollRef.current.scrollTop = (targetHour - START_HOUR) * HOUR_HEIGHT;
+      scrollRef.current.scrollTop = (targetHour - START_HOUR) * hourH;
     }
   }, [loading, view]);
 
@@ -411,7 +413,7 @@ function BookingsPage() {
         matchesPractitioner(bd.practitioner_id)
     );
     if (isBlockedDay) {
-      return [{ top: 0, height: (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT }];
+      return [{ top: 0, height: (END_HOUR - START_HOUR + 1) * hourH }];
     }
     const dayRules = (rulesByDow.get(dow) ?? []).filter(
       (r) =>
@@ -430,7 +432,7 @@ function BookingsPage() {
       ...dayOverrides.map((o) => [parseTime(o.start_time), parseTime(o.end_time)] as [number, number]),
     ].sort((a, b) => a[0] - b[0]);
     if (windows.length === 0) {
-      return [{ top: 0, height: (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT }];
+      return [{ top: 0, height: (END_HOUR - START_HOUR + 1) * hourH }];
     }
     // merge overlapping
     const merged: [number, number][] = [];
@@ -460,16 +462,16 @@ function BookingsPage() {
       const segEnd = Math.min(s, END_HOUR + 1);
       if (segEnd > segStart) {
         segs.push({
-          top: (segStart - START_HOUR) * HOUR_HEIGHT,
-          height: (segEnd - segStart) * HOUR_HEIGHT,
+          top: (segStart - START_HOUR) * hourH,
+          height: (segEnd - segStart) * hourH,
         });
       }
       cursor = Math.max(cursor, e);
     }
     if (cursor < END_HOUR + 1) {
       segs.push({
-        top: (cursor - START_HOUR) * HOUR_HEIGHT,
-        height: (END_HOUR + 1 - cursor) * HOUR_HEIGHT,
+        top: (cursor - START_HOUR) * hourH,
+        height: (END_HOUR + 1 - cursor) * hourH,
       });
     }
     return segs;
@@ -490,7 +492,7 @@ function BookingsPage() {
   }
 
   const todayStr = ymd(now);
-  const totalHeight = (END_HOUR - START_HOUR + 1) * HOUR_HEIGHT;
+  const totalHeight = (END_HOUR - START_HOUR + 1) * hourH;
   // Month-style views just show the month (dates were inaccurate for the
   // scrollable day / 3-day strip).
   const monthRangeLabel = (from: Date, to: Date) => {
@@ -755,8 +757,8 @@ function BookingsPage() {
               <div className="sticky left-0 z-20 border-r bg-background">
                 {HOURS.map((h) => (
                   <div key={h} className="absolute left-0 right-0 pr-1 text-right text-[9px] tabular-nums text-muted-foreground sm:text-[10px]"
-                    style={{ top: (h - START_HOUR) * HOUR_HEIGHT - 6 }}>
-                    {isMobile ? `${String(h).padStart(2, "0")}` : `${String(h).padStart(2, "0")}:00`}
+                    style={{ top: (h - START_HOUR) * hourH - 6 }}>
+                    {isMobile && view !== "day" ? `${String(h).padStart(2, "0")}` : `${String(h).padStart(2, "0")}:00`}
                   </div>
                 ))}
 
@@ -791,7 +793,7 @@ function BookingsPage() {
                       // Only empty space — appointment/block buttons handle their own clicks.
                       if (e.target !== e.currentTarget) return;
                       const rect = e.currentTarget.getBoundingClientRect();
-                      const hr = START_HOUR + (e.clientY - rect.top) / HOUR_HEIGHT;
+                      const hr = START_HOUR + (e.clientY - rect.top) / hourH;
                       const snapped = Math.min(Math.max(Math.floor(hr * 2) / 2, START_HOUR), END_HOUR - 0.5);
                       const hh = String(Math.floor(snapped)).padStart(2, "0");
                       const mm = snapped % 1 ? "30" : "00";
@@ -814,7 +816,7 @@ function BookingsPage() {
                     ))}
                     {HOURS.map((h) => (
                       <div key={h} className="pointer-events-none absolute left-0 right-0 border-t border-dashed border-muted"
-                        style={{ top: (h - START_HOUR) * HOUR_HEIGHT }} />
+                        style={{ top: (h - START_HOUR) * hourH }} />
                     ))}
                     {isToday && nowTop != null && (
                       <div className="pointer-events-none absolute left-0 right-0 z-10 h-px bg-red-500" style={{ top: nowTop }} />
@@ -831,7 +833,7 @@ function BookingsPage() {
                           key={`b-${b.id}`}
                           onClick={() => setEditBlock(b)}
                           className="absolute left-0 right-0 z-0 overflow-hidden border-y border-foreground/15 bg-foreground/10 px-1.5 py-0.5 text-left text-[10px] leading-tight text-foreground/70"
-                          style={{ top: (s - START_HOUR) * HOUR_HEIGHT, height: (e - s) * HOUR_HEIGHT }}
+                          style={{ top: (s - START_HOUR) * hourH, height: (e - s) * hourH }}
                           title={b.reason ? `${b.reason} — tap to edit` : "Tap to edit or unblock"}
                         >
                           <span className="inline-flex items-center gap-1 font-semibold"><Ban className="h-3 w-3 shrink-0" /> Blocked {b.start_time.slice(0,5)}–{b.end_time.slice(0,5)}</span>
@@ -843,9 +845,9 @@ function BookingsPage() {
                     {/* Appointments: same-time bookings split into side-by-side
                         columns; every card ends before the next one starts. */}
                     {layoutOverlaps<any>(dayAppts).map(({ item: a, leftPct, widthPct, index, columns, startHr, endHr, maxEndHr }) => {
-                      const top = (startHr - START_HOUR) * HOUR_HEIGHT;
-                      const ceiling = (maxEndHr - startHr) * HOUR_HEIGHT - 2;
-                      const height = Math.max(11, Math.min(Math.max((endHr - startHr) * HOUR_HEIGHT - 2, 13), ceiling));
+                      const top = (startHr - START_HOUR) * hourH;
+                      const ceiling = (maxEndHr - startHr) * hourH - 2;
+                      const height = Math.max(11, Math.min(Math.max((endHr - startHr) * hourH - 2, 13), ceiling));
                       
                       const tall = height >= 34;
                       const narrow = columns > 2;
@@ -853,6 +855,49 @@ function BookingsPage() {
                       const color = a.treatments?.color || "#3b82f6";
                       const tName = treatmentLabel(a);
                       const cardColor = isCheckedOut ? "#9ca3af" : color;
+                      if (isMobile && view === "day") {
+                        const roomy = height >= 60 && columns <= 2;
+                        return (
+                          <button
+                            key={`a-${a.id}`}
+                            onClick={() => setSelectedAppt(a)}
+                            className={cn(
+                              "absolute flex cursor-pointer flex-col justify-center overflow-hidden rounded-lg border border-foreground/10 py-1 pl-3 pr-2 text-left shadow-sm transition",
+                              isCheckedOut && "opacity-60"
+                            )}
+                            style={{
+                              top: top + 1,
+                              height: height - 2,
+                              left: `calc(${leftPct}% + 4px)`,
+                              width: `calc(${widthPct}% - 8px)`,
+                              zIndex: 5 + index,
+                              backgroundColor: hexToRgba(cardColor, 0.16),
+                              borderLeft: `4px solid ${cardColor}`,
+                              color: "#0f172a",
+                            }}
+                          >
+                            {roomy && (
+                              <div className="text-[11px] tabular-nums opacity-70">
+                                {a.start_time.slice(0, 5)} – {a.end_time.slice(0, 5)}
+                              </div>
+                            )}
+                            <div className={cn("flex min-w-0 items-baseline gap-2", isCheckedOut && "line-through")}>
+                              {!roomy && <span className="shrink-0 text-[11px] tabular-nums opacity-70">{a.start_time.slice(0, 5)}</span>}
+                              <span className="truncate text-[13.5px] font-semibold">{a.patient_name}</span>
+                              {tName && columns <= 1 && <span className="min-w-0 truncate text-[12px] opacity-70">{tName}</span>}
+                            </div>
+                            {tName && columns > 1 && roomy && <div className="truncate text-[12px] opacity-70">{tName}</div>}
+                            {a.has_allergies && height >= 80 && (
+                              <div className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-red-700">
+                                <AlertTriangle className="h-3 w-3" /> Allergies
+                              </div>
+                            )}
+                            {height >= 90 && a.locations?.name && (
+                              <div className="truncate text-[11px] opacity-70">{a.locations.name}</div>
+                            )}
+                          </button>
+                        );
+                      }
                       return (
                         <button
                           key={`a-${a.id}`}
