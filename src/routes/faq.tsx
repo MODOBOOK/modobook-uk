@@ -68,7 +68,7 @@ const groups: FaqGroup[] = [
   },
   {
     id: "rewards",
-    label: "Rewards & referrals",
+    label: "Memberships & loyalty",
     items: [
       { q: "Do I have to run a rewards programme?", a: "No — it's fully optional and off by default. Turn on referrals, loyalty points and reward tiers independently, in any combination you like." },
       { q: "How do referrals work?", a: "Every patient automatically gets a 6-character referral code. When a friend uses it at their first booking, the reward posts to the referrer once that first paid appointment is completed. No manual admin." },
@@ -78,7 +78,7 @@ const groups: FaqGroup[] = [
   },
   {
     id: "training",
-    label: "Training courses",
+    label: "Training & courses",
     items: [
       { q: "Can I sell training on MODO?", a: "Yes. Publish courses with fixed cohort dates or open them to your normal availability calendar. Learners book, pay and complete pre-course forms through MODO." },
       { q: "Can I preview a course before it's live?", a: "Yes. Set visibility to Hidden (link only), Coming soon (visible but not bookable), or Live." },
@@ -87,7 +87,7 @@ const groups: FaqGroup[] = [
   },
   {
     id: "marketing",
-    label: "Marketing & emails",
+    label: "Marketing & communications",
     items: [
       { q: "Can I send marketing emails from MODO?", a: "Yes. Segment your patient list, write campaigns with merge tags and Book-now buttons, and schedule sends. Automations cover birthday emails, treatment-interval reminders, top-up reminders and win-backs." },
       { q: "Are unsubscribe links handled for me?", a: "Yes — every marketing email includes a tokenised unsubscribe link and MODO respects preferences automatically." },
@@ -97,7 +97,7 @@ const groups: FaqGroup[] = [
   },
   {
     id: "ai",
-    label: "Built-in AI",
+    label: "Intelligent features",
     items: [
       { q: "What does the AI actually do?", a: "It drafts the writing you'd otherwise do yourself — treatment descriptions for your menu, consent and medical forms, and aftercare instructions per treatment. You review and edit everything before it goes live." },
       { q: "Does it cost extra?", a: "No. The AI features are included in your MODO subscription." },
@@ -106,7 +106,7 @@ const groups: FaqGroup[] = [
   },
   {
     id: "patients",
-    label: "For patients",
+    label: "For clients",
     items: [
       { q: "Do I need an account to book?", a: "You'll create one at the point of booking so your practitioner can hold your medical form, consent and treatment history. It only takes a moment." },
       { q: "Where do I see my rewards?", a: "Sign in to your practitioner's MODO page and open My account → Rewards. You'll see your code, credit and any points balance." },
@@ -115,7 +115,7 @@ const groups: FaqGroup[] = [
   },
   {
     id: "security",
-    label: "Data & security",
+    label: "Privacy & security",
     items: [
       { q: "Is MODO GDPR compliant?", a: "Yes. MODO is built for UK clinical use with row-level security, encrypted storage, a full DPA, a DPIA and breach-response process. You are the data controller for your patient records; MODO is your data processor." },
       { q: "Where is my data stored?", a: "In UK/EU data centres. Backups are encrypted at rest and access is audit-logged." },
