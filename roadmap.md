@@ -20,7 +20,7 @@ Goal: MODO runs in an app WebView; dashboard must feel native on phones.
 
 # Desktop sidebar parity with phone menu
 
-- [ ] Shared menu data module (single source for phone Menu + desktop sidebar)
-- [ ] Desktop sidebar rebuilt from the phone Menu groups (same items, same order)
-- [ ] Mobile-only features now on desktop: Memberships, Workspace appearance, Find a prescriber, SMS Marketing, admin
-- [ ] Verify signed-in in the browser
+- [x] Shared menu data module (single source for phone Menu + desktop sidebar)
+- [x] Desktop sidebar rebuilt from the phone Menu groups (same items, same order)
+- [x] Mobile-only features now on desktop: Memberships, Workspace appearance, Find a prescriber, SMS Marketing, admin
+- [x] Verify signed-in in the browser
