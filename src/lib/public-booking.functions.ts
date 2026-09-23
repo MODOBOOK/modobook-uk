@@ -593,6 +593,10 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       .filter((o) => matchPract((o as { practitioner_id?: string | null }).practitioner_id))
       .filter((o) => !locationBlockedDates.has(o.date) || o.location_id === data.locationId)
       .map((o) => o.date);
+    const scopedOverrides = (overrides ?? [])
+      .filter((o) => matchLoc(o.location_id))
+      .filter((o) => matchPract((o as { practitioner_id?: string | null }).practitioner_id))
+      .filter((o) => !locationBlockedDates.has(o.date) || o.location_id === data.locationId);
 
     // Expand rota-aware open dates across the month
     const openDates: string[] = [];
