@@ -155,6 +155,19 @@ function CommissionReportPage() {
                     <div><p className="text-xs text-muted-foreground">Their share</p>{money(s.practitionerShare)}</div>
                     <div><p className="text-xs text-muted-foreground">Your commission</p>{money(s.ownerShare)}</div>
                   </div>
+                  {s.deductProductCost && (
+                    <div className="rounded-md bg-muted/40 p-2 text-xs space-y-0.5">
+                      <div className="flex justify-between"><span>Takings</span><span>{money(s.revenue)}</span></div>
+                      <div className="flex justify-between"><span>− Product cost</span><span>−{money(s.productCost ?? 0)}</span></div>
+                      <div className="flex justify-between font-medium"><span>Split {s.commissionPercent}% / {100 - s.commissionPercent}%</span><span>{money(s.revenue - (s.productCost ?? 0))}</span></div>
+                      {(s.theirStock ?? 0) > 0 && (
+                        <div className="flex justify-between text-muted-foreground"><span>+ Their stock paid back to them</span><span>{money(s.theirStock ?? 0)}</span></div>
+                      )}
+                      {(s.clinicStock ?? 0) > 0 && (
+                        <div className="flex justify-between text-muted-foreground"><span>+ Clinic stock kept by you</span><span>{money(s.clinicStock ?? 0)}</span></div>
+                      )}
+                    </div>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     {s.owedToPractitioner >= 0
                       ? `You owe ${s.name} ${money(s.owedToPractitioner)}.`

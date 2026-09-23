@@ -27,11 +27,12 @@ async function assertOwner(supabase: any, userId: string) {
 
 export const updateStaffPayout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; payout_mode?: "clinic" | "own_account"; commission_percent?: number }) => d)
+  .inputValidator((d: { id: string; payout_mode?: "clinic" | "own_account"; commission_percent?: number; deduct_product_cost?: boolean }) => d)
   .handler(async ({ data, context }) => {
     const profileId = await assertOwner(context.supabase, context.userId);
     const patch: Record<string, unknown> = {};
     if (data.payout_mode !== undefined) patch.payout_mode = data.payout_mode;
+    if (data.deduct_product_cost !== undefined) patch.deduct_product_cost = !!data.deduct_product_cost;
     if (data.commission_percent !== undefined) {
       const pct = Math.max(0, Math.min(100, Number(data.commission_percent) || 0));
       patch.commission_percent = pct;
@@ -114,6 +115,13 @@ export type CommissionStaffRow = {
   owedToPractitioner: number;
   /** Set to their own account but none connected — money actually landed in the clinic account. */
   accountNotConnected?: boolean;
+  deductProductCost?: boolean;
+  /** Total product cost taken off before the split. */
+  productCost?: number;
+  /** Part of productCost that was their own stock (paid back to them). */
+  theirStock?: number;
+  /** Part of productCost that was clinic stock (kept by the clinic). */
+  clinicStock?: number;
 };
 
 /** Commission earned per team member over a date range. Owner-only. */
@@ -139,41 +147,73 @@ export const getCommissionReport = createServerFn({ method: "GET" })
 
     const { data: staffRows } = await supabase
       .from("staff_members")
-      .select("id, name, role, practitioner_id, payout_mode, commission_percent, status, stripe_account_id")
+      .select("id, name, role, practitioner_id, payout_mode, commission_percent, status, stripe_account_id, deduct_product_cost")
       .eq("profile_id", profileId);
 
     const { data: appts, error } = await supabase
       .from("appointments")
-      .select("id, practitioner_id, status, total_amount, amount_paid_cents, amount_refunded_cents")
+      .select("id, practitioner_id, treatment_id, status, total_amount, amount_paid_cents, amount_refunded_cents")
       .eq("profile_id", profileId)
       .gte("scheduled_date", data.from)
       .lte("scheduled_date", data.to)
       .range(0, 9999);
     if (error) throw error;
 
-    const byPractitioner = new Map<string, { revenue: number; bookings: number }>();
+    // Product cost per treatment, split by who owns the stock.
+    const { data: links } = await supabase
+      .from("treatment_products")
+      .select("treatment_id, cost_per_treatment_cents, products(owner_kind, owner_staff_id, active)")
+      .eq("profile_id", profileId);
+    const costByTreatment = new Map<string, { cents: number; ownerStaffId: string | null }[]>();
+    for (const l of (links ?? []) as any[]) {
+      const c = Number(l.cost_per_treatment_cents ?? 0);
+      if (!c) continue;
+      const arr = costByTreatment.get(l.treatment_id) ?? [];
+      arr.push({ cents: c, ownerStaffId: l.products?.owner_kind === "practitioner" ? l.products?.owner_staff_id ?? null : null });
+      costByTreatment.set(l.treatment_id, arr);
+    }
+
+    const byPractitioner = new Map<string, { revenue: number; bookings: number; items: { net: number; treatmentId: string | null }[] }>();
     let unassignedRevenue = 0;
     for (const a of (appts ?? []) as any[]) {
       if (a.status === "cancelled" && !(a.amount_paid_cents > 0)) continue;
       const total = Number(a.total_amount ?? 0) || (a.amount_paid_cents ?? 0) / 100;
       const net = total - (a.amount_refunded_cents ?? 0) / 100;
       if (!a.practitioner_id) { unassignedRevenue += net; continue; }
-      const cur = byPractitioner.get(a.practitioner_id) ?? { revenue: 0, bookings: 0 };
+      const cur = byPractitioner.get(a.practitioner_id) ?? { revenue: 0, bookings: 0, items: [] };
       cur.revenue += net; cur.bookings += 1;
+      cur.items.push({ net, treatmentId: a.treatment_id ?? null });
       byPractitioner.set(a.practitioner_id, cur);
     }
 
     const rows: CommissionStaffRow[] = [];
     for (const s of (staffRows ?? []) as any[]) {
       if (!s.practitioner_id) continue;
-      const agg = byPractitioner.get(s.practitioner_id) ?? { revenue: 0, bookings: 0 };
+      const agg = byPractitioner.get(s.practitioner_id) ?? { revenue: 0, bookings: 0, items: [] };
       const pct = Math.max(0, Math.min(100, Number(s.commission_percent ?? 0)));
-      const practitionerShare = Math.round(agg.revenue * pct) / 100;
+      let productCost = 0, theirStock = 0, splittable = agg.revenue;
+      if (s.deduct_product_cost) {
+        splittable = 0;
+        for (const it of agg.items) {
+          let cost = 0, mine = 0;
+          if (it.treatmentId && it.net > 0) {
+            for (const c of costByTreatment.get(it.treatmentId) ?? []) {
+              cost += c.cents / 100;
+              if (c.ownerStaffId === s.id) mine += c.cents / 100;
+            }
+          }
+          cost = Math.min(cost, Math.max(0, it.net));
+          mine = Math.min(mine, cost);
+          productCost += cost; theirStock += mine;
+          splittable += it.net - cost;
+        }
+      }
+      const clinicStock = productCost - theirStock;
+      const split = Math.round(splittable * pct) / 100;
+      const practitionerShare = Math.round((split + theirStock) * 100) / 100;
       const ownerShare = Math.round((agg.revenue - practitionerShare) * 100) / 100;
       const wantsOwn = s.payout_mode === "own_account";
       const notConnected = wantsOwn && !s.stripe_account_id;
-      // Without a connected account the money actually landed in the clinic account,
-      // so the figures must be calculated the clinic way round.
       const mode: "clinic" | "own_account" = wantsOwn && !notConnected ? "own_account" : "clinic";
       rows.push({
         accountNotConnected: notConnected,
@@ -187,6 +227,10 @@ export const getCommissionReport = createServerFn({ method: "GET" })
         practitionerShare,
         ownerShare,
         owedToPractitioner: mode === "clinic" ? practitionerShare : -ownerShare,
+        deductProductCost: !!s.deduct_product_cost,
+        productCost: Math.round(productCost * 100) / 100,
+        theirStock: Math.round(theirStock * 100) / 100,
+        clinicStock: Math.round(clinicStock * 100) / 100,
       });
     }
     rows.sort((a, b) => b.revenue - a.revenue);

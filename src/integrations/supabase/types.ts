@@ -8754,6 +8754,7 @@ export type Database = {
           commission_percent: number
           created_at: string
           data_scope: Database["public"]["Enums"]["staff_scope"]
+          deduct_product_cost: boolean
           id: string
           invite_expires_at: string | null
           invite_token: string | null
@@ -8780,6 +8781,7 @@ export type Database = {
           commission_percent?: number
           created_at?: string
           data_scope?: Database["public"]["Enums"]["staff_scope"]
+          deduct_product_cost?: boolean
           id?: string
           invite_expires_at?: string | null
           invite_token?: string | null
@@ -8806,6 +8808,7 @@ export type Database = {
           commission_percent?: number
           created_at?: string
           data_scope?: Database["public"]["Enums"]["staff_scope"]
+          deduct_product_cost?: boolean
           id?: string
           invite_expires_at?: string | null
           invite_token?: string | null
