@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/staff")({
 type Staff = {
   id: string; name: string; invited_email: string | null; role: StaffRole;
   data_scope: StaffScope; practitioner_id: string | null; status: StaffStatus; can_manage_rota?: boolean; can_use_prescribing?: boolean;
-  payout_mode?: "clinic" | "own_account" | null; commission_percent?: number | null;
+  payout_mode?: "clinic" | "own_account" | null; commission_percent?: number | null; deduct_product_cost?: boolean | null;
   stripe_account_id?: string | null; stripe_account_status?: string | null;
   invited_at: string; accepted_at: string | null; last_active_at: string | null;
   invite_expires_at: string | null;
@@ -47,6 +47,7 @@ function PayoutControls({ member, onSaved }: { member: Staff; onSaved: () => voi
   const disconnect = useServerFn(disconnectStaffStripe);
   const [mode, setMode] = useState<"clinic" | "own_account">(member.payout_mode === "own_account" ? "own_account" : "clinic");
   const [pct, setPct] = useState(String(member.commission_percent ?? 0));
+  const [deduct, setDeduct] = useState(!!member.deduct_product_cost);
   const [busy, setBusy] = useState(false);
   const connected = !!member.stripe_account_id;
 
@@ -87,6 +88,25 @@ function PayoutControls({ member, onSaved }: { member: Staff; onSaved: () => voi
             <Button size="sm" variant="outline" disabled={busy} onClick={() => void save()}>Save</Button>
           </div>
         </div>
+      </div>
+      <div className="flex items-start justify-between gap-3 rounded-md border bg-background p-2">
+        <div className="text-xs">
+          <p className="font-medium">Take off product cost before commission</p>
+          <p className="text-muted-foreground">
+            The product cost linked to each treatment (in Products &amp; stock) is taken off first, then the rest is split.
+            If the stock belongs to them, they get that cost back on top of their share.
+          </p>
+        </div>
+        <Switch
+          checked={deduct}
+          disabled={busy}
+          onCheckedChange={async (v) => {
+            setDeduct(v); setBusy(true);
+            try { await savePayout({ data: { id: member.id, deduct_product_cost: v } }); toast.success("Saved"); onSaved(); }
+            catch (e: any) { setDeduct(!v); toast.error(e?.message ?? "Could not save"); }
+            finally { setBusy(false); }
+          }}
+        />
       </div>
       {mode === "own_account" && !connected && (
         <div className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900">
