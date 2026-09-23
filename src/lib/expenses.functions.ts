@@ -11,7 +11,7 @@ export type ExpenseRow = {
   name: string;
   category: string;
   amount_cents: number;
-  frequency: "one_off" | "weekly" | "monthly" | "yearly";
+  frequency: "one_off" | "weekly" | "monthly" | "yearly" | "hourly" | "half_hourly";
   start_date: string;
   end_date: string | null;
   notes: string | null;
@@ -37,7 +37,7 @@ export const upsertExpense = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const pid = await getProfileId(context.supabase, context.userId);
     if (!pid) throw new Error("No profile");
-    const freq = ["one_off", "weekly", "monthly", "yearly"].includes(data.frequency) ? data.frequency : "one_off";
+    const freq = ["one_off", "weekly", "monthly", "yearly", "hourly", "half_hourly"].includes(data.frequency) ? data.frequency : "one_off";
     const payload = {
       profile_id: pid,
       name: data.name.trim().slice(0, 200),

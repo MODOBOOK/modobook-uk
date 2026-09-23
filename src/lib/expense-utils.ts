@@ -8,10 +8,24 @@ export const EXPENSE_CATEGORIES = [
 
 export const FREQUENCIES = [
   { value: "one_off", label: "One-off" },
+  { value: "hourly", label: "Per hour (room hire)" },
+  { value: "half_hourly", label: "Per half hour (room hire)" },
   { value: "weekly", label: "Weekly" },
   { value: "monthly", label: "Monthly" },
   { value: "yearly", label: "Yearly" },
 ] as const;
+
+/** Hourly/half-hourly costs are charged per hour of room use — the amount is the hourly rate. */
+export function isHourlyFreq(frequency: string) {
+  return frequency === "hourly" || frequency === "half_hourly";
+}
+
+/** Cost in cents for a number of minutes of room use. Half-hourly rounds up to whole half-hour blocks. */
+export function hourlyCostCents(e: { amount_cents: number; frequency: string }, minutes: number) {
+  if (minutes <= 0) return 0;
+  if (e.frequency === "half_hourly") return Math.round(Math.ceil(minutes / 30) * 0.5 * e.amount_cents);
+  return Math.round((minutes / 60) * e.amount_cents);
+}
 
 export function categoryLabel(v: string) {
   return EXPENSE_CATEGORIES.find((c) => c.value === v)?.label ?? "Other";
@@ -37,6 +51,7 @@ export function expenseOccurrences(e: ExpenseLike, fromIso: string, toIso: strin
     i++;
     if (e.frequency === "weekly") d.setDate(d.getDate() + 7);
     else if (e.frequency === "yearly") d.setFullYear(d.getFullYear() + 1);
+    else if (isHourlyFreq(e.frequency)) break; // hourly costs have no calendar occurrences
     else {
       // monthly — keep the same day, clamped to month length
       const base = new Date(e.start_date + "T00:00:00");
