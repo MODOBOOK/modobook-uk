@@ -962,7 +962,10 @@ function BookingsPage() {
                         >
                           {tall ? (
                             <>
-                              <div className="truncate font-bold">{a.patient_name}</div>
+                              <div className="flex min-w-0 items-center gap-1">
+                                <span className="truncate font-bold">{a.patient_name}</span>
+                                {a.payment_status === "paid" && <PaymentMethodBadge method={a.payment_method} />}
+                              </div>
                               <div className="truncate text-[10px] tabular-nums opacity-75">
                                 {a.start_time.slice(0, 5)}
                                 {!narrow ? `–${a.end_time.slice(0, 5)}` : ""}
@@ -985,6 +988,7 @@ function BookingsPage() {
                                   {tName}
                                 </span>
                               ) : null}
+                              {a.payment_status === "paid" && <PaymentMethodBadge method={a.payment_method} />}
                             </div>
                           )}
                           {a.has_allergies && height >= 50 && !narrow && (
