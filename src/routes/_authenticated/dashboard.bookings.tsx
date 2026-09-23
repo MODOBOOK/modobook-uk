@@ -108,6 +108,7 @@ type Appt = {
   allergies_text: string | null;
   practitioner_id?: string | null;
   treatments: { name: string; color?: string | null } | null;
+  treatment_name_snapshot?: string | null;
   locations: { name: string } | null;
   practitioners?: { name: string } | null;
   location_id?: string | null;
