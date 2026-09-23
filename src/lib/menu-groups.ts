@@ -120,7 +120,7 @@ export const menuGroups: MenuGroup[] = [
       { label: "Medical forms", description: "Build & send medical history forms", to: "/dashboard/forms", icon: FileSignature, ...T.mocha },
       { label: "Client marketing", description: "Campaigns, audiences & automation", to: "/dashboard/marketing", icon: Megaphone, ...T.taupe },
       { label: "Memberships", description: "Recurring plans & loyalty for your patients", to: "/dashboard/memberships", icon: Percent, ...T.ivory },
-et  ],
+    ],
   },
   {
     title: "Patient notifications",
