@@ -698,6 +698,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
           continue;
         }
         const windows = windowsByDate.get(iso) ?? [];
+        if (windows.length === 0) continue;
         const busy = (busyByDate.get(iso) ?? []).slice().sort((x, y) => x.start - y.start);
         let maxGap = 0;
         for (const w of windows) {
