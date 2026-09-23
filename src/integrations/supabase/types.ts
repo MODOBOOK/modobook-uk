@@ -1471,6 +1471,56 @@ export type Database = {
           },
         ]
       }
+      business_expenses: {
+        Row: {
+          amount_cents: number
+          category: string
+          created_at: string
+          end_date: string | null
+          frequency: string
+          id: string
+          name: string
+          notes: string | null
+          profile_id: string
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number
+          category?: string
+          created_at?: string
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          name: string
+          notes?: string | null
+          profile_id: string
+          start_date?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          category?: string
+          created_at?: string
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          profile_id?: string
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_expenses_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       care_plans: {
         Row: {
           appointment_id: string | null
