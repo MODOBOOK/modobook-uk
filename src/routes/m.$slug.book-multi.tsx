@@ -652,6 +652,12 @@ function MultiBookPage() {
       if (candidates.size === 0) {
         for (let t = start; t + totalDuration <= end; t += step) candidates.add(t);
       }
+      // Short appointments push the rest of the day off the fixed grid, so also
+      // offer times measured from the end of each existing booking.
+      for (const b of anchors) {
+        if (b.end < start || b.end >= end) continue;
+        for (let t = b.end; t + totalDuration <= end; t += step) candidates.add(t);
+      }
       for (const t of Array.from(candidates).sort((a, z) => a - z)) {
         const slotEnd = t + totalDuration;
         const overlap = busy.some((b) => (!locationId || !b.locId || b.locId === locationId) && t < b.end && slotEnd > b.start);

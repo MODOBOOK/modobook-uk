@@ -190,7 +190,15 @@ export const getRescheduleSlotsByToken = createServerFn({ method: "GET" })
       const start = toMinutes(w.start);
       const end = toMinutes(w.end);
       const step = Math.max(5, w.step);
-      for (let t = start; t + duration <= end; t += step) {
+      const candidates = new Set<number>();
+      for (let t = start; t + duration <= end; t += step) candidates.add(t);
+      // Short appointments push the rest of the day off the fixed grid, so also
+      // offer times measured from the end of each existing booking.
+      for (const b of busy) {
+        if (b.end < start || b.end >= end) continue;
+        for (let t = b.end; t + duration <= end; t += step) candidates.add(t);
+      }
+      for (const t of Array.from(candidates).sort((a, z) => a - z)) {
         const slotEnd = t + duration;
         if (busy.some((b) => t < b.end && slotEnd > b.start)) continue;
         out.add(fromMinutes(t));
