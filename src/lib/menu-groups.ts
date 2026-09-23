@@ -1,6 +1,8 @@
 import {
   Store,
   ShieldCheck,
+  MapPin,
+  Palette,
   Scissors,
   CalendarDays,
   CreditCard,
