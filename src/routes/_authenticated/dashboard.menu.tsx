@@ -48,19 +48,13 @@ function MenuPage() {
 
   const pilot = pilotFeaturesEnabled(profile.slug);
 
-function comingSoonFor(to: string): ComingSoonKey | null {
-    // Pilot-rolled features: open for pilot clinics, coming soon for everyone else.
-    if (pilot) return null;
-    if (to === "/dashboard/associates") return "associates";
-    if (to === "/dashboard/notifications/sms") return "sms-reminders";
-    return null;
-  }
+  const comingSoonFor = (to: string) => getComingSoonKey(to, pilot);
 
   const memberships = membershipsEnabled(profile.slug);
   const smsMarketing = smsMarketingEnabled(profile.slug);
 
   const visible = useMemo(() => {
-    return groups.map((g) => ({
+    return menuGroups.map((g) => ({
       ...g,
       items: g.items
         .filter((i) => canAccessRoute(clinicRole, i.to, { canManageRota: Boolean((profile as Record<string, unknown>)?.["__can_manage_rota"]), canUsePrescribing: Boolean((profile as Record<string, unknown>)?.["__can_use_prescribing"]) }))
