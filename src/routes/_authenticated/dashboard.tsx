@@ -1,47 +1,27 @@
-import { pilotFeaturesEnabled, practitionerReferralsEnabled } from "@/lib/feature-flags";
+import { membershipsEnabled, pilotFeaturesEnabled, practitionerReferralsEnabled, smsMarketingEnabled } from "@/lib/feature-flags";
 import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  DoorOpen,
-  LayoutDashboard,
-  Store,
   Scissors,
   CalendarDays,
   Users,
-  CreditCard,
-  MapPin,
-  Palette,
-  FileText,
-  FileSignature,
   LogOut,
   Package,
   Menu,
   CalendarPlus,
   CalendarClock,
-
-  Shield,
   Home,
-  Star,
   ClipboardList,
   Settings,
-  HelpCircle,
   ChevronLeft,
-  Sparkles,
-  Percent,
-  HeartPulse,
-  Info,
   Stethoscope,
-  Mail,
   Gift,
-  GraduationCap,
-  
   TrendingUp,
   MessageCircle,
+  HelpCircle,
   ShieldCheck,
-  ClipboardCheck,
-
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -65,6 +45,8 @@ import { PlatformBillingGate } from "@/components/PlatformBillingGate";
 import { ComingSoonDialog, type ComingSoonKey } from "@/components/ComingSoonDialog";
 import { ClinicSwitcher } from "@/components/ClinicSwitcher";
 import { canAccessRoute, type ClinicRole } from "@/lib/staff-nav";
+import { getComingSoonKey, menuGroups, type MenuGroup, type MenuItem } from "@/lib/menu-groups";
+import { amIAdmin } from "@/lib/admin.functions";
 
 
 
