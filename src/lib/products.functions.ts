@@ -165,8 +165,17 @@ export const deletePurchase = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const pid = await getProfileId(context.supabase, context.userId);
     if (!pid) throw new Error("No profile");
+    const { data: purchase } = await context.supabase
+      .from("product_purchases").select("product_id, quantity").eq("id", data.id).eq("profile_id", pid).maybeSingle();
     const { error } = await context.supabase.from("product_purchases").delete().eq("id", data.id).eq("profile_id", pid);
     if (error) throw error;
+    if (purchase?.product_id && Number(purchase.quantity) > 0) {
+      const { data: prod } = await context.supabase.from("products").select("stock_units, pack_size").eq("id", purchase.product_id).eq("profile_id", pid).maybeSingle();
+      if (prod) {
+        const units = Math.max(0, Number(prod.stock_units) - Number(purchase.quantity) * Number(prod.pack_size || 1));
+        await context.supabase.from("products").update({ stock_units: units }).eq("id", purchase.product_id).eq("profile_id", pid);
+      }
+    }
     return { ok: true };
   });
 
