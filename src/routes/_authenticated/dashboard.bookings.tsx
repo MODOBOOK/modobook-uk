@@ -124,6 +124,11 @@ type BlockedTime = {
   practitioner_id?: string | null;
 };
 
+/** Treatment label for a booking: live treatment first, then the snapshot
+ *  captured at booking time (covers courses and deleted treatments). */
+const treatmentLabel = (a: { treatments?: { name: string } | null; treatment_name_snapshot?: string | null }) =>
+  a.treatments?.name ?? (a.treatment_name_snapshot?.trim() || null);
+
 const HOUR_HEIGHT = 76;
 const START_HOUR = 0;
 const END_HOUR = 23;
