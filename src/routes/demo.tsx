@@ -110,38 +110,6 @@ function DemoPage() {
           </div>
         </section>
 
-        {/* Team & roles */}
-        <section
-          className="border-b border-[color:var(--hairline)]"
-          style={{ background: "var(--grad-band)" }}
-        >
-          <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
-            <SectionHead
-              eyebrow="Your team"
-              title="Built for clinics with more than one pair of hands."
-              blurb="The demo clinic comes with a full team already set up. The owner sees every diary; each practitioner sees only their own. Front-of-house can take bookings and payments without opening a medical record."
-            />
-            <HairlineGrid cols={2}>
-              {[
-                { name: "Nurse Amelia Hart", role: "Practitioner", blurb: "Own diary and own patients. Clinical notes, consent and consultations — no billing or settings." },
-                { name: "Dr Priya Raman", role: "Practitioner", blurb: "Second diary with a different rota, so Thursdays run late without touching anyone else's hours." },
-                { name: "Jess Okoro", role: "Receptionist", blurb: "Front of house: books, reschedules, takes payments and gift cards. Medical records stay closed." },
-                { name: "Marta Kowal", role: "Clinic admin", blurb: "Everything except owner-only areas like billing, branding and the team list itself." },
-              ].map((m) => (
-                <div key={m.name} className="lift bg-[color:var(--paper)] p-8 sm:p-10">
-                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[color:var(--accent)]">
-                    {m.role}
-                  </div>
-                  <h3 className="mt-3 font-display text-xl text-[color:var(--ink)]">{m.name}</h3>
-                  <div className="mt-3 h-px w-6 bg-[color:var(--taupe)]" />
-                  <p className="mt-3 text-sm leading-relaxed text-[color:var(--ink-soft)]">
-                    {m.blurb}
-                  </p>
-                </div>
-              ))}
-            </HairlineGrid>
-          </div>
-        </section>
 
         {/* Booking pages + reassurance */}
         <section className="border-b border-[color:var(--hairline)]">
