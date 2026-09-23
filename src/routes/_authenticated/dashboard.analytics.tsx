@@ -261,6 +261,9 @@ function AnalyticsPage() {
             <MetricCard icon={Clock} label="No-shows" value={String(totals.noShows)} tone="muted" />
           </div>
 
+          <ProfitSection appointments={data.appointments} fromIso={fromIso} toIso={toIso} revenue={totals.revenue} />
+
+
           {/* Charts */}
           <div className="grid gap-4 lg:grid-cols-2">
             <Card className="border-border/60">
