@@ -65,9 +65,7 @@ function DemoPage() {
           blurb="Experience MODO exactly as your clinic would- Step inside a fully interactive demo and experience the platform for yourself. Explore appointments, client records, consultations, consent forms and more — with complete freedom to look around."
         >
           <div className="mt-9 flex flex-wrap items-center justify-center gap-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">
-            <span>Live right now</span>
-            <span>Resets nightly</span>
-            <span>No card required</span>
+            <span>No sign-up. No commitment. Simply explore</span>
           </div>
         </PageHero>
 
