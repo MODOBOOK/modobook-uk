@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Loader2, Receipt, Repeat } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Receipt, Repeat, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/expenses")({
@@ -67,7 +67,7 @@ function ExpensesPage() {
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{r.name}</p>
         <p className="text-xs text-muted-foreground">
-          {categoryLabel(r.category)} · {r.frequency === "one_off" ? new Date(r.start_date).toLocaleDateString("en-GB") : `${FREQUENCIES.find((f) => f.value === r.frequency)?.label} from ${new Date(r.start_date).toLocaleDateString("en-GB")}${r.end_date ? ` to ${new Date(r.end_date).toLocaleDateString("en-GB")}` : ""}`}
+          {categoryLabel(r.category)} · {isHourlyFreq(r.frequency) ? (r.frequency === "half_hourly" ? "Charged per half hour of room use" : "Charged per hour of room use") : r.frequency === "one_off" ? new Date(r.start_date).toLocaleDateString("en-GB") : `${FREQUENCIES.find((f) => f.value === r.frequency)?.label} from ${new Date(r.start_date).toLocaleDateString("en-GB")}${r.end_date ? ` to ${new Date(r.end_date).toLocaleDateString("en-GB")}` : ""}`}
         </p>
       </div>
       <span className="text-sm font-semibold tabular-nums">{gbp(r.amount_cents)}</span>
@@ -97,8 +97,12 @@ function ExpensesPage() {
       ) : (
         <>
           <Card><CardContent className="p-4">
-            <div className="mb-2 flex items-center gap-2"><Repeat className="size-4" /><h2 className="font-medium">Recurring</h2><Badge variant="secondary">{rows.filter((r) => r.frequency !== "one_off").length}</Badge></div>
-            {rows.filter((r) => r.frequency !== "one_off").length === 0 ? <p className="py-4 text-sm text-muted-foreground">No recurring costs yet — add your rent or room hire.</p> : rows.filter((r) => r.frequency !== "one_off").map((r) => <Row key={r.id} r={r} />)}
+            <div className="mb-2 flex items-center gap-2"><Repeat className="size-4" /><h2 className="font-medium">Recurring</h2><Badge variant="secondary">{recurring.length}</Badge></div>
+            {recurring.length === 0 ? <p className="py-4 text-sm text-muted-foreground">No recurring costs yet — add your rent or room hire.</p> : recurring.map((r) => <Row key={r.id} r={r} />)}
+          </CardContent></Card>
+          <Card><CardContent className="p-4">
+            <div className="mb-2 flex items-center gap-2"><Clock className="size-4" /><h2 className="font-medium">Room hire by the hour</h2><Badge variant="secondary">{hourly.length}</Badge></div>
+            {hourly.length === 0 ? <p className="py-4 text-sm text-muted-foreground">No hourly room-hire rates yet.</p> : hourly.map((r) => <Row key={r.id} r={r} />)}
           </CardContent></Card>
           <Card><CardContent className="p-4">
             <div className="mb-2 flex items-center gap-2"><Receipt className="size-4" /><h2 className="font-medium">One-off</h2><Badge variant="secondary">{oneOff.length}</Badge></div>
@@ -120,7 +124,7 @@ function ExpensesPage() {
                     <SelectContent>{EXPENSE_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div><Label>Amount (£)</Label><Input type="number" step="0.01" min="0" value={draft.amount} onChange={(e) => setDraft({ ...draft, amount: e.target.value })} /></div>
+                <div><Label>{isHourlyFreq(draft.frequency) ? "Rate per hour (£)" : "Amount (£)"}</Label><Input type="number" step="0.01" min="0" value={draft.amount} onChange={(e) => setDraft({ ...draft, amount: e.target.value })} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>How often</Label>
@@ -129,9 +133,14 @@ function ExpensesPage() {
                     <SelectContent>{FREQUENCIES.map((f) => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div><Label>{draft.frequency === "one_off" ? "Date" : "First payment"}</Label><Input type="date" value={draft.start_date} onChange={(e) => setDraft({ ...draft, start_date: e.target.value })} /></div>
+                {!isHourlyFreq(draft.frequency) && (
+                  <div><Label>{draft.frequency === "one_off" ? "Date" : "First payment"}</Label><Input type="date" value={draft.start_date} onChange={(e) => setDraft({ ...draft, start_date: e.target.value })} /></div>
+                )}
               </div>
-              {draft.frequency !== "one_off" && (
+              {isHourlyFreq(draft.frequency) && (
+                <p className="text-xs text-muted-foreground">The cost is worked out automatically from the hours of appointments in your calendar — e.g. a £20/hour rate with 10 hours of appointments counts as £200 that month.</p>
+              )}
+              {draft.frequency !== "one_off" && !isHourlyFreq(draft.frequency) && (
                 <div><Label>End date (optional)</Label><Input type="date" value={draft.end_date} onChange={(e) => setDraft({ ...draft, end_date: e.target.value })} /></div>
               )}
               <div><Label>Notes</Label><Textarea value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} rows={2} /></div>
