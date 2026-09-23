@@ -176,7 +176,7 @@ function LandingPage() {
               <GridFeature icon={ClipboardList} title="Consultations" desc="Assess, plan, photograph, face map and document." />
               <GridFeature icon={FileSignature} title="Consent and Medical Forms" desc="Create, send, sign and securely stored." />
               <GridFeature icon={CreditCard} title="Payments" desc="Deposits, card capture, Klarna & Clearpay and pay in clinic options." />
-              <GridFeature icon={Sparkles} title="MODO AI" desc="Create treatment plans, treatment descriptions, and forms in seconds." />
+              <GridFeature icon={Sparkles} title="Intelligence built in" desc="Create treatment plans, treatment descriptions, and forms in seconds." />
               <GridFeature icon={Network} title="Prescriber Hub" desc="Prescribing requests and notes — connected in one secure record." />
               <GridFeature icon={ShieldCheck} title="Clinic compliance" desc="Audits, checks, and action notes designed to keep you clinic inspection-ready." />
               <GridFeature icon={Bell} title="Aftercare & Reviews" desc="Automatically send aftercare and review requests following every treatment." />
