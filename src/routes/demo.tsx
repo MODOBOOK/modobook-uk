@@ -62,7 +62,7 @@ function DemoPage() {
           eyebrow="Live demo · no sign-up"
           title="Take MODO for"
           accent="a test drive."
-          blurb="A fully populated demo clinic — real treatments, patients, consultations, consent forms and bookings. Click in, click around, change whatever you like. Everything resets overnight, and no emails or payments ever leave the sandbox."
+          blurb="Experience MODO exactly as your clinic would- Step inside a fully interactive demo and experience the platform for yourself. Explore appointments, client records, consultations, consent forms and more — with complete freedom to look around."
         >
           <div className="mt-9 flex flex-wrap items-center justify-center gap-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink-soft)]">
             <span>Live right now</span>
