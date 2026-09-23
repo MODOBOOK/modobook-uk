@@ -135,9 +135,9 @@ const groups: FaqGroup[] = [
     id: "patients",
     label: "For clients",
     items: [
-      { q: "Do I need an account to book?", a: "You'll create one at the point of booking so your practitioner can hold your medical form, consent and treatment history. It only takes a moment." },
-      { q: "Where do I see my rewards?", a: "Sign in to your practitioner's MODO page and open My account → Rewards. You'll see your code, credit and any points balance." },
-      { q: "How do I contact my practitioner?", a: "Every MODO clinic page has direct contact details and secure messaging where the practitioner has enabled it." },
+      { q: "Do I need a MODO account to book?", a: "Clients can book through their practitioner's MODO booking page. You can create an account at checkout if you wish to see you appointment details." },
+      { q: "Where can I see my rewards and membership balance?", a: "Your available rewards, loyalty benefits and eligible membership balance can be viewed through your MODO client experience." },
+      { q: "How do I contact my practitioner?", a: "For questions about your treatment, appointment or clinical care, contact your practitioner or clinic directly using the contact details provided on their MODO page." },
     ],
   },
   {
