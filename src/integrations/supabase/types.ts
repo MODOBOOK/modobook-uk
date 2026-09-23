@@ -7602,6 +7602,123 @@ export type Database = {
           },
         ]
       }
+      product_purchases: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          product_id: string
+          profile_id: string
+          purchased_at: string
+          quantity: number
+          supplier: string | null
+          total_cost_cents: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          product_id: string
+          profile_id: string
+          purchased_at?: string
+          quantity?: number
+          supplier?: string | null
+          total_cost_cents?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          product_id?: string
+          profile_id?: string
+          purchased_at?: string
+          quantity?: number
+          supplier?: string | null
+          total_cost_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_purchases_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          low_stock_threshold: number | null
+          name: string
+          notes: string | null
+          owner_kind: string
+          owner_staff_id: string | null
+          pack_size: number
+          profile_id: string
+          stock_units: number
+          supplier: string | null
+          unit_cost_cents: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          low_stock_threshold?: number | null
+          name: string
+          notes?: string | null
+          owner_kind?: string
+          owner_staff_id?: string | null
+          pack_size?: number
+          profile_id: string
+          stock_units?: number
+          supplier?: string | null
+          unit_cost_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          low_stock_threshold?: number | null
+          name?: string
+          notes?: string | null
+          owner_kind?: string
+          owner_staff_id?: string | null
+          pack_size?: number
+          profile_id?: string
+          stock_units?: number
+          supplier?: string | null
+          unit_cost_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_owner_staff_id_fkey"
+            columns: ["owner_staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           about: string | null
@@ -9690,6 +9807,55 @@ export type Database = {
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "treatment_plan_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treatment_products: {
+        Row: {
+          cost_per_treatment_cents: number
+          created_at: string
+          id: string
+          product_id: string
+          profile_id: string
+          treatment_id: string
+        }
+        Insert: {
+          cost_per_treatment_cents?: number
+          created_at?: string
+          id?: string
+          product_id: string
+          profile_id: string
+          treatment_id: string
+        }
+        Update: {
+          cost_per_treatment_cents?: number
+          created_at?: string
+          id?: string
+          product_id?: string
+          profile_id?: string
+          treatment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treatment_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_products_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_products_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
             referencedColumns: ["id"]
           },
         ]
