@@ -437,6 +437,13 @@ function BookTreatmentPage() {
         if (candidates.size === 0) {
           for (let t = start; t + duration <= end; t += step) candidates.add(t);
         }
+        // Short appointments push the rest of the day off the fixed grid (a
+        // 15-min booking inside a 30-min grid hides every later gap), so also
+        // offer times measured from the end of each existing booking.
+        for (const b of anchors) {
+          if (b.end < start || b.end >= end) continue;
+          for (let t = b.end; t + duration <= end; t += step) candidates.add(t);
+        }
         for (const t of Array.from(candidates).sort((a, z) => a - z)) {
           const slotEnd = t + duration;
           const overlap = busy.some(
