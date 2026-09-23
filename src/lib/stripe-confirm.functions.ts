@@ -73,6 +73,11 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
         ? session.payment_intent
         : session.payment_intent?.id ?? null;
 
+    // How the client actually paid (card, Klarna, Clearpay…) so the diary can
+    // show a payment-method symbol.
+    const { paymentMethodLabelForIntent } = await import("./payment-method.server");
+    const methodLabel = await paymentMethodLabelForIntent(stripe, accountId, paymentIntentId);
+
     let updated = 0;
     const confirmedAppointmentIds: string[] = [];
     for (const apptId of ids) {
@@ -84,7 +89,7 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
       if (kind === "deposit") {
         patch.deposit_paid_at = new Date().toISOString();
       } else {
-        patch.payment_method = "stripe_link";
+        patch.payment_method = methodLabel;
         patch.checkout_completed_at = new Date().toISOString();
       }
       // Atomic + idempotent money write: if the webhook already recorded this
@@ -93,6 +98,7 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
         p_appointment_id: apptId,
         p_payment_intent: paymentIntentId ?? "",
         p_amount_cents: shares.get(apptId) ?? 0,
+        p_payment_method: methodLabel,
       });
       const { error } = await supabaseAdmin
         .from("appointments")
@@ -196,6 +202,10 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
     const shares = await splitPaymentCents(supabaseAdmin, ids, treatmentPaidCents);
     const kind = metadata.kind || "deposit";
 
+    // How the client actually paid (card, Klarna, Clearpay…).
+    const { paymentMethodLabelForIntent } = await import("./payment-method.server");
+    const methodLabel = await paymentMethodLabelForIntent(stripe, accountId, pi.id);
+
     const confirmedAppointmentIds: string[] = [];
     for (const apptId of ids) {
       const patch: Record<string, unknown> = {
@@ -205,7 +215,7 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
       };
       if (kind === "deposit") patch.deposit_paid_at = new Date().toISOString();
       else {
-        patch.payment_method = "stripe_link";
+        patch.payment_method = methodLabel;
         patch.checkout_completed_at = new Date().toISOString();
       }
       // Atomic + idempotent: the same payment can only ever be counted once.
@@ -213,6 +223,7 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
         p_appointment_id: apptId,
         p_payment_intent: pi.id,
         p_amount_cents: shares.get(apptId) ?? 0,
+        p_payment_method: methodLabel,
       });
       const { error } = await supabaseAdmin
         .from("appointments")
