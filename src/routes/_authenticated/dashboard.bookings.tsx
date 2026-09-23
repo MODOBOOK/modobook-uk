@@ -108,6 +108,7 @@ type Appt = {
   allergies_text: string | null;
   practitioner_id?: string | null;
   treatments: { name: string; color?: string | null } | null;
+  treatment_name_snapshot?: string | null;
   locations: { name: string } | null;
   practitioners?: { name: string } | null;
   location_id?: string | null;
@@ -122,6 +123,11 @@ type BlockedTime = {
   location_id: string | null;
   practitioner_id?: string | null;
 };
+
+/** Treatment label for a booking: live treatment first, then the snapshot
+ *  captured at booking time (covers courses and deleted treatments). */
+const treatmentLabel = (a: { treatments?: { name: string } | null; treatment_name_snapshot?: string | null }) =>
+  a.treatments?.name ?? (a.treatment_name_snapshot?.trim() || null);
 
 const HOUR_HEIGHT = 76;
 const START_HOUR = 0;
@@ -845,6 +851,7 @@ function BookingsPage() {
                       const narrow = columns > 2;
                       const isCheckedOut = !!a.checked_out_at;
                       const color = a.treatments?.color || "#3b82f6";
+                      const tName = treatmentLabel(a);
                       const cardColor = isCheckedOut ? "#9ca3af" : color;
                       return (
                         <button
@@ -863,7 +870,7 @@ function BookingsPage() {
                             backgroundColor: hexToRgba(cardColor, isCheckedOut ? 0.25 : 0.45),
                             color: "#0f172a",
                           }}
-                          title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${a.treatments?.name ?? "Treatment"}${practitioners.length > 1 ? ` · ${a.practitioners?.name ?? "Unassigned"}` : ""}${a.locations?.name ? ` · ${a.locations.name}` : ""}${isCheckedOut ? " · Checked out" : ""}`}
+                          title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${tName ?? "Treatment"}${practitioners.length > 1 ? ` · ${a.practitioners?.name ?? "Unassigned"}` : ""}${a.locations?.name ? ` · ${a.locations.name}` : ""}${isCheckedOut ? " · Checked out" : ""}`}
                         >
                           {tall ? (
                             <>
@@ -871,7 +878,7 @@ function BookingsPage() {
                               <div className="truncate text-[10px] tabular-nums opacity-75">
                                 {a.start_time.slice(0, 5)}
                                 {!narrow ? `–${a.end_time.slice(0, 5)}` : ""}
-                                {!narrow && a.treatments?.name ? ` · ${a.treatments.name}` : ""}
+                                {tName ? ` · ${tName}` : ""}
                               </div>
                               {!narrow && height >= 48 && (
                                 <div className="truncate text-[10px] opacity-80">
@@ -885,6 +892,7 @@ function BookingsPage() {
                             <div className="truncate">
                               <span className="tabular-nums opacity-75">{a.start_time.slice(0, 5)} </span>
                               <span className="font-bold">{a.patient_name}</span>
+                              {tName ? <span className="opacity-80"> · {tName}</span> : null}
                             </div>
                           )}
                           {a.has_allergies && height >= 50 && !narrow && (
@@ -1842,7 +1850,7 @@ function CheckoutSheet({
       const row = await createLink({
         data: {
           amountCents: outstandingCents,
-          description: `${a.treatments?.name ?? "Treatment"} · ${a.patient_name}`,
+          description: `${treatmentLabel(a) ?? "Treatment"} · ${a.patient_name}`,
           kind: "checkout",
           appointmentId: a.id,
           recipientEmail: a.patient_email,
@@ -1887,7 +1895,7 @@ function CheckoutSheet({
             recipientEmail: a.patient_email,
             recipientName: a.patient_name,
             amountCents: totalCents,
-            description: a.treatments?.name ?? "your appointment",
+            description: treatmentLabel(a) ?? "your appointment",
             kind: "balance",
           },
         });
@@ -1906,7 +1914,7 @@ function CheckoutSheet({
       <div className="rounded-md border-l-4 p-2" style={{ borderLeftColor: color, backgroundColor: hexToRgba(color, 0.12) }}>
         <div className="font-semibold">{a.patient_name}</div>
         <div className="text-xs text-muted-foreground">
-          {a.start_time.slice(0, 5)}–{a.end_time.slice(0, 5)} · {a.treatments?.name ?? "Treatment"}
+          {a.start_time.slice(0, 5)}–{a.end_time.slice(0, 5)} · {treatmentLabel(a) ?? "Treatment"}
           {a.locations?.name && ` · ${a.locations.name}`}
         </div>
         {practitioners.length > 1 && (
@@ -1971,7 +1979,7 @@ function CheckoutSheet({
 
       <AppointmentExtrasPanel
         appointmentId={a.id}
-        bookedName={a.treatments?.name ?? "Treatment"}
+        bookedName={treatmentLabel(a) ?? "Treatment"}
         disabled={cancelled}
         onTotalChange={(t) => onPatch({ total_amount: t })}
         onEndTimeChange={(end) => onPatch({ end_time: `${end}:00` })}
