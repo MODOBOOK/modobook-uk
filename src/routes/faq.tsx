@@ -136,7 +136,7 @@ function FaqPage() {
           eyebrow="Frequently asked"
           title="A few things"
           accent="you might want to know."
-          blurb="Answers for practitioners setting up their clinic on MODO — and for patients booking with one."
+          blurb="Everything you need to know about MODO, from getting started to bookings, payments and beyond."
         >
           <div className="mt-10 flex flex-wrap justify-center gap-x-6 gap-y-3">
             {groups.map((g) => (
