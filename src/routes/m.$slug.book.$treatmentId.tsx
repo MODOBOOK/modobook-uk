@@ -346,10 +346,11 @@ function BookTreatmentPage() {
     if (!data) return false;
     // An ad-hoc open slot is an explicit "I'm working this day" and wins
     // over a closed/blocked day for the same date.
+    // Fully booked days have nothing left to offer — grey them out, even when
+    // the day was opened by a one-off date.
+    if ((data as { fullDates?: string[] }).fullDates?.includes(iso)) return true;
     if (data.overrideDates.includes(iso)) return false;
     if (data.blockedDates.includes(iso)) return true;
-    // Fully booked days have nothing left to offer — grey them out.
-    if ((data as { fullDates?: string[] }).fullDates?.includes(iso)) return true;
     if (Array.isArray((data as { openDates?: string[] }).openDates)) {
       return !(data as { openDates: string[] }).openDates.includes(iso);
     }

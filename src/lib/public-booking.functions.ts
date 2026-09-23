@@ -559,7 +559,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       .lte("date", endIso);
     const { data: overrides } = await sb
       .from("availability_overrides")
-      .select("date,location_id,practitioner_id")
+      .select("date,start_time,end_time,location_id,practitioner_id")
       .eq("profile_id", data.profileId)
       .gte("date", startIso)
       .lte("date", endIso)
@@ -593,6 +593,10 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       .filter((o) => matchPract((o as { practitioner_id?: string | null }).practitioner_id))
       .filter((o) => !locationBlockedDates.has(o.date) || o.location_id === data.locationId)
       .map((o) => o.date);
+    const scopedOverrides = (overrides ?? [])
+      .filter((o) => matchLoc(o.location_id))
+      .filter((o) => matchPract((o as { practitioner_id?: string | null }).practitioner_id))
+      .filter((o) => !locationBlockedDates.has(o.date) || o.location_id === data.locationId);
 
     // Expand rota-aware open dates across the month
     const openDates: string[] = [];
@@ -616,6 +620,15 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
           applicable.map((r) => ({ start: toMin(r.start_time as string), end: toMin(r.end_time as string) })),
         );
       }
+    }
+
+    // One-off open dates add their own working windows on top of the weekly rota.
+    for (const o of scopedOverrides) {
+      if (!o.start_time || !o.end_time) continue;
+      const iso = String(o.date);
+      const arr = windowsByDate.get(iso) ?? [];
+      arr.push({ start: toMin(o.start_time as string), end: toMin(o.end_time as string) });
+      windowsByDate.set(iso, arr);
     }
 
     // Fully booked days: every working window on that date is consumed by
@@ -676,13 +689,16 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       // for the whole appointment. Fall back to a token 15 minutes when the
       // caller hasn't told us how long the booking is.
       const needed = Math.max(15, Math.round(Number(data.durationMinutes ?? 0)) || 15);
-      for (const iso of openDates) {
-        if (blockedDates.includes(iso)) continue;
+      // Check every day the patient could click: weekly rota days AND one-off
+      // open dates (clinics that work purely from one-off dates have no rota).
+      for (const iso of Array.from(new Set([...openDates, ...overrideDates]))) {
+        if (blockedDates.includes(iso) && !overrideDates.includes(iso)) continue;
         if (dailyCap != null && (countByDate.get(iso) ?? 0) >= Number(dailyCap)) {
           fullDates.push(iso);
           continue;
         }
         const windows = windowsByDate.get(iso) ?? [];
+        if (windows.length === 0) continue;
         const busy = (busyByDate.get(iso) ?? []).slice().sort((x, y) => x.start - y.start);
         let maxGap = 0;
         for (const w of windows) {
