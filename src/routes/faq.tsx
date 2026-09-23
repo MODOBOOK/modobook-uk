@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "./index";
 import { MarketingPage, PageHero, Reveal, CtaBand } from "@/components/marketing-kit";
 import { ArrowRight } from "lucide-react";
