@@ -311,8 +311,8 @@ function BookingsPage() {
   const [unblockSeed, setUnblockSeed] = useState<{ date: string; start: string; end: string } | undefined>(undefined);
   const [now, setNow] = useState(new Date());
   const isMobile = useIsMobile();
-  // Phone day view: roughly 4 hours fill the screen, scroll for the rest.
-  const hourH = isMobile && view === "day" ? 170 : HOUR_HEIGHT;
+  // Phone calendar: roughly 4 hours fill the screen, scroll for the rest.
+  const hourH = isMobile && view !== "month" ? 170 : HOUR_HEIGHT;
   const nowTop = (() => {
     const hr = now.getHours() + now.getMinutes() / 60;
     if (hr < START_HOUR || hr > END_HOUR + 1) return null;
@@ -794,7 +794,7 @@ function BookingsPage() {
                 {HOURS.map((h) => (
                   <div key={h} className="absolute left-0 right-0 pr-1 text-right text-[9px] tabular-nums text-muted-foreground sm:text-[10px]"
                     style={{ top: (h - START_HOUR) * hourH - 6 }}>
-                    {isMobile && view !== "day" ? `${String(h).padStart(2, "0")}` : `${String(h).padStart(2, "0")}:00`}
+                    {`${String(h).padStart(2, "0")}:00`}
                   </div>
                 ))}
 
@@ -891,7 +891,7 @@ function BookingsPage() {
                       const color = a.treatments?.color || "#3b82f6";
                       const tName = treatmentLabel(a);
                       const cardColor = isCheckedOut ? "#9ca3af" : color;
-                      if (isMobile && view === "day") {
+                      if (isMobile) {
                         const roomy = height >= 60 && columns <= 2;
                         return (
                           <button
