@@ -758,7 +758,7 @@ function BookingsPage() {
                 {HOURS.map((h) => (
                   <div key={h} className="absolute left-0 right-0 pr-1 text-right text-[9px] tabular-nums text-muted-foreground sm:text-[10px]"
                     style={{ top: (h - START_HOUR) * hourH - 6 }}>
-                    {isMobile ? `${String(h).padStart(2, "0")}` : `${String(h).padStart(2, "0")}:00`}
+                    {isMobile && view !== "day" ? `${String(h).padStart(2, "0")}` : `${String(h).padStart(2, "0")}:00`}
                   </div>
                 ))}
 
