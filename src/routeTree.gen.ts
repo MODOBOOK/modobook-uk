@@ -94,6 +94,7 @@ import { Route as AuthenticatedDashboardRoomRentalRouteImport } from './routes/_
 import { Route as AuthenticatedDashboardRewardsRouteImport } from './routes/_authenticated/dashboard.rewards'
 import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
 import { Route as AuthenticatedDashboardReferralsRouteImport } from './routes/_authenticated/dashboard.referrals'
+import { Route as AuthenticatedDashboardProductsRouteImport } from './routes/_authenticated/dashboard.products'
 import { Route as AuthenticatedDashboardPrivacyRouteImport } from './routes/_authenticated/dashboard.privacy'
 import { Route as AuthenticatedDashboardPreTreatmentRouteImport } from './routes/_authenticated/dashboard.pre-treatment'
 import { Route as AuthenticatedDashboardPractitionersRouteImport } from './routes/_authenticated/dashboard.practitioners'
@@ -651,6 +652,12 @@ const AuthenticatedDashboardReferralsRoute =
   AuthenticatedDashboardReferralsRouteImport.update({
     id: '/referrals',
     path: '/referrals',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardProductsRoute =
+  AuthenticatedDashboardProductsRouteImport.update({
+    id: '/products',
+    path: '/products',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardPrivacyRoute =
@@ -1363,6 +1370,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
   '/dashboard/pre-treatment': typeof AuthenticatedDashboardPreTreatmentRoute
   '/dashboard/privacy': typeof AuthenticatedDashboardPrivacyRoute
+  '/dashboard/products': typeof AuthenticatedDashboardProductsRoute
   '/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
@@ -1545,6 +1553,7 @@ export interface FileRoutesByTo {
   '/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
   '/dashboard/pre-treatment': typeof AuthenticatedDashboardPreTreatmentRoute
   '/dashboard/privacy': typeof AuthenticatedDashboardPrivacyRoute
+  '/dashboard/products': typeof AuthenticatedDashboardProductsRoute
   '/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
@@ -1735,6 +1744,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/practitioners': typeof AuthenticatedDashboardPractitionersRoute
   '/_authenticated/dashboard/pre-treatment': typeof AuthenticatedDashboardPreTreatmentRoute
   '/_authenticated/dashboard/privacy': typeof AuthenticatedDashboardPrivacyRoute
+  '/_authenticated/dashboard/products': typeof AuthenticatedDashboardProductsRoute
   '/_authenticated/dashboard/referrals': typeof AuthenticatedDashboardReferralsRoute
   '/_authenticated/dashboard/reviews': typeof AuthenticatedDashboardReviewsRoute
   '/_authenticated/dashboard/rewards': typeof AuthenticatedDashboardRewardsRoute
@@ -1928,6 +1938,7 @@ export interface FileRouteTypes {
     | '/dashboard/practitioners'
     | '/dashboard/pre-treatment'
     | '/dashboard/privacy'
+    | '/dashboard/products'
     | '/dashboard/referrals'
     | '/dashboard/reviews'
     | '/dashboard/rewards'
@@ -2110,6 +2121,7 @@ export interface FileRouteTypes {
     | '/dashboard/practitioners'
     | '/dashboard/pre-treatment'
     | '/dashboard/privacy'
+    | '/dashboard/products'
     | '/dashboard/referrals'
     | '/dashboard/reviews'
     | '/dashboard/rewards'
@@ -2299,6 +2311,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/practitioners'
     | '/_authenticated/dashboard/pre-treatment'
     | '/_authenticated/dashboard/privacy'
+    | '/_authenticated/dashboard/products'
     | '/_authenticated/dashboard/referrals'
     | '/_authenticated/dashboard/reviews'
     | '/_authenticated/dashboard/rewards'
@@ -3049,6 +3062,13 @@ declare module '@tanstack/react-router' {
       path: '/referrals'
       fullPath: '/dashboard/referrals'
       preLoaderRoute: typeof AuthenticatedDashboardReferralsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/products': {
+      id: '/_authenticated/dashboard/products'
+      path: '/products'
+      fullPath: '/dashboard/products'
+      preLoaderRoute: typeof AuthenticatedDashboardProductsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/privacy': {
@@ -3975,6 +3995,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardPractitionersRoute: typeof AuthenticatedDashboardPractitionersRoute
   AuthenticatedDashboardPreTreatmentRoute: typeof AuthenticatedDashboardPreTreatmentRoute
   AuthenticatedDashboardPrivacyRoute: typeof AuthenticatedDashboardPrivacyRoute
+  AuthenticatedDashboardProductsRoute: typeof AuthenticatedDashboardProductsRoute
   AuthenticatedDashboardReferralsRoute: typeof AuthenticatedDashboardReferralsRoute
   AuthenticatedDashboardReviewsRoute: typeof AuthenticatedDashboardReviewsRoute
   AuthenticatedDashboardRewardsRoute: typeof AuthenticatedDashboardRewardsRoute
@@ -4063,6 +4084,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardPreTreatmentRoute:
       AuthenticatedDashboardPreTreatmentRoute,
     AuthenticatedDashboardPrivacyRoute: AuthenticatedDashboardPrivacyRoute,
+    AuthenticatedDashboardProductsRoute: AuthenticatedDashboardProductsRoute,
     AuthenticatedDashboardReferralsRoute: AuthenticatedDashboardReferralsRoute,
     AuthenticatedDashboardReviewsRoute: AuthenticatedDashboardReviewsRoute,
     AuthenticatedDashboardRewardsRoute: AuthenticatedDashboardRewardsRoute,
