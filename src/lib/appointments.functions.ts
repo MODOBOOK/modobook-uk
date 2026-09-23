@@ -74,7 +74,20 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
     const id = crypto.randomUUID();
     const pr = data.paymentReceived ?? null;
     const nowIso = new Date().toISOString();
-    const totalCents = Math.round(Number(data.basePrice ?? 0) * 100);
+    // Never save a £0 price by accident: fall back to the treatment's list
+    // price, then to whatever was actually taken.
+    let basePrice = Number(data.basePrice ?? 0);
+    if (!(basePrice > 0)) {
+      const { data: t } = await supabase
+        .from("treatments")
+        .select("price")
+        .eq("id", data.treatmentId)
+        .maybeSingle();
+      basePrice = Number((t as { price?: number } | null)?.price ?? 0);
+    }
+    if (!(basePrice > 0) && pr?.amountCents) basePrice = pr.amountCents / 100;
+    data.basePrice = basePrice;
+    const totalCents = Math.round(basePrice * 100);
     const insertRow: Record<string, unknown> = {
       id,
       profile_id: profile.id,
