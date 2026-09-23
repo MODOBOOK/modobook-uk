@@ -855,6 +855,49 @@ function BookingsPage() {
                       const color = a.treatments?.color || "#3b82f6";
                       const tName = treatmentLabel(a);
                       const cardColor = isCheckedOut ? "#9ca3af" : color;
+                      if (isMobile && view === "day") {
+                        const roomy = height >= 60 && columns <= 2;
+                        return (
+                          <button
+                            key={`a-${a.id}`}
+                            onClick={() => setSelectedAppt(a)}
+                            className={cn(
+                              "absolute flex cursor-pointer flex-col justify-center overflow-hidden rounded-lg border border-foreground/10 py-1 pl-3 pr-2 text-left shadow-sm transition",
+                              isCheckedOut && "opacity-60"
+                            )}
+                            style={{
+                              top: top + 1,
+                              height: height - 2,
+                              left: `calc(${leftPct}% + 4px)`,
+                              width: `calc(${widthPct}% - 8px)`,
+                              zIndex: 5 + index,
+                              backgroundColor: hexToRgba(cardColor, 0.16),
+                              borderLeft: `4px solid ${cardColor}`,
+                              color: "#0f172a",
+                            }}
+                          >
+                            {roomy && (
+                              <div className="text-[11px] tabular-nums opacity-70">
+                                {a.start_time.slice(0, 5)} – {a.end_time.slice(0, 5)}
+                              </div>
+                            )}
+                            <div className={cn("flex min-w-0 items-baseline gap-2", isCheckedOut && "line-through")}>
+                              {!roomy && <span className="shrink-0 text-[11px] tabular-nums opacity-70">{a.start_time.slice(0, 5)}</span>}
+                              <span className="truncate text-[13.5px] font-semibold">{a.patient_name}</span>
+                              {tName && columns <= 1 && <span className="min-w-0 truncate text-[12px] opacity-70">{tName}</span>}
+                            </div>
+                            {tName && columns > 1 && roomy && <div className="truncate text-[12px] opacity-70">{tName}</div>}
+                            {a.has_allergies && height >= 80 && (
+                              <div className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-red-700">
+                                <AlertTriangle className="h-3 w-3" /> Allergies
+                              </div>
+                            )}
+                            {height >= 90 && a.locations?.name && (
+                              <div className="truncate text-[11px] opacity-70">{a.locations.name}</div>
+                            )}
+                          </button>
+                        );
+                      }
                       return (
                         <button
                           key={`a-${a.id}`}
