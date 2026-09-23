@@ -155,7 +155,9 @@ function ProductsPage() {
     setLinksOpen(p);
     const existing: Record<string, string> = {};
     for (const l of links.filter((l) => l.product_id === p.id)) {
-      existing[l.treatment_id] = (l.cost_per_treatment_cents / 100).toFixed(2);
+      existing[l.treatment_id] = l.units_per_treatment != null
+        ? String(l.units_per_treatment)
+        : (l.cost_per_treatment_cents / 100).toFixed(2);
     }
     setLinkCosts(existing);
   }
@@ -165,8 +167,8 @@ function ProductsPage() {
     setSaving(true);
     try {
       const rows = Object.entries(linkCosts)
-        .map(([treatment_id, v]) => ({ treatment_id, cost_per_treatment_cents: Math.round(Number(v) * 100) }))
-        .filter((r) => r.cost_per_treatment_cents > 0);
+        .map(([treatment_id, v]) => ({ treatment_id, units_per_treatment: Number(v) }))
+        .filter((r) => r.units_per_treatment > 0);
       await saveLinks({ data: { product_id: linksOpen.id, links: rows } });
       toast.success("Treatment links saved");
       setLinksOpen(null);
@@ -241,7 +243,7 @@ function ProductsPage() {
                     {pLinks.length > 0 && (
                       <p className="text-xs text-muted-foreground">
                         Linked to {pLinks.length} treatment{pLinks.length === 1 ? "" : "s"}:{" "}
-                        {pLinks.map((l) => `${treatments.find((t) => t.id === l.treatment_id)?.name ?? "Treatment"} (${gbp(l.cost_per_treatment_cents)})`).join(", ")}
+                        {pLinks.map((l) => `${treatments.find((t) => t.id === l.treatment_id)?.name ?? "Treatment"} (${l.units_per_treatment != null ? `${l.units_per_treatment} units · ` : ""}${gbp(l.cost_per_treatment_cents)})`).join(", ")}
                       </p>
                     )}
                   </div>
@@ -391,20 +393,22 @@ function ProductsPage() {
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Link {linksOpen?.name} to treatments</DialogTitle></DialogHeader>
           <p className="text-xs text-muted-foreground">
-            Set the product cost used per treatment — this is the amount taken off before commission is worked out. Leave blank or 0 for treatments that don't use this product.
+            Enter how many units of this product each treatment uses (e.g. 1 or 1.5). MODO works out the cost from the pack price
+            {linksOpen ? ` (${gbp(linksOpen.unit_cost_cents)} ÷ ${linksOpen.pack_size} = ${gbp(Math.round(linksOpen.unit_cost_cents / Math.max(1, linksOpen.pack_size)))} per unit)` : ""}
+            {" "}and takes it off before commission. Leave blank or 0 for treatments that don't use this product.
           </p>
           <div className="space-y-2">
             {treatments.map((t) => (
               <div key={t.id} className="flex items-center justify-between gap-3">
                 <p className="min-w-0 truncate text-sm">{t.name}</p>
-                <div className="flex w-28 items-center gap-1">
-                  <span className="text-sm text-muted-foreground">£</span>
+                <div className="flex w-32 items-center gap-1">
                   <Input
-                    type="number" min="0" step="0.01" className="h-8"
+                    type="number" min="0" step="0.5" className="h-8"
                     value={linkCosts[t.id] ?? ""}
-                    placeholder="0.00"
+                    placeholder="0"
                     onChange={(e) => setLinkCosts({ ...linkCosts, [t.id]: e.target.value })}
                   />
+                  <span className="shrink-0 text-xs text-muted-foreground">units</span>
                 </div>
               </div>
             ))}
