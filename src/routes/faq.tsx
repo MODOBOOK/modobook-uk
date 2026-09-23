@@ -144,12 +144,11 @@ const groups: FaqGroup[] = [
     id: "account-billing",
     label: "Account & Billing",
     items: [
-      { q: "How much does MODO cost?", a: "MODO Solo is £39.99 a month and MODO Collective is £59.99 a month, with additional practitioners at £9.99 each. All prices are in GBP and include VAT, and your first month is free." },
-      { q: "How does the free trial work?", a: "Every account starts with a 30-day free trial with full access to every feature. No card details are needed to start, and nothing is charged until your trial ends." },
-      { q: "How do I pay for my subscription?", a: "Your paid subscription begins automatically at the end of your 30-day free trial unless cancelled, and is billed monthly to the card on your account." },
-      { q: "Can I cancel any time?", a: "Yes. There are no notice periods or cancellation fees — cancel from your account settings and you won't be billed again." },
-      { q: "Can I change plan or add practitioners?", a: "Yes. Move between plans or add practitioners whenever you like, and the change applies straight away with no penalty." },
-      { q: "Does MODO take a percentage of my revenue?", a: "No. MODO never takes a percentage of your treatment revenue — you pay your subscription and your revenue stays yours." },
+      { q: "How much does MODO cost?", a: "MODO is offered as a straightforward monthly subscription, with optional additions for extra team members or locations where required. Visit our Pricing page for current plan details." },
+      { q: "Does MODO charge booking fees?", a: "No. MODO doesn't take a percentage of your treatment revenue or add a MODO booking fee on top of your subscription. Standard payment-processing or third-party payment-provider fees may still apply." },
+      { q: "Is there a free trial?", a: "Yes. Your first 30 days are free." },
+      { q: "Can I cancel at any time?", a: "Yes. There's no long-term commitment — you can cancel your MODO subscription in line with the subscription terms." },
+      { q: "How do additional team members and locations work?", a: "Start with what your clinic needs today and add additional practitioners as your business grows." },
     ],
   },
   {
