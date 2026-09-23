@@ -101,9 +101,10 @@ function DemoPage() {
               <p className="mx-auto mt-10 flex max-w-xl items-start gap-3 text-sm leading-relaxed text-[color:var(--ink-soft)]">
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--accent)]" />
                 <span>
-                  The demo is shared by everyone who visits this page, so please don't store
-                  anything personal or real in it. All patient details are fictional, outbound email
-                  and text messages are switched off, and the clinic is wiped and rebuilt every night.
+                  This is a shared demo environment, designed for exploring MODO. Please
+                  don't enter any personal or identifiable information. All client details
+                  are fictional, external emails and text messages are disabled, and the
+                  demo resets each night.
                 </span>
               </p>
             </Reveal>
