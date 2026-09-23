@@ -69,65 +69,6 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 
-const navItems = [
-  { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
-  { label: "Analytics", to: "/dashboard/analytics", icon: TrendingUp },
-  { label: "Income report", to: "/dashboard/income-report", icon: TrendingUp },
-  { label: "Commission", to: "/dashboard/commission-report", icon: TrendingUp },
-  { label: "Team analytics", to: "/dashboard/staff-analytics", icon: TrendingUp },
-  { label: "Import with AI", to: "/dashboard/ai-import", icon: Sparkles },
-  { label: "Clinic page", to: "/dashboard/clinic", icon: Store },
-  { label: "Welcome & policies", to: "/dashboard/policies", icon: Shield },
-  { label: "About page", to: "/dashboard/about", icon: FileText },
-  { label: "Branding", to: "/dashboard/branding", icon: Palette },
-  
-  { label: "Services", to: "/dashboard/services", icon: Scissors },
-  { label: "Training", to: "/dashboard/training", icon: GraduationCap },
-  { label: "Add-ons", to: "/dashboard/addons", icon: Sparkles },
-  { label: "Packages", to: "/dashboard/packages", icon: Package },
-  { label: "Gift cards", to: "/dashboard/gift-cards", icon: Gift },
-  { label: "Discounts", to: "/dashboard/discounts", icon: Percent },
-  { label: "Model slots", to: "/dashboard/model-slots", icon: Sparkles },
-  { label: "Locations", to: "/dashboard/locations", icon: MapPin },
-  { label: "Practitioners", to: "/dashboard/practitioners", icon: Users },
-{ label: "Staff", to: "/dashboard/staff", icon: Users },
-  { section: "Clinic owner" as const, label: "Clinic Compliance", to: "/dashboard/compliance", icon: ClipboardCheck, pilot: true, flag: "compliance_enabled" as const },
-  { section: "Clinic owner" as const, label: "Associates", to: "/dashboard/associates", icon: ShieldCheck, flag: "associates_enabled" as const, pilot: true },
-  { section: "Clinic owner" as const, label: "Room rental", to: "/dashboard/room-rental", icon: DoorOpen },
-
-
-  { label: "Medical forms", to: "/dashboard/medical-forms", icon: FileText },
-  { label: "Consent forms", to: "/dashboard/consent-forms", icon: FileSignature },
-  { label: "Pre-treatment info", to: "/dashboard/pre-treatment", icon: Info },
-  { label: "Aftercare templates", to: "/dashboard/aftercare", icon: HeartPulse },
-  { label: "Attach forms", to: "/dashboard/form-allocation", icon: Sparkles },
-
-  { label: "Booking flow", to: "/dashboard/booking-flow", icon: HelpCircle },
-  { label: "Availability", to: "/dashboard/availability", icon: CalendarDays },
-  { label: "New appointment", to: "/dashboard/new-appointment", icon: CalendarPlus },
-  { label: "Bookings", to: "/dashboard/bookings", icon: Users },
-  { label: "Upcoming", to: "/dashboard/upcoming", icon: CalendarDays },
-  { label: "Patients", to: "/dashboard/patients", icon: Users },
-  { label: "Consultations", to: "/dashboard/consultations", icon: ClipboardList },
-  
-  { label: "Reviews", to: "/dashboard/reviews", icon: Star },
-  { label: "Referrals & Rewards", to: "/dashboard/rewards", icon: Gift },
-  { label: "Refer a practitioner", to: "/dashboard/partner-referrals", icon: Gift, referrals: true },
-
-{ label: "Marketing", to: "/dashboard/marketing", icon: Mail },
-  { label: "SMS Marketing", to: "/dashboard/sms-marketing", icon: MessageCircle, soon: true, soonKey: "sms-marketing" as ComingSoonKey },
-  { label: "Payments", to: "/dashboard/payments", icon: CreditCard },
-  { label: "Plan & billing", to: "/dashboard/billing", icon: CreditCard },
-  { label: "Invoices", to: "/dashboard/invoices", icon: CreditCard },
-{ label: "Booking settings", to: "/dashboard/settings", icon: Settings },
-  { section: "Patient notifications" as const, label: "Email", to: "/dashboard/notifications/email", icon: Mail },
-  { section: "Patient notifications" as const, label: "SMS", to: "/dashboard/notifications/sms", icon: MessageCircle },
-  { label: "Help", to: "/dashboard/help", icon: HelpCircle },
-  { label: "Prescriber Hub", to: "/hub", icon: Stethoscope },
-  { label: "Prescription requests", to: "/dashboard/rx-requests", icon: ClipboardList },
-  { label: "Prescriber referrals", to: "/dashboard/referrals", icon: ClipboardList },
-
-];
 
 
 const mobileTabs = [
