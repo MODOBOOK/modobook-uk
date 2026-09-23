@@ -94,7 +94,12 @@ export async function assertSeatAvailable(
 
   const isLoc = kind === "location";
   if (isLoc && FREE_EXTRA_LOCATIONS) return; // promo: extra locations free for now
-  const freeExtras = Math.max(0, Number((isLoc ? sub?.free_locations : sub?.free_practitioners) ?? 0));
+  let includedExtra = 0;
+  if (!isLoc && sub?.plan_id) {
+    const { data: planRow } = await supabase.from("subscription_plans").select("included_practitioners").eq("id", sub.plan_id).maybeSingle();
+    includedExtra = Math.max(0, Number(planRow?.included_practitioners ?? 1) - 1);
+  }
+  const freeExtras = Math.max(0, Number((isLoc ? sub?.free_locations : sub?.free_practitioners) ?? 0)) + includedExtra;
   if (current < 1 + freeExtras) return; // admin-granted comped seats
 
   // Seats needed beyond the free allowance once this new one is created.
@@ -289,7 +294,7 @@ export const getMyBilling = createServerFn({ method: "GET" })
         .maybeSingle(),
       context.supabase
         .from("subscription_plans")
-        .select("id, name, description, amount_cents, currency, interval, kind, active")
+        .select("id, name, description, amount_cents, currency, interval, kind, active, legacy, included_practitioners, is_default")
         .eq("active", true)
         .order("kind", { ascending: true })
         .order("amount_cents", { ascending: true }),
@@ -348,6 +353,7 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
     if (pErr) throw pErr;
 
     const base = (plans ?? []).find((p: any) => p.id === data.basePlanId && p.kind === "base");
+    if (base && !base.stripe_price_id) { const { ensurePlanPrice } = await import("./plan-prices.server"); await ensurePlanPrice(base); }
     if (!base?.stripe_price_id) throw new Error("Plan not available");
 
     const locAddon = (plans ?? []).find((p: any) => p.kind === "addon_location");
@@ -532,7 +538,7 @@ export const getSeatSummary = createServerFn({ method: "GET" })
         .in("status", ["invited", "active"]),
       context.supabase
         .from("subscription_plans")
-        .select("id, kind, name, amount_cents, currency, interval, active")
+        .select("id, kind, name, amount_cents, currency, interval, active, included_practitioners")
         .eq("active", true),
       context.supabase.from("profiles").select("associates_enabled, slug").eq("id", profile.id).maybeSingle(),
       context.supabase
@@ -553,7 +559,7 @@ export const getSeatSummary = createServerFn({ method: "GET" })
     const assocAddon = list.find((p) => p.kind === "addon_associate") ?? null;
 
     const freeLocs = Math.max(0, Number(sub?.free_locations ?? 0));
-    const freePracs = Math.max(0, Number(sub?.free_practitioners ?? 0));
+    const freePracs = Math.max(0, Number(sub?.free_practitioners ?? 0)) + Math.max(0, Number(base?.included_practitioners ?? 1) - 1);
     const usedLocs = locCount ?? 0;
     const usedPracs = pracCount ?? 0;
 
@@ -741,6 +747,7 @@ export const updateMySubscriptionItems = createServerFn({ method: "POST" })
     if (pErr) throw pErr;
 
     const base = (plans ?? []).find((p: any) => p.id === data.basePlanId && p.kind === "base");
+    if (base && !base.stripe_price_id) { const { ensurePlanPrice } = await import("./plan-prices.server"); await ensurePlanPrice(base); }
     if (!base?.stripe_price_id) throw new Error("Plan not available");
     const locAddon = (plans ?? []).find((p: any) => p.kind === "addon_location");
     const pracAddon = (plans ?? []).find((p: any) => p.kind === "addon_practitioner");
