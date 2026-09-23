@@ -73,7 +73,7 @@ function DemoPage() {
         <section className="border-b border-[color:var(--hairline)]">
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
             <SectionHead
-              eyebrow="Pick a door"
+              eyebrow="INSIDE MODO"
               title="see MODO from both sides."
               blurb="Experience the platform from your clinic's perspective - and your clients'"
             />
