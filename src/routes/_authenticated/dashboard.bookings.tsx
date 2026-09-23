@@ -31,6 +31,9 @@ import {
   Undo2,
   CalendarClock,
   SlidersHorizontal,
+  Banknote,
+  CreditCard,
+  Landmark,
 } from "lucide-react";
 import { RescheduleAppointmentDialog } from "@/components/RescheduleAppointmentDialog";
 import { AppointmentExtrasPanel } from "@/components/AppointmentExtrasPanel";
@@ -96,6 +99,7 @@ type Appt = {
   checkout_notes?: string | null;
   deposit_paid_at?: string | null;
   stripe_payment_intent_id: string | null;
+  payment_method?: string | null;
   card_capture_agreed_at?: string | null;
   card_captured_at?: string | null;
   card_capture_policy_text?: string | null;
@@ -234,6 +238,43 @@ function hexToRgba(hex: string, a: number) {
   const g = parseInt(h.slice(2, 4), 16);
   const b = parseInt(h.slice(4, 6), 16);
   return `rgba(${r},${g},${b},${a})`;
+}
+
+// Small symbol showing how the client paid (Klarna, Clearpay, card, cash…).
+function PaymentMethodBadge({ method, className }: { method?: string | null; className?: string }) {
+  if (!method) return null;
+  const m = method.toLowerCase();
+  const base = cn(
+    "inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-[9px] font-bold leading-none",
+    className,
+  );
+  if (m === "klarna") {
+    return <span title="Paid with Klarna" className={cn(base, "bg-[#ffb3c7] text-[#4a1a2b]")}>K</span>;
+  }
+  if (m === "clearpay" || m === "afterpay_clearpay") {
+    return <span title="Paid with Clearpay" className={cn(base, "bg-[#b2fce4] text-[#0f3d2e]")}>C</span>;
+  }
+  if (m === "cash") {
+    return (
+      <span title="Paid in cash" className={cn(base, "bg-emerald-100 text-emerald-800")}>
+        <Banknote className="h-3 w-3" />
+      </span>
+    );
+  }
+  if (m === "bank_transfer") {
+    return (
+      <span title="Paid by bank transfer" className={cn(base, "bg-sky-100 text-sky-800")}>
+        <Landmark className="h-3 w-3" />
+      </span>
+    );
+  }
+  // card, card_in_person, card_present, stripe_link, link, other
+  const label = m === "other" ? "Paid (other method)" : "Paid by card";
+  return (
+    <span title={label} className={cn(base, "bg-slate-200 text-slate-700")}>
+      <CreditCard className="h-3 w-3" />
+    </span>
+  );
 }
 
 function BookingsPage() {
@@ -877,14 +918,16 @@ function BookingsPage() {
                             }}
                           >
                             {roomy && (
-                              <div className="text-[11px] tabular-nums opacity-70">
+                              <div className="flex items-center gap-1.5 text-[11px] tabular-nums opacity-70">
                                 {a.start_time.slice(0, 5)} – {a.end_time.slice(0, 5)}
+                                {a.payment_status === "paid" && <PaymentMethodBadge method={a.payment_method} />}
                               </div>
                             )}
                             <div className={cn("flex min-w-0 items-baseline gap-2", isCheckedOut && "line-through")}>
                               {!roomy && <span className="shrink-0 text-[11px] tabular-nums opacity-70">{a.start_time.slice(0, 5)}</span>}
                               <span className="truncate text-[13.5px] font-semibold">{a.patient_name}</span>
                               {tName && columns <= 1 && <span className="min-w-0 truncate text-[12px] opacity-70">{tName}</span>}
+                              {!roomy && a.payment_status === "paid" && <PaymentMethodBadge method={a.payment_method} />}
                             </div>
                             {tName && columns > 1 && roomy && <div className="truncate text-[12px] opacity-70">{tName}</div>}
                             {a.has_allergies && height >= 80 && (
@@ -1961,7 +2004,10 @@ function CheckoutSheet({
   return (
     <div className="space-y-3 text-sm">
       <div className="rounded-md border-l-4 p-2" style={{ borderLeftColor: color, backgroundColor: hexToRgba(color, 0.12) }}>
-        <div className="font-semibold">{a.patient_name}</div>
+        <div className="flex items-center gap-1.5 font-semibold">
+          {a.patient_name}
+          {a.payment_status === "paid" && <PaymentMethodBadge method={a.payment_method} />}
+        </div>
         <div className="text-xs text-muted-foreground">
           {a.start_time.slice(0, 5)}–{a.end_time.slice(0, 5)} · {treatmentLabel(a) ?? "Treatment"}
           {a.locations?.name && ` · ${a.locations.name}`}

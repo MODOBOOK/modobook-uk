@@ -413,6 +413,11 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
               const totalCents = Number(session.amount_total ?? 0) || 0;
               const treatmentPaidCents = Math.max(0, totalCents - surchargeCents);
 
+              // How the client actually paid (card, Klarna, Clearpay…) so the
+              // diary can show a payment-method symbol.
+              const { paymentMethodLabelForIntent } = await import("@/lib/payment-method.server");
+              const methodLabel = await paymentMethodLabelForIntent(stripe, connectedAccountId, paymentIntentId);
+
               const buildApptPatch = (kind: string) => {
                 const patch: Record<string, unknown> = {
                   status: "confirmed",
@@ -423,7 +428,7 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                   patch.payment_status = "paid";
                 } else {
                   patch.payment_status = "paid";
-                  patch.payment_method = "stripe_link";
+                  patch.payment_method = methodLabel;
                   patch.checkout_completed_at = new Date().toISOString();
                 }
                 return patch;
@@ -437,6 +442,7 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                   p_appointment_id: apptId,
                   p_payment_intent: paymentIntentId ?? "",
                   p_amount_cents: amountCents,
+                  p_payment_method: methodLabel,
                 });
               };
 
@@ -640,6 +646,10 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
               const treatmentPaidCents = Math.max(0, totalCents - surchargeCents);
               const kind = metadata.kind || "deposit";
 
+              // How the client actually paid (card, Klarna, Clearpay…).
+              const { paymentMethodLabelForIntent } = await import("@/lib/payment-method.server");
+              const methodLabel = await paymentMethodLabelForIntent(stripe, connectedAccountId, pi.id);
+
               const buildApptPatch = () => {
                 const patch: Record<string, unknown> = {
                   status: "confirmed",
@@ -650,7 +660,7 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                   patch.payment_status = "paid";
                 } else {
                   patch.payment_status = "paid";
-                  patch.payment_method = "stripe_link";
+                  patch.payment_method = methodLabel;
                   patch.checkout_completed_at = new Date().toISOString();
                 }
                 return patch;
@@ -670,6 +680,7 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                   p_appointment_id: apptId,
                   p_payment_intent: pi.id,
                   p_amount_cents: shares.get(apptId) ?? 0,
+                  p_payment_method: methodLabel,
                 });
                 await supabaseAdmin
                   .from("appointments")
