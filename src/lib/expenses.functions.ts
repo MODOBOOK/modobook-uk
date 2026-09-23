@@ -45,7 +45,7 @@ export const upsertExpense = createServerFn({ method: "POST" })
       amount_cents: Math.max(0, Math.round(data.amount_cents)),
       frequency: freq,
       start_date: data.start_date,
-      end_date: freq === "one_off" ? null : data.end_date || null,
+      end_date: freq === "one_off" || freq === "hourly" || freq === "half_hourly" ? null : data.end_date || null,
       notes: data.notes?.trim() || null,
     };
     const t = context.supabase.from("business_expenses" as any);

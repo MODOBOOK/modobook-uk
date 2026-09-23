@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { listExpenses, upsertExpense, deleteExpense, type ExpenseRow } from "@/lib/expenses.functions";
-import { EXPENSE_CATEGORIES, FREQUENCIES, categoryLabel, monthlyEquivalentCents } from "@/lib/expense-utils";
+import { EXPENSE_CATEGORIES, FREQUENCIES, categoryLabel, monthlyEquivalentCents, isHourlyFreq } from "@/lib/expense-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,7 +37,8 @@ function ExpensesPage() {
   const load = () => list().then((r) => setRows(r.expenses)).catch((e) => toast.error(e.message)).finally(() => setLoading(false));
   useEffect(() => { load(); }, []);
 
-  const recurring = rows.filter((r) => r.frequency !== "one_off" && (!r.end_date || r.end_date >= today()));
+  const recurring = rows.filter((r) => r.frequency !== "one_off" && !isHourlyFreq(r.frequency) && (!r.end_date || r.end_date >= today()));
+  const hourly = rows.filter((r) => isHourlyFreq(r.frequency));
   const oneOff = rows.filter((r) => r.frequency === "one_off");
   const monthly = useMemo(() => recurring.reduce((s, r) => s + monthlyEquivalentCents(r), 0), [recurring]);
   const thisMonth = today().slice(0, 7);
