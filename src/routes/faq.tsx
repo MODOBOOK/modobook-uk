@@ -48,11 +48,11 @@ const groups: FaqGroup[] = [
     id: "getting-started",
     label: "Getting started",
     items: [
-      { q: "What is MODO?", a: "MODO is a booking, patient records and marketing platform built specifically for aesthetics practitioners in the UK. It replaces the patchwork of booking widgets, consent forms, WhatsApp reminders and spreadsheets with one clinical-grade system." },
-      { q: "Is MODO open to sign up now?", a: "Yes. MODO is live and open to any UK aesthetics practitioner. Create your account, set up your clinic and start taking bookings the same day — your first month is free and no card details are needed to start." },
-      { q: "Who is MODO for?", a: "Solo injectors, multi-room clinics, prescribers, aesthetic nurses, dentists offering facial aesthetics and academies running training. If you deliver aesthetic treatments in the UK, MODO is built for you." },
-      { q: "How long does set-up take?", a: "Most practitioners are taking bookings the same day. Add your treatments, set your hours, connect your card payments and publish your MODO page — you're live." },
-      { q: "Do I need a website already?", a: "No. Your MODO booking page (modobook.uk/m/your-clinic) is a full public page with your branding, treatments, reviews and rewards. You can point a custom domain at it too." },
+      { q: "What is MODO?", a: "MODO is an all-in-one booking and clinic management platform created for aesthetics. Manage bookings, payments, patient records, consultations, communications, marketing and more." },
+      { q: "Who is MODO for?", a: "MODO is designed for aesthetics practitioners and clinics of every size — from solo practitioners to growing, multi-practitioner teams." },
+      { q: "How quickly can I get set up?", a: "You can start building your clinic as soon as your account is created. Add your treatments, availability, branding and booking preferences, then share your personalised MODO booking link when you're ready." },
+      { q: "Can I move from another booking system?", a: "Yes. Switching doesn't have to mean starting again. Upload or screenshot your existing treatment list, client list and reviews, and MODO can help organise and import your information." },
+      { q: "Do I need my own website?", a: "No. Every clinic receives its own branded MODO booking page, ready to share across Instagram, TikTok, Google or anywhere else your clients find you." },
     ],
   },
   {
