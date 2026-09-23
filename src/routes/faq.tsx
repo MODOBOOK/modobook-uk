@@ -59,11 +59,12 @@ const groups: FaqGroup[] = [
     id: "bookings",
     label: "Bookings & payments",
     items: [
-      { q: "How do patients pay?", a: "By card at the time of booking — full payment, deposit or pay-in-clinic, set per treatment. Klarna and Clearpay are available too. You keep 100% of the treatment revenue; MODO never takes a percentage of your bookings." },
-      { q: "Can I take deposits?", a: "Yes. Set a deposit amount or percentage per treatment, and set it to £0 on any treatment where you'd rather take nothing up front. Deposits are captured at booking and applied to the final balance automatically." },
-      { q: "What about no-shows and late cancellations?", a: "Configure your own policy per treatment. MODO enforces it — non-refundable deposits, cancellation fees or full charges depending on how much notice was given." },
-      { q: "Can patients reschedule themselves?", a: "Yes, within the window you set. Reschedules respect your availability, treatment rules and any cancellation policy." },
-      { q: "Can each practitioner have their own notice period?", a: "Yes. As well as a clinic-wide minimum notice, each team member can have their own — so one person can take bookings three hours ahead while another needs twelve." },
+      { q: "How do clients pay?", a: "You decide. Take a deposit, request full payment at booking or allow clients to pay in clinic — with payment options set individually for each treatment." },
+      { q: "Can I take deposits or full payment?", a: "Yes. Set the amount or payment requirement that works for each treatment, including the option to take no upfront payment at all." },
+      { q: "Can I offer Klarna or Clearpay?", a: "Yes. Eligible clients can choose Klarna or Clearpay at checkout, giving them more flexibility when paying for their treatment." },
+      { q: "How are cancellations and no-shows handled?", a: "Set your own cancellation policy and securely capture a client's card when required. You can create cancellation fee rules around your clinic's notice periods, helping protect your diary from late cancellations and no-shows." },
+      { q: "Can clients reschedule their own appointments?", a: "Yes. Clients can manage eligible bookings themselves, within the rules and notice periods you set — saving you from unnecessary back-and-forth." },
+      { q: "Can each practitioner set their own availability and booking rules?", a: "Yes. Each practitioner can have their own working hours, availability and booking preferences, so MODO works around the way your team actually operates." },
     ],
   },
   {
