@@ -50,6 +50,7 @@ const groups: FaqGroup[] = [
     items: [
       { q: "What is MODO?", a: "MODO is an all-in-one booking and clinic management platform created for aesthetics. Manage bookings, payments, patient records, consultations, communications, marketing and more." },
       { q: "Who is MODO for?", a: "MODO is designed for aesthetics practitioners and clinics of every size — from solo practitioners to growing, multi-practitioner teams." },
+      { q: "Is there a MODO app?", a: "Coming soon - In the meantime, MODO works beautifully from your phone. simply save MODO to your home screen for one-tap access and enable notifications to receive alerts directly to your device - much like an app." },
       { q: "How quickly can I get set up?", a: "You can start building your clinic as soon as your account is created. Add your treatments, availability, branding and booking preferences, then share your personalised MODO booking link when you're ready." },
       { q: "Can I move from another booking system?", a: "Yes. Switching doesn't have to mean starting again. Upload or screenshot your existing treatment list, client list and reviews, and MODO can help organise and import your information." },
       { q: "Do I need my own website?", a: "No. Every clinic receives its own branded MODO booking page, ready to share across Instagram, TikTok, Google or anywhere else your clients find you." },
