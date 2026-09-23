@@ -111,37 +111,8 @@ function DemoPage() {
         </section>
 
 
-        {/* Booking pages + reassurance */}
-        <section className="border-b border-[color:var(--hairline)]">
-          <div className="mx-auto max-w-4xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
-            <SectionHead
-              eyebrow="Just the booking page?"
-              title="This is the link a clinic shares with its clients."
-            />
-            <Reveal>
-              <div className="flex flex-col justify-center gap-3 sm:flex-row">
-                <a
-                  href="/m/demo-clinic"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex h-14 items-center justify-center border border-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--ink)] transition-colors hover:bg-[color:var(--ink)] hover:text-[color:var(--paper)]"
-                >
-                  Demo booking page
-                </a>
-                <a
-                  href="https://modobook.uk/m/aestheticsbynurseryan"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex h-14 items-center justify-center border border-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--ink)] transition-colors hover:bg-[color:var(--ink)] hover:text-[color:var(--paper)]"
-                >
-                  A real live clinic
-                </a>
-              </div>
-            </Reveal>
-          </div>
-        </section>
-
         <CtaBand />
+
       </main>
 
       <SiteFooter />
