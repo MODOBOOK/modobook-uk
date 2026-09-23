@@ -112,11 +112,12 @@ const groups: FaqGroup[] = [
   },
   {
     id: "ai",
-    label: "Intelligent features",
+    label: "Smart tools",
     items: [
-      { q: "What does the AI actually do?", a: "It drafts the writing you'd otherwise do yourself — treatment descriptions for your menu, consent and medical forms, and aftercare instructions per treatment. You review and edit everything before it goes live." },
-      { q: "Does it cost extra?", a: "No. The AI features are included in your MODO subscription." },
-      { q: "Is patient data used to train it?", a: "No. Patient records are never used to train models." },
+      { q: "What can MODO's smart tools help me with?", a: "MODO's built-in tools take care of time-consuming admin. Generate treatment descriptions, draft consent and medical forms, create treatment-specific aftercare and assist with setting up your clinic — ready for you to review and edit before anything goes live." },
+      { q: "Can MODO help me move my existing clinic information?", a: "Yes. Upload or screenshot treatment lists, reviews and client information and MODO can help turn them into organised data within your account — making switching significantly less manual." },
+      { q: "Can MODO create treatment descriptions and forms?", a: "Yes. Tell MODO what you need and it can draft patient-ready treatment descriptions, consent forms and medical questionnaires for you to review and customise." },
+      { q: "Are smart tools included in my plan?", a: "Yes. MODO's smart tools are built into your subscription, with no separate AI add-on required." },
     ],
   },
   {
