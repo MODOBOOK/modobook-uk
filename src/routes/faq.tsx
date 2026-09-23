@@ -184,7 +184,7 @@ function FaqPage() {
                           className="flex w-full items-center justify-between gap-6 py-5 text-left"
                           aria-expanded={isOpen}
                         >
-                          <span className="font-display text-lg text-[color:var(--ink)]">
+                          <span className="text-base font-medium text-[color:var(--ink)]">
                             {item.q}
                           </span>
                           <ArrowRight
