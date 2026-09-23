@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "./index";
 import { MarketingPage, PageHero, Reveal, CtaBand } from "@/components/marketing-kit";
 import { ArrowRight } from "lucide-react";
@@ -242,12 +242,6 @@ function FaqPage() {
                   Speak to the MODO team. We know aesthetics because we work in it too — and we're here to help whenever you need us.
                 </p>
                 <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-                  <Link
-                    to="/auth"
-                    className="inline-flex h-14 items-center justify-center bg-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--paper)] transition-colors hover:bg-[color:var(--accent)]"
-                  >
-                    Create your account
-                  </Link>
                   <a
                     href="mailto:info@modobook.co.uk"
                     className="inline-flex h-14 items-center justify-center border border-[color:var(--ink)] px-10 text-xs font-bold uppercase tracking-[0.2em] text-[color:var(--ink)] transition-colors hover:bg-[color:var(--ink)] hover:text-[color:var(--paper)]"
