@@ -485,20 +485,20 @@ const NAV_PAGES = [
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[color:var(--hairline)] bg-[color:var(--paper)]/90 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-4 sm:h-20 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3 px-4 sm:h-20 sm:gap-6 sm:px-6 lg:px-8">
         <Link to="/" aria-label="MODO home" className="flex shrink-0 items-center">
           <img
             src={wordmark.url}
             alt="MODO"
-            className="h-9 w-auto object-contain sm:h-11"
+            className="h-7 w-auto object-contain sm:h-11"
             draggable={false}
           />
         </Link>
 
-        {/* Top bar nav — no dropdown. Scrolls sideways on small screens. */}
+        {/* Top bar nav — no dropdown. Fits on one line, even on small screens. */}
         <nav
           aria-label="Main"
-          className="flex flex-1 items-center justify-end gap-6 overflow-x-auto whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--ink-soft)] sm:gap-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex flex-1 items-center justify-end gap-3 whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--ink-soft)] sm:gap-8 sm:text-[11px] sm:tracking-[0.18em]"
         >
           {NAV_PAGES.map((p) => (
             <Link
