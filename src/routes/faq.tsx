@@ -102,10 +102,12 @@ const groups: FaqGroup[] = [
     id: "marketing",
     label: "Marketing & communications",
     items: [
-      { q: "Can I send marketing emails from MODO?", a: "Yes. Segment your patient list, write campaigns with merge tags and Book-now buttons, and schedule sends. Automations cover birthday emails, treatment-interval reminders, top-up reminders and win-backs." },
-      { q: "Are unsubscribe links handled for me?", a: "Yes — every marketing email includes a tokenised unsubscribe link and MODO respects preferences automatically." },
-      { q: "Do texts show who the appointment is with?", a: "Yes. Confirmation and reminder texts can include the practitioner's name, so patients always know who they're seeing." },
-      { q: "Will the emails match my brand?", a: "Yes. Preset transactional emails use your clinic colours and logo, and you can override the body copy per template. Send yourself a test with one click." },
+      { q: "Can I send marketing emails?", a: "Yes. Create targeted campaigns and communicate directly with your client base from within MODO, without needing a separate marketing platform for everyday clinic communications." },
+      { q: "Does MODO send SMS appointment reminders?", a: "Yes. Clients can receive SMS booking confirmations and appointment reminders automatically, helping keep them informed and reduce missed appointments." },
+      { q: "Can aftercare be sent automatically?", a: "Yes. Set treatment-specific aftercare to send automatically after an appointment, at the time you choose — so every client receives the right information without you having to send it manually." },
+      { q: "Can MODO request reviews automatically?", a: "Yes. Review requests can be sent after treatment, making it easier to consistently collect client feedback without having to remember to ask." },
+      { q: "Are unsubscribe preferences handled?", a: "Clients can manage their marketing preferences, helping you keep your communications organised and respect opt-out choices." },
+      { q: "Can communications match my brand?", a: "Your patient-facing experience is designed to feel like an extension of your clinic, with your own branding carried through the MODO experience." },
     ],
   },
   {
