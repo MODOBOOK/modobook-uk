@@ -116,6 +116,7 @@ import { Route as AuthenticatedDashboardHelpRouteImport } from './routes/_authen
 import { Route as AuthenticatedDashboardGiftCardsRouteImport } from './routes/_authenticated/dashboard.gift-cards'
 import { Route as AuthenticatedDashboardFormAllocationRouteImport } from './routes/_authenticated/dashboard.form-allocation'
 import { Route as AuthenticatedDashboardFindPrescriberRouteImport } from './routes/_authenticated/dashboard.find-prescriber'
+import { Route as AuthenticatedDashboardExpensesRouteImport } from './routes/_authenticated/dashboard.expenses'
 import { Route as AuthenticatedDashboardEmailsRouteImport } from './routes/_authenticated/dashboard.emails'
 import { Route as AuthenticatedDashboardDiscountsRouteImport } from './routes/_authenticated/dashboard.discounts'
 import { Route as AuthenticatedDashboardDesignStudioRouteImport } from './routes/_authenticated/dashboard.design-studio'
@@ -786,6 +787,12 @@ const AuthenticatedDashboardFindPrescriberRoute =
     path: '/find-prescriber',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
+const AuthenticatedDashboardExpensesRoute =
+  AuthenticatedDashboardExpensesRouteImport.update({
+    id: '/expenses',
+    path: '/expenses',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
 const AuthenticatedDashboardEmailsRoute =
   AuthenticatedDashboardEmailsRouteImport.update({
     id: '/emails',
@@ -1349,6 +1356,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/design-studio': typeof AuthenticatedDashboardDesignStudioRoute
   '/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
   '/dashboard/emails': typeof AuthenticatedDashboardEmailsRoute
+  '/dashboard/expenses': typeof AuthenticatedDashboardExpensesRoute
   '/dashboard/find-prescriber': typeof AuthenticatedDashboardFindPrescriberRoute
   '/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
   '/dashboard/gift-cards': typeof AuthenticatedDashboardGiftCardsRoute
@@ -1534,6 +1542,7 @@ export interface FileRoutesByTo {
   '/dashboard/design-studio': typeof AuthenticatedDashboardDesignStudioRoute
   '/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
   '/dashboard/emails': typeof AuthenticatedDashboardEmailsRoute
+  '/dashboard/expenses': typeof AuthenticatedDashboardExpensesRoute
   '/dashboard/find-prescriber': typeof AuthenticatedDashboardFindPrescriberRoute
   '/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
   '/dashboard/gift-cards': typeof AuthenticatedDashboardGiftCardsRoute
@@ -1723,6 +1732,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/design-studio': typeof AuthenticatedDashboardDesignStudioRoute
   '/_authenticated/dashboard/discounts': typeof AuthenticatedDashboardDiscountsRoute
   '/_authenticated/dashboard/emails': typeof AuthenticatedDashboardEmailsRoute
+  '/_authenticated/dashboard/expenses': typeof AuthenticatedDashboardExpensesRoute
   '/_authenticated/dashboard/find-prescriber': typeof AuthenticatedDashboardFindPrescriberRoute
   '/_authenticated/dashboard/form-allocation': typeof AuthenticatedDashboardFormAllocationRoute
   '/_authenticated/dashboard/gift-cards': typeof AuthenticatedDashboardGiftCardsRoute
@@ -1917,6 +1927,7 @@ export interface FileRouteTypes {
     | '/dashboard/design-studio'
     | '/dashboard/discounts'
     | '/dashboard/emails'
+    | '/dashboard/expenses'
     | '/dashboard/find-prescriber'
     | '/dashboard/form-allocation'
     | '/dashboard/gift-cards'
@@ -2102,6 +2113,7 @@ export interface FileRouteTypes {
     | '/dashboard/design-studio'
     | '/dashboard/discounts'
     | '/dashboard/emails'
+    | '/dashboard/expenses'
     | '/dashboard/find-prescriber'
     | '/dashboard/form-allocation'
     | '/dashboard/gift-cards'
@@ -2290,6 +2302,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/design-studio'
     | '/_authenticated/dashboard/discounts'
     | '/_authenticated/dashboard/emails'
+    | '/_authenticated/dashboard/expenses'
     | '/_authenticated/dashboard/find-prescriber'
     | '/_authenticated/dashboard/form-allocation'
     | '/_authenticated/dashboard/gift-cards'
@@ -3218,6 +3231,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardFindPrescriberRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
+    '/_authenticated/dashboard/expenses': {
+      id: '/_authenticated/dashboard/expenses'
+      path: '/expenses'
+      fullPath: '/dashboard/expenses'
+      preLoaderRoute: typeof AuthenticatedDashboardExpensesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
     '/_authenticated/dashboard/emails': {
       id: '/_authenticated/dashboard/emails'
       path: '/emails'
@@ -3974,6 +3994,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardDesignStudioRoute: typeof AuthenticatedDashboardDesignStudioRoute
   AuthenticatedDashboardDiscountsRoute: typeof AuthenticatedDashboardDiscountsRoute
   AuthenticatedDashboardEmailsRoute: typeof AuthenticatedDashboardEmailsRoute
+  AuthenticatedDashboardExpensesRoute: typeof AuthenticatedDashboardExpensesRoute
   AuthenticatedDashboardFindPrescriberRoute: typeof AuthenticatedDashboardFindPrescriberRoute
   AuthenticatedDashboardFormAllocationRoute: typeof AuthenticatedDashboardFormAllocationRoute
   AuthenticatedDashboardGiftCardsRoute: typeof AuthenticatedDashboardGiftCardsRoute
@@ -4051,6 +4072,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
       AuthenticatedDashboardDesignStudioRoute,
     AuthenticatedDashboardDiscountsRoute: AuthenticatedDashboardDiscountsRoute,
     AuthenticatedDashboardEmailsRoute: AuthenticatedDashboardEmailsRoute,
+    AuthenticatedDashboardExpensesRoute: AuthenticatedDashboardExpensesRoute,
     AuthenticatedDashboardFindPrescriberRoute:
       AuthenticatedDashboardFindPrescriberRoute,
     AuthenticatedDashboardFormAllocationRoute:
