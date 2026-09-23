@@ -93,9 +93,9 @@ const groups: FaqGroup[] = [
     id: "training",
     label: "Training & courses",
     items: [
-      { q: "Can I sell training on MODO?", a: "Yes. Publish courses with fixed cohort dates or open them to your normal availability calendar. Learners book, pay and complete pre-course forms through MODO." },
-      { q: "Can I preview a course before it's live?", a: "Yes. Set visibility to Hidden (link only), Coming soon (visible but not bookable), or Live." },
-      { q: "Can courses have multiple locations?", a: "Yes — attach one or more of your clinic locations per course and learners choose where to attend." },
+      { q: "Can I sell my own training through MODO?", a: "Yes. If you offer practitioner training, you can showcase your own courses through your clinic's MODO page, keeping training alongside the rest of your business without it appearing to be a MODO-run academy." },
+      { q: "Can I create a course before publishing it?", a: "Yes. Build and review your course privately first, then make it available to book when everything is ready." },
+      { q: "Can I offer courses across multiple locations?", a: "Yes. If you teach from more than one location, courses can be organised around the relevant venue, date and availability." },
     ],
   },
   {
