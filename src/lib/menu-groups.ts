@@ -82,7 +82,7 @@ export const menuGroups: MenuGroup[] = [
       { label: "Associates", description: "Invite associates to work under your clinic, rent rooms & manage their own clients", to: "/dashboard/associates", icon: Users, ...T.sand },
       { label: "Room Rental", description: "Rent clinic rooms by the hour with live availability", to: "/dashboard/room-rental", icon: MapPin, ...T.cream },
       { label: "Training", description: "Accredited courses students can book & pay for online", to: "/dashboard/training", icon: GraduationCap, ...T.taupe },
-et    ],
+    ],
   },
   {
     title: "Bookings",
