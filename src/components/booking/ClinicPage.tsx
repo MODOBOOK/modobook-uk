@@ -1608,12 +1608,12 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
 
       {/* Split-view navigation (pilot): Book now on home; Home + flashing Book now on book */}
       {splitView && (
-        <section className="mx-auto mt-6 max-w-3xl px-4">
+        <section className="mx-auto mt-6 w-full max-w-3xl self-stretch px-4">
           {view === "home" ? (
             <Link
               to="/m/$slug/book"
               params={{ slug }}
-              className="block w-full rounded-full py-3.5 text-center text-base font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+              className="block w-full rounded-full px-6 py-3.5 text-center text-base font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
               style={{ backgroundColor: brand }}
             >
               Book now
@@ -1636,7 +1636,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
                     document.getElementById("treatment-menu");
                   el?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
-                className="modo-book-pulse flex-1 rounded-full py-2.5 text-sm font-semibold text-white shadow-sm"
+                className="modo-book-pulse flex-1 rounded-full px-6 py-2.5 text-sm font-semibold text-white shadow-sm"
                 style={{ backgroundColor: brand }}
               >
                 Book now
