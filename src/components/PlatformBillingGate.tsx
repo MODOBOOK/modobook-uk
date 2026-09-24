@@ -53,7 +53,9 @@ export function PlatformBillingGate({ children }: { children: React.ReactNode })
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
             <Lock className="h-4 w-4 flex-shrink-0 text-destructive" />
             <div className="flex-1 min-w-0">
-              Your account is locked because your trial has ended. Choose a plan below to unlock MODO again.
+              {status.state === "card_required"
+                ? "Add your card to start your free month. You won't be charged until your first month ends, and you can cancel any time before then."
+                : "Your account is locked because your trial has ended. Choose a plan below to unlock MODO again."}
             </div>
           </div>
           {children}

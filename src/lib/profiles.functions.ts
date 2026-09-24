@@ -155,9 +155,11 @@ export const createProfile = createServerFn({ method: "POST" })
         .eq("name", planName)
         .maybeSingle();
       if (planRow?.id) {
+        // New sign-ups must add a card before using MODO; the free month
+        // still applies and the first charge happens when it ends.
         await supabaseAdmin
           .from("practitioner_subscriptions")
-          .update({ plan_id: planRow.id })
+          .update({ plan_id: planRow.id, card_required: true } as any)
           .eq("profile_id", profile.id)
           .is("stripe_subscription_id", null);
       }
