@@ -16,7 +16,7 @@ export const EmailChangeEmail = ({ siteName, oldEmail, newEmail, confirmationUrl
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Confirm your email change for {siteName}</Preview>
-    <ModoShell preview={null} siteName={siteName}>
+    <ModoShell preview={null} siteName={siteName} platform>
       <Heading style={styles.h1}>Confirm your email change</Heading>
       {introOverride ? (
         <Text style={styles.text}>{introOverride}</Text>

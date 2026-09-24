@@ -15,7 +15,7 @@ export const SignupEmail = ({ siteName, siteUrl, recipient, confirmationUrl, int
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Welcome to {siteName} — confirm your email to get started</Preview>
-    <ModoShell preview={null} siteName={siteName}>
+    <ModoShell preview={null} siteName={siteName} platform>
       <Heading style={styles.h1}>Welcome to {siteName}.</Heading>
       {introOverride ? (
         <Text style={styles.text}>{introOverride}</Text>

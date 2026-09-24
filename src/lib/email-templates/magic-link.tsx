@@ -13,7 +13,7 @@ export const MagicLinkEmail = ({ siteName, confirmationUrl, introOverride, closi
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Your secure sign-in link for {siteName}</Preview>
-    <ModoShell preview={null} siteName={siteName}>
+    <ModoShell preview={null} siteName={siteName} platform>
       <Heading style={styles.h1}>Sign in to {siteName}</Heading>
       {introOverride ? (
         <Text style={styles.text}>{introOverride}</Text>

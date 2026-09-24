@@ -10,7 +10,7 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Your MODO verification code</Preview>
-    <ModoShell preview={null} siteName="MODO">
+    <ModoShell preview={null} siteName="MODO" platform>
       <Heading style={styles.h1}>Confirm it&rsquo;s you</Heading>
       <Text style={styles.text}>Use the code below to confirm your identity:</Text>
       <div style={styles.buttonWrap}>
