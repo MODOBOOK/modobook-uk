@@ -142,17 +142,25 @@ const Email = ({
                         {cancellationPolicy ? <table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', backgroundColor: '#f4f0ea', border: `1px solid ${palette.border}`, borderRadius: '4px', margin: '0 0 24px' }}><tbody><tr><td style={{ padding: '15px 16px' }}><Text style={{ margin: '0 0 4px', color: palette.text, fontSize: '13px', fontWeight: 700 }}>Cancellation policy</Text><Text style={{ margin: 0, color: palette.muted, fontSize: '13px', lineHeight: '21px' }}>{cancellationPolicy}</Text></td></tr></tbody></table> : null}
 
                         {manageUrl ? (
-                          <Button href={manageUrl} style={{ display: 'block', boxSizing: 'border-box', width: '100%', padding: '14px 20px', borderRadius: '4px', backgroundColor: accent, color: palette.card, fontSize: '14px', fontWeight: 700, lineHeight: '20px', textAlign: 'center', textDecoration: 'none' }}>
-                            Manage your appointment
-                          </Button>
+                          <table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', borderCollapse: 'separate' }}>
+                            <tbody>
+                              <tr>
+                                <td align="center" {...({ bgcolor: accent } as Record<string, string>)} style={{ backgroundColor: accent, borderRadius: '4px', padding: '14px 20px' }}>
+                                  <a href={manageUrl} target="_blank" style={{ display: 'block', color: palette.card, fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '14px', fontWeight: 700, lineHeight: '20px', textAlign: 'center', textDecoration: 'none' }}>
+                                    <span style={{ color: palette.card }}>Manage your appointment</span>
+                                  </a>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
                         ) : null}
 
                         {calendarGoogleUrl || calendarOutlookUrl ? (
-                          <table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+                          <table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', borderCollapse: 'separate', marginTop: '10px' }}>
                             <tbody>
                               <tr>
-                                {calendarGoogleUrl ? <td width="50%" style={{ paddingRight: calendarOutlookUrl ? '5px' : 0 }}><Button href={calendarGoogleUrl} style={{ display: 'block', boxSizing: 'border-box', width: '100%', padding: '11px 8px', borderRadius: '4px', border: `1px solid ${accent}`, backgroundColor: palette.card, color: accent, fontSize: '12px', fontWeight: 700, lineHeight: '18px', textAlign: 'center', textDecoration: 'none' }}>Add to Google Calendar</Button></td> : null}
-                                {calendarOutlookUrl ? <td width="50%" style={{ paddingLeft: calendarGoogleUrl ? '5px' : 0 }}><Button href={calendarOutlookUrl} style={{ display: 'block', boxSizing: 'border-box', width: '100%', padding: '11px 8px', borderRadius: '4px', border: `1px solid ${accent}`, backgroundColor: palette.card, color: accent, fontSize: '12px', fontWeight: 700, lineHeight: '18px', textAlign: 'center', textDecoration: 'none' }}>Add to Outlook</Button></td> : null}
+                                {calendarGoogleUrl ? <td width="50%" style={{ paddingRight: calendarOutlookUrl ? '5px' : 0 }}><table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', borderCollapse: 'separate' }}><tbody><tr><td align="center" {...({ bgcolor: palette.card } as Record<string, string>)} style={{ backgroundColor: palette.card, border: `1px solid ${accent}`, borderRadius: '4px', padding: '11px 8px' }}><a href={calendarGoogleUrl} target="_blank" style={{ display: 'block', color: accent, fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12px', fontWeight: 700, lineHeight: '18px', textAlign: 'center', textDecoration: 'none' }}><span style={{ color: accent }}>Add to Google Calendar</span></a></td></tr></tbody></table></td> : null}
+                                {calendarOutlookUrl ? <td width="50%" style={{ paddingLeft: calendarGoogleUrl ? '5px' : 0 }}><table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', borderCollapse: 'separate' }}><tbody><tr><td align="center" {...({ bgcolor: palette.card } as Record<string, string>)} style={{ backgroundColor: palette.card, border: `1px solid ${accent}`, borderRadius: '4px', padding: '11px 8px' }}><a href={calendarOutlookUrl} target="_blank" style={{ display: 'block', color: accent, fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12px', fontWeight: 700, lineHeight: '18px', textAlign: 'center', textDecoration: 'none' }}><span style={{ color: accent }}>Add to Outlook</span></a></td></tr></tbody></table></td> : null}
                               </tr>
                             </tbody>
                           </table>
