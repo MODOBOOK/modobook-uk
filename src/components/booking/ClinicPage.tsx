@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getPublicClinic } from "@/lib/public-clinic.functions";
 import { listPublicCourses } from "@/lib/training-public.functions";
 import { listPublicGiftCards } from "@/lib/gift-cards.functions";
 import { listPublicMembershipPlans } from "@/lib/memberships.functions";
