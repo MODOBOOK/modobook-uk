@@ -35,7 +35,7 @@ Goal: MODO runs in an app WebView; dashboard must feel native on phones.
 # Email design system
 - [x] Modern clinic-branded booking confirmation and optional clinic imagery
 - [x] Appointment, payment, manage-booking and calendar details
-- [x] MODO No-Reply sender and clinic-contact Reply-To handling
+- [x] Clinic Name NO REPLY sender and clinic-contact Reply-To handling
 - [x] Apply the shared design to all patient appointment emails
 - [x] Apply the shared design to clinic and staff emails
 - [x] Apply the shared design to marketing emails with unsubscribe links

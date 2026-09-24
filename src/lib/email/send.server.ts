@@ -8,9 +8,15 @@ import { render } from 'react-email'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 import { describeCancellationRules, type CancellationRule } from '@/lib/policy'
 
-const SITE_NAME = 'MODO No-Reply'
 const SENDER_DOMAIN = 'notify.modobook.uk'
 const FROM_DOMAIN = 'modobook.uk'
+
+function emailSenderName(clinicName: unknown) {
+  const safeClinicName = typeof clinicName === 'string'
+    ? clinicName.replace(/[\r\n"]/g, '').trim()
+    : ''
+  return `${safeClinicName || 'MODO'} NO REPLY`
+}
 
 // Some bookings are typed in by hand at the clinic and the email box gets a
 // placeholder like "LB" or "xx". Those can never be delivered — sending them
@@ -270,6 +276,8 @@ export async function enqueueAppEmail(
       ? template.subject(baseData)
       : template.subject
 
+  const senderName = emailSenderName(baseData.clinicName)
+
   await supabase.from('email_send_log').insert({
     message_id: messageId,
     template_name: input.templateName as string,
@@ -282,7 +290,7 @@ export async function enqueueAppEmail(
     payload: {
       message_id: messageId,
       to: recipient,
-      from: `"${SITE_NAME}" <noreply@${FROM_DOMAIN}>`,
+      from: `"${senderName}" <noreply@${FROM_DOMAIN}>`,
       sender_domain: SENDER_DOMAIN,
       subject,
       html,

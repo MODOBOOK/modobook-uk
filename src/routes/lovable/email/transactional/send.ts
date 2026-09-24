@@ -5,13 +5,19 @@ import { createFileRoute } from '@tanstack/react-router'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 
 // Configuration baked in at scaffold time
-const SITE_NAME = "MODO No-Reply"
 // SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
 // It MUST match the subdomain delegated to Lovable's nameservers. NEVER use the root domain.
 const SENDER_DOMAIN = "notify.modobook.uk"
 // FROM_DOMAIN is the domain shown in the From: header (e.g., "example.com").
 // Can be the root domain when display_from_root is enabled — this is cosmetic only.
 const FROM_DOMAIN = "modobook.uk"
+
+function emailSenderName(clinicName: unknown) {
+  const safeClinicName = typeof clinicName === 'string'
+    ? clinicName.replace(/[\r\n"]/g, '').trim()
+    : ''
+  return `${safeClinicName || 'MODO'} NO REPLY`
+}
 
 function redactEmail(email: string | null | undefined): string {
   if (!email) return '***'
@@ -277,24 +283,31 @@ export const Route = createFileRoute("/lovable/email/transactional/send")({
         // so replies should land in the practitioner's inbox. Look up their
         // profile email; fall back to their auth email.
         let replyTo: string | undefined
+        let clinicName = typeof templateData.clinicName === 'string'
+          ? templateData.clinicName
+          : undefined
         try {
           const { data: prof } = await supabase
             .from('profiles')
-            .select('email')
+            .select('email, clinic_name')
             .eq('id', user.id)
             .maybeSingle()
-          const profEmail = (prof as { email?: string | null } | null)?.email?.trim()
+          const typedProfile = prof as { email?: string | null; clinic_name?: string | null } | null
+          const profEmail = typedProfile?.email?.trim()
           replyTo = profEmail || user.email || undefined
+          clinicName = clinicName || typedProfile?.clinic_name || undefined
         } catch {
           replyTo = user.email || undefined
         }
+
+        const senderName = emailSenderName(clinicName)
 
         const { error: enqueueError } = await supabase.rpc('enqueue_email', {
           queue_name: 'transactional_emails',
           payload: {
             message_id: messageId,
             to: effectiveRecipient,
-            from: `"${SITE_NAME}" <noreply@${FROM_DOMAIN}>`,
+            from: `"${senderName}" <noreply@${FROM_DOMAIN}>`,
             sender_domain: SENDER_DOMAIN,
             subject: resolvedSubject,
             html,
