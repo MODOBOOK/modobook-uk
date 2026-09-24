@@ -14,7 +14,7 @@ export const InviteEmail = ({ siteName, siteUrl, confirmationUrl, introOverride,
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>You&rsquo;ve been invited to join {siteName}</Preview>
-    <ModoShell preview={null} siteName={siteName}>
+    <ModoShell preview={null} siteName={siteName} platform>
       <Heading style={styles.h1}>You&rsquo;re invited</Heading>
       {introOverride ? (
         <Text style={styles.text}>{introOverride}</Text>

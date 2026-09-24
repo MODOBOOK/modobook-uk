@@ -4,7 +4,7 @@
 // HTML input is accepted.
 import * as React from 'react'
 import { Head, Html, Preview, Section, Text, Heading, Img, Button, Hr, Link } from '@react-email/components'
-import { ModoShell, styles, brand, brandedButton } from './_modo-brand'
+import { ModoShell, styles, brand, brandedButton, EmailFooter } from './_modo-brand'
 import type { TemplateEntry } from './registry'
 
 export type Block =
@@ -27,6 +27,9 @@ export interface MarketingBroadcastData {
   firstName?: string
   last_treatment?: string
   bookingUrl?: string
+  clinicImageUrl?: string | null
+  websiteUrl?: string | null
+  instagramUrl?: string | null
 }
 
 
@@ -124,6 +127,9 @@ export function MarketingBroadcastEmail(data: MarketingBroadcastData) {
     firstName = '',
     last_treatment = '',
     bookingUrl = '',
+    clinicImageUrl,
+    websiteUrl,
+    instagramUrl,
   } = data
   const vars = {
     first_name: firstName,
@@ -149,12 +155,7 @@ export function MarketingBroadcastEmail(data: MarketingBroadcastData) {
         <Preview>{preheader || subject}</Preview>
         <Section style={{ margin: 0, padding: 0, backgroundColor: '#ffffff' }}>
           <div dangerouslySetInnerHTML={{ __html: inner }} />
-          <Text style={{ ...styles.footer, textAlign: 'center', marginTop: 20 }}>
-            You&rsquo;re receiving this because you opted in to marketing emails from {clinicName}.{' '}
-            <Link href={unsubscribeUrl} style={{ color: brand.muted, textDecoration: 'underline' }}>
-              Unsubscribe
-            </Link>
-          </Text>
+          <EmailFooter siteName={clinicName} unsubscribeUrl={unsubscribeUrl} websiteUrl={websiteUrl} instagramUrl={instagramUrl} />
         </Section>
       </Html>
     )
@@ -164,21 +165,12 @@ export function MarketingBroadcastEmail(data: MarketingBroadcastData) {
     <Html>
       <Head />
       <Preview>{preheader || subject}</Preview>
-      <ModoShell preview={preheader} siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
+      <ModoShell preview={preheader} siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor} imageUrl={clinicImageUrl} unsubscribeUrl={unsubscribeUrl} websiteUrl={websiteUrl} instagramUrl={instagramUrl}>
         {blocks.length === 0 ? (
           <Text style={styles.text}>(no content)</Text>
         ) : (
           blocks.map((b, i) => renderBlock(b, i, vars, brandColor))
         )}
-        <Hr style={styles.hr} />
-        <Text style={{ ...styles.footer, marginBottom: 8 }}>
-          You&rsquo;re receiving this because you opted in to marketing emails from {clinicName}.
-        </Text>
-        <Text style={styles.footer}>
-          <Link href={unsubscribeUrl} style={{ color: brand.muted, textDecoration: 'underline' }}>
-            Unsubscribe
-          </Link>
-        </Text>
       </ModoShell>
     </Html>
   )

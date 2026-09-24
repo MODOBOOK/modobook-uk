@@ -45,7 +45,7 @@ const Email = ({
     <Head />
     <Preview>{`New booking: ${patientName} — ${dateTime}`}</Preview>
     <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
-      <Heading as="h1" style={styles.h1}>Congratulations! You have a new booking!</Heading>
+      <Heading as="h1" style={styles.h1}>You have a new booking</Heading>
       <Text style={styles.text}>
         {patientName} has just booked in with {clinicName}.
       </Text>

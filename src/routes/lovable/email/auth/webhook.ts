@@ -31,7 +31,8 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "MODO No-Reply"
+const SITE_NAME = "MODO"
+const SENDER_NAME = "MODO No-Reply"
 const SENDER_DOMAIN = "notify.modobook.uk"
 const ROOT_DOMAIN = "modobook.uk"
 const FROM_DOMAIN = "modobook.uk"
@@ -213,7 +214,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
             run_id,
             message_id: messageId,
             to: payload.data.email,
-            from: `"${SITE_NAME}" <noreply@${FROM_DOMAIN}>`,
+            from: `"${SENDER_NAME}" <noreply@${FROM_DOMAIN}>`,
             sender_domain: SENDER_DOMAIN,
             subject: subjectOverride || EMAIL_SUBJECTS[emailType] || 'Notification',
             html,

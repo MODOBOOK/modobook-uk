@@ -13,7 +13,7 @@ export const RecoveryEmail = ({ siteName, confirmationUrl, introOverride, closin
   <Html lang="en" dir="ltr">
     <Head />
     <Preview>Reset your password for {siteName}</Preview>
-    <ModoShell preview={null} siteName={siteName}>
+    <ModoShell preview={null} siteName={siteName} platform>
       <Heading style={styles.h1}>Reset your password</Heading>
       {introOverride ? (
         <Text style={styles.text}>{introOverride}</Text>

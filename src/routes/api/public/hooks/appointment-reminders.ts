@@ -3,6 +3,7 @@
 // Idempotent via public.appointment_reminders_sent (unique on (appointment, rule)).
 import { createFileRoute } from '@tanstack/react-router'
 import { tryEnqueueAppEmail, formatBookingDateTime, getPractitionerBranding } from '@/lib/email/send.server'
+import { describeCancellationRules } from '@/lib/policy'
 
 export const Route = createFileRoute('/api/public/hooks/appointment-reminders')({
   server: {
@@ -43,7 +44,7 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
 
             const { data: appts, error: apptErr } = await supabaseAdmin
               .from('appointments')
-              .select('id, patient_name, patient_email, patient_phone, scheduled_date, start_time, manage_token, profile_id, status, treatments(name), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug)')
+              .select('id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, manage_token, profile_id, status, treatments(name, timing_notes), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug, cancellation_rules)')
               .eq('profile_id', rule.profile_id)
               .in('status', ['confirmed', 'pending'])
               .gte('scheduled_date', startDate)
@@ -79,6 +80,14 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
                 ? `${origin}/m/${a.profiles.slug}/manage/${a.manage_token}`
                 : undefined
               const loc = a.locations
+              const location = loc ? [loc.name, loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ') : ''
+              const directionsUrl = location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}` : undefined
+              const durationMinutes = Math.max(0, clockMinutes(a.end_time) - clockMinutes(a.start_time))
+              const duration = durationMinutes >= 60 && durationMinutes % 60 === 0
+                ? `${durationMinutes / 60} ${durationMinutes === 60 ? 'hour' : 'hours'}`
+                : `${durationMinutes} minutes`
+              const cancellationPolicy = describeCancellationRules(Array.isArray(a.profiles?.cancellation_rules) ? a.profiles.cancellation_rules : []).join('. ') || undefined
+              const calendarLinks = buildReminderCalendarLinks({ date: a.scheduled_date, startTime: a.start_time, endTime: a.end_time, title: `${a.treatments?.name ?? 'Appointment'} at ${a.profiles?.clinic_name ?? branding.clinicName}`, location, manageUrl })
 
               // Texts are handled separately below, on the clinic's own SMS timings.
 
@@ -103,6 +112,15 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
                   practitionerName: a.practitioners?.name,
                   locationName: loc?.name ?? loc?.city ?? undefined,
                   locationAddress: loc ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ') : undefined,
+                  duration,
+                  preparationNotes: a.treatments?.timing_notes?.trim() || undefined,
+                  cancellationPolicy,
+                  directionsUrl,
+                  calendarGoogleUrl: calendarLinks.google,
+                  calendarOutlookUrl: calendarLinks.outlook,
+                  clinicImageUrl: branding.clinicImageUrl,
+                  websiteUrl: branding.websiteUrl,
+                  instagramUrl: normaliseInstagramUrl(branding.instagramUrl),
                   dateTime: formatBookingDateTime(a.scheduled_date, a.start_time),
                   hoursBefore: rule.hours_before,
                   manageUrl,
@@ -235,3 +253,37 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
     },
   },
 })
+
+function clockMinutes(value?: string | null) {
+  const [hours, minutes] = String(value || '').split(':').map(Number)
+  return (Number.isFinite(hours) ? hours : 0) * 60 + (Number.isFinite(minutes) ? minutes : 0)
+}
+
+function calendarStamp(date: string, time: string) {
+  const [hours = '00', minutes = '00'] = String(time).split(':')
+  return `${date.replaceAll('-', '')}T${hours.padStart(2, '0')}${minutes.padStart(2, '0')}00`
+}
+
+function buildReminderCalendarLinks(input: { date: string; startTime: string; endTime?: string | null; title: string; location: string; manageUrl?: string }) {
+  const endTime = input.endTime || input.startTime
+  const google = new URL('https://calendar.google.com/calendar/render')
+  google.searchParams.set('action', 'TEMPLATE')
+  google.searchParams.set('text', input.title)
+  google.searchParams.set('dates', `${calendarStamp(input.date, input.startTime)}/${calendarStamp(input.date, endTime)}`)
+  google.searchParams.set('ctz', 'Europe/London')
+  if (input.location) google.searchParams.set('location', input.location)
+  if (input.manageUrl) google.searchParams.set('details', `Manage your appointment: ${input.manageUrl}`)
+  const outlook = new URL('https://outlook.live.com/calendar/0/deeplink/compose')
+  outlook.searchParams.set('path', '/calendar/action/compose')
+  outlook.searchParams.set('rru', 'addevent')
+  outlook.searchParams.set('subject', input.title)
+  outlook.searchParams.set('startdt', `${input.date}T${input.startTime}`)
+  outlook.searchParams.set('enddt', `${input.date}T${endTime}`)
+  if (input.location) outlook.searchParams.set('location', input.location)
+  return { google: google.toString(), outlook: outlook.toString() }
+}
+
+function normaliseInstagramUrl(value?: string | null) {
+  const trimmed = value?.trim()
+  return trimmed ? (trimmed.startsWith('http') ? trimmed : `https://instagram.com/${trimmed.replace(/^@/, '')}`) : undefined
+}
