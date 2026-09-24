@@ -406,7 +406,6 @@ function ProductsPage() {
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
             {treatments
               .filter((t) => t.name.toLowerCase().includes(linkSearch.trim().toLowerCase()))
-              .sort((a, b) => Number(!!Number(linkCosts[b.id])) - Number(!!Number(linkCosts[a.id])))
               .map((t) => (
               <div key={t.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                 <p className="min-w-0 truncate text-sm">{t.name}</p>
