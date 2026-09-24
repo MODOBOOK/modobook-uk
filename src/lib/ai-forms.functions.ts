@@ -91,72 +91,103 @@ export const suggestFormMatches = createServerFn({ method: "POST" })
       throw new Error("No forms found to match. Add medical, consent or aftercare templates first.");
     }
 
-    const validTreatments = new Set(treatments.map((t) => t.id));
-    const validMF = new Set(medicalForms.map((m) => m.id));
-    const validC = new Set(consents.map((c) => c.id));
-    const validA = new Set(aftercares.map((a) => a.id));
+    // Use short aliases instead of UUIDs to keep prompts/outputs small & fast.
+    const tAlias = new Map<string, string>();
+    const mfAlias = new Map<string, string>();
+    const cAlias = new Map<string, string>();
+    const aAlias = new Map<string, string>();
+    treatments.forEach((t, i) => tAlias.set(`t${i + 1}`, t.id));
+    medicalForms.forEach((m, i) => mfAlias.set(`m${i + 1}`, m.id));
+    consents.forEach((c, i) => cAlias.set(`c${i + 1}`, c.id));
+    aftercares.forEach((a, i) => aAlias.set(`a${i + 1}`, a.id));
 
-    const payload = {
-      treatments: treatments.map((t) => ({
-        id: t.id,
-        name: t.name,
-        description: (t.description ?? "").slice(0, 200) || undefined,
-      })),
-      medical_forms: medicalForms.map((m) => ({
-        id: m.id,
+    const formsPayload = {
+      medical_forms: medicalForms.map((m, i) => ({
+        id: `m${i + 1}`,
         name: m.name,
-        description: (m.description ?? "").slice(0, 160) || undefined,
+        description: (m.description ?? "").slice(0, 100) || undefined,
       })),
-      consents: consents.map((c) => ({
-        id: c.id,
+      consents: consents.map((c, i) => ({
+        id: `c${i + 1}`,
         name: c.name,
         treatment_type: c.treatment_type ?? undefined,
       })),
-      aftercares: aftercares.map((a) => ({
-        id: a.id,
+      aftercares: aftercares.map((a, i) => ({
+        id: `a${i + 1}`,
         name: a.name,
         category: a.category ?? undefined,
-        summary: (a.summary ?? "").slice(0, 160) || undefined,
       })),
     };
 
-    const res = await fetch(GATEWAY_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: `Match forms to treatments. Source data:\n\n${JSON.stringify(payload)}` },
-        ],
-        response_format: { type: "json_object" },
-      }),
-    });
+    const allT = treatments.map((t, i) => ({
+      id: `t${i + 1}`,
+      name: t.name,
+      description: (t.description ?? "").slice(0, 100) || undefined,
+    }));
+    const BATCH = 20;
+    const batches: typeof allT[] = [];
+    for (let i = 0; i < allT.length; i += BATCH) batches.push(allT.slice(i, i + BATCH));
 
-    if (res.status === 402) throw new Error("AI credits exhausted. Add credits in workspace settings.");
-    if (res.status === 429) throw new Error("AI rate limit hit. Retry shortly.");
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      throw new Error(`AI request failed (${res.status}): ${txt.slice(0, 300)}`);
+    async function runBatch(batch: typeof allT): Promise<FormMatch[]> {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 60_000);
+      let res: Response;
+      try {
+        res = await fetch(GATEWAY_URL, {
+          method: "POST",
+          signal: controller.signal,
+          headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey! },
+          body: JSON.stringify({
+            model: MODEL,
+            reasoning_effort: "low",
+            max_tokens: 4000,
+            messages: [
+              { role: "system", content: SYSTEM_PROMPT },
+              {
+                role: "user",
+                content: `Match forms to treatments. Source data:\n\n${JSON.stringify({ treatments: batch, ...formsPayload })}`,
+              },
+            ],
+            response_format: { type: "json_object" },
+          }),
+        });
+      } catch {
+        throw new Error("AI took too long to respond. Try again.");
+      } finally {
+        clearTimeout(timer);
+      }
+      if (res.status === 402) throw new Error("AI credits exhausted. Add credits in workspace settings.");
+      if (res.status === 429) throw new Error("AI rate limit hit. Retry shortly.");
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        throw new Error(`AI request failed (${res.status}): ${txt.slice(0, 300)}`);
+      }
+      const body = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+      const raw = (body.choices?.[0]?.message?.content ?? "").trim().replace(/^```json\s*/i, "").replace(/```$/, "");
+      let parsed: { matches?: FormMatch[] };
+      try {
+        parsed = JSON.parse(raw);
+      } catch {
+        return [];
+      }
+      const map = (ids: string[] | undefined, m: Map<string, string>) =>
+        Array.from(new Set((ids ?? []).map((x) => m.get(String(x))).filter((x): x is string => !!x)));
+      return (parsed.matches ?? [])
+        .filter((m) => m && tAlias.has(String(m.treatment_id)))
+        .map((m) => ({
+          treatment_id: tAlias.get(String(m.treatment_id))!,
+          medical_form_ids: map(m.medical_form_ids, mfAlias),
+          consent_ids: map(m.consent_ids, cAlias),
+          aftercare_ids: map(m.aftercare_ids, aAlias),
+        }));
     }
 
-    const body = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
-    const raw = (body.choices?.[0]?.message?.content ?? "").trim().replace(/^```json\s*/i, "").replace(/```$/, "");
-    let parsed: { matches?: FormMatch[] };
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      throw new Error("AI returned malformed output. Try again.");
+    const results = await Promise.allSettled(batches.map(runBatch));
+    const matches = results.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
+    if (!matches.length) {
+      const firstErr = results.find((r) => r.status === "rejected") as PromiseRejectedResult | undefined;
+      throw new Error(firstErr ? (firstErr.reason as Error).message : "AI returned no matches. Try again.");
     }
-
-    const matches: FormMatch[] = (parsed.matches ?? [])
-      .filter((m) => m && validTreatments.has(m.treatment_id))
-      .map((m) => ({
-        treatment_id: m.treatment_id,
-        medical_form_ids: Array.from(new Set((m.medical_form_ids ?? []).filter((id) => validMF.has(id)))),
-        consent_ids: Array.from(new Set((m.consent_ids ?? []).filter((id) => validC.has(id)))),
-        aftercare_ids: Array.from(new Set((m.aftercare_ids ?? []).filter((id) => validA.has(id)))),
-      }));
 
     return {
       matches,
