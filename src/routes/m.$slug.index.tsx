@@ -56,7 +56,7 @@ import { toast } from "sonner";
 import { SafeHtml } from "@/components/SafeHtml";
 import { PackageBuilderCard, type PublicBuilder } from "@/components/PackageBuilderCard";
 import { CourseGroupRow } from "@/components/CourseGroupRow";
-import { packageBuilderEnabled, linkButtonEnabled, treatmentLeafletsEnabled, coursePickerEnabled, membershipsEnabled, bookCtaEnabled } from "@/lib/feature-flags";
+import { packageBuilderEnabled, linkButtonEnabled, treatmentLeafletsEnabled, coursePickerEnabled, membershipsEnabled, bookCtaEnabled, bookingLayoutOptionsEnabled } from "@/lib/feature-flags";
 import { getLeafletSignedUrl } from "@/lib/leaflets.functions";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { formatPrice, BADGE_LABEL, badgeClasses, treatmentPricing, type TreatmentBadge } from "@/lib/price-display";
@@ -400,6 +400,32 @@ function BookPage() {
   const carouselEnabled =
     !!(theme as { hero_carousel_enabled?: boolean } | null)?.hero_carousel_enabled ||
     (layoutKey === "carousel" && carouselUrls.length > 0);
+
+  // Booking-page layout options (pilot clinic only): presets, carousel size,
+  // hide-carousel, and section show/hide + ordering. Every value defaults to
+  // "unchanged" so the page renders exactly as before unless the clinic opts in.
+  const layoutOptionsOn = bookingLayoutOptionsEnabled(slug);
+  const themeAnyOpts = theme as Record<string, unknown> | null;
+  const pagePreset = layoutOptionsOn ? ((themeAnyOpts?.page_preset as string) || "default") : "default";
+  const presetCompact = pagePreset === "compact";
+  const presetEditorial = pagePreset === "editorial";
+  const carouselHidden = layoutOptionsOn && themeAnyOpts?.carousel_hidden === true;
+  const carouselSmall = layoutOptionsOn && themeAnyOpts?.carousel_height === "small";
+  const savedVisibility = (themeAnyOpts?.section_visibility ?? null) as Record<string, boolean> | null;
+  const savedOrder = layoutOptionsOn ? ((themeAnyOpts?.section_order ?? null) as string[] | null) : null;
+  const SECTION_DEFAULT_ORDER = ["welcome", "memberships", "locations", "practitioners", "chooser", "favourites", "treatments", "contact", "policy"];
+  const customSectionLayout = layoutOptionsOn && (!!savedOrder || !!savedVisibility);
+  const sectionHidden = (k: string) => !!savedVisibility && savedVisibility[k] === false;
+  const sectionIndexOf = (k: string) => {
+    if (!customSectionLayout) return 0;
+    const ordered = (savedOrder ?? []).filter(
+      (key, i, arr) => SECTION_DEFAULT_ORDER.includes(key) && arr.indexOf(key) === i && !sectionHidden(key),
+    );
+    const effective = [...ordered, ...SECTION_DEFAULT_ORDER.filter((key) => !ordered.includes(key) && !sectionHidden(key))];
+    const idx = effective.indexOf(k);
+    return idx === -1 ? SECTION_DEFAULT_ORDER.length + 1 : idx + 1;
+  };
+
   // Editorial hero gallery — auto-advancing slideshow when multiple photos
   const editorialGallery: string[] =
     carouselUrls.length > 0 ? carouselUrls : heroUrl ? [heroUrl] : [];
@@ -1042,7 +1068,7 @@ function BookPage() {
     theme?.button_radius === "pill" ? "9999px" : "0.75rem";
   const btnUppercase = !!theme?.button_uppercase;
   const density = theme?.page_density ?? "cozy";
-  const sectionGapPx = density === "compact" ? "1.25rem" : density === "spacious" ? "3rem" : "2rem";
+  const sectionGapPx = presetCompact ? "1.25rem" : presetEditorial ? "2.75rem" : density === "compact" ? "1.25rem" : density === "spacious" ? "3rem" : "2rem";
   const pageStyle: React.CSSProperties = {
     backgroundColor: bgColor,
     color: textColor,
@@ -1314,10 +1340,14 @@ function BookPage() {
   })();
 
   return (
-    <main className="min-h-screen pb-16" style={pageStyle}>
+    <main className={`min-h-screen pb-16${customSectionLayout ? " modo-sec-flex" : ""}${presetCompact ? " preset-compact" : presetEditorial ? " preset-editorial" : ""}`} style={pageStyle}>
       <style>{`
         .modo-btn { background-color: var(--btn-color); color: var(--btn-text); border-radius: var(--btn-radius); ${btnUppercase ? "text-transform: uppercase; letter-spacing: 0.05em;" : ""} }
         [data-modo-section] + [data-modo-section] { margin-top: var(--section-gap); }
+        .modo-sec-flex { display: flex; flex-direction: column; }
+        .modo-sec-flex .modo-sec + .modo-sec { margin-top: var(--section-gap); }
+        .preset-compact h2 { font-size: 1.125rem; line-height: 1.35; }
+        .preset-editorial h2 { font-size: 1.5rem; line-height: 1.3; letter-spacing: -0.01em; }
       `}</style>
 
       {/* Editorial cover — signature MODO landing block */}
