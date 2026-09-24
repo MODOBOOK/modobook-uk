@@ -125,7 +125,7 @@ function DashboardIndex() {
       (a) => a.status === "cancelled" && a.scheduled_date >= mondayIso && a.scheduled_date <= sundayIso,
     ).length;
     return { todays, upcoming, todayBookings, todayCancellations, weekCount, monthBookings, salesToday, salesWeek, salesMonth, thisMonthName, nextMonthName, nextMonthBookings, nextMonthSales, cancelledThisWeek };
-  }, [appts, today]);
+  }, [appts, today, income]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, Appt[]>();
