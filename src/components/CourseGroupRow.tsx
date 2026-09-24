@@ -372,7 +372,7 @@ export function CourseGroupRow({
                       {o.duration ? `${o.duration} min each` : null}
                       {spacingLabel(o.interval_days) ? ` · ${spacingLabel(o.interval_days)}` : ""}
                     </div>
-                    {o.description && (
+                    {showPerOptionDesc && o.description && (
                       <p className="mt-1 whitespace-pre-line text-xs leading-relaxed opacity-80">{o.description}</p>
                     )}
                     {o.allow_split_payment && o.session_count > 1 && (
