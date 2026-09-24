@@ -319,6 +319,7 @@ export const sendPatientEmail = createServerFn({ method: "POST" })
           logoUrl: branding.logoUrl,
           brandColor: branding.brandColor,
           copyNotice: `Copy of the email sent to ${client.full_name} <${client.email}>.`,
+          actions: data.actions,
         },
       });
     }
