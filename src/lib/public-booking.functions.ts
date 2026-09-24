@@ -858,7 +858,9 @@ export const requestBooking = createServerFn({ method: "POST" })
     if (prof?.require_account_to_book && !data.patientUserId) {
       throw new Error("Please sign in to book — this clinic requires an account.");
     }
-    const paymentChoice = normaliseBookingPaymentChoice(prof, data.paymentChoice ?? null);
+    const paymentChoice = (await treatmentsArePayInClinic([data.treatmentId]))
+      ? ({ mode: "cash", method: "card" } as PaymentChoice)
+      : normaliseBookingPaymentChoice(prof, data.paymentChoice ?? null);
     // Auto-confirm target status once we know payment isn't required. We always
     // insert as "pending" first so the notify_new_booking trigger doesn't fire
     // for bookings that end up abandoning Stripe checkout.
@@ -1639,6 +1641,19 @@ function bookingNeedsStripePayment(
   return depositConfigured || onlinePaymentConfigured;
 }
 
+/**
+ * A service set to "Pay in clinic" (e.g. a prescribing clinic) is never charged
+ * online, whatever the clinic-wide deposit / card settings say.
+ */
+async function treatmentsArePayInClinic(treatmentIds: string[]): Promise<boolean> {
+  const ids = Array.from(new Set(treatmentIds.filter(Boolean)));
+  if (ids.length === 0) return false;
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.from("treatments").select("id, payment_mode").in("id", ids);
+  if (!data || data.length !== ids.length) return false;
+  return data.every((t) => (t as { payment_mode?: string | null }).payment_mode === "pay_in_clinic");
+}
+
 function depositRequiredForProfile(profile: { payment_deposit_enabled?: boolean | null; require_deposit_to_confirm?: boolean | null } | null) {
   return !!profile && (!!profile.require_deposit_to_confirm || !!profile.payment_deposit_enabled);
 }
@@ -1738,7 +1753,9 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     if (prof?.require_account_to_book && !data.patientUserId) {
       throw new Error("Please sign in to book — this clinic requires an account.");
     }
-    const paymentChoice = normaliseBookingPaymentChoice(prof, data.paymentChoice ?? null);
+    const paymentChoice = (await treatmentsArePayInClinic(data.bookings.map((b) => b.treatmentId)))
+      ? ({ mode: "cash", method: "card" } as PaymentChoice)
+      : normaliseBookingPaymentChoice(prof, data.paymentChoice ?? null);
     const finalStatus = prof?.auto_confirm_bookings === false ? "pending" : "confirmed";
     const status = "pending";
     const { data: blk } = await sb
