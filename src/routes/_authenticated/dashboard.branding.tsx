@@ -571,6 +571,110 @@ function BrandingPage() {
 
 
 
+      {/* Booking page layout options (pilot) */}
+      {bookingLayoutOptionsEnabled(slug) && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Booking page layout</CardTitle>
+              <p className="text-xs text-muted-foreground">Optional — "Current look" keeps everything exactly as it is now.</p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-3">
+                {([
+                  { key: "default", name: "Current look", desc: "Exactly as your page is today" },
+                  { key: "compact", name: "Compact", desc: "Tighter spacing, smaller headings" },
+                  { key: "editorial", name: "Editorial", desc: "More air, larger headings" },
+                ] as const).map((p) => {
+                  const active = (state.page_preset ?? "default") === p.key;
+                  return (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() => set("page_preset", p.key)}
+                      className={`rounded-xl border p-3 text-left transition ${active ? "border-primary ring-2 ring-primary/30" : "hover:border-primary/40"}`}
+                    >
+                      <span className="flex items-center justify-between text-sm font-medium">
+                        {p.name}
+                        {active && <Check className="h-4 w-4" />}
+                      </span>
+                      <span className="mt-1 block text-xs text-muted-foreground">{p.desc}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label>Photo carousel</Label>
+                  <select
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                    value={state.carousel_hidden ? "hidden" : "shown"}
+                    onChange={(e) => set("carousel_hidden", e.target.value === "hidden")}
+                  >
+                    <option value="shown">Shown</option>
+                    <option value="hidden">Hidden — straight to your welcome & treatments</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Carousel size</Label>
+                  <select
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                    value={state.carousel_height ?? "regular"}
+                    onChange={(e) => set("carousel_height", e.target.value)}
+                    disabled={!!state.carousel_hidden}
+                  >
+                    <option value="regular">Regular (tall portrait)</option>
+                    <option value="small">Smaller (landscape)</option>
+                  </select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Page sections</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Show, hide and reorder the blocks on your booking page. Booking essentials can be moved but not hidden.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {sectionList.map((k, i) => {
+                const meta = SECTION_META[k];
+                if (!meta) return null;
+                const hidden = state.section_visibility?.[k] === false;
+                return (
+                  <div key={k} className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2">
+                    <label className="flex min-w-0 items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={!hidden}
+                        disabled={meta.fixed}
+                        onChange={(e) => {
+                          const next = { ...(state.section_visibility ?? {}) };
+                          if (e.target.checked) delete next[k];
+                          else next[k] = false;
+                          set("section_visibility", next);
+                        }}
+                      />
+                      <span className="truncate">
+                        {meta.label}
+                        {meta.fixed ? <span className="ml-1 text-xs text-muted-foreground">(always shown)</span> : null}
+                      </span>
+                    </label>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <Button type="button" variant="outline" size="sm" disabled={i === 0} onClick={() => moveSection(i, -1)} aria-label={`Move ${meta.label} up`}>↑</Button>
+                      <Button type="button" variant="outline" size="sm" disabled={i === sectionList.length - 1} onClick={() => moveSection(i, 1)} aria-label={`Move ${meta.label} down`}>↓</Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </>
+      )}
+
       {/* Booking-link layout */}
 
       <Card>
@@ -856,6 +960,29 @@ function BrandingPage() {
           <p className="text-xs text-muted-foreground">
             These six colours flow through every page — hero, header, footer, treatment menu and buttons all follow them automatically.
           </p>
+          {bookingLayoutOptionsEnabled(slug) && (
+            <>
+              <p className="text-xs text-muted-foreground">Pilot: set every colour individually — these do not follow the six brand colours above.</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <ColorField label="Header background" value={state.header_bg_color ?? ""} onChange={(v) => set("header_bg_color", v)} />
+                <ColorField label="Header text" value={state.header_text_color ?? ""} onChange={(v) => set("header_text_color", v)} />
+                <ColorField label="Footer background" value={state.footer_bg_color ?? ""} onChange={(v) => set("footer_bg_color", v)} />
+                <ColorField label="Footer text" value={state.footer_text_color ?? ""} onChange={(v) => set("footer_text_color", v)} />
+                <ColorField label="Button colour" value={state.button_color ?? ""} onChange={(v) => set("button_color", v)} />
+                <ColorField label="Button text" value={state.button_text_color ?? ""} onChange={(v) => set("button_text_color", v)} />
+                <ColorField label="Menu category background" value={state.menu_category_bg ?? ""} onChange={(v) => set("menu_category_bg", v)} />
+                <ColorField label="Menu category text" value={state.menu_category_text ?? ""} onChange={(v) => set("menu_category_text", v)} />
+                <ColorField label="Treatment name colour" value={state.menu_treatment_name_color ?? ""} onChange={(v) => set("menu_treatment_name_color", v)} />
+                <ColorField label="Price colour" value={state.menu_price_color ?? ""} onChange={(v) => set("menu_price_color", v)} />
+                <ColorField label="Card border" value={state.menu_card_border_color ?? ""} onChange={(v) => set("menu_card_border_color", v)} />
+                <ColorField label="Welcome card background" value={state.welcome_card_bg_color ?? ""} onChange={(v) => set("welcome_card_bg_color", v)} />
+                <ColorField label="Welcome card border" value={state.welcome_card_border_color ?? ""} onChange={(v) => set("welcome_card_border_color", v)} />
+                <ColorField label="Contact tile background" value={state.contact_tile_bg_color ?? ""} onChange={(v) => set("contact_tile_bg_color", v)} />
+                <ColorField label="Contact tile border" value={state.contact_tile_border_color ?? ""} onChange={(v) => set("contact_tile_border_color", v)} />
+                <ColorField label="Hero overlay" value={state.hero_overlay_color ?? ""} onChange={(v) => set("hero_overlay_color", v)} />
+              </div>
+            </>
+          )}
         </div>
 
       </details>
