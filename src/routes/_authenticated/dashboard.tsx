@@ -407,7 +407,19 @@ function DashboardLayout() {
           style={{ paddingBottom: "calc(6.5rem + env(safe-area-inset-bottom))" }}
         >
           <PlatformBillingGate>
-            <Outlet />
+            {isSoloPlan(profile) && isCollectiveOnlyRoute(pathname) ? (
+              <div className="mx-auto max-w-md py-16 text-center">
+                <h2 className="font-serif text-2xl">Part of MODO Collective</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Clinic Compliance, Associates, Room rental and Training are included with MODO Collective. Upgrade in Plan &amp; billing to unlock them.
+                </p>
+                <Link to="/dashboard/billing" className="mt-6 inline-block rounded-full bg-primary px-5 py-2 text-sm text-primary-foreground">
+                  View plans
+                </Link>
+              </div>
+            ) : (
+              <Outlet />
+            )}
           </PlatformBillingGate>
         </main>
 
