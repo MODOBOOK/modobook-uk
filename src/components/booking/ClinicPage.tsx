@@ -183,6 +183,7 @@ function WelcomeIntroBlock({
   variant: "mobile" | "desktop";
   tight?: boolean;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const collapsed = expandable && !expanded;
   return (
     <>
