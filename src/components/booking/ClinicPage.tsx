@@ -1383,7 +1383,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
         .preset-editorial h2 { font-size: 1.5rem; line-height: 1.3; letter-spacing: -0.01em; }
         #modo-hero [data-modo-image] button[aria-label^="Show photo"], #modo-hero [data-modo-image] button[aria-label^="Slide"] { min-height: 0 !important; min-width: 0 !important; height: 0.375rem !important; padding: 0 !important; }
         @media (min-width: 768px) {
-          .modo-wide.modo-sec-flex { padding-bottom: 0; }
+          .modo-wide.modo-sec-flex { padding-bottom: 0; min-height: calc(100dvh - 6.1rem); }
           .modo-wide.modo-sec-flex > footer { margin-top: auto; }
           .modo-wide #modo-hero [data-modo-image] { aspect-ratio: 4 / 3; }
         }
