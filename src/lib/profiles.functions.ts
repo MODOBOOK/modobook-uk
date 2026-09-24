@@ -238,6 +238,9 @@ export const updateProfile = createServerFn({ method: "POST" })
       sms_channels?: Record<string, string>;
       sms_timings?: Record<string, unknown> | object;
       reminder_hours_before?: number[];
+      general_rebook_reminders_enabled?: boolean;
+      general_rebook_reminder_days?: number;
+      general_rebook_followup_days?: number | null;
       invoice_bank_name?: string | null;
       invoice_account_name?: string | null;
       invoice_sort_code?: string | null;
@@ -336,6 +339,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       "notify_new_booking_email","new_booking_email_to",
       "whatsapp_reminders_enabled","whatsapp_notify_confirmation","whatsapp_notify_reminder",
       "whatsapp_notify_cancellation","whatsapp_notify_rebook","reminder_hours_before",
+      "general_rebook_reminders_enabled","general_rebook_reminder_days","general_rebook_followup_days",
       "sms_templates","sms_channels","sms_timings",
       "invoice_bank_name","invoice_account_name","invoice_sort_code",
       "invoice_account_number","invoice_iban","invoice_swift",
