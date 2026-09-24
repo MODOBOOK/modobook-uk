@@ -3707,6 +3707,48 @@ export type Database = {
         }
         Relationships: []
       }
+      general_rebook_reminders_sent: {
+        Row: {
+          appointment_id: string
+          id: string
+          patient_email: string
+          profile_id: string
+          sent_at: string
+          stage: number
+        }
+        Insert: {
+          appointment_id: string
+          id?: string
+          patient_email: string
+          profile_id: string
+          sent_at?: string
+          stage: number
+        }
+        Update: {
+          appointment_id?: string
+          id?: string
+          patient_email?: string
+          profile_id?: string
+          sent_at?: string
+          stage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "general_rebook_reminders_sent_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "general_rebook_reminders_sent_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gift_card_purchases: {
         Row: {
           amount_paid: number | null
@@ -7827,6 +7869,9 @@ export type Database = {
           favourites_custom_title: string | null
           favourites_enabled: boolean
           full_name: string | null
+          general_rebook_followup_days: number | null
+          general_rebook_reminder_days: number
+          general_rebook_reminders_enabled: boolean
           hero_url: string | null
           id: string
           invoice_account_name: string | null
@@ -7971,6 +8016,9 @@ export type Database = {
           favourites_custom_title?: string | null
           favourites_enabled?: boolean
           full_name?: string | null
+          general_rebook_followup_days?: number | null
+          general_rebook_reminder_days?: number
+          general_rebook_reminders_enabled?: boolean
           hero_url?: string | null
           id?: string
           invoice_account_name?: string | null
@@ -8115,6 +8163,9 @@ export type Database = {
           favourites_custom_title?: string | null
           favourites_enabled?: boolean
           full_name?: string | null
+          general_rebook_followup_days?: number | null
+          general_rebook_reminder_days?: number
+          general_rebook_reminders_enabled?: boolean
           hero_url?: string | null
           id?: string
           invoice_account_name?: string | null
