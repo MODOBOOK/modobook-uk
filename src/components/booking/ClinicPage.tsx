@@ -1598,6 +1598,33 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
         </section>
       )}
 
+      {/* Split-view navigation (pilot): Book now on home, back link on book */}
+      {splitView && (
+        <section className="mx-auto mt-6 max-w-3xl px-4">
+          {view === "home" ? (
+            <Link
+              to="/m/$slug/book"
+              params={{ slug }}
+              className="block w-full rounded-full py-3.5 text-center text-base font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+              style={{ backgroundColor: brand }}
+            >
+              Book now
+            </Link>
+          ) : (
+            <Link
+              to="/m/$slug"
+              params={{ slug }}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold underline-offset-4 hover:underline"
+              style={{ color: brand }}
+            >
+              <ChevronLeft className="h-4 w-4" /> Back to home
+            </Link>
+          )}
+        </section>
+      )}
+
+
+
 
 
       {/* Mobile link button (above welcome message) */}
