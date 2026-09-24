@@ -202,7 +202,7 @@ function WelcomeIntroBlock({
       {html && (
         <div className="relative">
           <div
-            className={collapsed ? "max-h-40 overflow-hidden" : ""}
+            className={collapsed ? (tight ? "max-h-[3.2em] overflow-hidden" : "max-h-40 overflow-hidden") : ""}
             style={collapsed ? { maskImage: "linear-gradient(to bottom, black 60%, transparent)", WebkitMaskImage: "linear-gradient(to bottom, black 60%, transparent)" } : undefined}
           >
             <SafeHtml html={html} className={proseCls} />
