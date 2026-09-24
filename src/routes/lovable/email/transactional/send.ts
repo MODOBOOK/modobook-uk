@@ -16,7 +16,7 @@ function emailSenderName(clinicName: unknown) {
   const safeClinicName = typeof clinicName === 'string'
     ? clinicName.replace(/[\r\n"]/g, '').trim()
     : ''
-  return `${safeClinicName || 'MODO'} NO REPLY`
+  return safeClinicName || 'MODO'
 }
 
 function redactEmail(email: string | null | undefined): string {
