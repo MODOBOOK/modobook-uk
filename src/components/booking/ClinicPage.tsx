@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -71,19 +71,6 @@ type Location = Database["public"]["Tables"]["locations"]["Row"];
 type Category = Database["public"]["Tables"]["treatment_categories"]["Row"];
 type Pricing = Database["public"]["Tables"]["treatment_location_pricing"]["Row"];
 
-export const Route = createFileRoute("/m/$slug/")({
-  validateSearch: (search: Record<string, unknown>): { draft?: true } =>
-    search.draft === "1" || search.draft === true ? { draft: true } : {},
-  loaderDeps: ({ search }) => ({ draft: search.draft }),
-  loader: async ({ params, deps }) =>
-    getPublicClinic({ data: { slug: params.slug, draft: deps.draft } }),
-
-  head: ({ params }) => ({
-    meta: [{ property: "og:url", content: `https://modobook.uk/m/${params.slug}` }],
-    links: [{ rel: "canonical", href: `https://modobook.uk/m/${params.slug}` }],
-  }),
-  component: BookPage,
-});
 
 type CatNode = Category & { children: CatNode[]; treatments: Treatment[] };
 
