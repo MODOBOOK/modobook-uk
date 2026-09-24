@@ -3,7 +3,7 @@ import { getPublicClinic } from "@/lib/public-clinic.functions";
 import { bookingLayoutOptionsEnabled } from "@/lib/feature-flags";
 import { ClinicPage, type ClinicPageData } from "@/components/booking/ClinicPage";
 
-export const Route = createFileRoute("/m/$slug/book")({
+export const Route = createFileRoute("/m/$slug/book/")({
   validateSearch: (search: Record<string, unknown>): { draft?: true } =>
     search.draft === "1" || search.draft === true ? { draft: true } : {},
   loaderDeps: ({ search }) => ({ draft: search.draft }),
