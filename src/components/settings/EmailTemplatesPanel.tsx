@@ -29,7 +29,6 @@ type EmailDef = {
 const EMAILS: EmailDef[] = [
   { key: 'booking-confirmation', name: 'Booking confirmation', description: 'Sent to the patient after they book & pay.', editable: true },
   { key: 'booking-cancellation', name: 'Booking cancellation', description: 'Sent when a booking is cancelled.', editable: true },
-  { key: 'appointment-reminder', name: 'Appointment reminder', description: 'Base template used by the reminder rules below.', editable: true },
   { key: 'medical-form-request', name: 'Medical form request', description: 'Asks the patient to complete a medical form.', editable: true },
   { key: 'review-request', name: 'Review request', description: 'Sent after treatment asking for a review.', editable: true },
   { key: 'patient-message', name: 'Patient message', description: 'Practitioner-composed one-off message.', editable: true },
@@ -74,7 +73,7 @@ export function EmailTemplatesPanel() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-serif flex items-center gap-2"><Bell className="h-5 w-5" /> Appointment reminders</h2>
-            <p className="text-sm text-muted-foreground">Automatic emails sent before each appointment.</p>
+            <p className="text-sm text-muted-foreground">Ready-made reminder emails with the appointment details, your branding and a manage button. Just choose when they go out.</p>
           </div>
           <Button size="sm" onClick={() => setRuleEditing({ hours_before: 24, enabled: true })}>
             <Plus className="h-4 w-4 mr-1.5" /> Add reminder
@@ -97,7 +96,7 @@ export function EmailTemplatesPanel() {
                       {!r.enabled && <Badge variant="outline">Off</Badge>}
                     </div>
                     <p className="text-sm text-muted-foreground truncate">
-                      {r.subject || 'Default subject line'}
+                      {r.hours_before >= 24 ? 'Reminder with appointment details and reschedule note' : 'Short "see you soon" reminder'}
                     </p>
                   </div>
                   <Switch
@@ -335,9 +334,6 @@ function ReminderEditDialog({
   onSave: (payload: any) => void
 }) {
   const [hours, setHours] = useState<number>(rule.hours_before || 24)
-  const [subject, setSubject] = useState(rule.subject ?? '')
-  const [intro, setIntro] = useState(rule.intro ?? '')
-  const [closing, setClosing] = useState(rule.closing ?? '')
   const [enabled, setEnabled] = useState(rule.enabled ?? true)
 
   return (
@@ -350,18 +346,7 @@ function ReminderEditDialog({
             <Input type="number" min={1} max={720} value={hours} onChange={(e) => setHours(Math.max(1, Math.min(720, Number(e.target.value) || 0)))} />
             <p className="text-xs text-muted-foreground mt-1">Try 48 (2 days), 24 (day before), or 2 (same-day nudge).</p>
           </div>
-          <div>
-            <Label>Subject line</Label>
-            <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Leave blank for default" />
-          </div>
-          <div>
-            <Label>Opening line</Label>
-            <Textarea rows={3} value={intro} onChange={(e) => setIntro(e.target.value)} placeholder="e.g. Just a quick reminder about your appointment tomorrow." />
-          </div>
-          <div>
-            <Label>Closing / notes</Label>
-            <Textarea rows={3} value={closing} onChange={(e) => setClosing(e.target.value)} placeholder="e.g. Please arrive with a clean face, no makeup." />
-          </div>
+          <p className="text-sm text-muted-foreground">The reminder email is pre-written and includes the treatment, date, time, location, preparation notes and a manage button — you only need to pick the timing.</p>
           <div className="flex items-center justify-between pt-2">
             <Label>Enabled</Label>
             <Switch checked={enabled} onCheckedChange={setEnabled} />
@@ -372,9 +357,9 @@ function ReminderEditDialog({
           <Button onClick={() => onSave({
             id: rule.id,
             hours_before: hours,
-            subject: subject.trim() || null,
-            intro: intro.trim() || null,
-            closing: closing.trim() || null,
+            subject: null,
+            intro: null,
+            closing: null,
             enabled,
           })}>Save</Button>
         </DialogFooter>

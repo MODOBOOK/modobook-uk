@@ -17,7 +17,7 @@ export interface EmailDefault {
 
 export const EMAIL_DEFAULTS: Record<string, EmailDefault> = {
   'booking-confirmation': {
-    subject: 'Booking confirmed — {{clinic_name}}',
+    subject: 'Appointment confirmed — {{clinic_name}}',
     intro: 'Dear {{patient_name}}, thank you for booking with us. We look forward to seeing you.',
     body: '',
     closing: '',
@@ -27,26 +27,26 @@ export const EMAIL_DEFAULTS: Record<string, EmailDefault> = {
     subject: 'Appointment cancelled — {{clinic_name}}',
     intro: 'Hi {{patient_name}}, this confirms your {{treatment_name}} on {{date_time}} has been cancelled.',
     body: '',
-    closing: 'If you have any questions, just reply to this email.',
+    closing: '',
     variables: ['patient_name', 'clinic_name', 'treatment_name', 'date_time'],
   },
   'appointment-reminder': {
-    subject: 'Reminder: your appointment at {{clinic_name}}',
-    intro: 'Hi {{patient_name}}, just a friendly reminder about your {{treatment_name}} on {{date_time}}.',
+    subject: 'Reminder: your appointment with {{clinic_name}}',
+    intro: 'Hi {{patient_name}}, this is a friendly reminder about your upcoming appointment with {{clinic_name}}.',
     body: '',
-    closing: 'Looking forward to seeing you.',
+    closing: 'Please let us know as soon as possible if you need to reschedule.',
     variables: ['patient_name', 'clinic_name', 'treatment_name', 'practitioner_name', 'date_time'],
   },
   'medical-form-request': {
-    subject: 'Please complete your {{form_name}} — {{clinic_name}}',
-    intro: 'Hi {{patient_name}}, {{clinic_name}} has sent you {{form_name}} to complete ahead of your appointment. It only takes a few minutes.',
+    subject: 'Please complete your forms — {{clinic_name}}',
+    intro: 'Hi {{patient_name}}, {{clinic_name}} has sent you the following forms to complete ahead of your appointment.',
     body: '',
     closing: 'Your answers are shared securely with your practitioner.',
     variables: ['patient_name', 'clinic_name', 'form_name'],
   },
   'review-request': {
     subject: 'How was your visit to {{clinic_name}}?',
-    intro: "Hi {{patient_name}}, thanks for choosing {{clinic_name}}. We'd love to hear how it went — it only takes a minute.",
+    intro: "Hi {{patient_name}}, thanks for choosing {{clinic_name}} for your {{treatment_name}}. We'd love to hear how it went — it only takes a minute.",
     body: '',
     closing: 'Your feedback helps other patients and helps us keep improving.',
     variables: ['patient_name', 'clinic_name', 'treatment_name', 'practitioner_name'],
