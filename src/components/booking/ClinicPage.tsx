@@ -417,7 +417,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
   const pagePreset = layoutOptionsOn ? ((themeAnyOpts?.page_preset as string) || "default") : "default";
   const presetCompact = pagePreset === "compact";
   const presetEditorial = pagePreset === "editorial";
-  const carouselHidden = (layoutOptionsOn && themeAnyOpts?.carousel_hidden === true) || view === "book";
+  const carouselHidden = layoutOptionsOn && themeAnyOpts?.carousel_hidden === true;
   const carouselSmall = layoutOptionsOn && (themeAnyOpts?.carousel_height === "small" || pagePreset === "compact");
   const savedVisibility = (themeAnyOpts?.section_visibility ?? null) as Record<string, boolean> | null;
   const savedOrder = layoutOptionsOn ? ((themeAnyOpts?.section_order ?? null) as string[] | null) : null;
