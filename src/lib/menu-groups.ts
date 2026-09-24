@@ -136,6 +136,7 @@ export const menuGroups: MenuGroup[] = [
       { label: "Payments & payouts", description: "Connect Stripe & manage payouts", to: "/dashboard/payments", icon: CreditCard, ...T.espresso },
       { label: "Products & stock", description: "Product costs, purchases & stock levels", to: "/dashboard/products", icon: Package, ...T.cream },
       { label: "Business costs", description: "Rent, room rental, bills & other outgoings", to: "/dashboard/expenses", icon: FileText, ...T.taupe },
+      { label: "Business income", description: "Retail, training, room lets & other income", to: "/dashboard/income", icon: FileText, ...T.cream },
       { label: "Plan & billing", description: "Choose your MODO plan, add-ons & direct debit", to: "/dashboard/billing", icon: CreditCard, ...T.mocha },
       { label: "Invoices", description: "MODO subscription invoices & any arrears", to: "/dashboard/invoices", icon: FileText, ...T.sand },
     ],

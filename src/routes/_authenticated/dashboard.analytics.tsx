@@ -17,7 +17,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { getCostsForAnalytics } from "@/lib/expenses.functions";
-import { expenseOccurrences, categoryLabel, isHourlyFreq, hourlyCostCents } from "@/lib/expense-utils";
+import { expenseOccurrences, categoryLabel, incomeCategoryLabel, isHourlyFreq, hourlyCostCents } from "@/lib/expense-utils";
 
 /** Minutes between two "HH:MM(:SS)" times. */
 function apptMinutes(a: { start_time?: string | null; end_time?: string | null }) {
@@ -430,7 +430,7 @@ function ProfitSection({ appointments, fromIso, toIso, revenue }: { appointments
   const fetchCosts = useServerFn(getCostsForAnalytics);
   const [costs, setCosts] = useState<Awaited<ReturnType<typeof getCostsForAnalytics>> | null>(null);
   useEffect(() => {
-    fetchCosts().then(setCosts).catch(() => setCosts({ expenses: [], purchases: [] }));
+    fetchCosts().then(setCosts).catch(() => setCosts({ expenses: [], purchases: [], income: [] }));
   }, [fetchCosts]);
 
   const view = useMemo(() => {
@@ -450,6 +450,13 @@ function ProfitSection({ appointments, fromIso, toIso, revenue }: { appointments
       if (n) byCat.set(e.category, (byCat.get(e.category) ?? 0) + (n * e.amount_cents) / 100);
     }
     const otherCost = Array.from(byCat.values()).reduce((a, b) => a + b, 0);
+    const incByCat = new Map<string, number>();
+    for (const e of costs.income ?? []) {
+      const n = expenseOccurrences(e, fromIso, toIso).length;
+      if (n) incByCat.set(e.category, (incByCat.get(e.category) ?? 0) + (n * e.amount_cents) / 100);
+    }
+    const extraIncome = Array.from(incByCat.values()).reduce((a, b) => a + b, 0);
+    const incomeBreakdown = Array.from(incByCat.entries()).map(([k, v]) => ({ name: incomeCategoryLabel(k), value: v }));
     const breakdown = [
       ...(productCost ? [{ name: "Products & stock", value: productCost }] : []),
       ...Array.from(byCat.entries()).map(([k, v]) => ({ name: categoryLabel(k), value: v })),
@@ -495,21 +502,28 @@ function ProfitSection({ appointments, fromIso, toIso, revenue }: { appointments
         if (i !== undefined) months[i].costs += e.amount_cents / 100;
       }
     }
-    return { productCost, otherCost, breakdown, months };
+    for (const e of costs.income ?? []) {
+      for (const day of expenseOccurrences(e, first, last)) {
+        const i = idx.get(day.slice(0, 7));
+        if (i !== undefined) months[i].income += e.amount_cents / 100;
+      }
+    }
+    return { productCost, otherCost, breakdown, months, extraIncome, incomeBreakdown };
   }, [costs, fromIso, toIso, appointments]);
 
   if (!view) return null;
   const totalCosts = view.productCost + view.otherCost;
-  const profit = revenue - totalCosts;
+  const profit = revenue + view.extraIncome - totalCosts;
   const tip = { background: "var(--card)", border: "1px solid var(--border)", borderRadius: "0.75rem" };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="font-serif text-xl">Profit & costs</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button variant="outline" size="sm" asChild><Link to="/dashboard/products">Products</Link></Button>
           <Button variant="outline" size="sm" asChild><Link to="/dashboard/expenses">Business costs</Link></Button>
+          <Button variant="outline" size="sm" asChild><Link to="/dashboard/income">Income</Link></Button>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -522,6 +536,9 @@ function ProfitSection({ appointments, fromIso, toIso, revenue }: { appointments
         <CardHeader className="pb-2"><CardTitle className="font-serif text-lg">What you've made</CardTitle></CardHeader>
         <CardContent className="space-y-2 text-sm">
           <div className="flex justify-between"><span>Revenue (treatments)</span><span className="tabular-nums font-medium">{formatCurrency(revenue)}</span></div>
+          {view.incomeBreakdown.map((b) => (
+            <div key={"i" + b.name} className="flex justify-between"><span>+ {b.name}</span><span className="tabular-nums">+{formatCurrency(b.value)}</span></div>
+          ))}
           {view.breakdown.map((b) => (
             <div key={b.name} className="flex justify-between text-muted-foreground"><span>− {b.name}</span><span className="tabular-nums">−{formatCurrency(b.value)}</span></div>
           ))}
