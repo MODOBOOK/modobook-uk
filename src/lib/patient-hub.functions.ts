@@ -302,6 +302,7 @@ export const sendPatientEmail = createServerFn({ method: "POST" })
         clinicName: branding.clinicName,
         logoUrl: branding.logoUrl,
         brandColor: branding.brandColor,
+        actions: data.actions,
       },
     });
 
