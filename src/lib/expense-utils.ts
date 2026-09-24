@@ -73,3 +73,17 @@ export function monthlyEquivalentCents(e: ExpenseLike) {
     default: return 0;
   }
 }
+
+export const INCOME_CATEGORIES = [
+  { value: "retail", label: "Retail & product sales" },
+  { value: "training", label: "Training & courses" },
+  { value: "room_let", label: "Room rental income" },
+  { value: "vouchers", label: "Gift vouchers" },
+  { value: "other", label: "Other income" },
+] as const;
+
+export const INCOME_FREQUENCIES = FREQUENCIES.filter((f) => !isHourlyFreq(f.value));
+
+export function incomeCategoryLabel(v: string) {
+  return INCOME_CATEGORIES.find((c) => c.value === v)?.label ?? "Other income";
+}
