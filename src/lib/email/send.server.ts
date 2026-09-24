@@ -19,6 +19,12 @@ function looksLikeEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)
 }
 
+function normaliseInstagramUrl(value?: string | null) {
+  const trimmed = value?.trim()
+  if (!trimmed) return null
+  return trimmed.startsWith('http') ? trimmed : `https://instagram.com/${trimmed.replace(/^@/, '')}`
+}
+
 function generateToken() {
   const bytes = new Uint8Array(32)
   crypto.getRandomValues(bytes)
