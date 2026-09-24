@@ -1669,6 +1669,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
               brand={brand}
               expandable={view === "book" ? introLength > 90 : introExpandable}
               variant="mobile"
+            tight={view === "book"}
             />
           </div>
         </section>
@@ -1711,6 +1712,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
               brand={brand}
               expandable={view === "book" ? introLength > 90 : introExpandable}
               variant="desktop"
+            tight={view === "book"}
             />
           </div>
         </section>
