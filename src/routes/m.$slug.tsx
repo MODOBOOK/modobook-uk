@@ -6,7 +6,8 @@ import { getPublicRewardsOverview } from "@/lib/rewards.functions";
 import { listPublicGiftCards } from "@/lib/gift-cards.functions";
 import { listPublicMembershipPlans } from "@/lib/memberships.functions";
 import { Button } from "@/components/ui/button";
-import { UserCircle2 } from "lucide-react";
+import { UserCircle2, Home } from "lucide-react";
+import { bookingLayoutOptionsEnabled } from "@/lib/feature-flags";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { buildThemeVars } from "@/lib/theme-vars";
 import { useEffect, useMemo, useState } from "react";
@@ -286,7 +287,25 @@ function ModoLayout() {
               })()}
             </Link>
             <nav className="flex shrink-0 items-center gap-0.5 text-sm sm:gap-1">
-              <TabLink slug={slug} to="/m/$slug" label={theme?.header_button_label || "Book"} exact />
+              {bookingLayoutOptionsEnabled(slug) && (
+                <Link to="/m/$slug" params={{ slug }} aria-label="Home">
+                  <span
+                    className="mr-1 inline-flex h-8 w-8 items-center justify-center rounded-md border transition-colors hover:bg-[color-mix(in_srgb,currentColor_12%,transparent)]"
+                    style={{
+                      color: headerText,
+                      borderColor: "color-mix(in srgb, currentColor 35%, transparent)",
+                      backgroundColor: "transparent",
+                    }}
+                  >
+                    <Home className="h-4 w-4" />
+                  </span>
+                </Link>
+              )}
+              {bookingLayoutOptionsEnabled(slug) ? (
+                <TabLink slug={slug} to="/m/$slug/book" label={theme?.header_button_label || "Book"} />
+              ) : (
+                <TabLink slug={slug} to="/m/$slug" label={theme?.header_button_label || "Book"} exact />
+              )}
               <TabLink slug={slug} to="/m/$slug/about" label="About" />
               <RewardsTabLink slug={slug} />
               <MembershipsTabLink slug={slug} />
@@ -334,7 +353,7 @@ function TabLink({
   exact,
 }: {
   slug: string;
-  to: "/m/$slug" | "/m/$slug/rewards" | "/m/$slug/reviews" | "/m/$slug/about" | "/m/$slug/training" | "/m/$slug/gift-cards" | "/m/$slug/memberships";
+  to: "/m/$slug" | "/m/$slug/book" | "/m/$slug/rewards" | "/m/$slug/reviews" | "/m/$slug/about" | "/m/$slug/training" | "/m/$slug/gift-cards" | "/m/$slug/memberships";
   label: string;
   exact?: boolean;
 }) {

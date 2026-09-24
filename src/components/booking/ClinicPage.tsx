@@ -417,7 +417,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
   const pagePreset = layoutOptionsOn ? ((themeAnyOpts?.page_preset as string) || "default") : "default";
   const presetCompact = pagePreset === "compact";
   const presetEditorial = pagePreset === "editorial";
-  const carouselHidden = layoutOptionsOn && themeAnyOpts?.carousel_hidden === true;
+  const carouselHidden = (layoutOptionsOn && themeAnyOpts?.carousel_hidden === true) || view === "book";
   const carouselSmall = layoutOptionsOn && (themeAnyOpts?.carousel_height === "small" || pagePreset === "compact");
   const savedVisibility = (themeAnyOpts?.section_visibility ?? null) as Record<string, boolean> | null;
   const savedOrder = layoutOptionsOn ? ((themeAnyOpts?.section_order ?? null) as string[] | null) : null;
@@ -1628,11 +1628,11 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
               Book now
             </Link>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
                 to="/m/$slug"
                 params={{ slug }}
-                className="inline-flex items-center gap-1.5 rounded-full border px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-80"
+                className="inline-flex items-center justify-center gap-1.5 rounded-full border px-5 py-3 text-base font-semibold transition-opacity hover:opacity-80 sm:py-2.5 sm:text-sm"
                 style={{ borderColor: brand, color: brand }}
               >
                 <ChevronLeft className="h-4 w-4" /> Home
@@ -1645,7 +1645,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
                     document.getElementById("treatment-menu");
                   el?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
-                className="modo-book-pulse flex-1 rounded-full px-6 py-2.5 text-sm font-semibold text-white shadow-sm"
+                className="modo-book-pulse w-full rounded-full px-6 py-3.5 text-base font-semibold text-white shadow-sm sm:flex-1 sm:py-2.5 sm:text-sm"
                 style={{ backgroundColor: brand }}
               >
                 Book now
