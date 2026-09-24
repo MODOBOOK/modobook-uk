@@ -14,7 +14,7 @@ import { Palette, Check, X, Wand2 } from "lucide-react";
 import { PRESETS, LAYOUTS, type ThemePresetKey, type BookingLayoutKey, type ThemePreset } from "@/lib/theme-presets";
 import { COLOR_PALETTES, CUSTOM_PALETTE_SLOTS, buildCustomPalette, type ColorPalette } from "@/lib/color-palettes";
 import { SaveReminder } from "@/components/SaveReminder";
-import { linkButtonEnabled, designStudioEnabled } from "@/lib/feature-flags";
+import { linkButtonEnabled, designStudioEnabled, bookingLayoutOptionsEnabled } from "@/lib/feature-flags";
 
 export const Route = createFileRoute("/_authenticated/dashboard/branding")({
   component: BrandingPage,
@@ -60,6 +60,11 @@ const DEFAULTS: ClinicThemeInput = {
   welcome_card_shadow: "0 10px 40px rgba(15,23,42,0.08)",
   welcome_card_opacity: 1,
   welcome_card_blur: 0,
+  page_preset: "default",
+  carousel_height: "regular",
+  carousel_hidden: false,
+  section_visibility: {},
+  section_order: null,
 };
 
 const FONTS = [
@@ -378,6 +383,28 @@ function BrandingPage() {
   };
   const removeCarouselUrl = (i: number) => {
     setState((s) => ({ ...s, hero_carousel_urls: parseUrls(s.hero_carousel_urls).filter((_, idx) => idx !== i) }));
+  };
+
+  // Booking-page layout options (pilot): section show/hide + ordering.
+  const SECTION_DEFAULT_ORDER = ["welcome", "memberships", "locations", "practitioners", "chooser", "favourites", "treatments", "contact", "policy"];
+  const SECTION_META: Record<string, { label: string; fixed?: boolean }> = {
+    welcome: { label: "Welcome message & link button" },
+    memberships: { label: "Membership promo" },
+    locations: { label: "Choose location", fixed: true },
+    practitioners: { label: "Choose practitioner", fixed: true },
+    chooser: { label: "Booking chooser", fixed: true },
+    favourites: { label: "Favourite treatments" },
+    treatments: { label: "Treatment menu", fixed: true },
+    contact: { label: "Get in touch" },
+    policy: { label: "Booking policy" },
+  };
+  const sectionList: string[] = state.section_order ?? SECTION_DEFAULT_ORDER;
+  const moveSection = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= sectionList.length) return;
+    const next = [...sectionList];
+    [next[i], next[j]] = [next[j], next[i]];
+    set("section_order", next);
   };
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
