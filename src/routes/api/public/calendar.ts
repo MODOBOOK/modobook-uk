@@ -23,18 +23,27 @@ export const Route = createFileRoute('/api/public/calendar')({
         if (!parsed.success) return new Response('Invalid calendar details', { status: 400 })
 
         const { title, date, start, end, location, details } = parsed.data
-        const stamp = (time: string) => `${date.replaceAll('-', '')}T${time.replace(':', '')}00`
+        // Convert London wall-clock time to UTC so every calendar app (incl. iPhone) accepts it
+        const stamp = (time: string) => {
+          const [y, m, d] = date.split('-').map(Number)
+          const [hh, mm] = time.split(':').map(Number)
+          const guess = Date.UTC(y, m - 1, d, hh, mm)
+          const londonHour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', hourCycle: 'h23' }).format(new Date(guess)))
+          const offsetHours = ((londonHour - hh + 24) % 24)
+          return new Date(guess - offsetHours * 3600000).toISOString().replaceAll('-', '').replaceAll(':', '').replace(/\.\d{3}Z$/, 'Z')
+        }
         const now = new Date().toISOString().replaceAll('-', '').replaceAll(':', '').replace(/\.\d{3}Z$/, 'Z')
         const body = [
           'BEGIN:VCALENDAR',
           'VERSION:2.0',
           'PRODID:-//MODO//Appointment//EN',
           'CALSCALE:GREGORIAN',
+          'METHOD:PUBLISH',
           'BEGIN:VEVENT',
           `UID:${crypto.randomUUID()}@modobook.uk`,
           `DTSTAMP:${now}`,
-          `DTSTART;TZID=Europe/London:${stamp(start)}`,
-          `DTEND;TZID=Europe/London:${stamp(end)}`,
+          `DTSTART:${stamp(start)}`,
+          `DTEND:${stamp(end)}`,
           `SUMMARY:${escapeCalendarText(title)}`,
           `LOCATION:${escapeCalendarText(location)}`,
           `DESCRIPTION:${escapeCalendarText(details)}`,
@@ -46,7 +55,7 @@ export const Route = createFileRoute('/api/public/calendar')({
         return new Response(body, {
           headers: {
             'Content-Type': 'text/calendar; charset=utf-8',
-            'Content-Disposition': 'attachment; filename="appointment.ics"',
+            'Content-Disposition': 'inline; filename="appointment.ics"',
             'Cache-Control': 'private, no-store',
           },
         })
