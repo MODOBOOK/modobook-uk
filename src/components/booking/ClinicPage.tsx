@@ -1704,7 +1704,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
       {!bookCtaOn && policySectionNode}
 
       {/* Choose Location + practitioners */}
-      <SectionWrap k="locations" custom={customSectionLayout} order={sectionIndexOf("locations")} hidden={false}>
+      <SectionWrap k="locations" custom={customSectionLayout} order={sectionIndexOf("locations")} hidden={sectionHidden(k)}>
       {locations.length > 0 && (
 
         <section data-section="locations" className="mx-auto mt-8 max-w-3xl scroll-mt-16 px-4">
@@ -1783,7 +1783,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
       </SectionWrap>
 
       {/* Choose your practitioner — its own step, before the treatment menu */}
-      <SectionWrap k="practitioners" custom={customSectionLayout} order={sectionIndexOf("practitioners")} hidden={false}>
+      <SectionWrap k="practitioners" custom={customSectionLayout} order={sectionIndexOf("practitioners")} hidden={sectionHidden(k)}>
       {showPractitionerStep && (
         <section data-section="practitioners" className="mx-auto mt-8 max-w-3xl scroll-mt-16 px-4">
           <h2 className="mb-1 text-xl font-bold" style={headingStyle}>
@@ -1878,7 +1878,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
 
 
       {/* Chooser gate */}
-      <SectionWrap k="chooser" custom={customSectionLayout} order={sectionIndexOf("chooser")} hidden={false}>
+      <SectionWrap k="chooser" custom={customSectionLayout} order={sectionIndexOf("chooser")} hidden={sectionHidden(k)}>
       {locationGateOpen && practitionerGateOpen && chooserOn && !mode && (
         <section id="booking-chooser" className="mx-auto mt-10 max-w-3xl scroll-mt-16 px-4">
           <h2 className="mb-1 text-center text-xl font-bold" style={headingStyle}>
@@ -2181,7 +2181,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
         );
       })()}
       </SectionWrap>
-      <SectionWrap k="treatments" custom={customSectionLayout} order={sectionIndexOf("treatments")} hidden={false}>
+      <SectionWrap k="treatments" custom={customSectionLayout} order={sectionIndexOf("treatments")} hidden={sectionHidden(k)}>
       {locationGateOpen && practitionerGateOpen && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
         <section id="treatment-menu" className="mx-auto mt-10 max-w-3xl scroll-mt-16 px-4 pb-32">
           {chooserOn && (
