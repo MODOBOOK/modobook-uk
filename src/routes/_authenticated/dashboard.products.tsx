@@ -188,26 +188,26 @@ function ProductsPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 pb-12">
-      <header className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="truncate text-2xl font-bold">Products & stock</h1>
-          <p className="text-xs text-muted-foreground">Track product costs, purchases and stock — and link products to treatments for commission.</p>
+      <header className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="min-w-0 truncate text-2xl font-bold">Products & stock</h1>
+          <Button size="sm" className="shrink-0" onClick={openCreate}><Plus className="mr-1 h-4 w-4" />New product</Button>
         </div>
-        <Button onClick={openCreate}><Plus className="mr-1 h-4 w-4" />New product</Button>
+        <p className="text-xs text-muted-foreground">Track product costs, purchases and stock — and link products to treatments for commission.</p>
       </header>
 
       <div className="grid grid-cols-3 gap-2">
-        <Card><CardContent className="p-3">
-          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Spent this month</p>
-          <p className="text-lg font-bold">{gbp(totals.month)}</p>
+        <Card><CardContent className="p-2.5 sm:p-3">
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground sm:text-[11px]">Spent this month</p>
+          <p className="text-base font-bold sm:text-lg">{gbp(totals.month)}</p>
         </CardContent></Card>
-        <Card><CardContent className="p-3">
-          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Total spent</p>
-          <p className="text-lg font-bold">{gbp(totals.all)}</p>
+        <Card><CardContent className="p-2.5 sm:p-3">
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground sm:text-[11px]">Total spent</p>
+          <p className="text-base font-bold sm:text-lg">{gbp(totals.all)}</p>
         </CardContent></Card>
-        <Card><CardContent className="p-3">
-          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Low stock</p>
-          <p className="text-lg font-bold">{totals.lowStock}</p>
+        <Card><CardContent className="p-2.5 sm:p-3">
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground sm:text-[11px]">Low stock</p>
+          <p className="text-base font-bold sm:text-lg">{totals.lowStock}</p>
         </CardContent></Card>
       </div>
 
