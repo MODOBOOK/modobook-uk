@@ -353,7 +353,7 @@ function TabLink({
   exact,
 }: {
   slug: string;
-  to: "/m/$slug" | "/m/$slug/rewards" | "/m/$slug/reviews" | "/m/$slug/about" | "/m/$slug/training" | "/m/$slug/gift-cards" | "/m/$slug/memberships";
+  to: "/m/$slug" | "/m/$slug/book" | "/m/$slug/rewards" | "/m/$slug/reviews" | "/m/$slug/about" | "/m/$slug/training" | "/m/$slug/gift-cards" | "/m/$slug/memberships";
   label: string;
   exact?: boolean;
 }) {
