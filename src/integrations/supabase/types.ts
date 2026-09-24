@@ -2471,6 +2471,8 @@ export type Database = {
           button_size: string
           button_text_color: string
           button_uppercase: boolean
+          carousel_height: string
+          carousel_hidden: boolean
           contact_tile_bg_color: string | null
           contact_tile_border_color: string | null
           contact_tile_icon_size: string
@@ -2524,10 +2526,13 @@ export type Database = {
           menu_treatment_name_color: string | null
           menu_treatment_size: string | null
           page_density: string
+          page_preset: string
           preset_key: string | null
           primary_color: string
           profile_id: string
           section_gap: string
+          section_order: Json | null
+          section_visibility: Json | null
           text_color: string
           updated_at: string
           welcome_card_background_type: string
@@ -2564,6 +2569,8 @@ export type Database = {
           button_size?: string
           button_text_color?: string
           button_uppercase?: boolean
+          carousel_height?: string
+          carousel_hidden?: boolean
           contact_tile_bg_color?: string | null
           contact_tile_border_color?: string | null
           contact_tile_icon_size?: string
@@ -2617,10 +2624,13 @@ export type Database = {
           menu_treatment_name_color?: string | null
           menu_treatment_size?: string | null
           page_density?: string
+          page_preset?: string
           preset_key?: string | null
           primary_color?: string
           profile_id: string
           section_gap?: string
+          section_order?: Json | null
+          section_visibility?: Json | null
           text_color?: string
           updated_at?: string
           welcome_card_background_type?: string
@@ -2657,6 +2667,8 @@ export type Database = {
           button_size?: string
           button_text_color?: string
           button_uppercase?: boolean
+          carousel_height?: string
+          carousel_hidden?: boolean
           contact_tile_bg_color?: string | null
           contact_tile_border_color?: string | null
           contact_tile_icon_size?: string
@@ -2710,10 +2722,13 @@ export type Database = {
           menu_treatment_name_color?: string | null
           menu_treatment_size?: string | null
           page_density?: string
+          page_preset?: string
           preset_key?: string | null
           primary_color?: string
           profile_id?: string
           section_gap?: string
+          section_order?: Json | null
+          section_visibility?: Json | null
           text_color?: string
           updated_at?: string
           welcome_card_background_type?: string

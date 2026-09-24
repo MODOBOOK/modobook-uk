@@ -56,7 +56,7 @@ import { toast } from "sonner";
 import { SafeHtml } from "@/components/SafeHtml";
 import { PackageBuilderCard, type PublicBuilder } from "@/components/PackageBuilderCard";
 import { CourseGroupRow } from "@/components/CourseGroupRow";
-import { packageBuilderEnabled, linkButtonEnabled, treatmentLeafletsEnabled, coursePickerEnabled, membershipsEnabled, bookCtaEnabled } from "@/lib/feature-flags";
+import { packageBuilderEnabled, linkButtonEnabled, treatmentLeafletsEnabled, coursePickerEnabled, membershipsEnabled, bookCtaEnabled, bookingLayoutOptionsEnabled } from "@/lib/feature-flags";
 import { getLeafletSignedUrl } from "@/lib/leaflets.functions";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { formatPrice, BADGE_LABEL, badgeClasses, treatmentPricing, type TreatmentBadge } from "@/lib/price-display";
@@ -241,6 +241,30 @@ function WelcomeIntroBlock({
 
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
+/**
+ * SectionWrap — only active when the clinic has custom section ordering or
+ * hidden sections. Without customisation it renders children untouched, so
+ * the DOM is byte-identical to the uncustomised page.
+ */
+function SectionWrap({
+  k,
+  custom,
+  order,
+  hidden,
+  children,
+}: {
+  k: string;
+  custom: boolean;
+  order: number;
+  hidden: boolean;
+  children: ReactNode;
+}) {
+  void k;
+  if (!custom) return <>{children}</>;
+  if (hidden) return null;
+  return <div className="modo-sec" style={{ order }}>{children}</div>;
+}
+
 function BookPage() {
   const { profile, treatments, packages, packageBuilders = [], locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], practitionerTreatments = [], aboutPage, careGuides = [], pretreatment = [], bookingCounts = [] } =
     Route.useLoaderData() as {
@@ -400,6 +424,32 @@ function BookPage() {
   const carouselEnabled =
     !!(theme as { hero_carousel_enabled?: boolean } | null)?.hero_carousel_enabled ||
     (layoutKey === "carousel" && carouselUrls.length > 0);
+
+  // Booking-page layout options (pilot clinic only): presets, carousel size,
+  // hide-carousel, and section show/hide + ordering. Every value defaults to
+  // "unchanged" so the page renders exactly as before unless the clinic opts in.
+  const layoutOptionsOn = bookingLayoutOptionsEnabled(slug);
+  const themeAnyOpts = theme as Record<string, unknown> | null;
+  const pagePreset = layoutOptionsOn ? ((themeAnyOpts?.page_preset as string) || "default") : "default";
+  const presetCompact = pagePreset === "compact";
+  const presetEditorial = pagePreset === "editorial";
+  const carouselHidden = layoutOptionsOn && themeAnyOpts?.carousel_hidden === true;
+  const carouselSmall = layoutOptionsOn && themeAnyOpts?.carousel_height === "small";
+  const savedVisibility = (themeAnyOpts?.section_visibility ?? null) as Record<string, boolean> | null;
+  const savedOrder = layoutOptionsOn ? ((themeAnyOpts?.section_order ?? null) as string[] | null) : null;
+  const SECTION_DEFAULT_ORDER = ["welcome", "memberships", "locations", "practitioners", "chooser", "favourites", "treatments", "contact", "policy"];
+  const customSectionLayout = layoutOptionsOn && (!!savedOrder || !!savedVisibility);
+  const sectionHidden = (k: string) => !!savedVisibility && savedVisibility[k] === false;
+  const sectionIndexOf = (k: string) => {
+    if (!customSectionLayout) return 0;
+    const ordered = (savedOrder ?? []).filter(
+      (key, i, arr) => SECTION_DEFAULT_ORDER.includes(key) && arr.indexOf(key) === i && !sectionHidden(key),
+    );
+    const effective = [...ordered, ...SECTION_DEFAULT_ORDER.filter((key) => !ordered.includes(key) && !sectionHidden(key))];
+    const idx = effective.indexOf(k);
+    return idx === -1 ? SECTION_DEFAULT_ORDER.length + 1 : idx + 1;
+  };
+
   // Editorial hero gallery — auto-advancing slideshow when multiple photos
   const editorialGallery: string[] =
     carouselUrls.length > 0 ? carouselUrls : heroUrl ? [heroUrl] : [];
@@ -1042,7 +1092,7 @@ function BookPage() {
     theme?.button_radius === "pill" ? "9999px" : "0.75rem";
   const btnUppercase = !!theme?.button_uppercase;
   const density = theme?.page_density ?? "cozy";
-  const sectionGapPx = density === "compact" ? "1.25rem" : density === "spacious" ? "3rem" : "2rem";
+  const sectionGapPx = presetCompact ? "1.25rem" : presetEditorial ? "2.75rem" : density === "compact" ? "1.25rem" : density === "spacious" ? "3rem" : "2rem";
   const pageStyle: React.CSSProperties = {
     backgroundColor: bgColor,
     color: textColor,
@@ -1314,10 +1364,15 @@ function BookPage() {
   })();
 
   return (
-    <main className="min-h-screen pb-16" style={pageStyle}>
+    <main className={`min-h-screen pb-16${customSectionLayout ? " modo-sec-flex" : ""}${presetCompact ? " preset-compact" : presetEditorial ? " preset-editorial" : ""}`} style={pageStyle}>
       <style>{`
         .modo-btn { background-color: var(--btn-color); color: var(--btn-text); border-radius: var(--btn-radius); ${btnUppercase ? "text-transform: uppercase; letter-spacing: 0.05em;" : ""} }
         [data-modo-section] + [data-modo-section] { margin-top: var(--section-gap); }
+        .modo-sec-flex { display: flex; flex-direction: column; }
+        .modo-sec-flex .modo-sec + .modo-sec { margin-top: var(--section-gap); }
+        .modo-sec-flex > footer { order: 9999; }
+        .preset-compact h2 { font-size: 1.125rem; line-height: 1.35; }
+        .preset-editorial h2 { font-size: 1.5rem; line-height: 1.3; letter-spacing: -0.01em; }
       `}</style>
 
       {/* Editorial cover — signature MODO landing block */}
@@ -1361,14 +1416,15 @@ function BookPage() {
               style={{ backgroundColor: accent }}
             />
 
-            <div className="relative mx-auto max-w-5xl px-4 pb-10 pt-8 sm:px-6 sm:pb-14 sm:pt-14">
+            <div className={`relative mx-auto max-w-5xl px-4 sm:px-6 ${presetCompact ? "pb-6 pt-5 sm:pb-8 sm:pt-8" : presetEditorial ? "pb-14 pt-10 sm:pb-20 sm:pt-20" : "pb-10 pt-8 sm:pb-14 sm:pt-14"}`}>
               {/* Portrait + type block */}
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-12 sm:gap-8">
                 {/* Portrait slideshow — swipeable + auto-advance */}
-                <div className="sm:col-span-6">
+                {carouselHidden ? null : (
+                <div className={presetCompact ? "sm:col-span-5" : "sm:col-span-6"}>
                   <div
                     data-modo-image="hero_image_url"
-                    className="relative overflow-hidden rounded-2xl bg-white/10 aspect-[3/4] touch-pan-y select-none"
+                    className={`relative overflow-hidden rounded-2xl bg-white/10 touch-pan-y select-none ${carouselSmall ? "aspect-[4/3] sm:aspect-[16/10]" : "aspect-[3/4]"}`}
                     onTouchStart={handleEditorialTouchStart}
                     onTouchEnd={handleEditorialTouchEnd}
                   >
@@ -1418,9 +1474,10 @@ function BookPage() {
                     )}
                   </div>
                 </div>
+                )}
 
                 {/* Typographic block */}
-                <div className="min-w-0 sm:col-span-6 sm:flex sm:flex-col sm:justify-end">
+                <div className={`min-w-0 ${carouselHidden ? "sm:col-span-12" : presetCompact ? "sm:col-span-7" : "sm:col-span-6"} sm:flex sm:flex-col sm:justify-end`}>
                   {heroUseLogo ? (
                     <img
                       data-modo-image="logo_url"
@@ -1433,7 +1490,7 @@ function BookPage() {
                     <h1
                       data-modo-text="clinic_name"
 
-                      className="font-light leading-[0.95] tracking-tight [overflow-wrap:normal] hyphens-none text-balance text-[clamp(1.75rem,8.5vw,3rem)] sm:text-[clamp(2rem,4.5vw,5rem)]"
+                      className={`font-light leading-[0.95] tracking-tight [overflow-wrap:normal] hyphens-none text-balance ${presetCompact ? "text-[clamp(1.5rem,7vw,2.5rem)] sm:text-[clamp(1.75rem,3.5vw,3.5rem)]" : presetEditorial ? "text-[clamp(2rem,9vw,3.5rem)] sm:text-[clamp(2.5rem,5.5vw,6rem)]" : "text-[clamp(1.75rem,8.5vw,3rem)] sm:text-[clamp(2rem,4.5vw,5rem)]"}`}
                       style={{
                         fontFamily: nameFont,
                         color: heroTextColor,
@@ -1544,11 +1601,14 @@ function BookPage() {
 
 
       {/* Mobile link button (above welcome message) */}
+      <SectionWrap k="welcome" custom={customSectionLayout} order={sectionIndexOf("welcome")} hidden={sectionHidden("welcome")}>
       {isMobile && linkButtonNode && (
         <section className="mx-auto mt-4 max-w-3xl px-4">{linkButtonNode}</section>
       )}
+      </SectionWrap>
 
       {/* Mobile welcome intro at top */}
+      <SectionWrap k="welcome" custom={customSectionLayout} order={sectionIndexOf("welcome")} hidden={sectionHidden("welcome")}>
       {isMobile && (introHeading || introLength > 0) && (
         <section id="welcome-intro-mobile" className="mx-auto mt-4 max-w-3xl px-4">
           <div className="rounded-2xl border bg-card px-5 py-5 shadow-sm" style={{ borderColor: `${brand}1a` }}>
@@ -1563,11 +1623,14 @@ function BookPage() {
           </div>
         </section>
       )}
+      </SectionWrap>
 
       {/* Mobile membership promo */}
+      <SectionWrap k="memberships" custom={customSectionLayout} order={sectionIndexOf("memberships")} hidden={sectionHidden("memberships")}>
       {isMobile && membershipPromoNode && (
         <section className="mx-auto mt-4 max-w-3xl px-4">{membershipPromoNode}</section>
       )}
+      </SectionWrap>
 
       {/* Model slots now render inside the Treatments tab after the user presses "I know what I want". */}
 
@@ -1577,11 +1640,14 @@ function BookPage() {
 
 
       {/* Link button (above welcome message) */}
+      <SectionWrap k="welcome" custom={customSectionLayout} order={sectionIndexOf("welcome")} hidden={sectionHidden("welcome")}>
       {linkButtonNode && (
         <section className="mx-auto mt-8 hidden max-w-3xl px-4 sm:block">{linkButtonNode}</section>
       )}
+      </SectionWrap>
 
       {/* Welcome message */}
+      <SectionWrap k="welcome" custom={customSectionLayout} order={sectionIndexOf("welcome")} hidden={sectionHidden("welcome")}>
       {(introHeading || introLength > 0) && (
         <section id="welcome-intro" className="mx-auto mt-8 hidden max-w-3xl scroll-mt-24 px-4 sm:block">
           <div
@@ -1599,16 +1665,20 @@ function BookPage() {
           </div>
         </section>
       )}
+      </SectionWrap>
 
       {/* Desktop membership promo */}
+      <SectionWrap k="memberships" custom={customSectionLayout} order={sectionIndexOf("memberships")} hidden={sectionHidden("memberships")}>
       {membershipPromoNode && (
         <section className="mx-auto mt-6 hidden max-w-3xl px-4 sm:block">{membershipPromoNode}</section>
       )}
+      </SectionWrap>
 
       {/* Booking & cancellation policy (moved below the treatment menu on quick-book CTA pages) */}
       {!bookCtaOn && policySectionNode}
 
       {/* Choose Location + practitioners */}
+      <SectionWrap k="locations" custom={customSectionLayout} order={sectionIndexOf("locations")} hidden={false}>
       {locations.length > 0 && (
 
         <section data-section="locations" className="mx-auto mt-8 max-w-3xl scroll-mt-16 px-4">
@@ -1684,8 +1754,10 @@ function BookPage() {
           </div>
         </section>
       )}
+      </SectionWrap>
 
       {/* Choose your practitioner — its own step, before the treatment menu */}
+      <SectionWrap k="practitioners" custom={customSectionLayout} order={sectionIndexOf("practitioners")} hidden={false}>
       {showPractitionerStep && (
         <section data-section="practitioners" className="mx-auto mt-8 max-w-3xl scroll-mt-16 px-4">
           <h2 className="mb-1 text-xl font-bold" style={headingStyle}>
@@ -1776,10 +1848,11 @@ function BookPage() {
           )}
         </section>
       )}
+      </SectionWrap>
 
 
       {/* Chooser gate */}
-
+      <SectionWrap k="chooser" custom={customSectionLayout} order={sectionIndexOf("chooser")} hidden={false}>
       {locationGateOpen && practitionerGateOpen && chooserOn && !mode && (
         <section id="booking-chooser" className="mx-auto mt-10 max-w-3xl scroll-mt-16 px-4">
           <h2 className="mb-1 text-center text-xl font-bold" style={headingStyle}>
@@ -1930,9 +2003,11 @@ function BookPage() {
           )}
         </section>
       )}
+      </SectionWrap>
 
 
       {/* Favourite / Most popular treatments */}
+      <SectionWrap k="favourites" custom={customSectionLayout} order={sectionIndexOf("favourites")} hidden={sectionHidden("favourites")}>
       {(() => {
         if (!locationGateOpen) return null;
         // When the booking chooser is active, favourites must not appear above
@@ -2079,8 +2154,8 @@ function BookPage() {
           </section>
         );
       })()}
-      {/* Treatments + Packages */}
-
+      </SectionWrap>
+      <SectionWrap k="treatments" custom={customSectionLayout} order={sectionIndexOf("treatments")} hidden={false}>
       {locationGateOpen && practitionerGateOpen && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
         <section id="treatment-menu" className="mx-auto mt-10 max-w-3xl scroll-mt-16 px-4 pb-32">
           {chooserOn && (
@@ -2715,9 +2790,19 @@ function BookPage() {
           </p>
         </section>
       ) : null}
+      </SectionWrap>
 
       {/* Quick-book CTA pages: Get in touch + policies in their own section below the menu */}
-      {bookCtaOn && (contactSectionNode || policySectionNode) && (
+      {bookCtaOn && (contactSectionNode || policySectionNode) && customSectionLayout ? (
+        <>
+          <SectionWrap k="contact" custom={customSectionLayout} order={sectionIndexOf("contact")} hidden={sectionHidden("contact")}>
+            {contactSectionNode}
+          </SectionWrap>
+          <SectionWrap k="policy" custom={customSectionLayout} order={sectionIndexOf("policy")} hidden={sectionHidden("policy")}>
+            {policySectionNode}
+          </SectionWrap>
+        </>
+      ) : bookCtaOn && (contactSectionNode || policySectionNode) && (
         <div className="mx-auto max-w-3xl px-4">
           <div className="border-t pt-1" style={{ borderColor: `${brand}1a` }} />
           {contactSectionNode}
