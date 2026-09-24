@@ -203,9 +203,30 @@ export const getMyBillingStatus = createServerFn({ method: "GET" })
     );
     const arrearsInvoiceUrl = (openInvoices ?? [])[0]?.hosted_invoice_url ?? null;
 
+    // New sign-ups (flagged at creation) need a card on file before access.
+    // Existing clinics have card_required = false and are never affected.
+    let needsCard = false;
+    const { data: cardSub } = await context.supabase
+      .from("practitioner_subscriptions")
+      .select("card_required, comped, status, stripe_subscription_id")
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+    if ((cardSub as any)?.card_required && !(cardSub as any)?.comped) {
+      const hasLiveSub = Boolean(
+        (cardSub as any)?.stripe_subscription_id &&
+          ["active", "trialing", "past_due"].includes(String((cardSub as any)?.status)),
+      );
+      if (!hasLiveSub) {
+        const { reconcileSubscriptionFromStripe } = await import("./billing-reconcile.server");
+        const healed = await reconcileSubscriptionFromStripe(context.supabase, profile.id, profile.email).catch(() => false);
+        needsCard = !healed;
+      }
+    }
+
     return {
-      state: (row?.state ?? "blocked") as "welcome" | "trial" | "grace" | "active" | "comped" | "suspended" | "blocked",
-      hasAccess: Boolean(row?.has_access),
+      state: (needsCard ? "card_required" : row?.state ?? "blocked") as
+        "welcome" | "trial" | "grace" | "active" | "comped" | "suspended" | "blocked" | "card_required",
+      hasAccess: needsCard ? false : Boolean(row?.has_access),
       daysLeft: row?.days_left ?? null,
       deadline: row?.deadline ?? null,
       arrearsCents,
