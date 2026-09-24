@@ -260,6 +260,7 @@ export const sendPatientEmail = createServerFn({ method: "POST" })
     subject: string;
     body: string;
     ccSelf?: boolean;
+    actions?: { label: string; url: string; variant?: "primary" | "secondary" }[];
   }) => input)
   .handler(async ({ data, context }) => {
     const pid = await getProfileId(context.supabase, context.userId);
