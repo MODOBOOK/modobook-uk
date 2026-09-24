@@ -73,6 +73,11 @@ function formatDateLabel(iso: string) {
 function AnalyticsPage() {
   const fetchAnalytics = useServerFn(getDashboardAnalytics);
   const [data, setData] = useState<Awaited<ReturnType<typeof getDashboardAnalytics>> | null>(null);
+  const fetchCosts = useServerFn(getCostsForAnalytics);
+  const [costs, setCosts] = useState<Awaited<ReturnType<typeof getCostsForAnalytics>> | null>(null);
+  useEffect(() => {
+    fetchCosts().then(setCosts).catch(() => setCosts({ expenses: [], purchases: [], income: [], usage: [] }));
+  }, [fetchCosts]);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<Range>("30d");
 
@@ -254,14 +259,14 @@ function AnalyticsPage() {
           {/* Summary cards */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             <MetricCard icon={CalendarDays} label="Bookings" value={String(totals.bookings)} />
-            <MetricCard icon={PoundSterling} label="Revenue" value={formatCurrency(totals.revenue)} />
+            <MetricCard icon={PoundSterling} label="Revenue" value={formatCurrency(totals.revenue + periodIncome(costs, fromIso, toIso))} />
             <MetricCard icon={Users} label="Unique patients" value={String(totals.uniquePatients)} />
             <MetricCard icon={TrendingUp} label="Avg. booking" value={formatCurrency(totals.avgBookingValue)} />
             <MetricCard icon={XCircle} label="Cancelled" value={String(totals.cancellations)} tone="destructive" />
             <MetricCard icon={Clock} label="No-shows" value={String(totals.noShows)} tone="muted" />
           </div>
 
-          <ProfitSection appointments={data.appointments} fromIso={fromIso} toIso={toIso} revenue={totals.revenue} />
+          <ProfitSection costs={costs} appointments={data.appointments} fromIso={fromIso} toIso={toIso} revenue={totals.revenue} />
 
 
           {/* Charts */}
@@ -426,12 +431,12 @@ function AnalyticsPage() {
   );
 }
 
-function ProfitSection({ appointments, fromIso, toIso, revenue }: { appointments: Appt[]; fromIso: string; toIso: string; revenue: number }) {
-  const fetchCosts = useServerFn(getCostsForAnalytics);
-  const [costs, setCosts] = useState<Awaited<ReturnType<typeof getCostsForAnalytics>> | null>(null);
-  useEffect(() => {
-    fetchCosts().then(setCosts).catch(() => setCosts({ expenses: [], purchases: [], income: [], usage: [] }));
-  }, [fetchCosts]);
+function periodIncome(costs: Awaited<ReturnType<typeof getCostsForAnalytics>> | null, fromIso: string, toIso: string) {
+  if (!costs || !fromIso) return 0;
+  return (costs.income ?? []).reduce((s, e) => s + (expenseOccurrences(e, fromIso, toIso).length * e.amount_cents) / 100, 0);
+}
+
+function ProfitSection({ costs, appointments, fromIso, toIso, revenue }: { costs: Awaited<ReturnType<typeof getCostsForAnalytics>> | null; appointments: Appt[]; fromIso: string; toIso: string; revenue: number }) {
 
   const view = useMemo(() => {
     if (!costs || !fromIso) return null;
