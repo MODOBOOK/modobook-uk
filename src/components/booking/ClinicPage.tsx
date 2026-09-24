@@ -1622,35 +1622,20 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
             <Link
               to="/m/$slug/book"
               params={{ slug }}
-              className="block w-full rounded-full px-6 py-3.5 text-center text-base font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+              className="modo-book-pulse block w-full rounded-full px-6 py-3.5 text-center text-base font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
               style={{ backgroundColor: brand }}
             >
               Book now
             </Link>
           ) : (
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link
-                to="/m/$slug"
-                params={{ slug }}
-                className="inline-flex items-center justify-center gap-1.5 rounded-full border px-5 py-3 text-base font-semibold transition-opacity hover:opacity-80 sm:py-2.5 sm:text-sm"
-                style={{ borderColor: brand, color: brand }}
-              >
-                <ChevronLeft className="h-4 w-4" /> Home
-              </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  const el =
-                    document.querySelector('[data-section="locations"]') ||
-                    document.getElementById("treatment-menu");
-                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
-                className="modo-book-pulse w-full rounded-full px-6 py-3.5 text-base font-semibold text-white shadow-sm sm:flex-1 sm:py-2.5 sm:text-sm"
-                style={{ backgroundColor: brand }}
-              >
-                Book now
-              </button>
-            </div>
+            <Link
+              to="/m/$slug"
+              params={{ slug }}
+              className="inline-flex items-center justify-center gap-1.5 rounded-full border px-5 py-3 text-base font-semibold transition-opacity hover:opacity-80 sm:py-2.5 sm:text-sm"
+              style={{ borderColor: brand, color: brand }}
+            >
+              <ChevronLeft className="h-4 w-4" /> Home
+            </Link>
           )}
         </section>
       )}
@@ -2916,10 +2901,9 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
         );
       })()}
 
-      {/* Floating book CTA — once the client starts scrolling, until the
-          booking options are on screen; the sticky booking bar takes over
-          once something is selected. */}
-      {bookCtaOn && scrolled && !bookingAreaVisible
+      {/* Floating book CTA — disabled for pilot split-view clinics (Ryan):
+          the Book now buttons in the page flow replace it. */}
+      {bookCtaOn && !splitView && scrolled && !bookingAreaVisible
         && selectedIds.length === 0 && selectedPackageIds.length === 0 && (
         <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">
           <button
