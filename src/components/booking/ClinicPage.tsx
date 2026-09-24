@@ -252,84 +252,83 @@ function SectionWrap({
   return <div className="modo-sec" style={{ order }}>{children}</div>;
 }
 
-function BookPage() {
-  const { profile, treatments, packages, packageBuilders = [], locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], practitionerTreatments = [], aboutPage, careGuides = [], pretreatment = [], bookingCounts = [] } =
-    Route.useLoaderData() as {
-      profile: {
-        id: string;
-        clinic_name: string;
-        full_name: string | null;
-        display_name_mode?: string | null;
+export type ClinicPageData = {
+  profile: {
+    id: string;
+    clinic_name: string;
+    full_name: string | null;
+    display_name_mode?: string | null;
 
-        tagline: string | null;
-        hero_url: string | null;
-        avatar_url: string | null;
-        about: string | null;
-        bio: string | null;
-        brand_color: string | null;
-        address: unknown;
-        social_links: { instagram?: string; facebook?: string; tiktok?: string } | null;
-        contact_sms_number?: string | null;
-        contact_whatsapp_number?: string | null;
+    tagline: string | null;
+    hero_url: string | null;
+    avatar_url: string | null;
+    about: string | null;
+    bio: string | null;
+    brand_color: string | null;
+    address: unknown;
+    social_links: { instagram?: string; facebook?: string; tiktok?: string } | null;
+    contact_sms_number?: string | null;
+    contact_whatsapp_number?: string | null;
 
-        welcome_intro_html?: string | null;
-        deposit_amount_cents?: number | null;
-        deposit_type?: string | null;
-        deposit_percent?: number | null;
-        deposit_policy_text?: string | null;
-        no_refund_policy_enabled?: boolean | null;
-        no_refund_policy_text?: string | null;
-        payment_pass_fees_to_customer?: boolean | null;
-        cancellation_rules?: { hours_before: number; fee_percent: number }[] | null;
-        chooser_enabled?: boolean | null;
-        chooser_show_know?: boolean | null;
-        chooser_show_unsure?: boolean | null;
-        chooser_show_consultation?: boolean | null;
-        chooser_consultation_treatment_id?: string | null;
-        chooser_consultation_treatment_ids?: string[] | null;
-        chooser_intro_text?: string | null;
-        model_slots_position?: "top" | "bottom" | null;
-        practitioner_selection_mode?: "required" | "optional" | "first_available" | null;
-        favourite_treatment_ids?: string[] | null;
-        favourites_enabled?: boolean | null;
-        favourites_custom_title?: string | null;
-      };
+    welcome_intro_html?: string | null;
+    deposit_amount_cents?: number | null;
+    deposit_type?: string | null;
+    deposit_percent?: number | null;
+    deposit_policy_text?: string | null;
+    no_refund_policy_enabled?: boolean | null;
+    no_refund_policy_text?: string | null;
+    payment_pass_fees_to_customer?: boolean | null;
+    cancellation_rules?: { hours_before: number; fee_percent: number }[] | null;
+    chooser_enabled?: boolean | null;
+    chooser_show_know?: boolean | null;
+    chooser_show_unsure?: boolean | null;
+    chooser_show_consultation?: boolean | null;
+    chooser_consultation_treatment_id?: string | null;
+    chooser_consultation_treatment_ids?: string[] | null;
+    chooser_intro_text?: string | null;
+    model_slots_position?: "top" | "bottom" | null;
+    practitioner_selection_mode?: "required" | "optional" | "first_available" | null;
+    favourite_treatment_ids?: string[] | null;
+    favourites_enabled?: boolean | null;
+    favourites_custom_title?: string | null;
+  };
 
-      treatments: Treatment[];
-      packages: Package[];
-      packageBuilders?: PublicBuilder[];
-      locations: (Location & { image_url?: string | null })[];
-      categories: Category[];
-      pricing: Pricing[];
-      theme: Theme | null;
-      reviews: { id: string; rating: number }[];
-      concernAreas: { id: string; name: string; sort_order: number }[];
-      concerns: { id: string; area_id: string; name: string; description: string | null }[];
-      concernLinks: { concern_id: string; treatment_id: string }[];
-      modelSlots?: {
-        id: string; treatment_id: string; location_id: string | null;
-        slot_date: string | null; start_time: string | null; end_time: string | null;
-        price_mode: "fixed" | "percent"; price_value: number; notes: string | null;
-        category?: string | null;
-        is_flexible?: boolean | null;
-      }[];
-      bookingCounts?: { treatment_id: string; booked_count: number }[];
+  treatments: Treatment[];
+  packages: Package[];
+  packageBuilders?: PublicBuilder[];
+  locations: (Location & { image_url?: string | null })[];
+  categories: Category[];
+  pricing: Pricing[];
+  theme: Theme | null;
+  reviews: { id: string; rating: number }[];
+  concernAreas: { id: string; name: string; sort_order: number }[];
+  concerns: { id: string; area_id: string; name: string; description: string | null }[];
+  concernLinks: { concern_id: string; treatment_id: string }[];
+  modelSlots?: {
+    id: string; treatment_id: string; location_id: string | null;
+    slot_date: string | null; start_time: string | null; end_time: string | null;
+    price_mode: "fixed" | "percent"; price_value: number; notes: string | null;
+    category?: string | null;
+    is_flexible?: boolean | null;
+  }[];
+  bookingCounts?: { treatment_id: string; booked_count: number }[];
 
-      addonLinks?: { treatment_id: string; addon_id: string; discount_percent: number | null; discount_amount: number | null }[];
-      practitioners?: { id: string; name: string; professional_title: string | null; photo_url: string | null; bio: string | null; display_order: number }[];
-      locationPractitioners?: { location_id: string; practitioner_id: string; display_order: number }[];
-      practitionerTreatments?: { practitioner_id: string; treatment_id: string }[];
-      aboutPage?: {
-        intro_heading?: string | null;
-        intro_body?: string | null;
-      } | null;
-      careGuides?: { id: string; name: string; body_html: string; summary: string | null; category: string | null }[];
-      pretreatment?: { id: string; name: string; body_html: string; summary: string | null; sort_order: number; category?: string | null; bullets?: string[] | null }[];
+  addonLinks?: { treatment_id: string; addon_id: string; discount_percent: number | null; discount_amount: number | null }[];
+  practitioners?: { id: string; name: string; professional_title: string | null; photo_url: string | null; bio: string | null; display_order: number }[];
+  locationPractitioners?: { location_id: string; practitioner_id: string; display_order: number }[];
+  practitionerTreatments?: { practitioner_id: string; treatment_id: string }[];
+  aboutPage?: {
+    intro_heading?: string | null;
+    intro_body?: string | null;
+  } | null;
+  careGuides?: { id: string; name: string; body_html: string; summary: string | null; category: string | null }[];
+  pretreatment?: { id: string; name: string; body_html: string; summary: string | null; sort_order: number; category?: string | null; bullets?: string[] | null }[];
+};
 
-    };
+export type ClinicPageView = "all" | "home" | "book";
 
-
-  const { slug } = useParams({ from: "/m/$slug/" });
+export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: ClinicPageView; slug: string }) {
+  const { profile, treatments, packages, packageBuilders = [], locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], practitionerTreatments = [], aboutPage, careGuides = [], pretreatment = [], bookingCounts = [] } = data;
   const listCoursesFn = useServerFn(listPublicCourses);
   const trainingQuery = useQuery({
     queryKey: ["public-training", slug],
