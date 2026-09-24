@@ -35,7 +35,7 @@ const SITE_NAME = "MODO"
 const SENDER_NAME = "MODO No-Reply"
 const SENDER_DOMAIN = "notify.modobook.uk"
 const ROOT_DOMAIN = "modobook.uk"
-const FROM_DOMAIN = "modobook.uk"
+const FROM_DOMAIN = "notify.modobook.uk"
 
 function redactEmail(email: string | null | undefined): string {
   if (!email) return '***'
