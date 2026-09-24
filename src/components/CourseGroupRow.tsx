@@ -120,6 +120,15 @@ export function CourseGroupRow({
     }
     return `${days} day${days === 1 ? "" : "s"} apart`;
   };
+  // Per-session descriptions only matter when the clinic actually customised
+  // one — when every option shares the same description (the common case),
+  // the group blurb already covers it, so skip repeating it in the pop-ups.
+  const allDescs = sorted.map((o) => (o.description ?? "").trim());
+  const nonEmptyDescs = allDescs.filter(Boolean);
+  const distinctDescs = new Set(nonEmptyDescs);
+  const showPerOptionDesc =
+    distinctDescs.size > 1 || (distinctDescs.size === 1 && nonEmptyDescs.length !== allDescs.length);
+
   const recommended = sorted.find((o) => o.recommended);
   const detailOption = single;
   const detailPicture = sorted.find((o) => o.picture_url)?.picture_url ?? null;
@@ -261,7 +270,7 @@ export function CourseGroupRow({
                         {o.duration ? `${o.duration} min each` : ""}
                         {o.full ? " · fully booked" : ""}
                       </div>
-                      {o.description && (
+                      {showPerOptionDesc && o.description && (
                         <p className="mt-1 whitespace-pre-line text-xs leading-relaxed opacity-80">{o.description}</p>
                       )}
                       {o.session_count > 1 && (
@@ -363,7 +372,7 @@ export function CourseGroupRow({
                       {o.duration ? `${o.duration} min each` : null}
                       {spacingLabel(o.interval_days) ? ` · ${spacingLabel(o.interval_days)}` : ""}
                     </div>
-                    {o.description && (
+                    {showPerOptionDesc && o.description && (
                       <p className="mt-1 whitespace-pre-line text-xs leading-relaxed opacity-80">{o.description}</p>
                     )}
                     {o.allow_split_payment && o.session_count > 1 && (
