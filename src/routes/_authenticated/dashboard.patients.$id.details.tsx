@@ -1586,8 +1586,15 @@ function PaymentLinkDialog({
     try {
       const firstName = client.full_name?.split(" ")[0] || "there";
       const subject = `Payment link${clinicName ? ` from ${clinicName}` : ""}`;
-      const body = `Hi ${firstName},\n\nHere is your payment link:\n\n${url}\n\nThank you,\n${clinicName || ""}`.trim();
-      await sendEmailFn({ data: { clientId: client.id, subject, body } });
+      const body = `Hi ${firstName},\n\nHere is your secure payment link${description ? ` for ${description}` : ""}. You can pay using the button below.\n\nThank you,\n${clinicName || ""}`.trim();
+      await sendEmailFn({
+        data: {
+          clientId: client.id,
+          subject,
+          body,
+          actions: [{ label: `Pay £${Number(amount || 0).toFixed(2)} securely`, url, variant: "primary" }],
+        },
+      });
       await markLogged("email");
       toast.success("Payment link emailed to patient");
     } catch (e: any) {

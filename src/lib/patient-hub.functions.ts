@@ -260,6 +260,7 @@ export const sendPatientEmail = createServerFn({ method: "POST" })
     subject: string;
     body: string;
     ccSelf?: boolean;
+    actions?: { label: string; url: string; variant?: "primary" | "secondary" }[];
   }) => input)
   .handler(async ({ data, context }) => {
     const pid = await getProfileId(context.supabase, context.userId);
@@ -301,6 +302,7 @@ export const sendPatientEmail = createServerFn({ method: "POST" })
         clinicName: branding.clinicName,
         logoUrl: branding.logoUrl,
         brandColor: branding.brandColor,
+        actions: data.actions,
       },
     });
 
@@ -317,6 +319,7 @@ export const sendPatientEmail = createServerFn({ method: "POST" })
           logoUrl: branding.logoUrl,
           brandColor: branding.brandColor,
           copyNotice: `Copy of the email sent to ${client.full_name} <${client.email}>.`,
+          actions: data.actions,
         },
       });
     }
