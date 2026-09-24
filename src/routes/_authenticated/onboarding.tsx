@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, CheckCircle, Sparkles, PencilLine, ArrowLeft, ArrowRight } from "lucide-react";
+import { Loader2, CheckCircle, Sparkles, PencilLine, ArrowLeft, ArrowRight, User, Users } from "lucide-react";
 import { toast } from "sonner";
 import { debounce } from "@/lib/debounce";
 
@@ -29,6 +29,7 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
 });
 
 const STEPS = [
+  { title: "Choose your plan", hint: "Your first month is free. You can upgrade any time." },
   { title: "How would you like to start?", hint: "You can change everything later." },
   { title: "The basics", hint: "Your name, clinic and booking link." },
   { title: "Contact & location", hint: "So patients know where to find you." },
@@ -39,6 +40,7 @@ function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [useAi, setUseAi] = useState<boolean | null>(null);
+  const [plan, setPlan] = useState<"solo" | "collective" | null>(null);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     full_name: "",
@@ -103,15 +105,22 @@ function OnboardingPage() {
 
   const canContinue =
     step === 0
-      ? useAi !== null
+      ? plan !== null
       : step === 1
+      ? useAi !== null
+      : step === 2
         ? Boolean(form.full_name.trim() && form.clinic_name.trim() && slugValid)
         : true;
 
   async function handleSubmit() {
     if (!slugValid) {
       toast.error("Choose an available booking link.");
-      setStep(1);
+      setStep(2);
+      return;
+    }
+    if (!plan) {
+      toast.error("Choose MODO Solo or MODO Collective.");
+      setStep(0);
       return;
     }
     setLoading(true);
@@ -131,6 +140,7 @@ function OnboardingPage() {
             postcode: form.postcode,
           },
           brand_color: form.brand_color,
+          plan,
         },
       });
       toast.success("Clinic created — welcome to MODO.");
@@ -160,6 +170,26 @@ function OnboardingPage() {
             {step === 0 && (
               <div className="space-y-3">
                 <ChoiceTile
+                  selected={plan === "solo"}
+                  onClick={() => setPlan("solo")}
+                  icon={<User className="h-5 w-5" />}
+                  title="MODO Solo — £39.99/month inc VAT"
+                  description="For independent practitioners. 1 practitioner, unlimited locations, SMS reminders, branded booking page, consultations, consent & records, payments & deposits, Prescriber hub."
+                />
+                <ChoiceTile
+                  selected={plan === "collective"}
+                  onClick={() => setPlan("collective")}
+                  icon={<Users className="h-5 w-5" />}
+                  title="MODO Collective — £59.99/month inc VAT"
+                  description="For clinic owners. Everything in Solo, plus 4 practitioners, Clinic Compliance, room rental & diary management, associate onboarding & permissions, and a training academy link. Extra practitioners £9.99/month."
+                />
+                <p className="text-center text-xs text-muted-foreground">First month free on either plan.</p>
+              </div>
+            )}
+
+            {step === 1 && (
+              <div className="space-y-3">
+                <ChoiceTile
                   selected={useAi === true}
                   onClick={() => setUseAi(true)}
                   icon={<Sparkles className="h-5 w-5" />}
@@ -176,7 +206,7 @@ function OnboardingPage() {
               </div>
             )}
 
-            {step === 1 && (
+            {step === 2 && (
               <div className="space-y-5">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
@@ -220,7 +250,7 @@ function OnboardingPage() {
               </div>
             )}
 
-            {step === 2 && (
+            {step === 3 && (
               <div className="space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone</Label>
@@ -254,7 +284,7 @@ function OnboardingPage() {
               </div>
             )}
 
-            {step === 3 && (
+            {step === 4 && (
               <div className="space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="tagline">Tagline</Label>
@@ -315,7 +345,7 @@ function OnboardingPage() {
 
               {step < STEPS.length - 1 ? (
                 <div className="flex items-center gap-2">
-                  {step > 1 && (
+                  {step > 2 && (
                     <Button type="button" variant="ghost" onClick={() => setStep(STEPS.length - 1)} disabled={loading}>
                       Skip
                     </Button>
