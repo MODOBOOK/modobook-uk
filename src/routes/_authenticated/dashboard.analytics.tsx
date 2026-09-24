@@ -520,7 +520,7 @@ function ProfitSection({ appointments, fromIso, toIso, revenue }: { appointments
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="font-serif text-xl">Profit & costs</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <Button variant="outline" size="sm" asChild><Link to="/dashboard/products">Products</Link></Button>
           <Button variant="outline" size="sm" asChild><Link to="/dashboard/expenses">Business costs</Link></Button>
           <Button variant="outline" size="sm" asChild><Link to="/dashboard/income">Income</Link></Button>
