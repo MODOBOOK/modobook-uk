@@ -174,7 +174,7 @@ function OnboardingPage() {
                   onClick={() => setPlan("solo")}
                   icon={<User className="h-5 w-5" />}
                   title="MODO Solo — £39.99/month inc VAT"
-                  description="For independent practitioners. 1 practitioner, unlimited locations, SMS reminders, branded booking page, consultations, consent & records, payments & deposits, Prescriber hub."
+                  description="For independent practitioners. 1 practitioner, unlimited locations, SMS reminders, branded booking page, consultations, consent & records, payments & deposits, memberships, Prescriber hub."
                 />
                 <ChoiceTile
                   selected={plan === "collective"}

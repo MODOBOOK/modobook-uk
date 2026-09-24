@@ -316,6 +316,7 @@ const PRICE_ROWS: PriceRow[] = [
       "Branded booking page",
       "Consultations, consent & clinical records",
       "Payments, deposits & cancellation rules",
+      "Memberships & recurring plans",
       "Prescriber hub",
     ],
     highlight: true,
