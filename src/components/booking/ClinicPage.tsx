@@ -1364,7 +1364,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
   })();
 
   return (
-    <main className={`min-h-screen pb-16${customSectionLayout ? " modo-sec-flex" : ""}${presetCompact ? " preset-compact" : presetEditorial ? " preset-editorial" : ""}`} style={pageStyle}>
+    <main className={`min-h-screen pb-16${customSectionLayout ? " modo-sec-flex" : ""}${layoutOptionsOn ? " modo-wide" : ""}${presetCompact ? " preset-compact" : presetEditorial ? " preset-editorial" : ""}`} style={pageStyle}>
       <style>{`
         .modo-btn { background-color: var(--btn-color); color: var(--btn-text); border-radius: var(--btn-radius); ${btnUppercase ? "text-transform: uppercase; letter-spacing: 0.05em;" : ""} }
         [data-modo-section] + [data-modo-section] { margin-top: var(--section-gap); }
@@ -1381,6 +1381,15 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
         .preset-compact .modo-sec p { font-size: 0.875rem; line-height: 1.45; }
         .preset-compact .modo-sec img.rounded-full, .preset-compact .modo-sec :is(.h-16,.w-16) { height: 3rem; width: 3rem; }
         .preset-editorial h2 { font-size: 1.5rem; line-height: 1.3; letter-spacing: -0.01em; }
+        #modo-hero [data-modo-image] button[aria-label^="Show photo"], #modo-hero [data-modo-image] button[aria-label^="Slide"] { min-height: 0 !important; min-width: 0 !important; height: 0.375rem !important; padding: 0 !important; }
+        @media (min-width: 768px) {
+          .modo-wide.modo-sec-flex { padding-bottom: 0; }
+          .modo-wide.modo-sec-flex > footer { margin-top: auto; }
+          .modo-wide #modo-hero [data-modo-image] { aspect-ratio: 4 / 3; }
+        }
+        @media (min-width: 1024px) {
+          .modo-wide section.max-w-3xl { max-width: 64rem; padding-left: 1.5rem; padding-right: 1.5rem; }
+        }
       `}</style>
 
       {/* Editorial cover — signature MODO landing block */}
@@ -1429,7 +1438,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-12 sm:gap-8">
                 {/* Portrait slideshow — swipeable + auto-advance */}
                 {carouselHidden ? null : (
-                <div className={presetCompact ? "sm:col-span-5" : "sm:col-span-6"}>
+                <div className={presetCompact ? (layoutOptionsOn ? "sm:col-span-5 lg:col-span-6" : "sm:col-span-5") : "sm:col-span-6"}>
                   <div
                     data-modo-image="hero_image_url"
                     className={`relative overflow-hidden rounded-2xl bg-white/10 touch-pan-y select-none ${carouselSmall ? "aspect-[4/3] sm:aspect-[16/10]" : "aspect-[3/4]"}`}
@@ -1485,7 +1494,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
                 )}
 
                 {/* Typographic block */}
-                <div className={`min-w-0 ${carouselHidden ? "sm:col-span-12" : presetCompact ? "sm:col-span-7" : "sm:col-span-6"} sm:flex sm:flex-col sm:justify-end`}>
+                <div className={`min-w-0 ${carouselHidden ? "sm:col-span-12" : presetCompact ? (layoutOptionsOn ? "sm:col-span-7 lg:col-span-6" : "sm:col-span-7") : "sm:col-span-6"} sm:flex sm:flex-col sm:justify-end`}>
                   {heroUseLogo ? (
                     <img
                       data-modo-image="logo_url"
