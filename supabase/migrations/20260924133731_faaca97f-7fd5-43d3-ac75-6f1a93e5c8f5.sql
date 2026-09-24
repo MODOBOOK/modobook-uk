@@ -1,0 +1,2 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS plan_tier text CHECK (plan_tier IN ('solo','collective'));
+COMMENT ON COLUMN public.profiles.plan_tier IS 'Plan chosen at sign-up. NULL = existing/legacy clinics with full access.';
