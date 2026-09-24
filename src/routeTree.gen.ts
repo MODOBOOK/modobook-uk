@@ -64,6 +64,7 @@ import { Route as MSlugPayRouteImport } from './routes/m.$slug.pay'
 import { Route as MSlugMembershipsRouteImport } from './routes/m.$slug.memberships'
 import { Route as MSlugGiftCardsRouteImport } from './routes/m.$slug.gift-cards'
 import { Route as MSlugBookMultiRouteImport } from './routes/m.$slug.book-multi'
+import { Route as MSlugBookRouteImport } from './routes/m.$slug.book'
 import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
 import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
 import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
@@ -480,6 +481,11 @@ const MSlugGiftCardsRoute = MSlugGiftCardsRouteImport.update({
 const MSlugBookMultiRoute = MSlugBookMultiRouteImport.update({
   id: '/book-multi',
   path: '/book-multi',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const MSlugBookRoute = MSlugBookRouteImport.update({
+  id: '/book',
+  path: '/book',
   getParentRoute: () => MSlugRoute,
 } as any)
 const MSlugAuthRoute = MSlugAuthRouteImport.update({
@@ -1037,9 +1043,9 @@ const MSlugManageTokenRoute = MSlugManageTokenRouteImport.update({
   getParentRoute: () => MSlugRoute,
 } as any)
 const MSlugBookTreatmentIdRoute = MSlugBookTreatmentIdRouteImport.update({
-  id: '/book/$treatmentId',
-  path: '/book/$treatmentId',
-  getParentRoute: () => MSlugRoute,
+  id: '/$treatmentId',
+  path: '/$treatmentId',
+  getParentRoute: () => MSlugBookRoute,
 } as any)
 const LovableEmailTransactionalSendRoute =
   LovableEmailTransactionalSendRouteImport.update({
@@ -1424,6 +1430,7 @@ export interface FileRoutesByFullPath {
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
   '/m/$slug/auth': typeof MSlugAuthRoute
+  '/m/$slug/book': typeof MSlugBookRouteWithChildren
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
   '/m/$slug/gift-cards': typeof MSlugGiftCardsRoute
   '/m/$slug/memberships': typeof MSlugMembershipsRoute
@@ -1609,6 +1616,7 @@ export interface FileRoutesByTo {
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
   '/m/$slug/auth': typeof MSlugAuthRoute
+  '/m/$slug/book': typeof MSlugBookRouteWithChildren
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
   '/m/$slug/gift-cards': typeof MSlugGiftCardsRoute
   '/m/$slug/memberships': typeof MSlugMembershipsRoute
@@ -1804,6 +1812,7 @@ export interface FileRoutesById {
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
   '/m/$slug/auth': typeof MSlugAuthRoute
+  '/m/$slug/book': typeof MSlugBookRouteWithChildren
   '/m/$slug/book-multi': typeof MSlugBookMultiRoute
   '/m/$slug/gift-cards': typeof MSlugGiftCardsRoute
   '/m/$slug/memberships': typeof MSlugMembershipsRoute
@@ -2001,6 +2010,7 @@ export interface FileRouteTypes {
     | '/m/$slug/about'
     | '/m/$slug/account'
     | '/m/$slug/auth'
+    | '/m/$slug/book'
     | '/m/$slug/book-multi'
     | '/m/$slug/gift-cards'
     | '/m/$slug/memberships'
@@ -2186,6 +2196,7 @@ export interface FileRouteTypes {
     | '/m/$slug/about'
     | '/m/$slug/account'
     | '/m/$slug/auth'
+    | '/m/$slug/book'
     | '/m/$slug/book-multi'
     | '/m/$slug/gift-cards'
     | '/m/$slug/memberships'
@@ -2380,6 +2391,7 @@ export interface FileRouteTypes {
     | '/m/$slug/about'
     | '/m/$slug/account'
     | '/m/$slug/auth'
+    | '/m/$slug/book'
     | '/m/$slug/book-multi'
     | '/m/$slug/gift-cards'
     | '/m/$slug/memberships'
@@ -2891,6 +2903,13 @@ declare module '@tanstack/react-router' {
       path: '/book-multi'
       fullPath: '/m/$slug/book-multi'
       preLoaderRoute: typeof MSlugBookMultiRouteImport
+      parentRoute: typeof MSlugRoute
+    }
+    '/m/$slug/book': {
+      id: '/m/$slug/book'
+      path: '/book'
+      fullPath: '/m/$slug/book'
+      preLoaderRoute: typeof MSlugBookRouteImport
       parentRoute: typeof MSlugRoute
     }
     '/m/$slug/auth': {
@@ -3553,10 +3572,10 @@ declare module '@tanstack/react-router' {
     }
     '/m/$slug/book/$treatmentId': {
       id: '/m/$slug/book/$treatmentId'
-      path: '/book/$treatmentId'
+      path: '/$treatmentId'
       fullPath: '/m/$slug/book/$treatmentId'
       preLoaderRoute: typeof MSlugBookTreatmentIdRouteImport
-      parentRoute: typeof MSlugRoute
+      parentRoute: typeof MSlugBookRoute
     }
     '/lovable/email/transactional/send': {
       id: '/lovable/email/transactional/send'
@@ -4325,6 +4344,18 @@ const PrivacyRouteChildren: PrivacyRouteChildren = {
 const PrivacyRouteWithChildren =
   PrivacyRoute._addFileChildren(PrivacyRouteChildren)
 
+interface MSlugBookRouteChildren {
+  MSlugBookTreatmentIdRoute: typeof MSlugBookTreatmentIdRoute
+}
+
+const MSlugBookRouteChildren: MSlugBookRouteChildren = {
+  MSlugBookTreatmentIdRoute: MSlugBookTreatmentIdRoute,
+}
+
+const MSlugBookRouteWithChildren = MSlugBookRoute._addFileChildren(
+  MSlugBookRouteChildren,
+)
+
 interface MSlugTrainingRouteChildren {
   MSlugTrainingCourseIdRoute: typeof MSlugTrainingCourseIdRoute
   MSlugTrainingIndexRoute: typeof MSlugTrainingIndexRoute
@@ -4343,6 +4374,7 @@ interface MSlugRouteChildren {
   MSlugAboutRoute: typeof MSlugAboutRoute
   MSlugAccountRoute: typeof MSlugAccountRoute
   MSlugAuthRoute: typeof MSlugAuthRoute
+  MSlugBookRoute: typeof MSlugBookRouteWithChildren
   MSlugBookMultiRoute: typeof MSlugBookMultiRoute
   MSlugGiftCardsRoute: typeof MSlugGiftCardsRoute
   MSlugMembershipsRoute: typeof MSlugMembershipsRoute
@@ -4352,7 +4384,6 @@ interface MSlugRouteChildren {
   MSlugRoomrentalRoute: typeof MSlugRoomrentalRoute
   MSlugTrainingRoute: typeof MSlugTrainingRouteWithChildren
   MSlugIndexRoute: typeof MSlugIndexRoute
-  MSlugBookTreatmentIdRoute: typeof MSlugBookTreatmentIdRoute
   MSlugManageTokenRoute: typeof MSlugManageTokenRoute
 }
 
@@ -4360,6 +4391,7 @@ const MSlugRouteChildren: MSlugRouteChildren = {
   MSlugAboutRoute: MSlugAboutRoute,
   MSlugAccountRoute: MSlugAccountRoute,
   MSlugAuthRoute: MSlugAuthRoute,
+  MSlugBookRoute: MSlugBookRouteWithChildren,
   MSlugBookMultiRoute: MSlugBookMultiRoute,
   MSlugGiftCardsRoute: MSlugGiftCardsRoute,
   MSlugMembershipsRoute: MSlugMembershipsRoute,
@@ -4369,7 +4401,6 @@ const MSlugRouteChildren: MSlugRouteChildren = {
   MSlugRoomrentalRoute: MSlugRoomrentalRoute,
   MSlugTrainingRoute: MSlugTrainingRouteWithChildren,
   MSlugIndexRoute: MSlugIndexRoute,
-  MSlugBookTreatmentIdRoute: MSlugBookTreatmentIdRoute,
   MSlugManageTokenRoute: MSlugManageTokenRoute,
 }
 
