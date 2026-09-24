@@ -592,10 +592,8 @@ export async function sendBookingConfirmationEmails(
   return results
 }
 
-/** For every unsubmitted medical form and unsigned consent on the given
- *  appointments, enqueue a `medical-form-request` email pointing at the
- *  patient-facing token URL. Reuses the medical-form-request template for
- *  consents by setting formName to the consent name and formUrl to /c/{token}. */
+/** Group every outstanding medical form and consent for a booking into one
+ * patient email, with a separate secure action for each form. */
 export async function sendBookingFormRequestEmails(
   appointmentIds: string[],
   origin: string,
@@ -634,45 +632,55 @@ export async function sendBookingFormRequestEmails(
     medical_form_templates?: { name?: string } | null;
     appointments?: { patient_name?: string | null; patient_email?: string | null; profile_id?: string; profiles?: { clinic_name?: string } | null } | null;
   }
-  for (const raw of (forms ?? []) as FormRow[]) {
-    const a = raw.appointments
-    if (!a?.patient_email || !raw.token || !a.profile_id) continue
-    const branding = await brandingFor(a.profile_id)
-    await tryEnqueueAppEmail({
-      templateName: 'medical-form-request',
-      recipientEmail: a.patient_email,
-      messageId: `form-request-${raw.id}`,
-      templateData: {
-        profileId: a.profile_id,
-        patientName: (a.patient_name ?? '').split(' ')[0] || 'there',
-        clinicName: a.profiles?.clinic_name ?? branding.clinicName,
-        formName: raw.medical_form_templates?.name ?? 'medical form',
-        formUrl: `${origin}/f/${raw.token}`,
-        logoUrl: branding.logoUrl,
-        brandColor: branding.brandColor,
-      },
-    })
-  }
-
   type ConsentRow = {
     id: string; token: string | null; appointment_id: string;
     consent_templates?: { name?: string } | null;
     appointments?: { patient_name?: string | null; patient_email?: string | null; profile_id?: string; profiles?: { clinic_name?: string } | null } | null;
   }
+  type RequestedForm = { id: string; name: string; url: string; type: 'medical' | 'consent' }
+  type FormGroup = { patientName: string; patientEmail: string; profileId: string; clinicName?: string; forms: RequestedForm[] }
+  const groups = new Map<string, FormGroup>()
+  const addToGroup = (a: FormRow['appointments'], form: RequestedForm) => {
+    if (!a?.patient_email || !a.profile_id) return
+    const key = `${a.profile_id}|${a.patient_email.toLowerCase()}`
+    const existing = groups.get(key)
+    if (existing) {
+      if (!existing.forms.some((item) => item.url === form.url)) existing.forms.push(form)
+      return
+    }
+    groups.set(key, {
+      patientName: (a.patient_name ?? '').split(' ')[0] || 'there',
+      patientEmail: a.patient_email,
+      profileId: a.profile_id,
+      clinicName: a.profiles?.clinic_name,
+      forms: [form],
+    })
+  }
+
+  for (const raw of (forms ?? []) as FormRow[]) {
+    if (!raw.token) continue
+    addToGroup(raw.appointments, { id: raw.id, name: raw.medical_form_templates?.name ?? 'Medical form', url: `${origin}/f/${raw.token}`, type: 'medical' })
+  }
   for (const raw of (consents ?? []) as ConsentRow[]) {
-    const a = raw.appointments
-    if (!a?.patient_email || !raw.token || !a.profile_id) continue
-    const branding = await brandingFor(a.profile_id)
+    if (!raw.token) continue
+    addToGroup(raw.appointments, { id: raw.id, name: raw.consent_templates?.name ?? 'Consent form', url: `${origin}/c/${raw.token}`, type: 'consent' })
+  }
+
+  for (const group of groups.values()) {
+    const branding = await brandingFor(group.profileId)
+    const firstForm = group.forms[0]
+    if (!firstForm) continue
     await tryEnqueueAppEmail({
       templateName: 'medical-form-request',
-      recipientEmail: a.patient_email,
-      messageId: `consent-request-${raw.id}`,
+      recipientEmail: group.patientEmail,
+      messageId: `forms-request-${firstForm.id}`,
       templateData: {
-        profileId: a.profile_id,
-        patientName: (a.patient_name ?? '').split(' ')[0] || 'there',
-        clinicName: a.profiles?.clinic_name ?? branding.clinicName,
-        formName: raw.consent_templates?.name ?? 'consent form',
-        formUrl: `${origin}/c/${raw.token}`,
+        profileId: group.profileId,
+        patientName: group.patientName,
+        clinicName: group.clinicName ?? branding.clinicName,
+        formName: firstForm.name,
+        formUrl: firstForm.url,
+        forms: group.forms.map(({ name, url, type }) => ({ name, url, type })),
         logoUrl: branding.logoUrl,
         brandColor: branding.brandColor,
       },

@@ -42,4 +42,5 @@ Goal: MODO runs in an app WebView; dashboard must feel native on phones.
 - [x] Apply an appropriate MODO-branded version to account emails
 - [x] Add preparation notes, cancellation policy, directions and social links where relevant
 - [x] Verify every template in HTML and plain text
+- [x] Group all booking medical and consent forms into one patient email
 - [ ] Switch delivery to Resend (connection was skipped)
