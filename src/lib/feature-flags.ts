@@ -186,3 +186,15 @@ export const SCHEDULED_AVAILABILITY_SLUGS = ["aestheticsbynurseryan"];
 export function scheduledAvailabilityEnabled(slug?: string | null) {
   return isFeatureLive(SCHEDULED_AVAILABILITY_SLUGS, slug);
 }
+
+/**
+ * Booking-page layout options — layout presets (current / compact / editorial),
+ * carousel height & hide, per-section show/hide and ordering, and per-colour
+ * pickers. Pilot account only; every option defaults to "unchanged" so other
+ * clinics' pages are not affected even when this ships live.
+ */
+export const BOOKING_LAYOUT_SLUGS = ["aestheticsbynurseryan"];
+
+export function bookingLayoutOptionsEnabled(slug?: string | null) {
+  return isFeatureLive(BOOKING_LAYOUT_SLUGS, slug);
+}
