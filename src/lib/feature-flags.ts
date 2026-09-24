@@ -192,8 +192,11 @@ export function scheduledAvailabilityEnabled(slug?: string | null) {
  * carousel height & hide, per-section show/hide and ordering, and per-colour
  * pickers. Pilot account only; every option defaults to "unchanged" so other
  * clinics' pages are not affected even when this ships live.
+ * Switched off for now (Ryan reverted to the single-page layout on 24 Sep
+ * 2026) — re-add "aestheticsbynurseryan" to bring the split Home/Book pages
+ * back; his saved layout settings are still in the database.
  */
-export const BOOKING_LAYOUT_SLUGS = ["aestheticsbynurseryan"];
+export const BOOKING_LAYOUT_SLUGS: string[] = [];
 
 export function bookingLayoutOptionsEnabled(slug?: string | null) {
   return isFeatureLive(BOOKING_LAYOUT_SLUGS, slug);
