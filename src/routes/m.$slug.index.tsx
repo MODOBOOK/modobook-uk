@@ -241,6 +241,30 @@ function WelcomeIntroBlock({
 
 type Theme = Database["public"]["Tables"]["clinic_theme"]["Row"];
 
+/**
+ * SectionWrap — only active when the clinic has custom section ordering or
+ * hidden sections. Without customisation it renders children untouched, so
+ * the DOM is byte-identical to the uncustomised page.
+ */
+function SectionWrap({
+  k,
+  custom,
+  order,
+  hidden,
+  children,
+}: {
+  k: string;
+  custom: boolean;
+  order: number;
+  hidden: boolean;
+  children: ReactNode;
+}) {
+  void k;
+  if (!custom) return <>{children}</>;
+  if (hidden) return null;
+  return <div className="modo-sec" style={{ order }}>{children}</div>;
+}
+
 function BookPage() {
   const { profile, treatments, packages, packageBuilders = [], locations, categories, pricing, theme, reviews, concernAreas, concerns, concernLinks, modelSlots = [], addonLinks = [], practitioners = [], locationPractitioners = [], practitionerTreatments = [], aboutPage, careGuides = [], pretreatment = [], bookingCounts = [] } =
     Route.useLoaderData() as {
@@ -1391,14 +1415,15 @@ function BookPage() {
               style={{ backgroundColor: accent }}
             />
 
-            <div className="relative mx-auto max-w-5xl px-4 pb-10 pt-8 sm:px-6 sm:pb-14 sm:pt-14">
+            <div className={`relative mx-auto max-w-5xl px-4 sm:px-6 ${presetCompact ? "pb-6 pt-5 sm:pb-8 sm:pt-8" : presetEditorial ? "pb-14 pt-10 sm:pb-20 sm:pt-20" : "pb-10 pt-8 sm:pb-14 sm:pt-14"}`}>
               {/* Portrait + type block */}
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-12 sm:gap-8">
                 {/* Portrait slideshow — swipeable + auto-advance */}
-                <div className="sm:col-span-6">
+                {carouselHidden ? null : (
+                <div className={presetCompact ? "sm:col-span-5" : "sm:col-span-6"}>
                   <div
                     data-modo-image="hero_image_url"
-                    className="relative overflow-hidden rounded-2xl bg-white/10 aspect-[3/4] touch-pan-y select-none"
+                    className={`relative overflow-hidden rounded-2xl bg-white/10 touch-pan-y select-none ${carouselSmall ? "aspect-[4/3] sm:aspect-[16/10]" : "aspect-[3/4]"}`}
                     onTouchStart={handleEditorialTouchStart}
                     onTouchEnd={handleEditorialTouchEnd}
                   >
@@ -1448,9 +1473,10 @@ function BookPage() {
                     )}
                   </div>
                 </div>
+                )}
 
                 {/* Typographic block */}
-                <div className="min-w-0 sm:col-span-6 sm:flex sm:flex-col sm:justify-end">
+                <div className={`min-w-0 ${carouselHidden ? "sm:col-span-12" : presetCompact ? "sm:col-span-7" : "sm:col-span-6"} sm:flex sm:flex-col sm:justify-end`}>
                   {heroUseLogo ? (
                     <img
                       data-modo-image="logo_url"
@@ -1463,7 +1489,7 @@ function BookPage() {
                     <h1
                       data-modo-text="clinic_name"
 
-                      className="font-light leading-[0.95] tracking-tight [overflow-wrap:normal] hyphens-none text-balance text-[clamp(1.75rem,8.5vw,3rem)] sm:text-[clamp(2rem,4.5vw,5rem)]"
+                      className={`font-light leading-[0.95] tracking-tight [overflow-wrap:normal] hyphens-none text-balance ${presetCompact ? "text-[clamp(1.5rem,7vw,2.5rem)] sm:text-[clamp(1.75rem,3.5vw,3.5rem)]" : presetEditorial ? "text-[clamp(2rem,9vw,3.5rem)] sm:text-[clamp(2.5rem,5.5vw,6rem)]" : "text-[clamp(1.75rem,8.5vw,3rem)] sm:text-[clamp(2rem,4.5vw,5rem)]"}`}
                       style={{
                         fontFamily: nameFont,
                         color: heroTextColor,
