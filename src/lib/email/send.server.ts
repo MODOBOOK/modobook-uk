@@ -378,7 +378,7 @@ export async function sendBookingConfirmationEmails(
 
   const { data: appts, error } = await supabaseAdmin
     .from('appointments')
-    .select('id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, manage_token, profile_id, notes, payment_method, payment_status, amount_paid_cents, total_amount, treatments(name, timing_notes), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug, email, notify_new_booking_email, new_booking_email_to, cancellation_rules)')
+    .select('id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, manage_token, profile_id, notes, payment_method, payment_status, amount_paid_cents, total_amount, treatments(name, timing_notes), practitioners(name, user_id), locations(name, address_line1, city, postcode), profiles(clinic_name, slug, email, notify_new_booking_email, new_booking_email_to, cancellation_rules)')
     .in('id', appointmentIds)
 
   if (error) throw error
@@ -549,6 +549,45 @@ export async function sendBookingConfirmationEmails(
       }
     } catch (e) {
       console.error('[email] practitioner new-booking alert failed', e)
+    }
+
+    // Also alert the booked practitioner (team members) if they're not the owner inbox.
+    try {
+      const pracUserId = (a.practitioners as { user_id?: string | null } | null)?.user_id
+      if (pracUserId && a.profiles?.notify_new_booking_email !== false) {
+        const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
+        const { data: u } = await supabaseAdmin.auth.admin.getUserById(pracUserId)
+        const pracEmail = (u?.user?.email ?? '').trim().toLowerCase()
+        const ownerTo = (a.profiles?.new_booking_email_to || a.profiles?.email || '').trim().toLowerCase()
+        if (pracEmail && pracEmail !== ownerTo) {
+          const paid = group.reduce((s, g) => s + Number(g.amount_paid_cents ?? 0), 0) / 100
+          await tryEnqueueAppEmail({
+            templateName: 'new-booking-practitioner',
+            recipientEmail: pracEmail,
+            messageId: `new-booking-alert-prac-${a.id}`,
+            templateData: {
+              profileId: a.profile_id,
+              clinicName: a.profiles?.clinic_name ?? branding.clinicName,
+              patientName: a.patient_name ?? 'A patient',
+              patientEmail: a.patient_email ?? undefined,
+              patientPhone: a.patient_phone ?? undefined,
+              treatmentName: treatmentSummary || 'a treatment',
+              practitionerName: a.practitioners?.name,
+              locationName: loc?.name ?? loc?.city ?? undefined,
+              dateTime: formatBookingDateTime(a.scheduled_date, a.start_time),
+              paymentSummary: a.payment_method === 'cash' || a.payment_method === 'in_clinic'
+                ? 'Paying in clinic'
+                : paid > 0 ? `${a.payment_status === 'paid' ? 'Paid in full' : 'Deposit paid'} — £${paid.toFixed(2)}` : undefined,
+              patientNote: a.notes ?? undefined,
+              dashboardUrl: `${origin}/dashboard/appointments`,
+              logoUrl: branding.logoUrl,
+              brandColor: branding.brandColor,
+            },
+          })
+        }
+      }
+    } catch (e) {
+      console.error('[email] booked-practitioner alert failed', e)
     }
 
     if (!a.patient_email) continue

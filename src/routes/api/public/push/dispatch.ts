@@ -50,13 +50,26 @@ export const Route = createFileRoute("/api/public/push/dispatch")({
           .eq("id", note.profile_id)
           .maybeSingle();
         const prof = profRes.data as { user_id: string } | null;
-        if (!prof?.user_id) return new Response("ok", { status: 200 });
+        const userIds = new Set<string>();
+        if (prof?.user_id) userIds.add(prof.user_id);
 
-        const subsRes = await admin
+        // Also notify the practitioner the booking/form belongs to (team members).
+        const full = (await (supabaseAdmin as any)
+          .from("notifications").select("entity_type, entity_id").eq("id", note.id).maybeSingle()).data as
+          | { entity_type: string | null; entity_id: string | null } | null;
+        if (full?.entity_id && full.entity_type === "appointment") {
+          const { data: appt } = await (supabaseAdmin as any)
+            .from("appointments").select("practitioners(user_id)").eq("id", full.entity_id).maybeSingle();
+          const uid = appt?.practitioners?.user_id as string | undefined;
+          if (uid) userIds.add(uid);
+        }
+        if (userIds.size === 0) return new Response("ok", { status: 200 });
+
+        const { data: subsData } = await (supabaseAdmin as any)
           .from("push_subscriptions")
           .select("id, endpoint, p256dh, auth")
-          .eq("user_id", prof.user_id);
-        const subs = (subsRes.data ?? []) as Array<{ id: string; endpoint: string; p256dh: string; auth: string }>;
+          .in("user_id", [...userIds]);
+        const subs = (subsData ?? []) as Array<{ id: string; endpoint: string; p256dh: string; auth: string }>;
         if (subs.length === 0) return new Response("ok", { status: 200 });
 
         const vapid = {
