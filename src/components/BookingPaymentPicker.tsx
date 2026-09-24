@@ -55,6 +55,8 @@ type Props = {
    *  Optional remainingPerSessionCents overrides the "then £X per session" copy
    *  (useful when only some treatments are split). */
   splitInfo?: { sessionCount: number; remainingPerSessionCents?: number } | null;
+  /** Every booked treatment is set to "Pay in clinic": no online payment options. */
+  payInClinicOnly?: boolean;
 };
 
 
@@ -62,7 +64,7 @@ function formatGBP(pence: number) {
   return `£${(pence / 100).toFixed(2)}`;
 }
 
-export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accent, depositOverrideCents, depositItems, splitInfo }: Props) {
+function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent, depositOverrideCents, depositItems, splitInfo }: Props) {
   const fn = useServerFn(getPublicPaymentOptions);
   const q = useQuery({
     queryKey: ["publicPaymentOptions", slug],
@@ -557,3 +559,22 @@ export function BookingPaymentPicker({ slug, totalAmount, value, onChange, accen
 }
 
 
+
+export function BookingPaymentPicker(props: Props) {
+  if (props.payInClinicOnly) return <PayInClinicNotice {...props} />;
+  return <BookingPaymentPickerInner {...props} />;
+}
+
+function PayInClinicNotice({ value, onChange, totalAmount }: Props) {
+  useEffect(() => {
+    if (value?.mode !== "cash") onChange({ mode: "cash", method: "card" });
+  }, [value?.mode, onChange]);
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 text-sm">
+      <div className="font-medium">Pay at your appointment</div>
+      <div className="text-muted-foreground mt-1">
+        Nothing to pay now{totalAmount > 0 ? ` — £${totalAmount.toFixed(2)} is paid in clinic on the day` : ""}.
+      </div>
+    </div>
+  );
+}

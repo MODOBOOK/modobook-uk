@@ -1201,6 +1201,7 @@ function BookTreatmentPage() {
           return override != null ? Math.max(0, Math.round(Number(override) * 100)) : null;
         })()}
         splitInfo={splitAllowed && paymentPlan === "split" ? { sessionCount } : null}
+        payInClinicOnly={(treatment as { payment_mode?: string | null }).payment_mode === "pay_in_clinic"}
       />
 
 
