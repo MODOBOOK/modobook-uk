@@ -1370,6 +1370,7 @@ function BookPage() {
         [data-modo-section] + [data-modo-section] { margin-top: var(--section-gap); }
         .modo-sec-flex { display: flex; flex-direction: column; }
         .modo-sec-flex .modo-sec + .modo-sec { margin-top: var(--section-gap); }
+        .modo-sec-flex > footer { order: 9999; }
         .preset-compact h2 { font-size: 1.125rem; line-height: 1.35; }
         .preset-editorial h2 { font-size: 1.5rem; line-height: 1.3; letter-spacing: -0.01em; }
       `}</style>
