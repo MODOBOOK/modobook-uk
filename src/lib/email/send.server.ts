@@ -9,7 +9,7 @@ import { TEMPLATES } from '@/lib/email-templates/registry'
 import { describeCancellationRules, type CancellationRule } from '@/lib/policy'
 
 const SENDER_DOMAIN = 'notify.modobook.uk'
-const FROM_DOMAIN = 'modobook.uk'
+const FROM_DOMAIN = 'notify.modobook.uk'
 
 function emailSenderName(clinicName: unknown) {
   const safeClinicName = typeof clinicName === 'string'
