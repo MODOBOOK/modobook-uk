@@ -1785,6 +1785,7 @@ function MultiBookPage() {
                         };
                       })}
 
+                      payInClinicOnly={treatments.length > 0 && treatments.every((t) => (t as { payment_mode?: string | null }).payment_mode === "pay_in_clinic")}
                       splitInfo={anySplit ? { sessionCount: maxSessions, remainingPerSessionCents: Math.round(remainingPerSession * 100) } : null}
                     />
                   );
