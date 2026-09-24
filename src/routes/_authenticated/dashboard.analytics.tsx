@@ -103,7 +103,7 @@ function AnalyticsPage() {
         treatmentBreakdown: [],
         statusBreakdown: [],
         fromIso: "",
-        toIso: "",
+        toIso: "", costToIso: "",
       };
     }
 
