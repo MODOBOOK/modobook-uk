@@ -1544,11 +1544,14 @@ function BookPage() {
 
 
       {/* Mobile link button (above welcome message) */}
+      <SectionWrap k="welcome" custom={customSectionLayout} order={sectionIndexOf("welcome")} hidden={sectionHidden("welcome")}>
       {isMobile && linkButtonNode && (
         <section className="mx-auto mt-4 max-w-3xl px-4">{linkButtonNode}</section>
       )}
+      </SectionWrap>
 
       {/* Mobile welcome intro at top */}
+      <SectionWrap k="welcome" custom={customSectionLayout} order={sectionIndexOf("welcome")} hidden={sectionHidden("welcome")}>
       {isMobile && (introHeading || introLength > 0) && (
         <section id="welcome-intro-mobile" className="mx-auto mt-4 max-w-3xl px-4">
           <div className="rounded-2xl border bg-card px-5 py-5 shadow-sm" style={{ borderColor: `${brand}1a` }}>
@@ -1563,11 +1566,14 @@ function BookPage() {
           </div>
         </section>
       )}
+      </SectionWrap>
 
       {/* Mobile membership promo */}
+      <SectionWrap k="memberships" custom={customSectionLayout} order={sectionIndexOf("memberships")} hidden={sectionHidden("memberships")}>
       {isMobile && membershipPromoNode && (
         <section className="mx-auto mt-4 max-w-3xl px-4">{membershipPromoNode}</section>
       )}
+      </SectionWrap>
 
       {/* Model slots now render inside the Treatments tab after the user presses "I know what I want". */}
 
@@ -1577,11 +1583,14 @@ function BookPage() {
 
 
       {/* Link button (above welcome message) */}
+      <SectionWrap k="welcome" custom={customSectionLayout} order={sectionIndexOf("welcome")} hidden={sectionHidden("welcome")}>
       {linkButtonNode && (
         <section className="mx-auto mt-8 hidden max-w-3xl px-4 sm:block">{linkButtonNode}</section>
       )}
+      </SectionWrap>
 
       {/* Welcome message */}
+      <SectionWrap k="welcome" custom={customSectionLayout} order={sectionIndexOf("welcome")} hidden={sectionHidden("welcome")}>
       {(introHeading || introLength > 0) && (
         <section id="welcome-intro" className="mx-auto mt-8 hidden max-w-3xl scroll-mt-24 px-4 sm:block">
           <div
@@ -1599,16 +1608,20 @@ function BookPage() {
           </div>
         </section>
       )}
+      </SectionWrap>
 
       {/* Desktop membership promo */}
+      <SectionWrap k="memberships" custom={customSectionLayout} order={sectionIndexOf("memberships")} hidden={sectionHidden("memberships")}>
       {membershipPromoNode && (
         <section className="mx-auto mt-6 hidden max-w-3xl px-4 sm:block">{membershipPromoNode}</section>
       )}
+      </SectionWrap>
 
       {/* Booking & cancellation policy (moved below the treatment menu on quick-book CTA pages) */}
       {!bookCtaOn && policySectionNode}
 
       {/* Choose Location + practitioners */}
+      <SectionWrap k="locations" custom={customSectionLayout} order={sectionIndexOf("locations")} hidden={false}>
       {locations.length > 0 && (
 
         <section data-section="locations" className="mx-auto mt-8 max-w-3xl scroll-mt-16 px-4">
@@ -1684,8 +1697,10 @@ function BookPage() {
           </div>
         </section>
       )}
+      </SectionWrap>
 
       {/* Choose your practitioner — its own step, before the treatment menu */}
+      <SectionWrap k="practitioners" custom={customSectionLayout} order={sectionIndexOf("practitioners")} hidden={false}>
       {showPractitionerStep && (
         <section data-section="practitioners" className="mx-auto mt-8 max-w-3xl scroll-mt-16 px-4">
           <h2 className="mb-1 text-xl font-bold" style={headingStyle}>
@@ -1776,10 +1791,11 @@ function BookPage() {
           )}
         </section>
       )}
+      </SectionWrap>
 
 
       {/* Chooser gate */}
-
+      <SectionWrap k="chooser" custom={customSectionLayout} order={sectionIndexOf("chooser")} hidden={false}>
       {locationGateOpen && practitionerGateOpen && chooserOn && !mode && (
         <section id="booking-chooser" className="mx-auto mt-10 max-w-3xl scroll-mt-16 px-4">
           <h2 className="mb-1 text-center text-xl font-bold" style={headingStyle}>
@@ -1930,9 +1946,11 @@ function BookPage() {
           )}
         </section>
       )}
+      </SectionWrap>
 
 
       {/* Favourite / Most popular treatments */}
+      <SectionWrap k="favourites" custom={customSectionLayout} order={sectionIndexOf("favourites")} hidden={sectionHidden("favourites")}>
       {(() => {
         if (!locationGateOpen) return null;
         // When the booking chooser is active, favourites must not appear above
