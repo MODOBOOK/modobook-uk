@@ -526,23 +526,11 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
 
     if ((data.notifyPatient ?? true) && appt.patient_email) {
       try {
-        const { tryEnqueueAppEmail, formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
-        const branding = await getPractitionerBranding(profile.id);
-        await tryEnqueueAppEmail({
-          templateName: "booking-confirmation",
-          recipientEmail: appt.patient_email,
-          messageId: `booking-reschedule-${data.appointmentId}-${data.date}-${startHM}`,
-          templateData: {
-            patientName: (appt.patient_name ?? "").split(" ")[0] || "there",
-            clinicName: branding.clinicName,
-            dateTime: formatBookingDateTime(data.date, startHM),
-            locationName: locRow?.name,
-            locationAddress: locRow ? [locRow.address_line1, locRow.city, locRow.postcode].filter(Boolean).join(', ') : undefined,
-            logoUrl: branding.logoUrl,
-            brandColor: branding.brandColor,
-            rescheduled: true,
-          },
-        });
+        const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
+        await sendBookingConfirmationEmails(
+          [data.appointmentId],
+          `booking-reschedule-${data.date}-${startHM}`,
+        );
       } catch (e) {
         console.error("[rescheduleAppointment] email failed", e);
       }

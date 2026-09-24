@@ -344,7 +344,10 @@ export async function sendPlatformArrearsEmail(input: {
 
 
 
-export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
+export async function sendBookingConfirmationEmails(
+  appointmentIds: string[],
+  messageIdPrefix = 'booking-confirm',
+) {
   if (appointmentIds.length === 0) return []
 
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
@@ -525,7 +528,7 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
     const res = await tryEnqueueAppEmail({
       templateName: 'booking-confirmation',
       recipientEmail: a.patient_email,
-      messageId: `booking-confirm-${a.id}`,
+      messageId: `${messageIdPrefix}-${a.id}`,
       replyTo: branding.contactEmail || undefined,
       resolveProfileReplyTo: false,
       templateData: {
@@ -708,6 +711,7 @@ function buildCalendarLinks(input: { date: string; startTime: string; endTime: s
   google.searchParams.set('action', 'TEMPLATE')
   google.searchParams.set('text', input.title)
   google.searchParams.set('dates', `${start}/${end}`)
+  google.searchParams.set('ctz', 'Europe/London')
   google.searchParams.set('location', input.location)
   if (details) google.searchParams.set('details', details)
   const outlook = new URL('https://outlook.live.com/calendar/0/deeplink/compose')
