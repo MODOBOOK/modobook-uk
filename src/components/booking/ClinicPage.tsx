@@ -419,13 +419,21 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
   const pagePreset = layoutOptionsOn ? ((themeAnyOpts?.page_preset as string) || "default") : "default";
   const presetCompact = pagePreset === "compact";
   const presetEditorial = pagePreset === "editorial";
-  const carouselHidden = layoutOptionsOn && themeAnyOpts?.carousel_hidden === true;
+  const carouselHidden = (layoutOptionsOn && themeAnyOpts?.carousel_hidden === true) || view === "book";
   const carouselSmall = layoutOptionsOn && (themeAnyOpts?.carousel_height === "small" || pagePreset === "compact");
   const savedVisibility = (themeAnyOpts?.section_visibility ?? null) as Record<string, boolean> | null;
   const savedOrder = layoutOptionsOn ? ((themeAnyOpts?.section_order ?? null) as string[] | null) : null;
   const SECTION_DEFAULT_ORDER = ["welcome", "memberships", "locations", "practitioners", "chooser", "favourites", "treatments", "contact", "policy"];
-  const customSectionLayout = layoutOptionsOn && (!!savedOrder || !!savedVisibility);
-  const sectionHidden = (k: string) => !!savedVisibility && savedVisibility[k] === false;
+  // Split-view (pilot): home shows intro sections, /book shows booking sections.
+  const HOME_SECTIONS = ["welcome", "memberships", "contact", "policy"];
+  const BOOK_SECTIONS = ["locations", "practitioners", "chooser", "favourites", "treatments"];
+  const splitView = layoutOptionsOn && view !== "all";
+  const customSectionLayout = layoutOptionsOn && (!!savedOrder || !!savedVisibility || splitView);
+  const sectionHidden = (k: string) => {
+    if (!!savedVisibility && savedVisibility[k] === false) return true;
+    if (splitView) return view === "home" ? !HOME_SECTIONS.includes(k) : !BOOK_SECTIONS.includes(k);
+    return false;
+  };
   const sectionIndexOf = (k: string) => {
     if (!customSectionLayout) return 0;
     const ordered = (savedOrder ?? []).filter(
