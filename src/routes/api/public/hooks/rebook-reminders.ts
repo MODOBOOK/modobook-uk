@@ -202,7 +202,143 @@ export const Route = createFileRoute('/api/public/hooks/rebook-reminders')({
           }
         }
 
-        return Response.json({ ok: true, queued, skipped, scanned: rows?.length ?? 0 })
+        // Clinic-wide reminders are based on each patient's most recent visit,
+        // regardless of treatment. They are deliberately separate from the
+        // treatment/category reminder rules above so clinics can use either or both.
+        const { data: generalProfiles, error: generalProfilesError } = await supabaseAdmin
+          .from('profiles')
+          .select('id, clinic_name, slug, general_rebook_reminder_days, general_rebook_followup_days')
+          .eq('general_rebook_reminders_enabled', true)
+
+        if (generalProfilesError) {
+          console.error('[general-rebook-reminders] profile query failed', generalProfilesError)
+          return Response.json({ ok: false, error: generalProfilesError.message }, { status: 500 })
+        }
+
+        let generalQueued = 0
+        let generalSkipped = 0
+
+        for (const profile of generalProfiles ?? []) {
+          const firstDays = Math.max(1, profile.general_rebook_reminder_days ?? 90)
+          const followupDays = profile.general_rebook_followup_days
+          const dueDays = new Set([firstDays])
+          if (followupDays != null && followupDays > 0) dueDays.add(firstDays + followupDays)
+          const oldestDueDate = new Date(now.getTime() - Math.max(...dueDays) * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .slice(0, 10)
+
+          const [{ data: visits, error: visitsError }, { data: upcoming, error: upcomingError }] = await Promise.all([
+            supabaseAdmin
+              .from('appointments')
+              .select('id, patient_name, patient_email, scheduled_date')
+              .eq('profile_id', profile.id)
+              .in('status', ['confirmed', 'completed'])
+              .gte('scheduled_date', oldestDueDate)
+              .lte('scheduled_date', todayIso)
+              .not('patient_email', 'is', null)
+              .order('scheduled_date', { ascending: false })
+              .limit(5000),
+            supabaseAdmin
+              .from('appointments')
+              .select('patient_email')
+              .eq('profile_id', profile.id)
+              .in('status', ['pending', 'confirmed'])
+              .gt('scheduled_date', todayIso)
+              .not('patient_email', 'is', null)
+              .limit(5000),
+          ])
+
+          if (visitsError || upcomingError) {
+            console.error('[general-rebook-reminders] appointment query failed', visitsError ?? upcomingError)
+            generalSkipped++
+            continue
+          }
+
+          const upcomingEmails = new Set(
+            (upcoming ?? []).map((item) => item.patient_email?.trim().toLowerCase()).filter(Boolean),
+          )
+          const latestByEmail = new Map<string, { id: string; patient_name: string | null; patient_email: string; scheduled_date: string }>()
+          for (const visit of visits ?? []) {
+            const email = visit.patient_email?.trim().toLowerCase()
+            if (!email || latestByEmail.has(email)) continue
+            latestByEmail.set(email, { ...visit, patient_email: email })
+          }
+
+          const visitIds = Array.from(latestByEmail.values()).map((visit) => visit.id)
+          const sentByVisit = new Set<string>()
+          if (visitIds.length > 0) {
+            const { data: generalSent } = await supabaseAdmin
+              .from('general_rebook_reminders_sent')
+              .select('appointment_id, patient_email, stage')
+              .eq('profile_id', profile.id)
+              .in('appointment_id', visitIds)
+            for (const sent of generalSent ?? []) {
+              sentByVisit.add(`${sent.appointment_id}:${sent.patient_email.toLowerCase()}:${sent.stage}`)
+            }
+          }
+
+          let branding = brandingCache.get(profile.id)
+          if (!branding) {
+            branding = await getPractitionerBranding(profile.id)
+            brandingCache.set(profile.id, branding)
+          }
+          const bookingUrl = profile.slug ? `${origin}/m/${profile.slug}` : origin
+
+          for (const [email, visit] of latestByEmail) {
+            if (upcomingEmails.has(email)) { generalSkipped++; continue }
+            const visitMs = new Date(`${visit.scheduled_date}T00:00:00Z`).getTime()
+            const daysSinceVisit = Math.floor((Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - visitMs) / (24 * 60 * 60 * 1000))
+            const stage = daysSinceVisit === firstDays
+              ? 1
+              : followupDays != null && followupDays > 0 && daysSinceVisit === firstDays + followupDays
+                ? 2
+                : null
+            if (!stage) continue
+            const sentKey = `${visit.id}:${email}:${stage}`
+            if (sentByVisit.has(sentKey)) { generalSkipped++; continue }
+            if (stage === 2 && !sentByVisit.has(`${visit.id}:${email}:1`)) { generalSkipped++; continue }
+
+            const result = await tryEnqueueAppEmail({
+              templateName: 'rebook-reminder',
+              recipientEmail: email,
+              messageId: `general-rebook-${stage}-${visit.id}`,
+              templateData: {
+                profileId: profile.id,
+                patientName: (visit.patient_name ?? '').split(' ')[0] || 'there',
+                clinicName: profile.clinic_name ?? branding.clinicName,
+                bookingUrl,
+                logoUrl: branding.logoUrl,
+                clinicImageUrl: branding.clinicImageUrl,
+                brandColor: branding.brandColor,
+                websiteUrl: branding.websiteUrl,
+                instagramUrl: branding.instagramUrl,
+                generalReminder: true,
+                followUp: stage === 2,
+              },
+            })
+
+            if (result.ok) {
+              generalQueued++
+              await supabaseAdmin.from('general_rebook_reminders_sent').insert({
+                profile_id: profile.id,
+                appointment_id: visit.id,
+                patient_email: email,
+                stage,
+              })
+            } else {
+              generalSkipped++
+            }
+          }
+        }
+
+        return Response.json({
+          ok: true,
+          queued,
+          skipped,
+          scanned: rows?.length ?? 0,
+          generalQueued,
+          generalSkipped,
+        })
       },
     },
   },
