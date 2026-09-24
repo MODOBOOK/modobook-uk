@@ -183,7 +183,6 @@ function WelcomeIntroBlock({
   variant: "mobile" | "desktop";
   tight?: boolean;
 }) {
-...
   const collapsed = expandable && !expanded;
   return (
     <>
