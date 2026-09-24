@@ -6,6 +6,7 @@
 import * as React from 'react'
 import { render } from 'react-email'
 import { TEMPLATES } from '@/lib/email-templates/registry'
+import { describeCancellationRules, type CancellationRule } from '@/lib/policy'
 
 const SITE_NAME = 'MODO No-Reply'
 const SENDER_DOMAIN = 'notify.modobook.uk'
@@ -363,7 +364,7 @@ export async function sendBookingConfirmationEmails(
 
   const { data: appts, error } = await supabaseAdmin
     .from('appointments')
-    .select('id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, manage_token, profile_id, notes, payment_method, payment_status, amount_paid_cents, total_amount, treatments(name), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug, email, notify_new_booking_email, new_booking_email_to)')
+    .select('id, patient_name, patient_email, patient_phone, scheduled_date, start_time, end_time, manage_token, profile_id, notes, payment_method, payment_status, amount_paid_cents, total_amount, treatments(name, timing_notes), practitioners(name), locations(name, address_line1, city, postcode), profiles(clinic_name, slug, email, notify_new_booking_email, new_booking_email_to, cancellation_rules)')
     .in('id', appointmentIds)
 
   if (error) throw error
@@ -386,7 +387,7 @@ export async function sendBookingConfirmationEmails(
     payment_status?: string | null
     amount_paid_cents?: number | null
     total_amount?: number | null
-    treatments?: { name?: string } | null
+    treatments?: { name?: string; timing_notes?: string | null } | null
     practitioners?: { name?: string } | null
     locations?: { name?: string; address_line1?: string; city?: string; postcode?: string } | null
     profiles?: {
@@ -395,6 +396,7 @@ export async function sendBookingConfirmationEmails(
       email?: string | null
       notify_new_booking_email?: boolean | null
       new_booking_email_to?: string | null
+      cancellation_rules?: CancellationRule[] | null
     } | null
   }
 
@@ -463,6 +465,9 @@ export async function sendBookingConfirmationEmails(
       location,
       manageUrl,
     })
+    const preparationNotes = group.map((item) => item.treatments?.timing_notes?.trim()).filter(Boolean).join('\n') || undefined
+    const cancellationPolicy = describeCancellationRules(Array.isArray(a.profiles?.cancellation_rules) ? a.profiles.cancellation_rules : []).join('. ') || undefined
+    const directionsUrl = location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}` : undefined
 
     // WhatsApp confirmation (per-clinic toggle; no-ops when off / no phone)
     try {
@@ -560,6 +565,11 @@ export async function sendBookingConfirmationEmails(
         logoUrl: branding.logoUrl,
         clinicImageUrl: branding.clinicImageUrl,
         brandColor: branding.brandColor,
+        preparationNotes,
+        cancellationPolicy,
+        directionsUrl,
+        websiteUrl: branding.websiteUrl,
+        instagramUrl: normaliseInstagramUrl(branding.instagramUrl),
       },
     })
 

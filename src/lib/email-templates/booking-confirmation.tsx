@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Body, Button, Head, Html, Img, Preview, Text } from '@react-email/components'
+import { Body, Button, Head, Html, Img, Link, Preview, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 
 interface Props {
@@ -22,6 +22,11 @@ interface Props {
   clinicImageUrl?: string | null
   brandColor?: string | null
   subjectOverride?: string | null
+  preparationNotes?: string | null
+  cancellationPolicy?: string | null
+  directionsUrl?: string | null
+  websiteUrl?: string | null
+  instagramUrl?: string | null
 }
 
 const palette = {
@@ -68,6 +73,11 @@ const Email = ({
   logoUrl,
   clinicImageUrl,
   brandColor,
+  preparationNotes,
+  cancellationPolicy,
+  directionsUrl,
+  websiteUrl,
+  instagramUrl,
 }: Props) => {
   const accent = safeBrandColor(brandColor)
   const treatments = services?.length ? services : [{ name: treatmentName }]
@@ -128,6 +138,9 @@ const Email = ({
                         </table>
                         <Text style={{ margin: '0 0 28px', color: palette.muted, fontSize: '13px', lineHeight: '21px' }}>{note}</Text>
 
+                        {preparationNotes ? <table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', backgroundColor: '#f4f0ea', border: `1px solid ${palette.border}`, borderRadius: '4px', margin: '0 0 14px' }}><tbody><tr><td style={{ padding: '15px 16px' }}><Text style={{ margin: '0 0 4px', color: palette.text, fontSize: '13px', fontWeight: 700 }}>Before your appointment</Text><Text style={{ margin: 0, color: palette.muted, fontSize: '13px', lineHeight: '21px' }}>{preparationNotes}</Text></td></tr></tbody></table> : null}
+                        {cancellationPolicy ? <table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', backgroundColor: '#f4f0ea', border: `1px solid ${palette.border}`, borderRadius: '4px', margin: '0 0 24px' }}><tbody><tr><td style={{ padding: '15px 16px' }}><Text style={{ margin: '0 0 4px', color: palette.text, fontSize: '13px', fontWeight: 700 }}>Cancellation policy</Text><Text style={{ margin: 0, color: palette.muted, fontSize: '13px', lineHeight: '21px' }}>{cancellationPolicy}</Text></td></tr></tbody></table> : null}
+
                         {manageUrl ? (
                           <Button href={manageUrl} style={{ display: 'block', boxSizing: 'border-box', width: '100%', padding: '14px 20px', borderRadius: '4px', backgroundColor: accent, color: palette.card, fontSize: '14px', fontWeight: 700, lineHeight: '20px', textAlign: 'center', textDecoration: 'none' }}>
                             Manage your appointment
@@ -151,6 +164,7 @@ const Email = ({
                 <Text style={{ margin: '18px 0 0', color: palette.muted, fontSize: '11px', lineHeight: '17px', textAlign: 'center' }}>
                   {clinicName} · Booking via MODO
                 </Text>
+                {directionsUrl || websiteUrl || instagramUrl ? <Text style={{ margin: '6px 0 0', color: palette.muted, fontSize: '11px', lineHeight: '17px', textAlign: 'center' }}>{directionsUrl ? <Link href={directionsUrl} style={{ color: palette.muted, textDecoration: 'underline' }}>Directions</Link> : null}{directionsUrl && (websiteUrl || instagramUrl) ? ' · ' : ''}{websiteUrl ? <Link href={websiteUrl} style={{ color: palette.muted, textDecoration: 'underline' }}>Website</Link> : null}{websiteUrl && instagramUrl ? ' · ' : ''}{instagramUrl ? <Link href={instagramUrl} style={{ color: palette.muted, textDecoration: 'underline' }}>Instagram</Link> : null}</Text> : null}
               </td>
             </tr>
           </tbody>
