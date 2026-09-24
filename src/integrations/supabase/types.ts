@@ -7964,6 +7964,7 @@ export type Database = {
           payment_surcharge_deposit_enabled: boolean
           payment_surcharge_deposit_percent: number
           phone: string | null
+          plan_tier: string | null
           practitioner_selection_mode: string
           qualifications: Json
           quiz_enabled: boolean
@@ -8111,6 +8112,7 @@ export type Database = {
           payment_surcharge_deposit_enabled?: boolean
           payment_surcharge_deposit_percent?: number
           phone?: string | null
+          plan_tier?: string | null
           practitioner_selection_mode?: string
           qualifications?: Json
           quiz_enabled?: boolean
@@ -8258,6 +8260,7 @@ export type Database = {
           payment_surcharge_deposit_enabled?: boolean
           payment_surcharge_deposit_percent?: number
           phone?: string | null
+          plan_tier?: string | null
           practitioner_selection_mode?: string
           qualifications?: Json
           quiz_enabled?: boolean

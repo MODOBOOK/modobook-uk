@@ -105,7 +105,13 @@ export const createProfile = createServerFn({ method: "POST" })
       email?: string;
       address?: Record<string, string>;
       brand_color?: string;
-    }) => input,
+      plan?: "solo" | "collective";
+    }) => {
+      if (input.plan !== "solo" && input.plan !== "collective") {
+        throw new Error("Please choose MODO Solo or MODO Collective.");
+      }
+      return input;
+    },
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -127,10 +133,37 @@ export const createProfile = createServerFn({ method: "POST" })
         address: data.address,
         brand_color: data.brand_color,
         active: true,
-      })
+        plan_tier: data.plan,
+        // Solo clinics don't include Clinic Compliance.
+        ...(data.plan === "solo" ? { compliance_enabled: false } : {}),
+      } as any)
       .select()
       .single();
     if (error) throw error;
+
+    // Put the new clinic's free-trial subscription on the plan they chose, so
+    // checkout later bills the right price. The caller has just created and
+    // owns this profile, so the privileged update is scoped to it.
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const planName = data.plan === "collective" ? "MODO Collective" : "MODO Solo";
+      const { data: planRow } = await supabaseAdmin
+        .from("subscription_plans")
+        .select("id")
+        .eq("kind", "base")
+        .eq("active", true)
+        .eq("name", planName)
+        .maybeSingle();
+      if (planRow?.id) {
+        await supabaseAdmin
+          .from("practitioner_subscriptions")
+          .update({ plan_id: planRow.id })
+          .eq("profile_id", profile.id)
+          .is("stripe_subscription_id", null);
+      }
+    } catch (e) {
+      console.error("[createProfile] failed to set chosen plan", e);
+    }
     return profile;
   });
 
