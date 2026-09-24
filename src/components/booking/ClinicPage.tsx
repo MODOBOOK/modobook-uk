@@ -1647,7 +1647,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
 
 
       {/* Mobile link button (above welcome message) */}
-      <SectionWrap k="welcome" custom={customSectionLayout} order={sectionIndexOf("welcome")} hidden={sectionHidden("welcome")}>
+      <SectionWrap k="welcome" custom={customSectionLayout} order={sectionIndexOf("welcome")} hidden={view === "book"}>
       {isMobile && linkButtonNode && (
         <section className="mx-auto mt-4 max-w-3xl px-4">{linkButtonNode}</section>
       )}
@@ -1687,7 +1687,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
 
 
       {/* Link button (above welcome message) */}
-      <SectionWrap k="welcome" custom={customSectionLayout} order={sectionIndexOf("welcome")} hidden={sectionHidden("welcome")}>
+      <SectionWrap k="welcome" custom={customSectionLayout} order={sectionIndexOf("welcome")} hidden={view === "book"}>
       {linkButtonNode && (
         <section className="mx-auto mt-8 hidden max-w-3xl px-4 sm:block">{linkButtonNode}</section>
       )}
