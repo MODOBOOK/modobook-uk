@@ -6557,6 +6557,7 @@ export type Database = {
       practitioner_subscriptions: {
         Row: {
           cancel_at_period_end: boolean
+          card_required: boolean
           comped: boolean
           created_at: string
           current_period_end: string | null
@@ -6586,6 +6587,7 @@ export type Database = {
         }
         Insert: {
           cancel_at_period_end?: boolean
+          card_required?: boolean
           comped?: boolean
           created_at?: string
           current_period_end?: string | null
@@ -6615,6 +6617,7 @@ export type Database = {
         }
         Update: {
           cancel_at_period_end?: boolean
+          card_required?: boolean
           comped?: boolean
           created_at?: string
           current_period_end?: string | null

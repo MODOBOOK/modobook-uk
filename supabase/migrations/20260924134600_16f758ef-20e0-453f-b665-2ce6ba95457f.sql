@@ -1,0 +1,1 @@
+ALTER TABLE public.practitioner_subscriptions ADD COLUMN IF NOT EXISTS card_required boolean NOT NULL DEFAULT false;
