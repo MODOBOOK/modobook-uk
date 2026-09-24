@@ -199,5 +199,8 @@ export function scheduledAvailabilityEnabled(slug?: string | null) {
 export const BOOKING_LAYOUT_SLUGS: string[] = [];
 
 export function bookingLayoutOptionsEnabled(slug?: string | null) {
-  return isFeatureLive(BOOKING_LAYOUT_SLUGS, slug);
+  // Explicit allowlist: an empty list means the split pages are off for
+  // everyone (unlike isFeatureLive, where empty means "live for everyone").
+  if (!slug) return false;
+  return BOOKING_LAYOUT_SLUGS.includes(slug.toLowerCase());
 }
