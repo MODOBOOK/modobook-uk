@@ -120,6 +120,15 @@ export function CourseGroupRow({
     }
     return `${days} day${days === 1 ? "" : "s"} apart`;
   };
+  // Per-session descriptions only matter when the clinic actually customised
+  // one — when every option shares the same description (the common case),
+  // the group blurb already covers it, so skip repeating it in the pop-ups.
+  const allDescs = sorted.map((o) => (o.description ?? "").trim());
+  const nonEmptyDescs = allDescs.filter(Boolean);
+  const distinctDescs = new Set(nonEmptyDescs);
+  const showPerOptionDesc =
+    distinctDescs.size > 1 || (distinctDescs.size === 1 && nonEmptyDescs.length !== allDescs.length);
+
   const recommended = sorted.find((o) => o.recommended);
   const detailOption = single;
   const detailPicture = sorted.find((o) => o.picture_url)?.picture_url ?? null;
