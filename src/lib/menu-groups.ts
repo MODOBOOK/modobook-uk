@@ -176,3 +176,19 @@ export function getComingSoonKey(to: string, pilot: boolean): "associates" | "sm
   if (to === "/dashboard/notifications/sms") return "sms-reminders";
   return null;
 }
+
+/** Features included in MODO Collective only — hidden for clinics that signed up on MODO Solo. */
+export const COLLECTIVE_ONLY_ROUTES = [
+  "/dashboard/compliance",
+  "/dashboard/associates",
+  "/dashboard/room-rental",
+  "/dashboard/training",
+];
+
+export function isCollectiveOnlyRoute(path: string) {
+  return COLLECTIVE_ONLY_ROUTES.some((r) => path === r || path.startsWith(r + "/"));
+}
+
+export function isSoloPlan(profile: unknown) {
+  return (profile as { plan_tier?: string | null } | null)?.plan_tier === "solo";
+}

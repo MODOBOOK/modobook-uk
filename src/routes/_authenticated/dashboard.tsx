@@ -46,6 +46,7 @@ import { ComingSoonDialog, type ComingSoonKey } from "@/components/ComingSoonDia
 import { ClinicSwitcher } from "@/components/ClinicSwitcher";
 import { canAccessRoute, type ClinicRole } from "@/lib/staff-nav";
 import { getComingSoonKey, menuGroups, type MenuGroup, type MenuItem } from "@/lib/menu-groups";
+import { isSoloPlan, isCollectiveOnlyRoute } from "@/lib/menu-groups";
 import { amIAdmin } from "@/lib/admin.functions";
 
 
@@ -175,7 +176,8 @@ function DashboardLayout() {
                 ...g,
                 items: g.items
                   .filter(gate)
-                  .filter((i) => (i.to === "/dashboard/compliance" ? pilotOn && (profile as Record<string, unknown>)?.compliance_enabled !== false && (profile as Record<string, unknown>)?.plan_tier !== "solo" : true))
+                  .filter((i) => (i.to === "/dashboard/compliance" ? (profile as { compliance_enabled?: boolean | null })?.compliance_enabled !== false : true))
+                  .filter((i) => !(isSoloPlan(profile) && isCollectiveOnlyRoute(i.to)))
                   .filter((i) => (i.to === "/dashboard/memberships" ? memberships : true))
                   .filter((i) => (i.to === "/dashboard/marketing/sms" ? smsMarketing : true))
                   .filter((i) => (i.to === "/dashboard/associates" ? (pilotOn ? Boolean((profile as Record<string, unknown>)?.associates_enabled) : true) : true)),
@@ -405,7 +407,19 @@ function DashboardLayout() {
           style={{ paddingBottom: "calc(6.5rem + env(safe-area-inset-bottom))" }}
         >
           <PlatformBillingGate>
-            <Outlet />
+            {isSoloPlan(profile) && isCollectiveOnlyRoute(pathname) ? (
+              <div className="mx-auto max-w-md py-16 text-center">
+                <h2 className="font-serif text-2xl">Part of MODO Collective</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Clinic Compliance, Associates, Room rental and Training are included with MODO Collective. Upgrade in Plan &amp; billing to unlock them.
+                </p>
+                <Link to="/dashboard/billing" className="mt-6 inline-block rounded-full bg-primary px-5 py-2 text-sm text-primary-foreground">
+                  View plans
+                </Link>
+              </div>
+            ) : (
+              <Outlet />
+            )}
           </PlatformBillingGate>
         </main>
 
