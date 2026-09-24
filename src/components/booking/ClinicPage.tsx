@@ -185,6 +185,7 @@ function WelcomeIntroBlock({
 }) {
   const [expanded, setExpanded] = useState(false);
   const collapsed = expandable && !expanded;
+  const proseCls = variant === "mobile" ? "text-sm leading-relaxed" : "text-base leading-relaxed";
   return (
     <>
       {heading && (
