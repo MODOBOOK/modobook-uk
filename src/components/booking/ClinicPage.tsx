@@ -173,6 +173,7 @@ function WelcomeIntroBlock({
   brand,
   expandable,
   variant,
+  tight,
 }: {
   heading: string;
   html: string;
@@ -180,12 +181,9 @@ function WelcomeIntroBlock({
   brand: string;
   expandable: boolean;
   variant: "mobile" | "desktop";
+  tight?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const proseCls =
-    variant === "mobile"
-      ? "prose prose-sm max-w-none [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg [&_p]:leading-relaxed [&_p]:my-3 [&_p:empty]:min-h-[1em] [&_p:empty]:block [&_br]:block [&_strong]:font-bold"
-      : "prose prose-base sm:prose-lg max-w-none [&_h1]:text-3xl [&_h2]:text-2xl [&_h3]:text-xl [&_p]:leading-relaxed [&_p]:my-3 [&_p:empty]:min-h-[1em] [&_p:empty]:block [&_br]:block [&_strong]:font-bold";
+...
   const collapsed = expandable && !expanded;
   return (
     <>
@@ -423,9 +421,10 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
   const savedVisibility = (themeAnyOpts?.section_visibility ?? null) as Record<string, boolean> | null;
   const savedOrder = layoutOptionsOn ? ((themeAnyOpts?.section_order ?? null) as string[] | null) : null;
   const SECTION_DEFAULT_ORDER = ["welcome", "memberships", "locations", "practitioners", "chooser", "favourites", "treatments", "contact", "policy"];
-  // Split-view (pilot): home shows intro sections, /book shows booking sections.
+  // Split-view (pilot): home shows intro sections, /book shows booking sections
+  // plus a clamped welcome intro pinned to the top.
   const HOME_SECTIONS = ["welcome", "memberships", "contact", "policy"];
-  const BOOK_SECTIONS = ["locations", "practitioners", "chooser", "favourites", "treatments"];
+  const BOOK_SECTIONS = ["welcome", "locations", "practitioners", "chooser", "favourites", "treatments"];
   const splitView = layoutOptionsOn && view !== "all";
   const customSectionLayout = layoutOptionsOn && (!!savedOrder || !!savedVisibility || splitView);
   const sectionHidden = (k: string) => {
@@ -439,6 +438,13 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
       (key, i, arr) => SECTION_DEFAULT_ORDER.includes(key) && arr.indexOf(key) === i && !sectionHidden(key),
     );
     const effective = [...ordered, ...SECTION_DEFAULT_ORDER.filter((key) => !ordered.includes(key) && !sectionHidden(key))];
+    if (view === "book") {
+      const wi = effective.indexOf("welcome");
+      if (wi > 0) {
+        effective.splice(wi, 1);
+        effective.unshift("welcome");
+      }
+    }
     const idx = effective.indexOf(k);
     return idx === -1 ? SECTION_DEFAULT_ORDER.length + 1 : idx + 1;
   };
