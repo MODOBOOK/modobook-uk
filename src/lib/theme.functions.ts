@@ -98,8 +98,8 @@ export type ClinicThemeInput = {
   dashboard_heading_font?: string | null;
   dashboard_body_font?: string | null;
   // Booking-page layout options (pilot)
-  page_preset?: string | null;
-  carousel_height?: string | null;
+  page_preset?: string;
+  carousel_height?: string;
   carousel_hidden?: boolean | null;
   section_visibility?: Record<string, boolean> | null;
   section_order?: string[] | null;
