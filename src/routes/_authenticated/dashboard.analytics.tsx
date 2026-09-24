@@ -87,7 +87,7 @@ function AnalyticsPage() {
       .finally(() => setLoading(false));
   }, [fetchAnalytics]);
 
-  const { filtered, totals, chartData, treatmentBreakdown, statusBreakdown, fromIso, toIso } = useMemo(() => {
+  const { filtered, totals, chartData, treatmentBreakdown, statusBreakdown, fromIso, toIso, costToIso } = useMemo(() => {
     if (!data) {
       return {
         filtered: [],
@@ -103,7 +103,7 @@ function AnalyticsPage() {
         treatmentBreakdown: [],
         statusBreakdown: [],
         fromIso: "",
-        toIso: "",
+        toIso: "", costToIso: "",
       };
     }
 
@@ -142,6 +142,8 @@ function AnalyticsPage() {
       `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     const fromIso = iso(from);
     const toIso = iso(to);
+    // Recurring costs/income for "All time" stop at today, not two years ahead.
+    const costToIso = range === "all" ? iso(today) : toIso;
 
     const filtered = data.appointments.filter((a) => a.scheduled_date >= fromIso && a.scheduled_date <= toIso);
 
@@ -226,7 +228,7 @@ function AnalyticsPage() {
     };
     const statusBreakdown = Array.from(statusMap.entries()).map(([name, value]) => ({ name, value, color: statusColors[name] ?? "#6c7a89" }));
 
-    return { filtered, totals, chartData, treatmentBreakdown, statusBreakdown, fromIso, toIso };
+    return { filtered, totals, chartData, treatmentBreakdown, statusBreakdown, fromIso, toIso, costToIso };
   }, [data, range]);
 
   return (
@@ -259,14 +261,14 @@ function AnalyticsPage() {
           {/* Summary cards */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             <MetricCard icon={CalendarDays} label="Bookings" value={String(totals.bookings)} />
-            <MetricCard icon={PoundSterling} label="Revenue" value={formatCurrency(totals.revenue + periodIncome(costs, fromIso, toIso))} />
+            <MetricCard icon={PoundSterling} label="Revenue" value={formatCurrency(totals.revenue + periodIncome(costs, fromIso, costToIso))} />
             <MetricCard icon={Users} label="Unique patients" value={String(totals.uniquePatients)} />
             <MetricCard icon={TrendingUp} label="Avg. booking" value={formatCurrency(totals.avgBookingValue)} />
             <MetricCard icon={XCircle} label="Cancelled" value={String(totals.cancellations)} tone="destructive" />
             <MetricCard icon={Clock} label="No-shows" value={String(totals.noShows)} tone="muted" />
           </div>
 
-          <ProfitSection costs={costs} appointments={data.appointments} fromIso={fromIso} toIso={toIso} revenue={totals.revenue} />
+          <ProfitSection costs={costs} appointments={data.appointments} fromIso={fromIso} toIso={toIso} costToIso={costToIso} revenue={totals.revenue} />
 
 
           {/* Charts */}
@@ -436,7 +438,7 @@ function periodIncome(costs: Awaited<ReturnType<typeof getCostsForAnalytics>> | 
   return (costs.income ?? []).reduce((s, e) => s + (expenseOccurrences(e, fromIso, toIso).length * e.amount_cents) / 100, 0);
 }
 
-function ProfitSection({ costs, appointments, fromIso, toIso, revenue }: { costs: Awaited<ReturnType<typeof getCostsForAnalytics>> | null; appointments: Appt[]; fromIso: string; toIso: string; revenue: number }) {
+function ProfitSection({ costs, appointments, fromIso, toIso, costToIso = toIso, revenue }: { costs: Awaited<ReturnType<typeof getCostsForAnalytics>> | null; appointments: Appt[]; fromIso: string; toIso: string; costToIso?: string; revenue: number }) {
 
   const view = useMemo(() => {
     if (!costs || !fromIso) return null;
@@ -451,13 +453,13 @@ function ProfitSection({ costs, appointments, fromIso, toIso, revenue }: { costs
         if (c) byCat.set(e.category, (byCat.get(e.category) ?? 0) + c / 100);
         continue;
       }
-      const n = expenseOccurrences(e, fromIso, toIso).length;
+      const n = expenseOccurrences(e, fromIso, costToIso).length;
       if (n) byCat.set(e.category, (byCat.get(e.category) ?? 0) + (n * e.amount_cents) / 100);
     }
     const otherCost = Array.from(byCat.values()).reduce((a, b) => a + b, 0);
     const incByCat = new Map<string, number>();
     for (const e of costs.income ?? []) {
-      const n = expenseOccurrences(e, fromIso, toIso).length;
+      const n = expenseOccurrences(e, fromIso, costToIso).length;
       if (n) incByCat.set(e.category, (incByCat.get(e.category) ?? 0) + (n * e.amount_cents) / 100);
     }
     const extraIncome = Array.from(incByCat.values()).reduce((a, b) => a + b, 0);
@@ -514,7 +516,7 @@ function ProfitSection({ costs, appointments, fromIso, toIso, revenue }: { costs
       }
     }
     return { productCost, otherCost, breakdown, months, extraIncome, incomeBreakdown };
-  }, [costs, fromIso, toIso, appointments]);
+  }, [costs, fromIso, toIso, costToIso, appointments]);
 
   if (!view) return null;
   const totalCosts = view.productCost + view.otherCost;
