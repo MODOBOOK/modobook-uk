@@ -20,6 +20,7 @@ import { amIAdmin } from "@/lib/admin.functions";
 import { ComingSoonDialog, type ComingSoonKey } from "@/components/ComingSoonDialog";
 import { canAccessRoute, type ClinicRole } from "@/lib/staff-nav";
 import { getComingSoonKey, menuGroups, type MenuItem } from "@/lib/menu-groups";
+import { isSoloPlan, isCollectiveOnlyRoute } from "@/lib/menu-groups";
 
 export const Route = createFileRoute("/_authenticated/dashboard/menu")({
   ssr: false,
@@ -58,7 +59,8 @@ function MenuPage() {
       ...g,
       items: g.items
         .filter((i) => canAccessRoute(clinicRole, i.to, { canManageRota: Boolean((profile as Record<string, unknown>)?.["__can_manage_rota"]), canUsePrescribing: Boolean((profile as Record<string, unknown>)?.["__can_use_prescribing"]) }))
-        .filter((i) => (i.to === "/dashboard/compliance" ? pilot && (profile as { compliance_enabled?: boolean | null }).compliance_enabled !== false && (profile as { plan_tier?: string | null }).plan_tier !== "solo" : true))
+        .filter((i) => (i.to === "/dashboard/compliance" ? (profile as { compliance_enabled?: boolean | null })?.compliance_enabled !== false : true))
+                  .filter((i) => !(isSoloPlan(profile) && isCollectiveOnlyRoute(i.to)))
         .filter((i) => (i.to === "/dashboard/memberships" ? memberships : true))
         .filter((i) => (i.to === "/dashboard/marketing/sms" ? smsMarketing : true))
         .filter((i) =>
