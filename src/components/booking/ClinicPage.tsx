@@ -426,7 +426,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
   const SECTION_DEFAULT_ORDER = ["welcome", "memberships", "locations", "practitioners", "chooser", "favourites", "treatments", "contact", "policy"];
   // Split-view (pilot): home shows intro sections, /book shows booking sections
   // plus a clamped welcome intro pinned to the top.
-  const HOME_SECTIONS = ["welcome", "memberships", "contact", "policy"];
+  const HOME_SECTIONS = ["memberships", "contact", "policy"];
   const BOOK_SECTIONS = ["welcome", "locations", "practitioners", "chooser", "favourites", "treatments"];
   const splitView = layoutOptionsOn && view !== "all";
   const customSectionLayout = layoutOptionsOn && (!!savedOrder || !!savedVisibility || splitView);
@@ -1647,7 +1647,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
 
 
       {/* Mobile link button (above welcome message) */}
-      <SectionWrap k="welcome" custom={customSectionLayout} order={sectionIndexOf("welcome")} hidden={sectionHidden("welcome")}>
+      <SectionWrap k="welcome" custom={customSectionLayout} order={sectionIndexOf("welcome")} hidden={view === "book"}>
       {isMobile && linkButtonNode && (
         <section className="mx-auto mt-4 max-w-3xl px-4">{linkButtonNode}</section>
       )}
@@ -1682,12 +1682,12 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
       {/* Model slots now render inside the Treatments tab after the user presses "I know what I want". */}
 
       {/* Contact us (moved below the treatment menu on quick-book CTA pages) */}
-      {!bookCtaOn && contactSectionNode}
+      {!bookCtaOn && !sectionHidden("contact") && contactSectionNode}
 
 
 
       {/* Link button (above welcome message) */}
-      <SectionWrap k="welcome" custom={customSectionLayout} order={sectionIndexOf("welcome")} hidden={sectionHidden("welcome")}>
+      <SectionWrap k="welcome" custom={customSectionLayout} order={sectionIndexOf("welcome")} hidden={view === "book"}>
       {linkButtonNode && (
         <section className="mx-auto mt-8 hidden max-w-3xl px-4 sm:block">{linkButtonNode}</section>
       )}
