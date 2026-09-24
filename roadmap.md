@@ -44,3 +44,10 @@ Goal: MODO runs in an app WebView; dashboard must feel native on phones.
 - [x] Verify every template in HTML and plain text
 - [x] Group all booking medical and consent forms into one patient email
 - [ ] Switch delivery to Resend (connection was skipped)
+
+# Clinic-wide rebook reminders
+- [x] Add an optional clinic-wide reminder after 90 days without a visit
+- [x] Exclude patients who already have an upcoming booking
+- [x] Send one follow-up 30 days later, then stop until another completed visit
+- [x] Keep treatment-specific rebook and top-up reminders available
+- [x] Verify the settings screen and reminder email in preview

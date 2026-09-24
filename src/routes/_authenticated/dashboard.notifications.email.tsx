@@ -46,6 +46,9 @@ function EmailNotificationsPage() {
     ((profile as { new_booking_email_to?: string | null }).new_booking_email_to ?? "") as string,
   );
   const [testing, setTesting] = useState(false);
+  const [generalRebookEnabled, setGeneralRebookEnabled] = useState(
+    (profile as { general_rebook_reminders_enabled?: boolean }).general_rebook_reminders_enabled === true,
+  );
 
   async function sendNewBookingTest() {
     setTesting(true);
@@ -79,6 +82,9 @@ function EmailNotificationsPage() {
           notify_new_booking_email: notifyNewBooking,
           new_booking_email_to: newBookingTo.trim() || null,
           reminder_hours_before: reminderHours,
+          general_rebook_reminders_enabled: generalRebookEnabled,
+          general_rebook_reminder_days: 90,
+          general_rebook_followup_days: 30,
         },
       });
       toast.success("Email notifications saved");
@@ -152,6 +158,15 @@ function EmailNotificationsPage() {
             {reminderHours.length === 0 && (
               <p className="mt-2 text-xs text-muted-foreground italic">No reminders will be sent.</p>
             )}
+          </div>
+          <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">We haven&rsquo;t seen you in a while</p>
+              <p className="text-xs text-muted-foreground">
+                Email patients after 3 months without a visit, then once more 30 days later. Patients with an upcoming booking are excluded.
+              </p>
+            </div>
+            <Switch checked={generalRebookEnabled} onCheckedChange={setGeneralRebookEnabled} />
           </div>
         </CardContent>
       </Card>
