@@ -175,7 +175,7 @@ function DashboardLayout() {
                 ...g,
                 items: g.items
                   .filter(gate)
-                  .filter((i) => (i.to === "/dashboard/compliance" ? pilotOn && (profile as Record<string, unknown>)?.compliance_enabled !== false : true))
+                  .filter((i) => (i.to === "/dashboard/compliance" ? pilotOn && (profile as Record<string, unknown>)?.compliance_enabled !== false && (profile as Record<string, unknown>)?.plan_tier !== "solo" : true))
                   .filter((i) => (i.to === "/dashboard/memberships" ? memberships : true))
                   .filter((i) => (i.to === "/dashboard/marketing/sms" ? smsMarketing : true))
                   .filter((i) => (i.to === "/dashboard/associates" ? (pilotOn ? Boolean((profile as Record<string, unknown>)?.associates_enabled) : true) : true)),

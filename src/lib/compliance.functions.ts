@@ -114,10 +114,11 @@ export const getCompliance = createServerFn({ method: "GET" })
     // often don't need it). When off we return empty data and never seed.
     const { data: prof } = await db
       .from("profiles")
-      .select("compliance_enabled")
+      .select("compliance_enabled, plan_tier")
       .eq("id", a.profileId)
       .maybeSingle();
-    const enabled = prof?.compliance_enabled !== false;
+    const notInPlan = prof?.plan_tier === "solo";
+    const enabled = !notInPlan && prof?.compliance_enabled !== false;
     if (!enabled) {
       return {
         enabled: false,
@@ -208,6 +209,10 @@ export const setComplianceEnabled = createServerFn({ method: "POST" })
     const db = context.supabase as any;
     const a = await access(context as Ctx);
     if (!a.isOwner) throw new Error("Only the clinic owner can change this setting.");
+    if (data.enabled) {
+      const { data: prof } = await db.from("profiles").select("plan_tier").eq("id", a.profileId).maybeSingle();
+      if (prof?.plan_tier === "solo") throw new Error("Clinic Compliance is part of MODO Collective.");
+    }
     const { error } = await db
       .from("profiles")
       .update({ compliance_enabled: data.enabled })
