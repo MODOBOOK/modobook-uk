@@ -430,12 +430,12 @@ function ProfitSection({ appointments, fromIso, toIso, revenue }: { appointments
   const fetchCosts = useServerFn(getCostsForAnalytics);
   const [costs, setCosts] = useState<Awaited<ReturnType<typeof getCostsForAnalytics>> | null>(null);
   useEffect(() => {
-    fetchCosts().then(setCosts).catch(() => setCosts({ expenses: [], purchases: [], income: [] }));
+    fetchCosts().then(setCosts).catch(() => setCosts({ expenses: [], purchases: [], income: [], usage: [] }));
   }, [fetchCosts]);
 
   const view = useMemo(() => {
     if (!costs || !fromIso) return null;
-    const productCost = costs.purchases.filter((p) => p.purchased_at >= fromIso && p.purchased_at <= toIso).reduce((s, p) => s + p.total_cost_cents, 0) / 100;
+    const productCost = (costs.usage ?? []).filter((u) => u.date >= fromIso && u.date <= toIso).reduce((s, u) => s + u.cost_cents, 0) / 100;
     const periodMinutes = appointments
       .filter((a) => a.status !== "cancelled" && a.status !== "no_show" && a.scheduled_date >= fromIso && a.scheduled_date <= toIso)
       .reduce((s, a) => s + apptMinutes(a), 0);
@@ -476,9 +476,9 @@ function ProfitSection({ appointments, fromIso, toIso, revenue }: { appointments
       const i = idx.get(a.scheduled_date.slice(0, 7));
       if (i !== undefined) months[i].income += Number((a as Appt & { total_amount?: number | null }).total_amount ?? 0);
     }
-    for (const p of costs.purchases) {
-      const i = idx.get(p.purchased_at.slice(0, 7));
-      if (i !== undefined) months[i].costs += p.total_cost_cents / 100;
+    for (const u of costs.usage ?? []) {
+      const i = idx.get(u.date.slice(0, 7));
+      if (i !== undefined) months[i].costs += u.cost_cents / 100;
     }
     const first = `${months[0].key}-01`;
     const lastD = new Date(now.getFullYear(), now.getMonth() + 1, 0);

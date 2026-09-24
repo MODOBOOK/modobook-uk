@@ -70,7 +70,7 @@ export const getCostsForAnalytics = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const pid = await getProfileId(context.supabase, context.userId);
-    if (!pid) return { expenses: [] as ExpenseRow[], purchases: [] as { purchased_at: string; total_cost_cents: number }[], income: [] as ExpenseRow[] };
+    if (!pid) return { expenses: [] as ExpenseRow[], purchases: [] as { purchased_at: string; total_cost_cents: number }[], income: [] as ExpenseRow[], usage: [] as { date: string; cost_cents: number }[] };
     const [e, p, inc] = await Promise.all([
       context.supabase.from("business_expenses" as any).select("id, name, category, amount_cents, frequency, start_date, end_date, notes").eq("profile_id", pid),
       context.supabase.from("product_purchases").select("purchased_at, total_cost_cents").eq("profile_id", pid),
@@ -81,8 +81,20 @@ export const getCostsForAnalytics = createServerFn({ method: "GET" })
       expenses: (e.data ?? []) as unknown as ExpenseRow[],
       purchases: (p.data ?? []) as { purchased_at: string; total_cost_cents: number }[],
       income: (inc.data ?? []) as unknown as ExpenseRow[],
+      usage: await productUsage(context.supabase, pid),
     };
   });
+
+/** Product cost used by booked treatments: one entry per appointment date. */
+async function productUsage(sb: any, pid: string): Promise<{ date: string; cost_cents: number }[]> {
+  const { data: links } = await sb.from("treatment_products").select("treatment_id, cost_per_treatment_cents").eq("profile_id", pid);
+  const perTreatment = new Map<string, number>();
+  for (const l of links ?? []) perTreatment.set(l.treatment_id, (perTreatment.get(l.treatment_id) ?? 0) + (l.cost_per_treatment_cents ?? 0));
+  if (!perTreatment.size) return [];
+  const { data: appts } = await sb.from("appointments").select("scheduled_date, treatment_id, status")
+    .in("treatment_id", Array.from(perTreatment.keys())).not("status", "in", "(cancelled,no_show)").limit(10000);
+  return (appts ?? []).map((a: any) => ({ date: String(a.scheduled_date).slice(0, 10), cost_cents: perTreatment.get(a.treatment_id) ?? 0 })).filter((u: any) => u.cost_cents > 0);
+}
 
 // ---------- Additional business income ----------
 export type IncomeRow = Omit<ExpenseRow, "frequency"> & { frequency: "one_off" | "weekly" | "monthly" | "yearly" };
