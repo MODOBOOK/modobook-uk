@@ -38,6 +38,7 @@ function ProductsPage() {
   const listTreatments = useServerFn(getMyTreatments);
 
   const [products, setProducts] = useState<ProductRow[]>([]);
+  const [linkSearch, setLinkSearch] = useState("");
   const [purchases, setPurchases] = useState<PurchaseRow[]>([]);
   const [links, setLinks] = useState<TreatmentProductLink[]>([]);
   const [staff, setStaff] = useState<StaffOption[]>([]);
@@ -394,26 +395,29 @@ function ProductsPage() {
       </Dialog>
 
       {/* Treatment links */}
-      <Dialog open={!!linksOpen} onOpenChange={(o) => !o && setLinksOpen(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Link {linksOpen?.name} to treatments</DialogTitle></DialogHeader>
-          <p className="text-xs text-muted-foreground">
-            Enter how many units of this product each treatment uses (e.g. 1 or 1.5). MODO works out the cost from the pack price
-            {linksOpen ? ` (${gbp(linksOpen.unit_cost_cents)} ÷ ${linksOpen.pack_size} = ${gbp(Math.round(linksOpen.unit_cost_cents / Math.max(1, linksOpen.pack_size)))} per unit)` : ""}
-            {" "}and takes it off before commission. Leave blank or 0 for treatments that don't use this product.
+      <Dialog open={!!linksOpen} onOpenChange={(o) => { if (!o) { setLinksOpen(null); setLinkSearch(""); } }}>
+        <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-1.5rem)] max-w-lg flex-col gap-3 overflow-hidden p-4 sm:p-6">
+          <DialogHeader><DialogTitle className="pr-6 text-left">Link {linksOpen?.name} to treatments</DialogTitle></DialogHeader>
+          <p className="text-xs text-muted-foreground break-words">
+            Units each treatment uses (e.g. 1 or 1.5)
+            {linksOpen ? ` · ${gbp(Math.round(linksOpen.unit_cost_cents / Math.max(1, linksOpen.pack_size)))} per unit` : ""}. Leave blank if not used.
           </p>
-          <div className="space-y-2">
-            {treatments.map((t) => (
-              <div key={t.id} className="flex items-center justify-between gap-3">
+          <Input placeholder="Search treatments…" value={linkSearch} onChange={(e) => setLinkSearch(e.target.value)} className="h-9" />
+          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+            {treatments
+              .filter((t) => t.name.toLowerCase().includes(linkSearch.trim().toLowerCase()))
+              .sort((a, b) => Number(!!Number(linkCosts[b.id])) - Number(!!Number(linkCosts[a.id])))
+              .map((t) => (
+              <div key={t.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                 <p className="min-w-0 truncate text-sm">{t.name}</p>
-                <div className="flex w-32 items-center gap-1">
+                <div className="flex w-24 shrink-0 items-center gap-1">
                   <Input
-                    type="number" min="0" step="0.5" className="h-8"
+                    type="number" inputMode="decimal" min="0" step="0.5" className="h-8 px-2"
                     value={linkCosts[t.id] ?? ""}
                     placeholder="0"
                     onChange={(e) => setLinkCosts({ ...linkCosts, [t.id]: e.target.value })}
                   />
-                  <span className="shrink-0 text-xs text-muted-foreground">units</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">u</span>
                 </div>
               </div>
             ))}
