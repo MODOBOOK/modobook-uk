@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Html, Preview, Heading, Text, Button, Section } from '@react-email/components'
-import { ModoShell, Head, styles, brandedButton, BodyOverride } from './_modo-brand'
+import { ModoShell, Head, styles, brandedButton, BodyOverride, DetailRow, Notice } from './_modo-brand'
 import type { TemplateEntry } from './registry'
 
 interface Props {
@@ -10,6 +10,15 @@ interface Props {
   practitionerName?: string
   locationName?: string
   locationAddress?: string
+  duration?: string
+  preparationNotes?: string | null
+  cancellationPolicy?: string | null
+  directionsUrl?: string | null
+  calendarGoogleUrl?: string | null
+  calendarOutlookUrl?: string | null
+  clinicImageUrl?: string | null
+  websiteUrl?: string | null
+  instagramUrl?: string | null
   dateTime?: string
   hoursBefore?: number
   manageUrl?: string
@@ -28,6 +37,15 @@ const Email = ({
   practitionerName,
   locationName,
   locationAddress,
+  duration,
+  preparationNotes,
+  cancellationPolicy,
+  directionsUrl,
+  calendarGoogleUrl,
+  calendarOutlookUrl,
+  clinicImageUrl,
+  websiteUrl,
+  instagramUrl,
   dateTime = 'your upcoming appointment',
   hoursBefore = 24,
   manageUrl,
@@ -47,25 +65,27 @@ const Email = ({
     <Html lang="en" dir="ltr">
       <Head />
       <Preview>Reminder: {treatmentName} at {clinicName}</Preview>
-      <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
+      <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor} imageUrl={clinicImageUrl} websiteUrl={websiteUrl} instagramUrl={instagramUrl} directionsUrl={directionsUrl}>
         <Heading as="h1" style={styles.h1}>Appointment reminder</Heading>
         <Text style={styles.text}>{introOverride?.trim() || defaultIntro}</Text>
         {hasBody ? (
           <BodyOverride text={bodyOverride} />
         ) : (
-          <Section style={{ backgroundColor: '#f5f1ea', borderRadius: 12, padding: '16px 18px', margin: '8px 0 20px' }}>
-            <Text style={{ ...styles.text, margin: '0 0 6px' }}><strong>{treatmentName}</strong></Text>
-            <Text style={{ ...styles.muted, margin: '0 0 4px' }}>{dateTime}</Text>
-            {practitionerName && <Text style={{ ...styles.muted, margin: '0 0 4px' }}>With {practitionerName}</Text>}
-            {locationName && <Text style={{ ...styles.muted, margin: '0 0 4px' }}>{locationName}</Text>}
-            {locationAddress && <Text style={{ ...styles.muted, margin: 0 }}>{locationAddress}</Text>}
-          </Section>
+          <table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', borderCollapse: 'collapse', borderTop: '1px solid #e4ddd3', borderBottom: '1px solid #e4ddd3', margin: '8px 0 22px' }}><tbody>
+            <DetailRow label="Treatment">{treatmentName}</DetailRow>
+            <DetailRow label="When">{dateTime}{duration ? <><br />{duration}</> : null}</DetailRow>
+            {practitionerName ? <DetailRow label="With">{practitionerName}</DetailRow> : null}
+            <DetailRow label="Where" last>{[locationName, locationAddress].filter(Boolean).join(', ')}</DetailRow>
+          </tbody></table>
         )}
+        {preparationNotes ? <Notice title="Before your appointment">{preparationNotes}</Notice> : null}
+        {cancellationPolicy ? <Notice title="Cancellation policy">{cancellationPolicy}</Notice> : null}
         {manageUrl && (
           <Section style={styles.buttonWrap}>
             <Button href={manageUrl} style={brandedButton(brandColor)}>Manage booking</Button>
           </Section>
         )}
+        {calendarGoogleUrl || calendarOutlookUrl ? <Text style={{ ...styles.muted, textAlign: 'center' }}>{calendarGoogleUrl ? <a href={calendarGoogleUrl} style={styles.link}>Google Calendar</a> : null}{calendarGoogleUrl && calendarOutlookUrl ? ' · ' : ''}{calendarOutlookUrl ? <a href={calendarOutlookUrl} style={styles.link}>Outlook</a> : null}</Text> : null}
         <Text style={styles.muted}>{closingOverride?.trim() || defaultClosing}</Text>
       </ModoShell>
     </Html>

@@ -59,7 +59,7 @@ const Email = ({
           <Button href={rebookUrl} style={brandedButton(brandColor)}>Book another time</Button>
         </Section>
       )}
-      <Text style={styles.muted}>{closingOverride?.trim() || 'If you have any questions, just reply to this email.'}</Text>
+      {closingOverride?.trim() ? <Text style={styles.muted}>{closingOverride}</Text> : null}
     </ModoShell>
   </Html>
 )
