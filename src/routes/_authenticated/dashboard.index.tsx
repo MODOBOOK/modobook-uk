@@ -15,6 +15,8 @@ import {
 
 import { listMyAppointments } from "@/lib/availability.functions";
 import { getStripePayouts } from "@/lib/stripe.functions";
+import { getCostsForAnalytics } from "@/lib/expenses.functions";
+import { expenseOccurrences } from "@/lib/expense-utils";
 import { buildBookingUrl } from "@/lib/booking-url";
 import { resolveDisplayNames } from "@/lib/display-name";
 import { SetupChecklistCard } from "@/components/SetupChecklistCard";
@@ -53,6 +55,8 @@ function DashboardIndex() {
   const [appts, setAppts] = useState<Appt[]>([]);
   const [loading, setLoading] = useState(true);
   const [payouts, setPayouts] = useState<Awaited<ReturnType<typeof getStripePayouts>> | null>(null);
+  const fetchCosts = useServerFn(getCostsForAnalytics);
+  const [income, setIncome] = useState<Awaited<ReturnType<typeof getCostsForAnalytics>>["income"]>([]);
 
   const bookingUrl = buildBookingUrl(profile.slug);
 
@@ -65,13 +69,15 @@ function DashboardIndex() {
         setLoading(false);
       }
     })();
+    fetchCosts().then((c) => setIncome(c.income ?? [])).catch(() => {});
     if (profile.stripe_connect_account_id) {
       fetchPayouts().then(setPayouts).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const localIso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const today = localIso(new Date());
 
   const { todays, upcoming, todayBookings, todayCancellations, weekCount, monthBookings, salesToday, salesWeek, salesMonth, thisMonthName, nextMonthName, nextMonthBookings, nextMonthSales, cancelledThisWeek } = useMemo(() => {
     const todays = appts.filter((a) => a.scheduled_date === today);
@@ -83,37 +89,38 @@ function DashboardIndex() {
     const now = new Date();
     const weekEnd = new Date();
     weekEnd.setDate(weekEnd.getDate() + 7);
-    const weekIso = weekEnd.toISOString().slice(0, 10);
+    const weekIso = localIso(weekEnd);
     const weekCount = appts.filter(
       (a) => a.scheduled_date >= today && a.scheduled_date <= weekIso && a.status !== "cancelled",
     ).length;
     // Past windows for sales (counts confirmed/completed bookings — excludes cancelled)
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - 6);
-    const weekStartIso = startOfWeek.toISOString().slice(0, 10);
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10);
+    const weekStartIso = localIso(startOfWeek);
+    const startOfMonth = localIso(new Date(now.getFullYear(), now.getMonth(), 1));
+    const endOfMonth = localIso(new Date(now.getFullYear(), now.getMonth() + 1, 0));
     // Next calendar month bounds + names
-    const nextStartOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString().slice(0, 10);
-    const nextEndOfMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0).toISOString().slice(0, 10);
+    const nextStartOfMonth = localIso(new Date(now.getFullYear(), now.getMonth() + 1, 1));
+    const nextEndOfMonth = localIso(new Date(now.getFullYear(), now.getMonth() + 2, 0));
     const thisMonthName = new Date(now.getFullYear(), now.getMonth(), 1).toLocaleDateString(undefined, { month: "long" });
     const nextMonthName = new Date(now.getFullYear(), now.getMonth() + 1, 1).toLocaleDateString(undefined, { month: "long" });
     const amt = (a: Appt) => Number((a as Appt & { total_amount?: number | null }).total_amount ?? 0);
     const inRange = (a: Appt, from: string, to: string) =>
-      a.status !== "cancelled" && a.scheduled_date >= from && a.scheduled_date <= to;
-    const salesToday = appts.filter((a) => inRange(a, today, today)).reduce((s, a) => s + amt(a), 0);
-    const salesWeek = appts.filter((a) => inRange(a, weekStartIso, today)).reduce((s, a) => s + amt(a), 0);
-    const salesMonth = appts.filter((a) => inRange(a, startOfMonth, endOfMonth)).reduce((s, a) => s + amt(a), 0);
+      a.status !== "cancelled" && a.status !== "no_show" && a.scheduled_date >= from && a.scheduled_date <= to;
+    const inc = (from: string, to: string) => income.reduce((s, e) => s + (expenseOccurrences(e, from, to).length * e.amount_cents) / 100, 0);
+    const salesToday = inc(today, today) + appts.filter((a) => inRange(a, today, today)).reduce((s, a) => s + amt(a), 0);
+    const salesWeek = inc(weekStartIso, today) + appts.filter((a) => inRange(a, weekStartIso, today)).reduce((s, a) => s + amt(a), 0);
+    const salesMonth = inc(startOfMonth, endOfMonth) + appts.filter((a) => inRange(a, startOfMonth, endOfMonth)).reduce((s, a) => s + amt(a), 0);
     const monthBookings = appts.filter((a) => inRange(a, startOfMonth, endOfMonth)).length;
     const nextMonthBookings = appts.filter((a) => inRange(a, nextStartOfMonth, nextEndOfMonth)).length;
-    const nextMonthSales = appts.filter((a) => inRange(a, nextStartOfMonth, nextEndOfMonth)).reduce((s, a) => s + amt(a), 0);
+    const nextMonthSales = inc(nextStartOfMonth, nextEndOfMonth) + appts.filter((a) => inRange(a, nextStartOfMonth, nextEndOfMonth)).reduce((s, a) => s + amt(a), 0);
     // Cancelled this calendar week (Monday–Sunday)
     const monday = new Date(now);
     monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-    const mondayIso = monday.toISOString().slice(0, 10);
+    const mondayIso = localIso(monday);
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
-    const sundayIso = sunday.toISOString().slice(0, 10);
+    const sundayIso = localIso(sunday);
     const cancelledThisWeek = appts.filter(
       (a) => a.status === "cancelled" && a.scheduled_date >= mondayIso && a.scheduled_date <= sundayIso,
     ).length;
