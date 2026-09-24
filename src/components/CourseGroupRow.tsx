@@ -270,7 +270,7 @@ export function CourseGroupRow({
                         {o.duration ? `${o.duration} min each` : ""}
                         {o.full ? " · fully booked" : ""}
                       </div>
-                      {o.description && (
+                      {showPerOptionDesc && o.description && (
                         <p className="mt-1 whitespace-pre-line text-xs leading-relaxed opacity-80">{o.description}</p>
                       )}
                       {o.session_count > 1 && (
