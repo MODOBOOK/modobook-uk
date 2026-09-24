@@ -1649,7 +1649,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
               html={welcomeHtml}
               headingStyle={headingStyle}
               brand={brand}
-              expandable={introExpandable}
+              expandable={view === "book" ? introLength > 90 : introExpandable}
               variant="mobile"
             />
           </div>
@@ -1691,7 +1691,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
               html={welcomeHtml}
               headingStyle={headingStyle}
               brand={brand}
-              expandable={introExpandable}
+              expandable={view === "book" ? introLength > 90 : introExpandable}
               variant="desktop"
             />
           </div>
