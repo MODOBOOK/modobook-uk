@@ -8,6 +8,9 @@ export const brand = {
   muted: '#8a8176',
   border: '#e4ddd3',
   soft: '#f4f0ea',
+  accent: '#2c2620',
+  accentInk: '#faf8f5',
+  headerCard: '#f4f0ea',
 }
 
 function safeBrandColor(value?: string | null) {

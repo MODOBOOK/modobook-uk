@@ -135,6 +135,14 @@ export async function enqueueAppEmail(
   let resolvedReplyTo = input.replyTo
   if (profileId) {
     try {
+      const branding = await getPractitionerBranding(profileId)
+      if (!baseData.clinicName) baseData.clinicName = branding.clinicName
+      if (!baseData.logoUrl) baseData.logoUrl = branding.logoUrl
+      if (!baseData.clinicImageUrl) baseData.clinicImageUrl = branding.clinicImageUrl
+      if (!baseData.brandColor) baseData.brandColor = branding.brandColor
+      if (!baseData.websiteUrl) baseData.websiteUrl = branding.websiteUrl
+      if (!baseData.instagramUrl) baseData.instagramUrl = branding.instagramUrl
+      if (input.resolveProfileReplyTo === false && !resolvedReplyTo && branding.contactEmail) resolvedReplyTo = branding.contactEmail
       const [{ data: cust }, { data: prof }] = await Promise.all([
         supabase
           .from('email_customizations')
