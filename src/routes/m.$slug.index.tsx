@@ -434,7 +434,7 @@ function BookPage() {
   const presetCompact = pagePreset === "compact";
   const presetEditorial = pagePreset === "editorial";
   const carouselHidden = layoutOptionsOn && themeAnyOpts?.carousel_hidden === true;
-  const carouselSmall = layoutOptionsOn && themeAnyOpts?.carousel_height === "small";
+  const carouselSmall = layoutOptionsOn && (themeAnyOpts?.carousel_height === "small" || pagePreset === "compact");
   const savedVisibility = (themeAnyOpts?.section_visibility ?? null) as Record<string, boolean> | null;
   const savedOrder = layoutOptionsOn ? ((themeAnyOpts?.section_order ?? null) as string[] | null) : null;
   const SECTION_DEFAULT_ORDER = ["welcome", "memberships", "locations", "practitioners", "chooser", "favourites", "treatments", "contact", "policy"];
@@ -1372,6 +1372,12 @@ function BookPage() {
         .modo-sec-flex .modo-sec > * { margin-top: var(--section-gap); }
         .modo-sec-flex > footer { order: 9999; }
         .preset-compact h2 { font-size: 1.125rem; line-height: 1.35; }
+        .preset-compact { --section-gap: 0.875rem !important; }
+        .preset-compact .modo-sec :is(.p-8,.p-7,.p-6) { padding: 1rem !important; }
+        .preset-compact .modo-sec :is(.p-5,.p-4) { padding: 0.75rem !important; }
+        .preset-compact .modo-sec :is(.py-6,.py-5,.py-4) { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; }
+        .preset-compact .modo-sec p { font-size: 0.875rem; line-height: 1.45; }
+        .preset-compact .modo-sec img.rounded-full, .preset-compact .modo-sec :is(.h-16,.w-16) { height: 3rem; width: 3rem; }
         .preset-editorial h2 { font-size: 1.5rem; line-height: 1.3; letter-spacing: -0.01em; }
       `}</style>
 
