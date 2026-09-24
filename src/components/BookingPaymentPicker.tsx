@@ -243,11 +243,19 @@ function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent,
     return { mode: normalizedMode, method, policyAgreed: value.policyAgreed === true };
   }, [value, opts, availableModes, availableMethods, depositWaived, effectiveDepositCents, treatmentTotalCents, cashDepositAvailable, cashFullAvailable]);
 
+  // When the clinic has no online payment set up (or no usable option), the
+  // picker renders nothing — fall back to paying in clinic so the patient can
+  // still complete the booking instead of hitting a disabled button.
+  const hasNonCashMode = availableModes.some((m) => m !== "cash");
+  const pickerUnavailable = !q.isLoading && treatmentTotalCents > 0
+    && (!configured || availableModes.length === 0 || (hasNonCashMode && availableMethods.length === 0));
+  useEffect(() => {
+    if (pickerUnavailable && value?.mode !== "cash") onChange({ mode: "cash", method: "card" });
+  }, [pickerUnavailable, value?.mode, onChange]);
 
   if (!configured || availableModes.length === 0) return null;
-  // Method picker only required when at least one non-cash mode is available.
-  const hasNonCashMode = availableModes.some((m) => m !== "cash");
   if (hasNonCashMode && availableMethods.length === 0) return null;
+
   // Free bookings (£0) skip payment entirely — no platform/processing fees.
   if (treatmentTotalCents <= 0) return null;
 
