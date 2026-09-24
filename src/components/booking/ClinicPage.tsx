@@ -426,7 +426,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
   const SECTION_DEFAULT_ORDER = ["welcome", "memberships", "locations", "practitioners", "chooser", "favourites", "treatments", "contact", "policy"];
   // Split-view (pilot): home shows intro sections, /book shows booking sections
   // plus a clamped welcome intro pinned to the top.
-  const HOME_SECTIONS = ["welcome", "memberships", "contact", "policy"];
+  const HOME_SECTIONS = ["memberships", "contact", "policy"];
   const BOOK_SECTIONS = ["welcome", "locations", "practitioners", "chooser", "favourites", "treatments"];
   const splitView = layoutOptionsOn && view !== "all";
   const customSectionLayout = layoutOptionsOn && (!!savedOrder || !!savedVisibility || splitView);
@@ -1682,7 +1682,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
       {/* Model slots now render inside the Treatments tab after the user presses "I know what I want". */}
 
       {/* Contact us (moved below the treatment menu on quick-book CTA pages) */}
-      {!bookCtaOn && contactSectionNode}
+      {!bookCtaOn && !sectionHidden("contact") && contactSectionNode}
 
 
 
