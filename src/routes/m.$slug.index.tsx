@@ -2079,8 +2079,8 @@ function BookPage() {
           </section>
         );
       })()}
-      {/* Treatments + Packages */}
-
+      </SectionWrap>
+      <SectionWrap k="treatments" custom={customSectionLayout} order={sectionIndexOf("treatments")} hidden={false}>
       {locationGateOpen && practitionerGateOpen && (!chooserOn || mode === "know" || mode === "consult" || (mode === "unsure" && concernsConfirmed && pickedConcernIds.length > 0)) ? (
         <section id="treatment-menu" className="mx-auto mt-10 max-w-3xl scroll-mt-16 px-4 pb-32">
           {chooserOn && (
@@ -2715,9 +2715,19 @@ function BookPage() {
           </p>
         </section>
       ) : null}
+      </SectionWrap>
 
       {/* Quick-book CTA pages: Get in touch + policies in their own section below the menu */}
-      {bookCtaOn && (contactSectionNode || policySectionNode) && (
+      {bookCtaOn && (contactSectionNode || policySectionNode) && customSectionLayout ? (
+        <>
+          <SectionWrap k="contact" custom={customSectionLayout} order={sectionIndexOf("contact")} hidden={sectionHidden("contact")}>
+            {contactSectionNode}
+          </SectionWrap>
+          <SectionWrap k="policy" custom={customSectionLayout} order={sectionIndexOf("policy")} hidden={sectionHidden("policy")}>
+            {policySectionNode}
+          </SectionWrap>
+        </>
+      ) : bookCtaOn && (contactSectionNode || policySectionNode) && (
         <div className="mx-auto max-w-3xl px-4">
           <div className="border-t pt-1" style={{ borderColor: `${brand}1a` }} />
           {contactSectionNode}
