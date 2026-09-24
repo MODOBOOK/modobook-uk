@@ -50,4 +50,4 @@ Goal: MODO runs in an app WebView; dashboard must feel native on phones.
 - [x] Exclude patients who already have an upcoming booking
 - [x] Send one follow-up 30 days later, then stop until another completed visit
 - [x] Keep treatment-specific rebook and top-up reminders available
-- [ ] Verify the settings screen and reminder email in preview
+- [x] Verify the settings screen and reminder email in preview
