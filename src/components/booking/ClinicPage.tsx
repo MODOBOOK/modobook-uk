@@ -1367,6 +1367,8 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
       <style>{`
         .modo-btn { background-color: var(--btn-color); color: var(--btn-text); border-radius: var(--btn-radius); ${btnUppercase ? "text-transform: uppercase; letter-spacing: 0.05em;" : ""} }
         [data-modo-section] + [data-modo-section] { margin-top: var(--section-gap); }
+        @keyframes modo-book-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.78; } }
+        .modo-book-pulse { animation: modo-book-pulse 2.2s ease-in-out infinite; }
         .modo-sec-flex { display: flex; flex-direction: column; }
         .modo-sec-flex .modo-sec > * { margin-top: var(--section-gap); }
         .modo-sec-flex > footer { order: 9999; }
@@ -1603,7 +1605,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
         </section>
       )}
 
-      {/* Split-view navigation (pilot): Book now on home, back link on book */}
+      {/* Split-view navigation (pilot): Book now on home; Home + flashing Book now on book */}
       {splitView && (
         <section className="mx-auto mt-6 max-w-3xl px-4">
           {view === "home" ? (
@@ -1616,14 +1618,29 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
               Book now
             </Link>
           ) : (
-            <Link
-              to="/m/$slug"
-              params={{ slug }}
-              className="inline-flex items-center gap-1.5 text-sm font-semibold underline-offset-4 hover:underline"
-              style={{ color: brand }}
-            >
-              <ChevronLeft className="h-4 w-4" /> Back to home
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                to="/m/$slug"
+                params={{ slug }}
+                className="inline-flex items-center gap-1.5 rounded-full border px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-80"
+                style={{ borderColor: brand, color: brand }}
+              >
+                <ChevronLeft className="h-4 w-4" /> Home
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  const el =
+                    document.querySelector('[data-section="locations"]') ||
+                    document.getElementById("treatment-menu");
+                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                className="modo-book-pulse flex-1 rounded-full py-2.5 text-sm font-semibold text-white shadow-sm"
+                style={{ backgroundColor: brand }}
+              >
+                Book now
+              </button>
+            </div>
           )}
         </section>
       )}
