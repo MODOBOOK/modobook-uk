@@ -24,11 +24,12 @@ You will be given:
 - aftercares:    [{ id, name, category?, summary? }]
 
 For EACH treatment, decide:
-- medical_form_ids: the most appropriate medical / intake form(s) the patient should fill in BEFORE this treatment. Almost every treatment should have at least one general intake form if one exists in the list. Add procedure-specific forms (e.g. an "Injectables" or "Skin" form) where they match.
-- consent_ids: the consent form(s) the patient signs for that treatment. Pick by name match (e.g. "Botox consent" goes on toxin treatments, "Filler consent" goes on dermal fillers). If a generic "Treatment consent" exists, use it as a fallback only when no specific one fits.
-- aftercare_ids: the aftercare template(s) sent after the treatment. Match by treatment family (toxin, filler, skin, laser, etc.).
+- medical_form_ids: the SINGLE most appropriate medical / intake form for this treatment. Prefer a procedure-specific form (e.g. "Injectables") if one fits, otherwise a general intake form.
+- consent_ids: the SINGLE best consent form. Pick by name match (e.g. "Botox consent" for toxin, "Filler consent" for dermal fillers); use a generic "Treatment consent" only if no specific one fits.
+- aftercare_ids: the SINGLE best aftercare template, matched by treatment family (toxin, filler, skin, laser, etc.).
 
 STRICT RULES:
+- Each array must contain AT MOST ONE id. Never return more than one per field.
 - Only use ids that appear in the provided lists. Never invent ids.
 - Be conservative — if nothing in the list is a sensible match, return an empty array for that field.
 - Output ONLY raw JSON, no markdown.
@@ -171,7 +172,7 @@ export const suggestFormMatches = createServerFn({ method: "POST" })
         return [];
       }
       const map = (ids: string[] | undefined, m: Map<string, string>) =>
-        Array.from(new Set((ids ?? []).map((x) => m.get(String(x))).filter((x): x is string => !!x)));
+        Array.from(new Set((ids ?? []).map((x) => m.get(String(x))).filter((x): x is string => !!x))).slice(0, 1);
       return (parsed.matches ?? [])
         .filter((m) => m && tAlias.has(String(m.treatment_id)))
         .map((m) => ({
@@ -226,7 +227,12 @@ export const commitFormMatches = createServerFn({ method: "POST" })
         await supabase.from("treatment_aftercare_templates").delete().eq("treatment_id", m.treatment_id);
       }
 
+      m.medical_form_ids = m.medical_form_ids.slice(0, 1);
+      m.consent_ids = m.consent_ids.slice(0, 1);
+      m.aftercare_ids = m.aftercare_ids.slice(0, 1);
+
       if (m.medical_form_ids.length) {
+        await supabase.from("treatment_medical_forms").delete().eq("treatment_id", m.treatment_id).neq("template_id", m.medical_form_ids[0]);
         const { data: existing } = await supabase
           .from("treatment_medical_forms")
           .select("template_id")
@@ -243,6 +249,7 @@ export const commitFormMatches = createServerFn({ method: "POST" })
       }
 
       if (m.consent_ids.length) {
+        await supabase.from("treatment_consents").delete().eq("treatment_id", m.treatment_id).neq("consent_template_id", m.consent_ids[0]);
         const { data: existing } = await supabase
           .from("treatment_consents")
           .select("consent_template_id")
@@ -263,6 +270,7 @@ export const commitFormMatches = createServerFn({ method: "POST" })
       }
 
       if (m.aftercare_ids.length) {
+        await supabase.from("treatment_aftercare_templates").delete().eq("treatment_id", m.treatment_id).neq("template_id", m.aftercare_ids[0]);
         const { data: existing } = await supabase
           .from("treatment_aftercare_templates")
           .select("template_id")
