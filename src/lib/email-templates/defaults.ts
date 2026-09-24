@@ -18,9 +18,9 @@ export interface EmailDefault {
 export const EMAIL_DEFAULTS: Record<string, EmailDefault> = {
   'booking-confirmation': {
     subject: 'Booking confirmed — {{clinic_name}}',
-    intro: 'Hi {{patient_name}}, thanks for booking with {{clinic_name}}.',
-    body: 'Your {{treatment_name}} is booked for {{date_time}}.\n\nWe look forward to seeing you.',
-    closing: 'If anything changes, use the link above to reschedule or cancel.',
+    intro: 'Dear {{patient_name}}, thank you for booking with us. We look forward to seeing you.',
+    body: '',
+    closing: '',
     variables: ['patient_name', 'clinic_name', 'treatment_name', 'practitioner_name', 'date_time'],
   },
   'booking-cancellation': {

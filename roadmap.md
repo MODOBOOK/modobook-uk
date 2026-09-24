@@ -31,3 +31,9 @@ Goal: MODO runs in an app WebView; dashboard must feel native on phones.
 - [x] /dashboard/products page: totals strip, product cards, purchase log, treatment-link dialog
 - [x] Menu item "Products & stock" under Payments (owner/admin only via staff-nav)
 - [ ] Commission: deduct product cost before split (next step, awaiting go-ahead)
+
+# Booking confirmation email redesign
+- [x] Modern clinic-branded confirmation card and optional clinic imagery
+- [x] Appointment, payment, manage-booking and calendar details
+- [x] MODO No-Reply sender and clinic-contact Reply-To handling
+- [ ] Switch delivery to Resend (connection was skipped)
