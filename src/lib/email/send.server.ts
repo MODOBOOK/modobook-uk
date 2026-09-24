@@ -15,7 +15,7 @@ function emailSenderName(clinicName: unknown) {
   const safeClinicName = typeof clinicName === 'string'
     ? clinicName.replace(/[\r\n"]/g, '').trim()
     : ''
-  return `${safeClinicName || 'MODO'} NO REPLY`
+  return safeClinicName || 'MODO'
 }
 
 // Some bookings are typed in by hand at the clinic and the email box gets a
@@ -472,6 +472,7 @@ export async function sendBookingConfirmationEmails(
       ? [loc.name, loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ')
       : a.profiles?.clinic_name ?? branding.clinicName
     const calendarLinks = buildCalendarLinks({
+      baseUrl: origin,
       date: a.scheduled_date,
       startTime: start,
       endTime: end,
@@ -575,7 +576,7 @@ export async function sendBookingConfirmationEmails(
         paymentNote,
         manageUrl,
         calendarGoogleUrl: calendarLinks.google,
-        calendarOutlookUrl: calendarLinks.outlook,
+        calendarAppleUrl: calendarLinks.apple,
         logoUrl: branding.logoUrl,
         clinicImageUrl: branding.clinicImageUrl,
         brandColor: branding.brandColor,
@@ -743,7 +744,7 @@ function calendarStamp(date: string, time: string): string {
   return `${date.replaceAll('-', '')}T${formatBookingTime(time).replace(':', '')}00`
 }
 
-function buildCalendarLinks(input: { date: string; startTime: string; endTime: string; title: string; location: string; manageUrl?: string }) {
+function buildCalendarLinks(input: { baseUrl: string; date: string; startTime: string; endTime: string; title: string; location: string; manageUrl?: string }) {
   const start = calendarStamp(input.date, input.startTime)
   const end = calendarStamp(input.date, input.endTime)
   const details = input.manageUrl ? `Manage your appointment: ${input.manageUrl}` : ''
@@ -762,7 +763,14 @@ function buildCalendarLinks(input: { date: string; startTime: string; endTime: s
   outlook.searchParams.set('enddt', `${input.date}T${formatBookingTime(input.endTime)}:00`)
   outlook.searchParams.set('location', input.location)
   if (details) outlook.searchParams.set('body', details)
-  return { google: google.toString(), outlook: outlook.toString() }
+  const apple = new URL('/api/public/calendar', input.baseUrl)
+  apple.searchParams.set('title', input.title)
+  apple.searchParams.set('date', input.date)
+  apple.searchParams.set('start', formatBookingTime(input.startTime))
+  apple.searchParams.set('end', formatBookingTime(input.endTime))
+  apple.searchParams.set('location', input.location)
+  if (details) apple.searchParams.set('details', details)
+  return { google: google.toString(), outlook: outlook.toString(), apple: apple.toString() }
 }
 
 export interface PractitionerBranding {

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Body, Button, Head, Html, Img, Link, Preview, Text } from '@react-email/components'
+import { Body, Head, Html, Img, Link, Preview, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 
 interface Props {
@@ -17,7 +17,7 @@ interface Props {
   paymentNote?: string | null
   manageUrl?: string
   calendarGoogleUrl?: string
-  calendarOutlookUrl?: string
+  calendarAppleUrl?: string
   logoUrl?: string | null
   clinicImageUrl?: string | null
   brandColor?: string | null
@@ -69,7 +69,7 @@ const Email = ({
   paymentNote,
   manageUrl,
   calendarGoogleUrl,
-  calendarOutlookUrl,
+  calendarAppleUrl,
   logoUrl,
   clinicImageUrl,
   brandColor,
@@ -155,12 +155,12 @@ const Email = ({
                           </table>
                         ) : null}
 
-                        {calendarGoogleUrl || calendarOutlookUrl ? (
+                        {calendarGoogleUrl || calendarAppleUrl ? (
                           <table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', borderCollapse: 'separate', marginTop: '10px' }}>
                             <tbody>
                               <tr>
-                                {calendarGoogleUrl ? <td width="50%" style={{ paddingRight: calendarOutlookUrl ? '5px' : 0 }}><table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', borderCollapse: 'separate' }}><tbody><tr><td align="center" {...({ bgcolor: palette.card } as Record<string, string>)} style={{ backgroundColor: palette.card, border: `1px solid ${accent}`, borderRadius: '4px', padding: '11px 8px' }}><a href={calendarGoogleUrl} target="_blank" style={{ display: 'block', color: accent, fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12px', fontWeight: 700, lineHeight: '18px', textAlign: 'center', textDecoration: 'none' }}><span style={{ color: accent }}>Add to Google Calendar</span></a></td></tr></tbody></table></td> : null}
-                                {calendarOutlookUrl ? <td width="50%" style={{ paddingLeft: calendarGoogleUrl ? '5px' : 0 }}><table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', borderCollapse: 'separate' }}><tbody><tr><td align="center" {...({ bgcolor: palette.card } as Record<string, string>)} style={{ backgroundColor: palette.card, border: `1px solid ${accent}`, borderRadius: '4px', padding: '11px 8px' }}><a href={calendarOutlookUrl} target="_blank" style={{ display: 'block', color: accent, fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12px', fontWeight: 700, lineHeight: '18px', textAlign: 'center', textDecoration: 'none' }}><span style={{ color: accent }}>Add to Outlook</span></a></td></tr></tbody></table></td> : null}
+                                {calendarGoogleUrl ? <td width="50%" style={{ paddingRight: calendarAppleUrl ? '5px' : 0 }}><table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', borderCollapse: 'separate' }}><tbody><tr><td align="center" {...({ bgcolor: palette.card } as Record<string, string>)} style={{ backgroundColor: palette.card, border: `1px solid ${accent}`, borderRadius: '4px', padding: '11px 8px' }}><a href={calendarGoogleUrl} target="_blank" style={{ display: 'block', color: accent, fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12px', fontWeight: 700, lineHeight: '18px', textAlign: 'center', textDecoration: 'none' }}><span style={{ color: accent }}>Add to Google Calendar</span></a></td></tr></tbody></table></td> : null}
+                                {calendarAppleUrl ? <td width="50%" style={{ paddingLeft: calendarGoogleUrl ? '5px' : 0 }}><table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', borderCollapse: 'separate' }}><tbody><tr><td align="center" {...({ bgcolor: palette.card } as Record<string, string>)} style={{ backgroundColor: palette.card, border: `1px solid ${accent}`, borderRadius: '4px', padding: '11px 8px' }}><a href={calendarAppleUrl} target="_blank" style={{ display: 'block', color: accent, fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12px', fontWeight: 700, lineHeight: '18px', textAlign: 'center', textDecoration: 'none' }}><span style={{ color: accent }}>Add to Apple Calendar</span></a></td></tr></tbody></table></td> : null}
                               </tr>
                             </tbody>
                           </table>
@@ -204,6 +204,6 @@ export const template = {
     paymentNote: 'A £25.00 deposit has been taken. £50.00 remains to pay.',
     manageUrl: 'https://modobook.uk/m/example-aesthetics/manage/example',
     calendarGoogleUrl: 'https://calendar.google.com/calendar/render?action=TEMPLATE',
-    calendarOutlookUrl: 'https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose',
+    calendarAppleUrl: 'https://modobook.uk/api/public/calendar?title=Consultation&date=2026-09-26&start=10%3A30&end=11%3A30&location=Example+Aesthetics',
   },
 } satisfies TemplateEntry

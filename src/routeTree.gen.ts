@@ -68,6 +68,7 @@ import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
 import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
 import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as ApiPublicCalendarRouteImport } from './routes/api/public/calendar'
 import { Route as AuthenticatedPrescriberVisitsRouteImport } from './routes/_authenticated/prescriber.visits'
 import { Route as AuthenticatedPrescriberRequestsRouteImport } from './routes/_authenticated/prescriber.requests'
 import { Route as AuthenticatedPrescriberLibraryRouteImport } from './routes/_authenticated/prescriber.library'
@@ -498,6 +499,11 @@ const MSlugAboutRoute = MSlugAboutRouteImport.update({
 const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   id: '/lovable/email/suppression',
   path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicCalendarRoute = ApiPublicCalendarRouteImport.update({
+  id: '/api/public/calendar',
+  path: '/api/public/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedPrescriberVisitsRoute =
@@ -1405,6 +1411,7 @@ export interface FileRoutesByFullPath {
   '/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/prescriber/requests': typeof AuthenticatedPrescriberRequestsRouteWithChildren
   '/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
+  '/api/public/calendar': typeof ApiPublicCalendarRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -1588,6 +1595,7 @@ export interface FileRoutesByTo {
   '/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/prescriber/requests': typeof AuthenticatedPrescriberRequestsRouteWithChildren
   '/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
+  '/api/public/calendar': typeof ApiPublicCalendarRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -1781,6 +1789,7 @@ export interface FileRoutesById {
   '/_authenticated/prescriber/library': typeof AuthenticatedPrescriberLibraryRoute
   '/_authenticated/prescriber/requests': typeof AuthenticatedPrescriberRequestsRouteWithChildren
   '/_authenticated/prescriber/visits': typeof AuthenticatedPrescriberVisitsRoute
+  '/api/public/calendar': typeof ApiPublicCalendarRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/m/$slug/about': typeof MSlugAboutRoute
   '/m/$slug/account': typeof MSlugAccountRoute
@@ -1976,6 +1985,7 @@ export interface FileRouteTypes {
     | '/prescriber/library'
     | '/prescriber/requests'
     | '/prescriber/visits'
+    | '/api/public/calendar'
     | '/lovable/email/suppression'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -2159,6 +2169,7 @@ export interface FileRouteTypes {
     | '/prescriber/library'
     | '/prescriber/requests'
     | '/prescriber/visits'
+    | '/api/public/calendar'
     | '/lovable/email/suppression'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -2351,6 +2362,7 @@ export interface FileRouteTypes {
     | '/_authenticated/prescriber/library'
     | '/_authenticated/prescriber/requests'
     | '/_authenticated/prescriber/visits'
+    | '/api/public/calendar'
     | '/lovable/email/suppression'
     | '/m/$slug/about'
     | '/m/$slug/account'
@@ -2455,6 +2467,7 @@ export interface RootRouteChildren {
   PlanTokenRoute: typeof PlanTokenRoute
   RCodeRoute: typeof RCodeRoute
   StaffAcceptTokenRoute: typeof StaffAcceptTokenRoute
+  ApiPublicCalendarRoute: typeof ApiPublicCalendarRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicBookingReleaseRoute: typeof ApiPublicBookingReleaseRoute
   ApiPublicHooksAftercareDispatchRoute: typeof ApiPublicHooksAftercareDispatchRoute
@@ -2893,6 +2906,13 @@ declare module '@tanstack/react-router' {
       path: '/lovable/email/suppression'
       fullPath: '/lovable/email/suppression'
       preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/calendar': {
+      id: '/api/public/calendar'
+      path: '/api/public/calendar'
+      fullPath: '/api/public/calendar'
+      preLoaderRoute: typeof ApiPublicCalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/prescriber/visits': {
@@ -4361,6 +4381,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlanTokenRoute: PlanTokenRoute,
   RCodeRoute: RCodeRoute,
   StaffAcceptTokenRoute: StaffAcceptTokenRoute,
+  ApiPublicCalendarRoute: ApiPublicCalendarRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicBookingReleaseRoute: ApiPublicBookingReleaseRoute,
   ApiPublicHooksAftercareDispatchRoute: ApiPublicHooksAftercareDispatchRoute,
