@@ -32,8 +32,14 @@ Goal: MODO runs in an app WebView; dashboard must feel native on phones.
 - [x] Menu item "Products & stock" under Payments (owner/admin only via staff-nav)
 - [ ] Commission: deduct product cost before split (next step, awaiting go-ahead)
 
-# Booking confirmation email redesign
-- [x] Modern clinic-branded confirmation card and optional clinic imagery
+# Email design system
+- [x] Modern clinic-branded booking confirmation and optional clinic imagery
 - [x] Appointment, payment, manage-booking and calendar details
 - [x] MODO No-Reply sender and clinic-contact Reply-To handling
+- [ ] Apply the shared design to all patient appointment emails
+- [ ] Apply the shared design to clinic and staff emails
+- [ ] Apply the shared design to marketing emails with unsubscribe links
+- [ ] Apply an appropriate MODO-branded version to account emails
+- [ ] Add preparation notes, cancellation policy, directions and social links where relevant
+- [ ] Verify every template in HTML and plain text
 - [ ] Switch delivery to Resend (connection was skipped)
