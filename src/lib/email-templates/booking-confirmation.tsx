@@ -1,6 +1,5 @@
 import * as React from 'react'
-import { Html, Preview, Heading, Text, Button, Section } from '@react-email/components'
-import { ModoShell, Head, styles, brandedButton, BodyOverride } from './_modo-brand'
+import { Body, Button, Head, Html, Img, Preview, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
 
 interface Props {
@@ -8,74 +7,155 @@ interface Props {
   clinicName?: string
   treatmentName?: string
   services?: { name: string; price?: string }[]
-  totalPrice?: string
-  practitionerName?: string
-  locationName?: string
-  locationAddress?: string
-  dateTime?: string
+  date?: string
+  time?: string
+  duration?: string
+  location?: string
+  treatmentPrice?: string
+  amountPaid?: string
+  amountDue?: string
+  paymentNote?: string | null
   manageUrl?: string
+  calendarGoogleUrl?: string
+  calendarOutlookUrl?: string
   logoUrl?: string | null
+  clinicImageUrl?: string | null
   brandColor?: string | null
   subjectOverride?: string | null
-  introOverride?: string | null
-  bodyOverride?: string | null
-  closingOverride?: string | null
+}
+
+const palette = {
+  page: '#eeeae4',
+  card: '#faf8f5',
+  border: '#e4ddd3',
+  text: '#2c2620',
+  muted: '#8a8176',
+}
+
+function safeBrandColor(value?: string | null) {
+  return value && /^#[0-9a-f]{6}$/i.test(value.trim()) ? value.trim() : palette.text
+}
+
+function DetailRow({ label, children, last = false }: { label: string; children: React.ReactNode; last?: boolean }) {
+  return (
+    <tr>
+      <td style={{ width: '108px', padding: '14px 0', borderBottom: last ? 'none' : `1px solid ${palette.border}`, color: palette.muted, fontSize: '13px', verticalAlign: 'top' }}>
+        {label}
+      </td>
+      <td style={{ padding: '14px 0', borderBottom: last ? 'none' : `1px solid ${palette.border}`, color: palette.text, fontSize: '14px', lineHeight: '21px', verticalAlign: 'top' }}>
+        {children}
+      </td>
+    </tr>
+  )
 }
 
 const Email = ({
-  patientName = 'there',
-  clinicName = 'MODO',
-  treatmentName = 'your treatment',
+  patientName = 'Sarah',
+  clinicName = 'Example Aesthetics',
+  treatmentName = 'Consultation',
   services,
-  totalPrice,
-  practitionerName,
-  locationName,
-  locationAddress,
-  dateTime = 'your appointment',
+  date = 'Fri 26 Sep 2026',
+  time = '10:30',
+  duration = '60 minutes',
+  location = 'Example Aesthetics',
+  treatmentPrice = '£75.00',
+  amountPaid = '£25.00',
+  amountDue = '£50.00',
+  paymentNote,
   manageUrl,
+  calendarGoogleUrl,
+  calendarOutlookUrl,
   logoUrl,
+  clinicImageUrl,
   brandColor,
-  introOverride,
-  bodyOverride,
-  closingOverride,
 }: Props) => {
-  const hasBody = !!bodyOverride?.trim()
+  const accent = safeBrandColor(brandColor)
+  const treatments = services?.length ? services : [{ name: treatmentName }]
+  const note = paymentNote?.trim() || `You have paid ${amountPaid}. The remaining balance is ${amountDue}.`
+
   return (
     <Html lang="en" dir="ltr">
       <Head />
-      <Preview>Your {clinicName} booking is confirmed</Preview>
-      <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
-        <Heading as="h1" style={styles.h1}>Your booking is confirmed</Heading>
-        <Text style={styles.text}>{introOverride?.trim() || `Hi ${patientName}, thanks for booking with ${clinicName}.`}</Text>
-        {hasBody ? (
-          <BodyOverride text={bodyOverride} />
-        ) : (
-          <Section style={{ backgroundColor: '#f5f1ea', borderRadius: 12, padding: '16px 18px', margin: '8px 0 20px' }}>
-            {services && services.length > 1 ? (
-              services.map((s, i) => (
-                <Text key={i} style={{ ...styles.text, margin: '0 0 4px' }}>
-                  <strong>{s.name}</strong>{s.price ? ` — ${s.price}` : ''}
+      <Preview>Your appointment with {clinicName} is confirmed</Preview>
+      <Body style={{ margin: 0, padding: '28px 12px 40px', backgroundColor: palette.page, color: palette.text, fontFamily: 'Arial, Helvetica, sans-serif' }}>
+        <table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <tbody>
+            <tr>
+              <td align="center">
+                <table role="presentation" cellPadding="0" cellSpacing="0" width="560" style={{ width: '100%', maxWidth: '560px', borderCollapse: 'separate', backgroundColor: palette.card, border: `1px solid ${palette.border}`, borderRadius: '8px', overflow: 'hidden' }}>
+                  <tbody>
+                    <tr>
+                      <td align="center" style={{ padding: '30px 28px 25px', borderBottom: `2px solid ${accent}` }}>
+                        {logoUrl ? <Img src={logoUrl} alt={`${clinicName} logo`} height="54" style={{ display: 'block', width: 'auto', height: '54px', maxWidth: '180px', margin: '0 auto 14px' }} /> : null}
+                        <Text style={{ margin: 0, color: palette.text, fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '12px', fontWeight: 700, letterSpacing: '2px', lineHeight: '18px', textTransform: 'uppercase' }}>
+                          {clinicName}
+                        </Text>
+                      </td>
+                    </tr>
+                    {clinicImageUrl ? (
+                      <tr>
+                        <td style={{ padding: 0 }}>
+                          <Img src={clinicImageUrl} alt="" width="560" style={{ display: 'block', width: '100%', height: 'auto', margin: 0 }} />
+                        </td>
+                      </tr>
+                    ) : null}
+                    <tr>
+                      <td style={{ padding: '36px 32px 34px' }}>
+                        <Text style={{ margin: '0 0 16px', color: palette.text, fontFamily: "Georgia, 'Times New Roman', serif", fontSize: '28px', fontWeight: 400, lineHeight: '35px' }}>
+                          Your appointment is confirmed
+                        </Text>
+                        <Text style={{ margin: '0 0 28px', color: palette.text, fontSize: '15px', lineHeight: '24px' }}>
+                          Dear {patientName}, thank you for booking with us. We look forward to seeing you.
+                        </Text>
+
+                        <table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', borderCollapse: 'collapse', borderTop: `1px solid ${palette.border}`, borderBottom: `1px solid ${palette.border}`, margin: '0 0 28px' }}>
+                          <tbody>
+                            <DetailRow label="Treatment">
+                              {treatments.map((service, index) => <React.Fragment key={`${service.name}-${index}`}>{index > 0 ? <br /> : null}{service.name}</React.Fragment>)}
+                            </DetailRow>
+                            <DetailRow label="When">{date}<br />{time} · {duration}</DetailRow>
+                            <DetailRow label="Where" last>{location}</DetailRow>
+                          </tbody>
+                        </table>
+
+                        <Text style={{ margin: '0 0 8px', color: palette.text, fontSize: '12px', fontWeight: 700, letterSpacing: '1.5px', lineHeight: '18px', textTransform: 'uppercase' }}>Payment</Text>
+                        <table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', borderCollapse: 'collapse', margin: '0 0 14px' }}>
+                          <tbody>
+                            <DetailRow label="Treatment cost">{treatmentPrice}</DetailRow>
+                            <DetailRow label="Paid so far">{amountPaid}</DetailRow>
+                            <DetailRow label="Still to pay" last>{amountDue}</DetailRow>
+                          </tbody>
+                        </table>
+                        <Text style={{ margin: '0 0 28px', color: palette.muted, fontSize: '13px', lineHeight: '21px' }}>{note}</Text>
+
+                        {manageUrl ? (
+                          <Button href={manageUrl} style={{ display: 'block', boxSizing: 'border-box', width: '100%', padding: '14px 20px', borderRadius: '4px', backgroundColor: accent, color: palette.card, fontSize: '14px', fontWeight: 700, lineHeight: '20px', textAlign: 'center', textDecoration: 'none' }}>
+                            Manage your appointment
+                          </Button>
+                        ) : null}
+
+                        {calendarGoogleUrl || calendarOutlookUrl ? (
+                          <table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+                            <tbody>
+                              <tr>
+                                {calendarGoogleUrl ? <td width="50%" style={{ paddingRight: calendarOutlookUrl ? '5px' : 0 }}><Button href={calendarGoogleUrl} style={{ display: 'block', boxSizing: 'border-box', width: '100%', padding: '11px 8px', borderRadius: '4px', border: `1px solid ${accent}`, backgroundColor: palette.card, color: accent, fontSize: '12px', fontWeight: 700, lineHeight: '18px', textAlign: 'center', textDecoration: 'none' }}>Add to Google Calendar</Button></td> : null}
+                                {calendarOutlookUrl ? <td width="50%" style={{ paddingLeft: calendarGoogleUrl ? '5px' : 0 }}><Button href={calendarOutlookUrl} style={{ display: 'block', boxSizing: 'border-box', width: '100%', padding: '11px 8px', borderRadius: '4px', border: `1px solid ${accent}`, backgroundColor: palette.card, color: accent, fontSize: '12px', fontWeight: 700, lineHeight: '18px', textAlign: 'center', textDecoration: 'none' }}>Add to Outlook</Button></td> : null}
+                              </tr>
+                            </tbody>
+                          </table>
+                        ) : null}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <Text style={{ margin: '18px 0 0', color: palette.muted, fontSize: '11px', lineHeight: '17px', textAlign: 'center' }}>
+                  {clinicName} · Booking via MODO
                 </Text>
-              ))
-            ) : (
-              <Text style={{ ...styles.text, margin: '0 0 6px' }}><strong>{treatmentName}</strong></Text>
-            )}
-            {services && services.length > 1 && totalPrice && (
-              <Text style={{ ...styles.text, margin: '6px 0 6px' }}><strong>Total: {totalPrice}</strong></Text>
-            )}
-            <Text style={{ ...styles.muted, margin: '0 0 4px' }}>{dateTime}</Text>
-            {practitionerName && <Text style={{ ...styles.muted, margin: '0 0 4px' }}>With {practitionerName}</Text>}
-            {locationName && <Text style={{ ...styles.muted, margin: '0 0 4px' }}>{locationName}</Text>}
-            {locationAddress && <Text style={{ ...styles.muted, margin: 0 }}>{locationAddress}</Text>}
-          </Section>
-        )}
-        {manageUrl && (
-          <Section style={styles.buttonWrap}>
-            <Button href={manageUrl} style={brandedButton(brandColor)}>Manage booking</Button>
-          </Section>
-        )}
-        <Text style={styles.muted}>{closingOverride?.trim() || 'If anything changes, use the link above to reschedule or cancel.'}</Text>
-      </ModoShell>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </Body>
     </Html>
   )
 }
@@ -85,18 +165,23 @@ export const template = {
   subject: (d: Record<string, unknown>) => {
     const override = (d.subjectOverride as string | null | undefined)?.trim()
     if (override) return override
-    const clinic = (d.clinicName as string) || 'MODO'
-    return `Booking confirmed — ${clinic}`
+    return `Appointment confirmed — ${(d.clinicName as string) || 'MODO'}`
   },
   displayName: 'Booking confirmation',
   previewData: {
-    patientName: 'Alex',
-    clinicName: 'MODO',
-    treatmentName: 'Lip filler consultation',
-    practitionerName: 'Dr Jamie Reid',
-    locationName: 'Chelsea Studio',
-    locationAddress: '12 Kings Road, London',
-    dateTime: 'Fri 12 Jul 2026 · 2:30 PM',
-    manageUrl: 'https://modobook.uk/m/demo/manage/xyz',
+    clinicName: 'Example Aesthetics',
+    patientName: 'Sarah',
+    treatmentName: 'Consultation',
+    date: 'Fri 26 Sep 2026',
+    time: '10:30',
+    duration: '60 minutes',
+    location: 'Example Aesthetics',
+    treatmentPrice: '£75.00',
+    amountPaid: '£25.00',
+    amountDue: '£50.00',
+    paymentNote: 'A £25.00 deposit has been taken. £50.00 remains to pay.',
+    manageUrl: 'https://modobook.uk/m/example-aesthetics/manage/example',
+    calendarGoogleUrl: 'https://calendar.google.com/calendar/render?action=TEMPLATE',
+    calendarOutlookUrl: 'https://outlook.live.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose',
   },
 } satisfies TemplateEntry

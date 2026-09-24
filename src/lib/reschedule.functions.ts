@@ -290,21 +290,11 @@ export const rescheduleByToken = createServerFn({ method: "POST" })
         : undefined;
 
       if (appt.patient_email) {
-        await tryEnqueueAppEmail({
-          templateName: "booking-confirmation",
-          recipientEmail: appt.patient_email,
-          messageId: `booking-reschedule-${appt.id}-${data.date}-${startHM}`,
-          templateData: {
-            patientName: (appt.patient_name ?? "").split(" ")[0] || "there",
-            clinicName: branding.clinicName,
-            dateTime: formatBookingDateTime(data.date, startHM),
-            locationName: locRow?.name,
-            locationAddress,
-            logoUrl: branding.logoUrl,
-            brandColor: branding.brandColor,
-            rescheduled: true,
-          },
-        });
+        const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
+        await sendBookingConfirmationEmails(
+          [appt.id],
+          `booking-reschedule-${data.date}-${startHM}`,
+        );
       }
 
       try {

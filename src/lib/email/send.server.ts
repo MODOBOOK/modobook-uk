@@ -7,7 +7,7 @@ import * as React from 'react'
 import { render } from 'react-email'
 import { TEMPLATES } from '@/lib/email-templates/registry'
 
-const SITE_NAME = 'MODO Book'
+const SITE_NAME = 'MODO No-Reply'
 const SENDER_DOMAIN = 'notify.modobook.uk'
 const FROM_DOMAIN = 'modobook.uk'
 
@@ -33,6 +33,9 @@ export interface EnqueueAppEmailInput {
   messageId?: string
   /** Optional Reply-To header (e.g. so patient replies go to practitioner). */
   replyTo?: string
+  /** Disable the legacy profile-email fallback when only a public clinic
+   * contact address is appropriate. */
+  resolveProfileReplyTo?: boolean
 }
 
 export async function enqueueAppEmail(
@@ -171,7 +174,7 @@ export async function enqueueAppEmail(
         if (c.closing_override) baseData.closingOverride = interpolateOverride(c.closing_override, vars)
       }
       const profEmail = (prof as { email?: string | null } | null)?.email?.trim()
-      if (!resolvedReplyTo && profEmail) resolvedReplyTo = profEmail
+      if (input.resolveProfileReplyTo !== false && !resolvedReplyTo && profEmail) resolvedReplyTo = profEmail
     } catch (e) {
       console.error('[email] failed to load customization/profile email', e)
     }
@@ -341,7 +344,10 @@ export async function sendPlatformArrearsEmail(input: {
 
 
 
-export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
+export async function sendBookingConfirmationEmails(
+  appointmentIds: string[],
+  messageIdPrefix = 'booking-confirm',
+) {
   if (appointmentIds.length === 0) return []
 
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
@@ -407,7 +413,9 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
 
     const manageUrl = a.manage_token && a.profiles?.slug
       ? `${origin}/m/${a.profiles.slug}/manage/${a.manage_token}`
-      : undefined
+      : a.profiles?.slug
+        ? `${origin}/m/${a.profiles.slug}`
+        : undefined
     const loc = a.locations
 
     const services = group.map((g) => ({
@@ -415,8 +423,38 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
       price: typeof g.total_amount === 'number' ? `£${Number(g.total_amount).toFixed(2)}` : undefined,
     }))
     const totalNumber = group.reduce((sum, g) => sum + Number(g.total_amount ?? 0), 0)
-    const totalPrice = totalNumber > 0 ? `£${totalNumber.toFixed(2)}` : undefined
+    const totalPrice = `£${totalNumber.toFixed(2)}`
+    const paidNumber = group.reduce((sum, g) => sum + Number(g.amount_paid_cents ?? 0), 0) / 100
+    const dueNumber = Math.max(0, totalNumber - paidNumber)
+    const amountPaid = `£${paidNumber.toFixed(2)}`
+    const amountDue = `£${dueNumber.toFixed(2)}`
+    const paymentNote = totalNumber <= 0
+      ? 'No payment is due for this appointment.'
+      : dueNumber <= 0
+        ? `Paid in full. We have received ${amountPaid}.`
+        : paidNumber > 0
+          ? `A ${amountPaid} deposit has been taken. ${amountDue} remains to pay.`
+          : `Nothing has been paid yet. ${amountDue} remains to pay.`
     const treatmentSummary = services.map((s) => s.name).join(', ')
+    const start = group[0]?.start_time ?? a.start_time
+    const end = group.reduce((latest, item) => String(item.end_time ?? latest) > latest ? String(item.end_time) : latest, String(a.end_time ?? a.start_time))
+    const durationMinutes = Math.max(0, toClockMinutes(end) - toClockMinutes(start))
+    const duration = durationMinutes >= 60 && durationMinutes % 60 === 0
+      ? `${durationMinutes / 60} ${durationMinutes === 60 ? 'hour' : 'hours'}`
+      : `${durationMinutes} minutes`
+    const date = formatBookingDate(a.scheduled_date)
+    const time = formatBookingTime(start)
+    const location = loc
+      ? [loc.name, loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ')
+      : a.profiles?.clinic_name ?? branding.clinicName
+    const calendarLinks = buildCalendarLinks({
+      date: a.scheduled_date,
+      startTime: start,
+      endTime: end,
+      title: `${treatmentSummary || 'Appointment'} at ${a.profiles?.clinic_name ?? branding.clinicName}`,
+      location,
+      manageUrl,
+    })
 
     // WhatsApp confirmation (per-clinic toggle; no-ops when off / no phone)
     try {
@@ -490,20 +528,29 @@ export async function sendBookingConfirmationEmails(appointmentIds: string[]) {
     const res = await tryEnqueueAppEmail({
       templateName: 'booking-confirmation',
       recipientEmail: a.patient_email,
-      messageId: `booking-confirm-${a.id}`,
+      messageId: `${messageIdPrefix}-${a.id}`,
+      replyTo: branding.contactEmail || undefined,
+      resolveProfileReplyTo: false,
       templateData: {
         profileId: a.profile_id,
         patientName: (a.patient_name ?? '').split(' ')[0] || 'there',
         clinicName: a.profiles?.clinic_name ?? branding.clinicName,
         treatmentName: treatmentSummary || 'your treatment',
         services: services.length > 1 ? services : undefined,
-        totalPrice: services.length > 1 ? totalPrice : undefined,
-        practitionerName: a.practitioners?.name,
-        locationName: loc?.name ?? loc?.city ?? undefined,
-        locationAddress: loc ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ') : undefined,
-        dateTime: formatBookingDateTime(a.scheduled_date, a.start_time),
+        totalPrice,
+        date,
+        time,
+        duration,
+        location,
+        treatmentPrice: totalPrice,
+        amountPaid,
+        amountDue,
+        paymentNote,
         manageUrl,
+        calendarGoogleUrl: calendarLinks.google,
+        calendarOutlookUrl: calendarLinks.outlook,
         logoUrl: branding.logoUrl,
+        clinicImageUrl: branding.clinicImageUrl,
         brandColor: branding.brandColor,
       },
     })
@@ -635,10 +682,55 @@ export function formatBookingDateTime(date: string, startTime: string): string {
   }
 }
 
+function toClockMinutes(value: string): number {
+  const [hours, minutes] = String(value).split(':').map(Number)
+  return (Number.isFinite(hours) ? hours : 0) * 60 + (Number.isFinite(minutes) ? minutes : 0)
+}
+
+function formatBookingDate(date: string): string {
+  const parsed = new Date(`${date}T12:00:00`)
+  if (Number.isNaN(parsed.getTime())) return date
+  return new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }).format(parsed)
+}
+
+function formatBookingTime(time: string): string {
+  const [hours, minutes] = String(time).split(':').map(Number)
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return time
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+}
+
+function calendarStamp(date: string, time: string): string {
+  return `${date.replaceAll('-', '')}T${formatBookingTime(time).replace(':', '')}00`
+}
+
+function buildCalendarLinks(input: { date: string; startTime: string; endTime: string; title: string; location: string; manageUrl?: string }) {
+  const start = calendarStamp(input.date, input.startTime)
+  const end = calendarStamp(input.date, input.endTime)
+  const details = input.manageUrl ? `Manage your appointment: ${input.manageUrl}` : ''
+  const google = new URL('https://calendar.google.com/calendar/render')
+  google.searchParams.set('action', 'TEMPLATE')
+  google.searchParams.set('text', input.title)
+  google.searchParams.set('dates', `${start}/${end}`)
+  google.searchParams.set('ctz', 'Europe/London')
+  google.searchParams.set('location', input.location)
+  if (details) google.searchParams.set('details', details)
+  const outlook = new URL('https://outlook.live.com/calendar/0/deeplink/compose')
+  outlook.searchParams.set('path', '/calendar/action/compose')
+  outlook.searchParams.set('rru', 'addevent')
+  outlook.searchParams.set('subject', input.title)
+  outlook.searchParams.set('startdt', `${input.date}T${formatBookingTime(input.startTime)}:00`)
+  outlook.searchParams.set('enddt', `${input.date}T${formatBookingTime(input.endTime)}:00`)
+  outlook.searchParams.set('location', input.location)
+  if (details) outlook.searchParams.set('body', details)
+  return { google: google.toString(), outlook: outlook.toString() }
+}
+
 export interface PractitionerBranding {
   clinicName: string
   logoUrl: string | null
+  clinicImageUrl: string | null
   brandColor: string | null
+  contactEmail: string | null
 }
 
 /** Fetch a practitioner's clinic name, logo and brand colour for emails.
@@ -647,20 +739,22 @@ export interface PractitionerBranding {
 export async function getPractitionerBranding(
   profileId: string | null | undefined,
 ): Promise<PractitionerBranding> {
-  const fallback: PractitionerBranding = { clinicName: 'MODO', logoUrl: null, brandColor: null }
+  const fallback: PractitionerBranding = { clinicName: 'MODO', logoUrl: null, clinicImageUrl: null, brandColor: null, contactEmail: null }
   if (!profileId) return fallback
   try {
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
     const [{ data: prof }, { data: theme }] = await Promise.all([
-      supabaseAdmin.from('profiles').select('clinic_name, brand_color').eq('id', profileId).maybeSingle(),
-      supabaseAdmin.from('clinic_theme').select('logo_url, primary_color').eq('profile_id', profileId).maybeSingle(),
+      supabaseAdmin.from('profiles').select('clinic_name, brand_color, hero_url, about_page').eq('id', profileId).maybeSingle(),
+      supabaseAdmin.from('clinic_theme').select('logo_url, primary_color, hero_image_url').eq('profile_id', profileId).maybeSingle(),
     ])
-    const p = prof as { clinic_name?: string | null; brand_color?: string | null } | null
-    const t = theme as { logo_url?: string | null; primary_color?: string | null } | null
+    const p = prof as { clinic_name?: string | null; brand_color?: string | null; hero_url?: string | null; about_page?: { contact_email?: string | null } | null } | null
+    const t = theme as { logo_url?: string | null; primary_color?: string | null; hero_image_url?: string | null } | null
     return {
       clinicName: p?.clinic_name || 'MODO',
       logoUrl: t?.logo_url || null,
+      clinicImageUrl: t?.hero_image_url || p?.hero_url || null,
       brandColor: t?.primary_color || p?.brand_color || null,
+      contactEmail: p?.about_page?.contact_email?.trim() || null,
     }
   } catch (e) {
     console.error('[email] getPractitionerBranding failed', e)
