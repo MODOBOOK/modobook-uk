@@ -1,4 +1,4 @@
-import { membershipsEnabled, pilotFeaturesEnabled, practitionerReferralsEnabled, smsMarketingEnabled } from "@/lib/feature-flags";
+import { membershipsEnabled, patientWaitlistEnabled, pilotFeaturesEnabled, practitionerReferralsEnabled, smsMarketingEnabled } from "@/lib/feature-flags";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,6 +53,7 @@ function MenuPage() {
 
   const memberships = membershipsEnabled(profile.slug);
   const smsMarketing = smsMarketingEnabled(profile.slug);
+  const waitlist = patientWaitlistEnabled(profile.slug);
 
   const visible = useMemo(() => {
     return menuGroups.map((g) => ({
@@ -63,9 +64,10 @@ function MenuPage() {
                   .filter((i) => !(isSoloPlan(profile) && isCollectiveOnlyRoute(i.to)))
         .filter((i) => (i.to === "/dashboard/memberships" ? memberships : true))
         .filter((i) => (i.to === "/dashboard/marketing/sms" ? smsMarketing : true))
+        .filter((i) => (i.to === "/dashboard/waitlist" ? waitlist : true))
         ,
     })).filter((g) => g.items.length > 0);
-  }, [profile.associates_enabled, pilot, clinicRole, memberships, smsMarketing]);
+  }, [profile.associates_enabled, pilot, clinicRole, memberships, smsMarketing, waitlist]);
 
   const searchResults = useMemo(() => {
     if (!query.trim()) return null;
