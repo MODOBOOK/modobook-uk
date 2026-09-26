@@ -106,6 +106,44 @@ function BookTreatmentPage() {
     setChosenPractitionerId(window.sessionStorage.getItem(`modo:practitionerId:${slug}`) || null);
   }, [slug]);
 
+  // Patient waitlist (pilot clinics) — shown when a date has no free times.
+  const waitlistOn = patientWaitlistEnabled(slug);
+  const [wlOpen, setWlOpen] = useState(false);
+  const [wlName, setWlName] = useState("");
+  const [wlEmail, setWlEmail] = useState("");
+  const [wlPhone, setWlPhone] = useState("");
+  const [wlPref, setWlPref] = useState("");
+  const [wlUrgency, setWlUrgency] = useState<string>("As soon as possible");
+  const [wlNotes, setWlNotes] = useState("");
+  const [wlSubmitting, setWlSubmitting] = useState(false);
+  const [wlJoined, setWlJoined] = useState(false);
+
+  async function submitWaitlist(e: React.FormEvent) {
+    e.preventDefault();
+    if (wlSubmitting) return;
+    setWlSubmitting(true);
+    try {
+      await joinPatientWaitlist({
+        data: {
+          slug,
+          treatmentId: treatment.id,
+          fullName: wlName,
+          email: wlEmail,
+          phone: wlPhone || null,
+          preferredTimes: wlPref || null,
+          urgency: wlUrgency,
+          notes: wlNotes || null,
+        },
+      });
+      setWlJoined(true);
+      toast.success("You're on the waitlist — the clinic will be in touch.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't join the waitlist. Please try again.");
+    } finally {
+      setWlSubmitting(false);
+    }
+  }
+
   // A team member can require more (or less) notice than the clinic default.
   const minNoticeHours = (() => {
     if (!chosenPractitionerId) return clinicMinNoticeHours;
