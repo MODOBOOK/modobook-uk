@@ -6,7 +6,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { getBookingContext, getDayAvailability, getMonthAvailability, requestBooking, type PaymentChoice } from "@/lib/public-booking.functions";
 import { redeemGiftCardCode } from "@/lib/gift-cards.functions";
 import { previewMembershipCredit, redeemMembershipCredit } from "@/lib/memberships.functions";
-import { ruleAppliesOnDate } from "@/lib/rota";
+import { joinPatientWaitlist } from "@/lib/patient-waitlist.functions";
+import { patientWaitlistEnabled } from "@/lib/feature-flags";
 
 import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
 import { BookingProgress, type BookingStep } from "@/components/BookingProgress";
