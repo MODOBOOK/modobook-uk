@@ -84,6 +84,7 @@ import { Route as AuthenticatedHubReferralsRouteImport } from './routes/_authent
 import { Route as AuthenticatedHubPrescribingRouteImport } from './routes/_authenticated/hub.prescribing'
 import { Route as AuthenticatedHubFindPrescriberRouteImport } from './routes/_authenticated/hub.find-prescriber'
 import { Route as AuthenticatedHubConnectionsRouteImport } from './routes/_authenticated/hub.connections'
+import { Route as AuthenticatedDashboardWaitlistRouteImport } from './routes/_authenticated/dashboard.waitlist'
 import { Route as AuthenticatedDashboardUpcomingRouteImport } from './routes/_authenticated/dashboard.upcoming'
 import { Route as AuthenticatedDashboardTreatmentsRouteImport } from './routes/_authenticated/dashboard.treatments'
 import { Route as AuthenticatedDashboardTrainingRouteImport } from './routes/_authenticated/dashboard.training'
@@ -596,6 +597,12 @@ const AuthenticatedHubConnectionsRoute =
     id: '/connections',
     path: '/connections',
     getParentRoute: () => AuthenticatedHubRoute,
+  } as any)
+const AuthenticatedDashboardWaitlistRoute =
+  AuthenticatedDashboardWaitlistRouteImport.update({
+    id: '/waitlist',
+    path: '/waitlist',
+    getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardUpcomingRoute =
   AuthenticatedDashboardUpcomingRouteImport.update({
@@ -1410,6 +1417,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/training': typeof AuthenticatedDashboardTrainingRouteWithChildren
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/dashboard/upcoming': typeof AuthenticatedDashboardUpcomingRoute
+  '/dashboard/waitlist': typeof AuthenticatedDashboardWaitlistRoute
   '/hub/connections': typeof AuthenticatedHubConnectionsRoute
   '/hub/find-prescriber': typeof AuthenticatedHubFindPrescriberRoute
   '/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
@@ -1596,6 +1604,7 @@ export interface FileRoutesByTo {
   '/dashboard/staff-analytics': typeof AuthenticatedDashboardStaffAnalyticsRoute
   '/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/dashboard/upcoming': typeof AuthenticatedDashboardUpcomingRoute
+  '/dashboard/waitlist': typeof AuthenticatedDashboardWaitlistRoute
   '/hub/connections': typeof AuthenticatedHubConnectionsRoute
   '/hub/find-prescriber': typeof AuthenticatedHubFindPrescriberRoute
   '/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
@@ -1792,6 +1801,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/training': typeof AuthenticatedDashboardTrainingRouteWithChildren
   '/_authenticated/dashboard/treatments': typeof AuthenticatedDashboardTreatmentsRoute
   '/_authenticated/dashboard/upcoming': typeof AuthenticatedDashboardUpcomingRoute
+  '/_authenticated/dashboard/waitlist': typeof AuthenticatedDashboardWaitlistRoute
   '/_authenticated/hub/connections': typeof AuthenticatedHubConnectionsRoute
   '/_authenticated/hub/find-prescriber': typeof AuthenticatedHubFindPrescriberRoute
   '/_authenticated/hub/prescribing': typeof AuthenticatedHubPrescribingRoute
@@ -1990,6 +2000,7 @@ export interface FileRouteTypes {
     | '/dashboard/training'
     | '/dashboard/treatments'
     | '/dashboard/upcoming'
+    | '/dashboard/waitlist'
     | '/hub/connections'
     | '/hub/find-prescriber'
     | '/hub/prescribing'
@@ -2176,6 +2187,7 @@ export interface FileRouteTypes {
     | '/dashboard/staff-analytics'
     | '/dashboard/treatments'
     | '/dashboard/upcoming'
+    | '/dashboard/waitlist'
     | '/hub/connections'
     | '/hub/find-prescriber'
     | '/hub/prescribing'
@@ -2371,6 +2383,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/training'
     | '/_authenticated/dashboard/treatments'
     | '/_authenticated/dashboard/upcoming'
+    | '/_authenticated/dashboard/waitlist'
     | '/_authenticated/hub/connections'
     | '/_authenticated/hub/find-prescriber'
     | '/_authenticated/hub/prescribing'
@@ -3044,6 +3057,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/hub/connections'
       preLoaderRoute: typeof AuthenticatedHubConnectionsRouteImport
       parentRoute: typeof AuthenticatedHubRoute
+    }
+    '/_authenticated/dashboard/waitlist': {
+      id: '/_authenticated/dashboard/waitlist'
+      path: '/waitlist'
+      fullPath: '/dashboard/waitlist'
+      preLoaderRoute: typeof AuthenticatedDashboardWaitlistRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/upcoming': {
       id: '/_authenticated/dashboard/upcoming'
@@ -4088,6 +4108,7 @@ interface AuthenticatedDashboardRouteChildren {
   AuthenticatedDashboardTrainingRoute: typeof AuthenticatedDashboardTrainingRouteWithChildren
   AuthenticatedDashboardTreatmentsRoute: typeof AuthenticatedDashboardTreatmentsRoute
   AuthenticatedDashboardUpcomingRoute: typeof AuthenticatedDashboardUpcomingRoute
+  AuthenticatedDashboardWaitlistRoute: typeof AuthenticatedDashboardWaitlistRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
   AuthenticatedDashboardAssociatesIdRoute: typeof AuthenticatedDashboardAssociatesIdRoute
   AuthenticatedDashboardConsultationsIdRoute: typeof AuthenticatedDashboardConsultationsIdRoute
@@ -4183,6 +4204,7 @@ const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
     AuthenticatedDashboardTreatmentsRoute:
       AuthenticatedDashboardTreatmentsRoute,
     AuthenticatedDashboardUpcomingRoute: AuthenticatedDashboardUpcomingRoute,
+    AuthenticatedDashboardWaitlistRoute: AuthenticatedDashboardWaitlistRoute,
     AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
     AuthenticatedDashboardAssociatesIdRoute:
       AuthenticatedDashboardAssociatesIdRoute,

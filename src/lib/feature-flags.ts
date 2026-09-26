@@ -204,3 +204,16 @@ export function bookingLayoutOptionsEnabled(slug?: string | null) {
   if (!slug) return false;
   return BOOKING_LAYOUT_SLUGS.includes(slug.toLowerCase());
 }
+
+/**
+ * Patient waitlist — patients can leave their details when a date has no
+ * free times, and the practitioner manages the list from their dashboard.
+ * Pilot account only for now.
+ */
+export const PATIENT_WAITLIST_SLUGS = ["aestheticsbynurseryan"];
+
+export function patientWaitlistEnabled(slug?: string | null) {
+  // Explicit allowlist: an empty list means off for everyone.
+  if (!slug) return false;
+  return PATIENT_WAITLIST_SLUGS.includes(slug.toLowerCase());
+}

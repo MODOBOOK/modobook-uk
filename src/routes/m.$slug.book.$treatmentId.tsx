@@ -6,6 +6,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { getBookingContext, getDayAvailability, getMonthAvailability, requestBooking, type PaymentChoice } from "@/lib/public-booking.functions";
 import { redeemGiftCardCode } from "@/lib/gift-cards.functions";
 import { previewMembershipCredit, redeemMembershipCredit } from "@/lib/memberships.functions";
+import { joinPatientWaitlist } from "@/lib/patient-waitlist.functions";
+import { patientWaitlistEnabled } from "@/lib/feature-flags";
 import { ruleAppliesOnDate } from "@/lib/rota";
 
 import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
@@ -103,6 +105,44 @@ function BookTreatmentPage() {
     if (typeof window === "undefined") return;
     setChosenPractitionerId(window.sessionStorage.getItem(`modo:practitionerId:${slug}`) || null);
   }, [slug]);
+
+  // Patient waitlist (pilot clinics) — shown when a date has no free times.
+  const waitlistOn = patientWaitlistEnabled(slug);
+  const [wlOpen, setWlOpen] = useState(false);
+  const [wlName, setWlName] = useState("");
+  const [wlEmail, setWlEmail] = useState("");
+  const [wlPhone, setWlPhone] = useState("");
+  const [wlPref, setWlPref] = useState("");
+  const [wlUrgency, setWlUrgency] = useState<string>("As soon as possible");
+  const [wlNotes, setWlNotes] = useState("");
+  const [wlSubmitting, setWlSubmitting] = useState(false);
+  const [wlJoined, setWlJoined] = useState(false);
+
+  async function submitWaitlist(e: React.FormEvent) {
+    e.preventDefault();
+    if (wlSubmitting) return;
+    setWlSubmitting(true);
+    try {
+      await joinPatientWaitlist({
+        data: {
+          slug,
+          treatmentId: treatment.id,
+          fullName: wlName,
+          email: wlEmail,
+          phone: wlPhone || null,
+          preferredTimes: wlPref || null,
+          urgency: wlUrgency,
+          notes: wlNotes || null,
+        },
+      });
+      setWlJoined(true);
+      toast.success("You're on the waitlist — the clinic will be in touch.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't join the waitlist. Please try again.");
+    } finally {
+      setWlSubmitting(false);
+    }
+  }
 
   // A team member can require more (or less) notice than the clinic default.
   const minNoticeHours = (() => {
@@ -874,9 +914,82 @@ function BookTreatmentPage() {
             ) : dayQuery.data?.isBlocked ? (
               <p className="mt-2 text-sm text-muted-foreground">This date is unavailable.</p>
             ) : slots.length === 0 ? (
-              <p className="mt-2 text-sm text-muted-foreground">
-                No slots available. Try another date.
-              </p>
+              <div className="mt-2">
+                <p className="text-sm text-muted-foreground">
+                  No slots available. Try another date.
+                </p>
+                {waitlistOn && !wlJoined && !wlOpen && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    style={{ color: brand, borderColor: `${brand}55` }}
+                    onClick={() => setWlOpen(true)}
+                  >
+                    Join the waitlist for this treatment
+                  </Button>
+                )}
+                {waitlistOn && wlJoined && (
+                  <p className="mt-3 flex items-center gap-2 text-sm font-medium" style={{ color: brand }}>
+                    <CheckCircle2 className="h-4 w-4" /> You're on the waitlist — we'll be in touch when a space opens up.
+                  </p>
+                )}
+                {waitlistOn && wlOpen && !wlJoined && (
+                  <form onSubmit={submitWaitlist} className="mt-4 space-y-3 rounded-lg border p-4" style={{ borderColor: `${brand}33` }}>
+                    <p className="text-sm font-semibold" style={headingStyle}>Join the waitlist</p>
+                    <p className="text-xs text-muted-foreground">
+                      Leave your details and the clinic will contact you if a space opens up or a cancellation comes in.
+                    </p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <Label className="mb-1 block text-xs">Full name</Label>
+                        <Input required value={wlName} onChange={(e) => setWlName(e.target.value)} placeholder="First and last name" />
+                      </div>
+                      <div>
+                        <Label className="mb-1 block text-xs">Email</Label>
+                        <Input required type="email" value={wlEmail} onChange={(e) => setWlEmail(e.target.value)} placeholder="you@email.com" />
+                      </div>
+                      <div>
+                        <Label className="mb-1 block text-xs">Phone (optional)</Label>
+                        <Input type="tel" value={wlPhone} onChange={(e) => setWlPhone(e.target.value)} placeholder="07…" />
+                      </div>
+                      <div>
+                        <Label className="mb-1 block text-xs">Preferred days / times (optional)</Label>
+                        <Input value={wlPref} onChange={(e) => setWlPref(e.target.value)} placeholder="e.g. weekday evenings" />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="mb-1 block text-xs">How soon would you like to be seen?</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {["As soon as possible", "Within a few weeks", "Flexible"].map((u) => (
+                          <Button
+                            key={u}
+                            type="button"
+                            size="sm"
+                            variant={wlUrgency === u ? "default" : "outline"}
+                            onClick={() => setWlUrgency(u)}
+                            style={wlUrgency === u ? { backgroundColor: brand, borderColor: brand, color: "#fff" } : { color: brand, borderColor: `${brand}55` }}
+                          >
+                            {u}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="mb-1 block text-xs">Anything else? (optional)</Label>
+                      <Textarea value={wlNotes} onChange={(e) => setWlNotes(e.target.value)} rows={2} placeholder="e.g. happy to take a cancellation at short notice" />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button type="submit" disabled={wlSubmitting} style={{ backgroundColor: brand, color: "#fff" }}>
+                        {wlSubmitting ? "Joining…" : "Join the waitlist"}
+                      </Button>
+                      <Button type="button" variant="ghost" onClick={() => setWlOpen(false)} style={{ color: brand }}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </div>
             ) : (
               <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">
                 {slots.map((s) => {

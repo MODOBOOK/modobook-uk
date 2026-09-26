@@ -1,4 +1,4 @@
-import { membershipsEnabled, pilotFeaturesEnabled, practitionerReferralsEnabled, smsMarketingEnabled } from "@/lib/feature-flags";
+import { membershipsEnabled, patientWaitlistEnabled, pilotFeaturesEnabled, practitionerReferralsEnabled, smsMarketingEnabled } from "@/lib/feature-flags";
 import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
@@ -167,6 +167,7 @@ function DashboardLayout() {
             };
             const memberships = membershipsEnabled(profile?.slug);
             const smsMarketing = smsMarketingEnabled(profile?.slug);
+            const waitlist = patientWaitlistEnabled(profile?.slug);
             const gate = (item: MenuItem) => canAccessRoute(clinicRole, item.to, access);
 
             // Desktop mirrors the phone: the sidebar is built from the exact
@@ -179,7 +180,8 @@ function DashboardLayout() {
                   .filter((i) => (i.to === "/dashboard/compliance" ? (profile as { compliance_enabled?: boolean | null })?.compliance_enabled !== false : true))
                   .filter((i) => !(isSoloPlan(profile) && isCollectiveOnlyRoute(i.to)))
                   .filter((i) => (i.to === "/dashboard/memberships" ? memberships : true))
-                  .filter((i) => (i.to === "/dashboard/marketing/sms" ? smsMarketing : true)),
+                  .filter((i) => (i.to === "/dashboard/marketing/sms" ? smsMarketing : true))
+                  .filter((i) => (i.to === "/dashboard/waitlist" ? waitlist : true)),
               }))
               .filter((g) => g.items.length > 0);
 
