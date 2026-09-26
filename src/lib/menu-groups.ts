@@ -30,6 +30,7 @@ import {
   MessageCircle,
   Stethoscope,
   Gift,
+  Clock,
 } from "lucide-react";
 import type { ElementType } from "react";
 
