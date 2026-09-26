@@ -89,7 +89,7 @@ export const joinPatientWaitlist = createServerFn({ method: "POST" })
         p_link: "/dashboard/waitlist",
         p_entity_id: null,
         p_entity_type: "patient_waitlist",
-      });
+      } as any);
     } catch {
       // Waitlist entry is saved — don't fail the join over the extras.
     }
