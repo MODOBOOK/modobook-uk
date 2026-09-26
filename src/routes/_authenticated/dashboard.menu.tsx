@@ -63,13 +63,7 @@ function MenuPage() {
                   .filter((i) => !(isSoloPlan(profile) && isCollectiveOnlyRoute(i.to)))
         .filter((i) => (i.to === "/dashboard/memberships" ? memberships : true))
         .filter((i) => (i.to === "/dashboard/marketing/sms" ? smsMarketing : true))
-        .filter((i) =>
-          i.to === "/dashboard/associates"
-            ? pilot
-              ? !!profile.associates_enabled
-              : true // non-pilot clinics see it as "coming soon"
-            : true,
-        ),
+        ,
     })).filter((g) => g.items.length > 0);
   }, [profile.associates_enabled, pilot, clinicRole, memberships, smsMarketing]);
 

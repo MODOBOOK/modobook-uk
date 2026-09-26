@@ -179,8 +179,7 @@ function DashboardLayout() {
                   .filter((i) => (i.to === "/dashboard/compliance" ? (profile as { compliance_enabled?: boolean | null })?.compliance_enabled !== false : true))
                   .filter((i) => !(isSoloPlan(profile) && isCollectiveOnlyRoute(i.to)))
                   .filter((i) => (i.to === "/dashboard/memberships" ? memberships : true))
-                  .filter((i) => (i.to === "/dashboard/marketing/sms" ? smsMarketing : true))
-                  .filter((i) => (i.to === "/dashboard/associates" ? (pilotOn ? Boolean((profile as Record<string, unknown>)?.associates_enabled) : true) : true)),
+                  .filter((i) => (i.to === "/dashboard/marketing/sms" ? smsMarketing : true)),
               }))
               .filter((g) => g.items.length > 0);
 
