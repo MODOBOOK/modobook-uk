@@ -1106,25 +1106,37 @@ function ReorderCategoriesDialog({
   onSave: (ids: string[]) => void | Promise<void>;
 }) {
   const [items, setItems] = useState<CatNode[]>(categories);
-  const [dragId, setDragId] = useState<string | null>(null);
-  const [overId, setOverId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // Pointer + touch sensors so dragging works on phones and iPads too — the
+  // old browser drag-and-drop only worked with a mouse.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
+  );
 
   useEffect(() => {
     if (open) setItems(categories);
-  }, [open, categories]);
+    // Only reset when the popup opens — background refetches must not wipe
+    // an order the user is part-way through arranging.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
-  function handleDrop(targetId: string) {
-    if (!dragId || dragId === targetId) return;
-    const from = items.findIndex((c) => c.id === dragId);
-    const to = items.findIndex((c) => c.id === targetId);
-    if (from < 0 || to < 0) return;
+  function move(from: number, to: number) {
+    if (to < 0 || to >= items.length || from === to) return;
     const next = items.slice();
     const [moved] = next.splice(from, 1);
     next.splice(to, 0, moved);
     setItems(next);
-    setDragId(null);
-    setOverId(null);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const activeId = String(event.active.id);
+    const targetId = event.over ? String(event.over.id) : null;
+    if (!targetId || activeId === targetId) return;
+    move(
+      items.findIndex((c) => c.id === activeId),
+      items.findIndex((c) => c.id === targetId),
+    );
   }
 
   return (
@@ -1134,38 +1146,23 @@ function ReorderCategoriesDialog({
           <DialogTitle className="font-display">Rearrange categories</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">
-          Drag categories into the order you want them on your booking page.
+          Drag the handle, or use the arrows, to put categories in the order you want on your booking page.
         </p>
-        <div className="max-h-[50vh] space-y-2 overflow-y-auto py-1">
-          {items.map((c) => (
-            <div
-              key={c.id}
-              draggable
-              onDragStart={() => setDragId(c.id)}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setOverId(c.id);
-              }}
-              onDragLeave={() => setOverId((v) => (v === c.id ? null : v))}
-              onDrop={() => handleDrop(c.id)}
-              onDragEnd={() => {
-                setDragId(null);
-                setOverId(null);
-              }}
-              className={`flex cursor-grab items-center gap-3 rounded-2xl border bg-background p-3 transition-colors active:cursor-grabbing ${
-                overId === c.id && dragId !== c.id ? "border-primary" : ""
-              } ${dragId === c.id ? "opacity-50" : ""}`}
-            >
-              <GripVertical className="h-5 w-5 shrink-0 text-muted-foreground" />
-              {c.icon && <span className="text-lg">{c.icon}</span>}
-              <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-                {c.name}
-              </span>
-              <span className="shrink-0 text-xs text-muted-foreground">
-                {c.treatments.length} service{c.treatments.length === 1 ? "" : "s"}
-              </span>
-            </div>
-          ))}
+        <div className="max-h-[55vh] space-y-2 overflow-y-auto py-1">
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={items.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+              {items.map((c, idx) => (
+                <SortableCategoryRow
+                  key={c.id}
+                  cat={c}
+                  canUp={idx > 0}
+                  canDown={idx < items.length - 1}
+                  onUp={() => move(idx, idx - 1)}
+                  onDown={() => move(idx, idx + 1)}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={saving}>
@@ -1187,6 +1184,59 @@ function ReorderCategoriesDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function SortableCategoryRow({
+  cat,
+  canUp,
+  canDown,
+  onUp,
+  onDown,
+}: {
+  cat: CatNode;
+  canUp: boolean;
+  canDown: boolean;
+  onUp: () => void;
+  onDown: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`flex items-center gap-2 rounded-2xl border bg-background p-2 ${isDragging ? "relative z-10 opacity-70 shadow-lg" : ""}`}
+    >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="flex h-11 w-9 shrink-0 touch-none cursor-grab items-center justify-center rounded-lg text-muted-foreground active:cursor-grabbing active:bg-muted"
+        aria-label={`Drag ${cat.name}`}
+      >
+        <GripVertical className="h-5 w-5" />
+      </button>
+      {cat.icon && <span className="text-lg">{cat.icon}</span>}
+      <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{cat.name}</span>
+      <button
+        type="button"
+        onClick={onUp}
+        disabled={!canUp}
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted disabled:opacity-30"
+        aria-label={`Move ${cat.name} up`}
+      >
+        <ArrowUp className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        onClick={onDown}
+        disabled={!canDown}
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted disabled:opacity-30"
+        aria-label={`Move ${cat.name} down`}
+      >
+        <ArrowDown className="h-4 w-4" />
+      </button>
+    </div>
   );
 }
 

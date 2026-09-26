@@ -437,7 +437,7 @@ export const reorderTreatments = createServerFn({ method: "POST" })
     const { data: profile, error } = await supabase
       .from("profiles").select("id").eq("id", await __activeProfileId(context.supabase, context.userId)).single();
     if (error) throw error;
-    await Promise.all(
+    const results = await Promise.all(
       data.ids.map((id, idx) =>
         supabase
           .from("treatments")
@@ -446,6 +446,8 @@ export const reorderTreatments = createServerFn({ method: "POST" })
           .eq("profile_id", profile.id),
       ),
     );
+    const failed = results.find((r) => r.error);
+    if (failed?.error) throw new Error(failed.error.message);
     return { success: true };
   });
 
