@@ -778,7 +778,9 @@ export const getPublicPaymentOptions = createServerFn({ method: "GET" })
     return {
       configured: active,
       requireDepositToConfirm: !!prof.require_deposit_to_confirm || depositEnabled,
-      cardEnabled: fullCardEnabled || depositEnabled,
+      // Card capture only needs the card form — it must still show when the
+      // clinic has turned off deposits and full card payments.
+      cardEnabled: fullCardEnabled || depositEnabled || !!(prof as { payment_card_capture_enabled?: boolean }).payment_card_capture_enabled,
       fullCardEnabled,
       klarnaEnabled: !!prof.payment_klarna_enabled,
       clearpayEnabled: !!prof.payment_clearpay_enabled,
