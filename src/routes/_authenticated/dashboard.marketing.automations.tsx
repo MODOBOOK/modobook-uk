@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react'
 import { useServerFn } from '@tanstack/react-start'
 import {
   listAutomations, saveAutomation, deleteAutomation, toggleAutomation,
-  listTemplates,
+  listTemplates, listAutomationTreatmentOptions,
 } from '@/lib/marketing.functions'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -200,18 +201,13 @@ function AutomationDialog({ editing, setEditing, templates, onSaved, saveFn }: {
         </div>
 
         {editing.type === 'treatment_interval' && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-3">
             <div>
-              <Label>Weeks after last visit</Label>
+              <Label>Weeks after the appointment</Label>
               <Input type="number" min={1} max={104} value={cfg.interval_weeks || 8}
                 onChange={(e) => setCfg({ interval_weeks: parseInt(e.target.value) || 8 })} />
             </div>
-            <div>
-              <Label>Treatment ID</Label>
-              <Input value={cfg.treatment_id || ''} placeholder="Paste treatment id"
-                onChange={(e) => setCfg({ treatment_id: e.target.value || null })} />
-              <p className="text-xs text-muted-foreground mt-1">Find it under Treatments.</p>
-            </div>
+            <TreatmentPicker cfg={cfg} setCfg={setCfg} />
           </div>
         )}
 
@@ -247,5 +243,58 @@ function AutomationDialog({ editing, setEditing, templates, onSaved, saveFn }: {
         </Button>
       </DialogFooter>
     </DialogContent>
+  )
+}
+
+function TreatmentPicker({ cfg, setCfg }: { cfg: any; setCfg: (p: any) => void }) {
+  const optsFn = useServerFn(listAutomationTreatmentOptions)
+  const [data, setData] = useState<{ categories: any[]; treatments: any[] } | null>(null)
+  useEffect(() => { optsFn().then((d) => setData(d as any)).catch(() => setData({ categories: [], treatments: [] })) }, [])
+
+  const tIds: string[] = [...new Set([...(cfg.treatment_ids || []), ...(cfg.treatment_id ? [cfg.treatment_id] : [])])]
+  const cIds: string[] = cfg.category_ids || []
+  const toggleCat = (id: string, on: boolean) =>
+    setCfg({ category_ids: on ? [...cIds, id] : cIds.filter((x) => x !== id) })
+  const toggleT = (id: string, on: boolean) =>
+    setCfg({ treatment_id: null, treatment_ids: on ? [...tIds, id] : tIds.filter((x) => x !== id) })
+
+  if (!data) return <div className="text-sm text-muted-foreground flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading treatments…</div>
+
+  const groups = [
+    ...data.categories.map((c) => ({ id: c.id as string | null, name: c.name as string, items: data.treatments.filter((t) => t.category_id === c.id) })),
+    { id: null, name: 'Uncategorised', items: data.treatments.filter((t) => !t.category_id || !data.categories.some((c) => c.id === t.category_id)) },
+  ].filter((g) => g.items.length)
+  const count = cIds.length + tIds.length
+
+  return (
+    <div>
+      <Label>Which treatments?</Label>
+      <p className="text-xs text-muted-foreground mb-2">Tick a whole category (includes any treatments you add to it later) or individual treatments.</p>
+      <div className="max-h-72 overflow-y-auto rounded-md border divide-y">
+        {groups.map((g) => {
+          const catOn = !!g.id && cIds.includes(g.id)
+          return (
+            <div key={g.id ?? 'none'} className="p-2">
+              {g.id ? (
+                <label className="flex items-center gap-2 font-medium text-sm cursor-pointer">
+                  <Checkbox checked={catOn} onCheckedChange={(v) => toggleCat(g.id!, !!v)} />
+                  {g.name} <span className="text-xs text-muted-foreground font-normal">— whole category</span>
+                </label>
+              ) : <div className="font-medium text-sm">{g.name}</div>}
+              <div className="mt-1 ml-6 space-y-1">
+                {g.items.map((t) => (
+                  <label key={t.id} className={`flex items-center gap-2 text-sm cursor-pointer ${catOn ? 'opacity-50' : ''}`}>
+                    <Checkbox disabled={catOn} checked={catOn || tIds.includes(t.id)} onCheckedChange={(v) => toggleT(t.id, !!v)} />
+                    {t.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )
+        })}
+        {!groups.length && <div className="p-3 text-sm text-muted-foreground">No treatments yet.</div>}
+      </div>
+      <p className="text-xs text-muted-foreground mt-1">{count ? `${count} selected` : 'Nothing selected yet — the email won’t send until you pick something.'}</p>
+    </div>
   )
 }
