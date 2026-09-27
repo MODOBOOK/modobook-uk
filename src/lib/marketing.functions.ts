@@ -57,7 +57,7 @@ async function assertOwnCampaign(supabase: any, practitionerId: string, id: stri
 // appointments has no client_id / appointment_date columns: it stores
 // patient_email + scheduled_date. Match clinic clients to their appointments
 // by email (case-insensitive) and normalise the shape used by the filters.
-type ApptRow = { date: string; treatment_id: string | null; location_id: string | null; treatment_name?: string }
+type ApptRow = { date: string; treatment_id: string | null; location_id: string | null; treatment_name?: string; status?: string | null }
 async function appointmentsByClient(
   supabase: any,
   profileId: string,
@@ -75,7 +75,7 @@ async function appointmentsByClient(
   }
   if (!emailToIds.size) return byClient
 
-  const cols = `patient_email, scheduled_date, treatment_id, location_id${withTreatmentName ? ', treatments(name)' : ''}`
+  const cols = `patient_email, scheduled_date, treatment_id, location_id, status${withTreatmentName ? ', treatments(name)' : ''}`
   const { data: appts } = await supabase
     .from('appointments')
     .select(cols)
@@ -92,6 +92,7 @@ async function appointmentsByClient(
       treatment_id: a.treatment_id ?? null,
       location_id: a.location_id ?? null,
       treatment_name: a.treatments?.name || undefined,
+      status: a.status ?? null,
     }
     for (const id of ids) {
       const arr = byClient.get(id) || []
@@ -759,6 +760,8 @@ export async function processScheduledCampaigns() {
 const AutomationConfigSchema = z.object({
   // treatment_interval
   treatment_id: z.string().uuid().nullable().optional(),
+  treatment_ids: z.array(z.string().uuid()).max(500).optional(),
+  category_ids: z.array(z.string().uuid()).max(200).optional(),
   interval_weeks: z.number().int().min(1).max(104).nullable().optional(),
   // win_back
   no_visit_days: z.number().int().min(7).max(3650).nullable().optional(),
@@ -776,6 +779,17 @@ const AutomationSaveSchema = z.object({
   segment_id: z.string().uuid().nullable().optional(),
   config: AutomationConfigSchema.default({}),
 })
+
+export const listAutomationTreatmentOptions = createServerFn({ method: 'GET' })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const pid = await getOwnerProfileId(context.supabase, context.userId)
+    const [{ data: cats }, { data: tr }] = await Promise.all([
+      context.supabase.from('treatment_categories').select('id, name, sort_order').eq('profile_id', pid).order('sort_order'),
+      context.supabase.from('treatments').select('id, name, category_id').eq('profile_id', pid).order('name'),
+    ])
+    return { categories: (cats || []) as Array<{ id: string; name: string }>, treatments: (tr || []) as Array<{ id: string; name: string; category_id: string | null }> }
+  })
 
 export const listAutomations = createServerFn({ method: 'GET' })
   .middleware([requireSupabaseAuth])
@@ -878,16 +892,25 @@ async function resolveAutomationRecipients(supabase: any, automation: any): Prom
   }
 
   if (automation.type === 'treatment_interval') {
-    const treatmentId = cfg.treatment_id as string | null
     const weeks = cfg.interval_weeks || 8
-    if (!treatmentId) return []
+    const ids = new Set<string>([...(Array.isArray(cfg.treatment_ids) ? cfg.treatment_ids : []), ...(cfg.treatment_id ? [cfg.treatment_id] : [])])
+    const catIds: string[] = Array.isArray(cfg.category_ids) ? cfg.category_ids : []
+    if (catIds.length) {
+      // Resolved each run, so treatments added to a category later are included.
+      const { data: inCats } = await supabase.from('treatments').select('id').eq('profile_id', pid).in('category_id', catIds)
+      for (const t of (inCats || []) as any[]) ids.add(t.id)
+    }
+    if (!ids.size) return []
     const targetDate = new Date(Date.now() - weeks * 7 * 86400_000).toISOString().slice(0, 10)
     if (!clients.length) return []
     const byClient = await appointmentsByClient(supabase, pid, clients, true)
     const out: any[] = []
     for (const c of clients) {
-      const match = (byClient.get(c.id) || []).find((r) => r.treatment_id === treatmentId && r.date === targetDate)
+      const rows = (byClient.get(c.id) || []).filter((r) => r.treatment_id && ids.has(r.treatment_id) && !['cancelled', 'canceled', 'no_show'].includes(String(r.status || '')))
+      const match = rows.find((r) => r.date === targetDate)
       if (!match) continue
+      // Skip if they've already had (or booked) one of these treatments since.
+      if (rows.some((r) => r.date > targetDate)) continue
       out.push(mapClient(c, {
         last_treatment: match.treatment_name || '',
         dedup_key: `interval-${automation.id}-${targetDate}-${c.id}`,
