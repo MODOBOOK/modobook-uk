@@ -75,15 +75,23 @@ async function appointmentsByClient(
   }
   if (!emailToIds.size) return byClient
 
-  const cols = `patient_email, scheduled_date, treatment_id, location_id, status${withTreatmentName ? ', treatments(name)' : ''}`
-  const { data: appts } = await supabase
-    .from('appointments')
-    .select(cols)
-    .eq('profile_id', profileId)
-    .not('patient_email', 'is', null)
-    .limit(50000)
+  const cols = `id, patient_email, scheduled_date, treatment_id, location_id, status${withTreatmentName ? ', treatments(name)' : ''}`
+  // The API returns at most 1000 rows per request, so page through them all.
+  const appts: any[] = []
+  for (let from = 0; from < 50000; from += 1000) {
+    const { data: page, error } = await supabase
+      .from('appointments')
+      .select(cols)
+      .eq('profile_id', profileId)
+      .not('patient_email', 'is', null)
+      .order('id')
+      .range(from, from + 999)
+    if (error) throw new Error(error.message)
+    appts.push(...(page || []))
+    if (!page || page.length < 1000) break
+  }
 
-  for (const a of (appts || []) as any[]) {
+  for (const a of appts) {
     const e = String(a.patient_email || '').trim().toLowerCase()
     const ids = emailToIds.get(e)
     if (!ids) continue
@@ -652,12 +660,17 @@ export const setClientMarketingOptIn = createServerFn({ method: 'POST' })
 // email address are eligible. Never touches anyone who has unsubscribed or is
 // suppressed, and never touches anyone already opted in.
 async function collectBulkOptInCandidates(supabase: any, ownerId: string) {
-  const { data: clients, error } = await supabase.from('clinic_clients')
-    .select('id, email, marketing_opt_in')
-    .eq('profile_id', ownerId).eq('archived', false).eq('is_demo', false)
-    .limit(5000)
-  if (error) throw new Error(error.message)
-  const rows = (clients || []) as Array<{ id: string; email: string | null; marketing_opt_in: boolean }>
+  const rows: Array<{ id: string; email: string | null; marketing_opt_in: boolean }> = []
+  for (let from = 0; from < 20000; from += 1000) {
+    const { data: page, error } = await supabase.from('clinic_clients')
+      .select('id, email, marketing_opt_in')
+      .eq('profile_id', ownerId).eq('archived', false).eq('is_demo', false)
+      .order('id')
+      .range(from, from + 999)
+    if (error) throw new Error(error.message)
+    rows.push(...((page || []) as any[]))
+    if (!page || page.length < 1000) break
+  }
 
   const alreadyOptedIn = rows.filter((r) => r.marketing_opt_in).length
   const pending = rows.filter((r) => !r.marketing_opt_in)
