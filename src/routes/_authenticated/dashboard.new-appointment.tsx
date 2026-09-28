@@ -884,9 +884,9 @@ function NewAppointmentPage() {
           <div>
             <Label>Add treatment</Label>
             <TreatmentPicker
-              treatments={treatments}
-              categories={categories}
-              placeholder="Search or select treatment to add"
+              treatments={pickerTreatments}
+              categories={pickerCategories}
+              placeholder="Search or select treatment or package to add"
               clearAfterSelect
               onSelect={(id) => addTreatmentRow(id)}
             />
