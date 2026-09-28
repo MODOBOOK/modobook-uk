@@ -58,7 +58,13 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
             for (const raw of appts ?? []) {
               const a = raw as any
               // Precise time check
-              const apptMs = new Date(`${a.scheduled_date}T${a.start_time}:00`).getTime()
+              const hm0 = String(a.start_time ?? '').slice(0, 5)
+              const asUtc0 = new Date(`${a.scheduled_date}T${hm0}:00Z`).getTime()
+              const lh0 = Number(
+                new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', hourCycle: 'h23' })
+                  .format(new Date(asUtc0)),
+              )
+              const apptMs = asUtc0 - (((lh0 - new Date(asUtc0).getUTCHours()) + 24) % 24) * 3600_000
               if (Number.isNaN(apptMs) || apptMs < windowStartMs || apptMs > windowEndMs) continue
 
               // Skip if already sent
@@ -223,7 +229,15 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
                   .lte('scheduled_date', new Date(winEnd).toISOString().slice(0, 10))
                 for (const raw of appts ?? []) {
                   const a = raw as any
-                  const apptMs = new Date(`${a.scheduled_date}T${a.start_time}:00`).getTime()
+                  // start_time is "HH:MM:SS" (or "HH:MM") in UK local time.
+                  const hm = String(a.start_time ?? '').slice(0, 5)
+                  const asUtc = new Date(`${a.scheduled_date}T${hm}:00Z`).getTime()
+                  const londonHour = Number(
+                    new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', hourCycle: 'h23' })
+                      .format(new Date(asUtc)),
+                  )
+                  const offsetH = ((londonHour - new Date(asUtc).getUTCHours()) + 24) % 24
+                  const apptMs = asUtc - offsetH * 3600_000
                   if (Number.isNaN(apptMs) || apptMs < winStart || apptMs > winEnd) continue
                   const r = await sendWhatsApp({
                     profileId: a.profile_id,
