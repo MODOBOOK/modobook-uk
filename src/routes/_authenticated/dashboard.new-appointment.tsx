@@ -74,6 +74,17 @@ type BookingItem = {
   duration: number;  // minutes
   price: number;     // £
   modelSlotId: string | null;
+  packageName?: string;
+};
+
+type PackageRow = {
+  id: string;
+  name: string;
+  price: number;
+  duration_minutes: number | null;
+  treatment_id: string | null;
+  treatment_ids: string[] | null;
+  session_count: number;
 };
 
 function newKey() {
@@ -120,6 +131,24 @@ function NewAppointmentPage() {
   const navigate = useNavigate();
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [packages, setPackages] = useState<PackageRow[]>([]);
+  const pickerTreatments = useMemo(
+    () => [
+      ...treatments,
+      ...packages.map((p) => ({
+        id: `pkg:${p.id}`,
+        name: p.session_count > 1 ? `${p.name} (${p.session_count} sessions)` : p.name,
+        price: p.price,
+        duration: p.duration_minutes,
+        category_id: "__packages",
+      })),
+    ],
+    [treatments, packages],
+  );
+  const pickerCategories = useMemo(
+    () => [...categories, ...(packages.length ? [{ id: "__packages", name: "Packages" }] : [])],
+    [categories, packages],
+  );
   const [locations, setLocations] = useState<Location[]>([]);
   const [locationId, setLocationId] = useState<string>("");
   // Who the client is seeing — asked up front so it never has to be added
@@ -188,6 +217,15 @@ function NewAppointmentPage() {
         .order("sort_order")
         .order("name");
       setCategories((cats ?? []) as Category[]);
+      const { data: pk } = await supabase
+        .from("packages")
+        .select("id,name,price,duration_minutes,treatment_id,treatment_ids,session_count")
+        .eq("profile_id", profile.id)
+        .eq("active", true)
+        .eq("is_custom", false)
+        .order("sort_order")
+        .order("name");
+      setPackages((pk ?? []) as PackageRow[]);
       const { data: l } = await supabase
         .from("locations")
         .select("id,name")
@@ -372,9 +410,23 @@ function NewAppointmentPage() {
     return out;
   }
 
-  function addTreatmentRow(treatmentId: string) {
+  function addTreatmentRow(pickedId: string) {
+    let treatmentId = pickedId;
+    let pkg: PackageRow | undefined;
+    if (pickedId.startsWith("pkg:")) {
+      pkg = packages.find((p) => `pkg:${p.id}` === pickedId);
+      const first = pkg ? (pkg.treatment_ids?.length ? pkg.treatment_ids[0] : pkg.treatment_id) : null;
+      if (!first) {
+        toast.error("This package has no treatment linked to it yet");
+        return;
+      }
+      treatmentId = first;
+    }
     const t = treatments.find((x) => x.id === treatmentId);
-    if (!t) return;
+    if (!t) {
+      if (pkg) toast.error("The treatment in this package is no longer active");
+      return;
+    }
     setItems((prev) => {
       const nextStart = (() => {
         if (prev.length === 0) {
@@ -393,9 +445,10 @@ function NewAppointmentPage() {
           key: newKey(),
           treatmentId,
           startTime: nextStart,
-          duration: t.duration ?? 30,
-          price: Number(t.price ?? 0),
+          duration: pkg?.duration_minutes ?? t.duration ?? 30,
+          price: pkg ? Number(pkg.price ?? 0) : Number(t.price ?? 0),
           modelSlotId: null,
+          packageName: pkg?.name,
         },
       ];
     });
@@ -763,8 +816,13 @@ function NewAppointmentPage() {
                 <div key={it.key} className="rounded-2xl border bg-card/50 p-4 space-y-3 shadow-sm">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Treatment {idx + 1}</div>
-                      <div className="font-semibold truncate">{t?.name ?? "—"}</div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        {it.packageName ? `Package · treatment ${idx + 1}` : `Treatment ${idx + 1}`}
+                      </div>
+                      <div className="font-semibold truncate">{it.packageName ?? t?.name ?? "—"}</div>
+                      {it.packageName && t?.name && (
+                        <div className="text-xs text-muted-foreground truncate">{t.name}</div>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {it.modelSlotId && (
@@ -826,9 +884,9 @@ function NewAppointmentPage() {
           <div>
             <Label>Add treatment</Label>
             <TreatmentPicker
-              treatments={treatments}
-              categories={categories}
-              placeholder="Search or select treatment to add"
+              treatments={pickerTreatments}
+              categories={pickerCategories}
+              placeholder="Search or select treatment or package to add"
               clearAfterSelect
               onSelect={(id) => addTreatmentRow(id)}
             />
