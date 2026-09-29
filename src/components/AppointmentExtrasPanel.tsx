@@ -198,7 +198,7 @@ export function AppointmentExtrasPanel({
             className="h-8 w-20"
             inputMode="decimal"
             value={basePrice}
-            disabled={disabled || busy}
+            disabled={disabled || busy || loadedBase === null}
             onChange={(e) => setBasePrice(e.target.value)}
             onBlur={saveBase}
           />
@@ -266,7 +266,10 @@ export function AppointmentExtrasPanel({
             inputMode="numeric"
             defaultValue={String(x.quantity)}
             disabled={disabled || busy}
-            onBlur={(e) => editExtra(x.id, { quantity: parseInt(e.target.value || "1", 10) })}
+            onBlur={(e) => {
+              const q = Math.round(parseOr(e.target.value, x.quantity));
+              if (q !== x.quantity) editExtra(x.id, { quantity: q });
+            }}
           />
           <div className="flex items-center gap-1">
             <span className="text-sm text-muted-foreground">£</span>
@@ -275,7 +278,11 @@ export function AppointmentExtrasPanel({
               inputMode="decimal"
               defaultValue={Number(x.unit_price).toFixed(2)}
               disabled={disabled || busy}
-              onBlur={(e) => editExtra(x.id, { unitPrice: parseFloat(e.target.value || "0") })}
+              onBlur={(e) => {
+                const p = parseOr(e.target.value, Number(x.unit_price));
+                if (Math.round(p * 100) !== Math.round(Number(x.unit_price) * 100)) editExtra(x.id, { unitPrice: p });
+                else e.target.value = Number(x.unit_price).toFixed(2);
+              }}
             />
           </div>
           <Button
