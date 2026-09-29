@@ -126,20 +126,26 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
     {
       const { data: tr } = await supabase
         .from("treatments")
-        .select("prescriber_routing")
+        .select("prescriber_routing, requires_prescriber")
         .eq("id", data.treatmentId)
         .maybeSingle();
-      if ((tr as { prescriber_routing?: string | null } | null)?.prescriber_routing === "clinic_visit") {
+      const t = tr as { prescriber_routing?: string | null; requires_prescriber?: boolean | null } | null;
+      // Prescriber days set up on the services page are generic clinic days —
+      // they apply to any treatment needing a prescriber, often with no linked
+      // prescriber and no specific treatment attached to the day.
+      if (t?.prescriber_routing === "clinic_visit" || t?.requires_prescriber === true) {
         const { data: visits } = await supabase
           .from("prescriber_clinic_visits")
           .select("id, treatment_id, location_id")
           .eq("practitioner_profile_id", profile.id)
           .eq("visit_date", data.date)
-          .neq("status", "cancelled")
-          .or(`treatment_id.eq.${data.treatmentId},treatment_id.is.null`);
+          .neq("status", "cancelled");
         const vs = ((visits ?? []) as { id: string; treatment_id: string | null; location_id: string | null }[])
           .filter((v) => !data.locationId || !v.location_id || v.location_id === data.locationId);
-        const visit = vs.find((v) => v.treatment_id === data.treatmentId) ?? vs[0];
+        const visit =
+          vs.find((v) => v.treatment_id === data.treatmentId) ??
+          vs.find((v) => v.treatment_id == null) ??
+          vs[0];
         if (visit) insertRow.clinic_visit_id = visit.id;
       }
     }
