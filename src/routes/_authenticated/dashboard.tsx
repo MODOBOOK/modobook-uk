@@ -176,6 +176,45 @@ function DashboardLayout() {
           </div>
         </div>
         <ClinicSwitcher />
+        <div ref={searchBoxRef} className="relative px-4 pt-4">
+          <Search className="pointer-events-none absolute left-7 top-1/2 mt-2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={pageQuery}
+            onChange={(e) => setPageQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && pageResults && pageResults.length > 0) {
+                navigate({ to: pageResults[0].to });
+                setPageQuery("");
+              } else if (e.key === "Escape") {
+                setPageQuery("");
+              }
+            }}
+            placeholder="Search pages…"
+            className="h-10 w-full rounded-full border border-border/60 bg-background pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary/50"
+          />
+          {pageResults && (
+            <div className="absolute inset-x-4 top-full z-30 mt-1 overflow-hidden rounded-2xl border border-border/60 bg-popover shadow-lg">
+              {pageResults.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-muted-foreground">Nothing matches “{pageQuery}”.</p>
+              ) : (
+                pageResults.map((r) => (
+                  <button
+                    key={r.to}
+                    type="button"
+                    onClick={() => { navigate({ to: r.to }); setPageQuery(""); }}
+                    className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-muted"
+                  >
+                    <r.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">{r.label}</span>
+                      <span className="block truncate text-xs text-muted-foreground">{r.group}</span>
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
         {practitionerReferralsEnabled(profile?.slug) && (
           <div className="px-4 pt-4">
             <Link
