@@ -36,6 +36,7 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
       medicalFormTemplateIds?: string[];
       modelSlotId?: string | null;
       practitionerId?: string | null;
+      packageId?: string | null;
       paymentReceived?: {
         kind: "deposit" | "full";
         amountCents: number;
@@ -122,6 +123,36 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
     }
     const { error } = await supabase.from("appointments").insert(insertRow as never);
     if (error) throw new Error(error.message);
+
+    // Booked as a package: record the purchase and label the booking with the
+    // package name so the diary shows the package, not just one treatment.
+    if (data.packageId) {
+      const { data: pkg } = await supabase
+        .from("packages")
+        .select("id, name, session_count, expiry_days, profile_id")
+        .eq("id", data.packageId)
+        .maybeSingle();
+      const p = pkg as { id: string; name: string; session_count: number | null; expiry_days: number | null; profile_id: string } | null;
+      if (p && p.profile_id === profile.id) {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const purchaseId = crypto.randomUUID();
+        const { error: pErr2 } = await supabaseAdmin.from("package_purchases").insert({
+          id: purchaseId,
+          package_id: p.id,
+          patient_email: data.patientEmail,
+          sessions_remaining: Math.max(0, Number(p.session_count ?? 1) - 1),
+          expires_at: p.expiry_days ? new Date(Date.now() + p.expiry_days * 86400000).toISOString() : null,
+          status: "active",
+        } as never);
+        await supabase
+          .from("appointments")
+          .update({
+            ...(pErr2 ? {} : { package_purchase_id: purchaseId }),
+            treatment_name_snapshot: p.name,
+          } as never)
+          .eq("id", id);
+      }
+    }
 
     if (pr) {
       await supabase.from("payments").insert({

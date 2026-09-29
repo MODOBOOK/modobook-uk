@@ -1955,8 +1955,9 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       const pkgIds = data.packagePurchases.map((p) => p.packageId);
       const { data: pkgs } = await supabaseAdmin
         .from("packages")
-        .select("id, session_count, expiry_days")
+        .select("id, name, session_count, expiry_days, treatment_id, treatment_ids")
         .in("id", pkgIds);
+      const linkedAppts = new Set<string>();
       for (const p of data.packagePurchases) {
         const meta = (pkgs ?? []).find((x) => x.id === p.packageId);
         const sessions = Math.max(1, Number(meta?.session_count ?? 1));
@@ -1979,6 +1980,24 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         await (supabaseAdmin as never as { rpc: (n: string, a: Record<string, unknown>) => Promise<unknown> })
           .rpc("increment_package_claim", { p_package_id: p.packageId });
         packagePurchases.push({ id: purchaseId, packageId: p.packageId, sessionsRemaining: remaining });
+        // Show the package (not just its first treatment) on the booking.
+        const pkgTreatments = [
+          (meta as { treatment_id?: string | null } | undefined)?.treatment_id,
+          ...(((meta as { treatment_ids?: string[] | null } | undefined)?.treatment_ids) ?? []),
+        ].filter(Boolean) as string[];
+        const target =
+          created.find((c) => !linkedAppts.has(c.id) && pkgTreatments.includes(c.treatmentId)) ??
+          (data.packagePurchases.length === 1 ? created.find((c) => !linkedAppts.has(c.id)) : undefined);
+        if (target && (meta as { name?: string } | undefined)?.name) {
+          linkedAppts.add(target.id);
+          await supabaseAdmin
+            .from("appointments")
+            .update({
+              package_purchase_id: purchaseId,
+              treatment_name_snapshot: (meta as { name: string }).name,
+            } as never)
+            .eq("id", target.id);
+        }
       }
     }
 
