@@ -740,6 +740,30 @@ function downloadSampleCsv() {
 }
 
 
+const MAP_FIELDS: { key: string; label: string; hints: string[] }[] = [
+  { key: "Full Name", label: "Name", hints: ["full name", "client name", "name", "first name"] },
+  { key: "Email", label: "Email", hints: ["email"] },
+  { key: "Phone", label: "Mobile / phone", hints: ["mobile", "phone", "telephone", "tel", "cell", "contact number"] },
+  { key: "DOB", label: "Date of birth", hints: ["dob", "date of birth", "birth"] },
+];
+const NONE = "__none__";
+
+function guessColumn(headers: string[], hints: string[]): string {
+  const n = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
+  const bad = ["emergency", "kin", "gp", "doctor", "optin", "marketing", "consent"].map(n);
+  for (const hint of hints) {
+    const h = n(hint);
+    const exact = headers.find((x) => n(x) === h);
+    if (exact) return exact;
+  }
+  for (const hint of hints) {
+    const h = n(hint);
+    const loose = headers.find((x) => n(x).includes(h) && !bad.some((b) => n(x).includes(b)));
+    if (loose) return loose;
+  }
+  return NONE;
+}
+
 function ImportCsvDialog({ open, onOpenChange, onImport }: {
   open: boolean; onOpenChange: (v: boolean) => void;
   onImport: (rows: Record<string, string>[], onProgress: (done: number, total: number) => void) => Promise<void>;
@@ -748,6 +772,9 @@ function ImportCsvDialog({ open, onOpenChange, onImport }: {
   const [busy, setBusy] = useState(false);
   const [filename, setFilename] = useState("");
   const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const [mapping, setMapping] = useState<Record<string, string>>({});
+
+  const headers = rows.length ? Object.keys(rows[0]) : [];
 
   function handleFile(f: File | null) {
     if (!f) return;
@@ -757,6 +784,12 @@ function ImportCsvDialog({ open, onOpenChange, onImport }: {
       try {
         const parsed = parseCsv(String(reader.result || ""));
         setRows(parsed);
+        if (parsed.length) {
+          const hs = Object.keys(parsed[0]);
+          const next: Record<string, string> = {};
+          for (const f2 of MAP_FIELDS) next[f2.key] = guessColumn(hs, f2.hints);
+          setMapping(next);
+        }
         if (!parsed.length) toast.error("No rows found in CSV");
       } catch {
         toast.error("Could not parse CSV");
@@ -765,8 +798,18 @@ function ImportCsvDialog({ open, onOpenChange, onImport }: {
     reader.readAsText(f);
   }
 
+  function mappedRows(): Record<string, string>[] {
+    const active = MAP_FIELDS.filter((f) => mapping[f.key] && mapping[f.key] !== NONE);
+    if (!active.length) return rows;
+    return rows.map((r) => {
+      const out = { ...r };
+      for (const f of active) out[f.key] = r[mapping[f.key]] ?? "";
+      return out;
+    });
+  }
+
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) { setRows([]); setFilename(""); setProgress({ done: 0, total: 0 }); } onOpenChange(v); }}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { setRows([]); setFilename(""); setMapping({}); setProgress({ done: 0, total: 0 }); } onOpenChange(v); }}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader><DialogTitle>Import patients from CSV</DialogTitle></DialogHeader>
         <div className="space-y-3 text-sm">
@@ -779,6 +822,30 @@ function ImportCsvDialog({ open, onOpenChange, onImport }: {
           </button>
           <Input type="file" accept=".csv,text/csv,text/plain" onChange={(e) => handleFile(e.target.files?.[0] ?? null)} />
           {filename && <div className="text-xs text-muted-foreground">{filename} — {rows.length} row(s) detected</div>}
+          {rows.length > 0 && (
+            <div className="space-y-2 rounded border p-3">
+              <div className="text-xs font-medium">Check the columns</div>
+              {MAP_FIELDS.map((f) => {
+                const col = mapping[f.key] ?? NONE;
+                const filled = col !== NONE ? rows.filter((r) => (r[col] ?? "").trim() !== "").length : 0;
+                return (
+                  <div key={f.key} className="flex items-center gap-2">
+                    <span className="w-28 shrink-0 text-xs text-muted-foreground">{f.label}</span>
+                    <Select value={col} onValueChange={(v) => setMapping((m) => ({ ...m, [f.key]: v }))}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE}>Not in this file</SelectItem>
+                        {headers.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <span className={`w-20 shrink-0 text-right text-[11px] ${col !== NONE && filled === 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                      {col === NONE ? "—" : `${filled} filled`}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
           {busy && progress.total > 0 && (
             <div className="space-y-1.5" aria-live="polite">
               <div className="flex justify-between text-xs font-medium"><span>Importing patients</span><span>{progress.done} of {progress.total}</span></div>
