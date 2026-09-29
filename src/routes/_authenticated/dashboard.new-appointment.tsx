@@ -507,8 +507,14 @@ function NewAppointmentPage() {
       toast.error("Choose who the client is seeing");
       return;
     }
-    if (items.some((it) => !it.treatmentId || !it.startTime)) {
-      toast.error("Each treatment needs a start time");
+    const missingTime = items.find((it) => !it.treatmentId || !it.startTime);
+    if (missingTime) {
+      const name = missingTime.packageName
+        ?? treatments.find((x) => x.id === missingTime.treatmentId)?.name
+        ?? "this booking";
+      toast.error(items.length === 1
+        ? `Pick a start time for ${name}`
+        : `Pick a start time for ${name} — tap a time above or type one in its Start box`);
       return;
     }
     submitLockRef.current = true;
@@ -792,7 +798,7 @@ function NewAppointmentPage() {
 
           {date && items.length > 0 && !items[0].startTime && (
             <div>
-              <Label>Available start times for first treatment</Label>
+              <Label>{items[0].packageName ? `Available start times for ${items[0].packageName}` : items.length > 1 ? "Available start times for first treatment" : "Available start times"}</Label>
               {isClinicVisitBooking && clinicVisitDay && (
                 <p className="mb-1 text-xs text-muted-foreground">
                   Prescribing clinic {clinicVisitDay.start}–{clinicVisitDay.end} — only these times can be booked.
@@ -833,11 +839,11 @@ function NewAppointmentPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                        {it.packageName ? `Package · treatment ${idx + 1}` : `Treatment ${idx + 1}`}
+                        {it.packageName ? "Package" : `Treatment ${idx + 1}`}
                       </div>
                       <div className="font-semibold truncate">{it.packageName ?? t?.name ?? "—"}</div>
-                      {it.packageName && t?.name && (
-                        <div className="text-xs text-muted-foreground truncate">{t.name}</div>
+                      {it.packageName && (
+                        <div className="text-xs text-muted-foreground truncate">Booked as one appointment</div>
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
