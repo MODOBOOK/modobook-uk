@@ -872,8 +872,8 @@ function ImportCsvDialog({ open, onOpenChange, onImport }: {
             setBusy(true);
             try {
               setProgress({ done: 0, total: rows.length });
-              await onImport(rows, (done, total) => setProgress({ done, total }));
-              setRows([]); setFilename(""); setProgress({ done: 0, total: 0 });
+              await onImport(mappedRows(), (done, total) => setProgress({ done, total }));
+              setRows([]); setFilename(""); setMapping({}); setProgress({ done: 0, total: 0 });
             }
             catch (e) { toast.error(e instanceof Error ? e.message : "Import failed"); }
             finally { setBusy(false); }
