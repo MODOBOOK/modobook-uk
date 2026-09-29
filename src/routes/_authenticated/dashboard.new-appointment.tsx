@@ -307,7 +307,11 @@ function NewAppointmentPage() {
   // bookable times come from that day's window and places — not the normal
   // diary. Mirrors what patients see on the public booking page.
   const firstTreatment = treatments.find((t) => t.id === items[0]?.treatmentId) ?? null;
-  const isClinicVisitBooking = firstTreatment?.prescriber_routing === "clinic_visit";
+  // Prescriber days set up on the services page are generic clinic days — they
+  // apply to any treatment that needs a prescriber, not just the auto-created
+  // "Prescribing clinic" service, and often have no linked prescriber.
+  const isClinicVisitBooking =
+    firstTreatment?.prescriber_routing === "clinic_visit" || firstTreatment?.requires_prescriber === true;
   const [clinicVisitDay, setClinicVisitDay] = useState<{ start: string; end: string } | null>(null);
 
   // Recompute available slots when date/location changes
@@ -345,11 +349,16 @@ function NewAppointmentPage() {
             .from("prescriber_clinic_visits")
             .select("start_time,end_time,capacity,location_id,treatment_id,status")
             .eq("practitioner_profile_id", profile.id)
-            .or(`treatment_id.eq.${firstTreatment.id},treatment_id.is.null`)
             .eq("visit_date", date)
             .neq("status", "cancelled");
           const vs = (visits ?? []).filter((v) => matchLoc(v.location_id));
-          const visit = vs.find((v) => v.treatment_id === firstTreatment.id) ?? vs[0] ?? null;
+          // Prefer a day tied to this treatment, then a generic day (no
+          // treatment), then any prescriber day that date.
+          const visit =
+            vs.find((v) => v.treatment_id === firstTreatment.id) ??
+            vs.find((v) => v.treatment_id == null) ??
+            vs[0] ??
+            null;
           if (!visit) { setClinicVisitDay(null); setSlots([]); return; }
           setClinicVisitDay({ start: visit.start_time.slice(0, 5), end: visit.end_time.slice(0, 5) });
           const s = toMin(visit.start_time);
