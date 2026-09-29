@@ -1,5 +1,5 @@
 import { membershipsEnabled, patientWaitlistEnabled, pilotFeaturesEnabled, practitionerReferralsEnabled, smsMarketingEnabled } from "@/lib/feature-flags";
-import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,8 +22,9 @@ import {
   MessageCircle,
   HelpCircle,
   ShieldCheck,
+  Search,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
@@ -47,6 +48,7 @@ import { ClinicSwitcher } from "@/components/ClinicSwitcher";
 import { canAccessRoute, type ClinicRole } from "@/lib/staff-nav";
 import { getComingSoonKey, menuGroups, type MenuGroup, type MenuItem } from "@/lib/menu-groups";
 import { isSoloPlan, isCollectiveOnlyRoute } from "@/lib/menu-groups";
+import { searchMenuItems } from "@/lib/menu-search";
 import { amIAdmin } from "@/lib/admin.functions";
 
 
