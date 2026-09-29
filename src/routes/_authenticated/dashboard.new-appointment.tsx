@@ -75,6 +75,7 @@ type BookingItem = {
   price: number;     // £
   modelSlotId: string | null;
   packageName?: string;
+  packageId?: string;
 };
 
 type PackageRow = {
@@ -449,6 +450,7 @@ function NewAppointmentPage() {
           price: pkg ? Number(pkg.price ?? 0) : Number(t.price ?? 0),
           modelSlotId: null,
           packageName: pkg?.name,
+          packageId: pkg?.id,
         },
       ];
     });
@@ -542,10 +544,11 @@ function NewAppointmentPage() {
             medicalFormTemplateIds: [...pickedMedicalIds],
             modelSlotId: it.modelSlotId,
             practitionerId: practitionerId || null,
+            packageId: it.packageId ?? null,
             paymentReceived,
           },
         });
-        created.push({ id: result.id, manageToken: result.manageToken, treatmentName: t.name });
+        created.push({ id: result.id, manageToken: result.manageToken, treatmentName: it.packageName ?? t.name });
       }
 
       const primary = created[0];
