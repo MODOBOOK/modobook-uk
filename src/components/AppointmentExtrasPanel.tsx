@@ -56,6 +56,7 @@ export function AppointmentExtrasPanel({
   const [extras, setExtras] = useState<Extra[]>([]);
   const [treatments, setTreatments] = useState<{ id: string; name: string; price: number | null; duration: number | null }[]>([]);
   const [basePrice, setBasePrice] = useState("");
+  const [loadedBase, setLoadedBase] = useState<number | null>(null);
   const [pick, setPick] = useState<string>("");
   const [customName, setCustomName] = useState("");
   const [newPrice, setNewPrice] = useState("");
@@ -74,6 +75,7 @@ export function AppointmentExtrasPanel({
         if (off) return;
         setExtras(r.extras as Extra[]);
         setBasePrice(Number(r.baseAmount ?? 0).toFixed(2));
+        setLoadedBase(Number(r.baseAmount ?? 0));
         setStartTime(r.startTime ?? "");
         setEndTime(r.endTime ?? "");
         setSavedMins(Number(r.durationMinutes ?? 0));
@@ -88,6 +90,7 @@ export function AppointmentExtrasPanel({
 
   function applyTotals(r: { baseAmount: number; total: number }) {
     setBasePrice(Number(r.baseAmount).toFixed(2));
+    setLoadedBase(Number(r.baseAmount));
     onTotalChange(Number(r.total));
   }
 
@@ -95,16 +98,36 @@ export function AppointmentExtrasPanel({
     const r = await load({ data: { appointmentId } });
     setExtras(r.extras as Extra[]);
     setBasePrice(Number(r.baseAmount ?? 0).toFixed(2));
+    setLoadedBase(Number(r.baseAmount ?? 0));
     onTotalChange(Number(r.total ?? 0));
   }
 
   async function saveBase() {
+    // Never save before the real price has loaded, when the box is blank or
+    // unreadable, or when nothing changed — these used to wipe the price to £0.
+    if (loadedBase === null) return;
+    const cleaned = basePrice.replace(/[^0-9.]/g, "");
+    const next = parseFloat(cleaned);
+    if (cleaned === "" || !Number.isFinite(next)) {
+      setBasePrice(loadedBase.toFixed(2));
+      return;
+    }
+    if (Math.round(next * 100) === Math.round(loadedBase * 100)) {
+      setBasePrice(loadedBase.toFixed(2));
+      return;
+    }
     setBusy(true);
     try {
-      const r = await setBase({ data: { appointmentId, basePrice: parseFloat(basePrice || "0") } });
+      const r = await setBase({ data: { appointmentId, basePrice: next } });
       applyTotals(r);
       toast.success("Price updated");
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
+
+  function parseOr(value: string, fallback: number) {
+    const cleaned = value.replace(/[^0-9.]/g, "");
+    const n = parseFloat(cleaned);
+    return cleaned === "" || !Number.isFinite(n) ? fallback : n;
   }
 
   /** Save a new visit length — always an explicit confirm, never automatic. */
@@ -175,7 +198,7 @@ export function AppointmentExtrasPanel({
             className="h-8 w-20"
             inputMode="decimal"
             value={basePrice}
-            disabled={disabled || busy}
+            disabled={disabled || busy || loadedBase === null}
             onChange={(e) => setBasePrice(e.target.value)}
             onBlur={saveBase}
           />
@@ -243,7 +266,10 @@ export function AppointmentExtrasPanel({
             inputMode="numeric"
             defaultValue={String(x.quantity)}
             disabled={disabled || busy}
-            onBlur={(e) => editExtra(x.id, { quantity: parseInt(e.target.value || "1", 10) })}
+            onBlur={(e) => {
+              const q = Math.round(parseOr(e.target.value, x.quantity));
+              if (q !== x.quantity) editExtra(x.id, { quantity: q });
+            }}
           />
           <div className="flex items-center gap-1">
             <span className="text-sm text-muted-foreground">£</span>
@@ -252,7 +278,11 @@ export function AppointmentExtrasPanel({
               inputMode="decimal"
               defaultValue={Number(x.unit_price).toFixed(2)}
               disabled={disabled || busy}
-              onBlur={(e) => editExtra(x.id, { unitPrice: parseFloat(e.target.value || "0") })}
+              onBlur={(e) => {
+                const p = parseOr(e.target.value, Number(x.unit_price));
+                if (Math.round(p * 100) !== Math.round(Number(x.unit_price) * 100)) editExtra(x.id, { unitPrice: p });
+                else e.target.value = Number(x.unit_price).toFixed(2);
+              }}
             />
           </div>
           <Button
