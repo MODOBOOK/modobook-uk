@@ -483,9 +483,17 @@ export const importClientsCsv = createServerFn({ method: "POST" })
         if (title) full_name = title;
       }
       if (!full_name) { skipped.push(`(missing name) columns: ${Object.keys(row).join(", ")}`); continue; }
-      const email = pick(row, ["email", "email address", "e-mail", "email1", "primary email"]).toLowerCase() || null;
-      const phone = pick(row, ["phone", "mobile", "mobile number", "telephone", "tel", "contact number", "phone number", "cell"]) || null;
-      const dob = parseDob(pick(row, ["dob", "d.o.b", "date of birth", "birthday", "birth date", "dateofbirth"]));
+      const email = pick(
+        row,
+        ["email", "email address", "e-mail", "email1", "primary email"],
+        ["optin", "opt in", "marketing", "consent", "subscribed", "unsubscribe", "verified"],
+      ).toLowerCase() || null;
+      const phone = cleanPhone(pick(
+        row,
+        ["mobile", "mobile number", "phone", "phone number", "telephone", "tel", "contact number", "cell", "mobile phone", "primary phone"],
+        ["emergency", "next of kin", "kin", "gp", "doctor", "surgery", "optin", "opt in", "verified"],
+      ));
+      const dob = parseDob(pick(row, ["dob", "d.o.b", "date of birth", "birthday", "birth date", "dateofbirth", "born"]));
       const address_line1 = pick(row, ["address_line1", "address line 1", "address1", "addressline1", "street", "street address", "line 1"]) || null;
       const address_line2 = pick(row, ["address_line2", "address line 2", "address2", "addressline2", "line 2"]) || null;
       const address = pick(row, ["address", "home address", "full address"]) || [address_line1, address_line2].filter(Boolean).join(", ") || null;
