@@ -39,6 +39,7 @@ type Appt = {
   total_amount: number | null;
   treatment_id: string | null;
   reschedule_count: number | null;
+  manage_token?: string | null;
   treatment_name_snapshot: string | null;
   treatments: { name: string | null } | null;
   locations: { name: string | null } | null;
@@ -198,7 +199,7 @@ function Account() {
       const myEmail = signedInEmail;
       const { data: apptRows } = await supabase
         .from("appointments")
-        .select("id, scheduled_date, start_time, end_time, status, payment_status, amount_paid_cents, payment_hold_expires_at, total_amount, treatment_id, reschedule_count, treatment_name_snapshot, patient_user_id, patient_email, treatments(name), locations(name)")
+        .select("id, scheduled_date, start_time, end_time, status, payment_status, amount_paid_cents, payment_hold_expires_at, total_amount, treatment_id, reschedule_count, manage_token, treatment_name_snapshot, patient_user_id, patient_email, treatments(name), locations(name)")
         .eq("profile_id", prof.id)
         .or(`patient_user_id.eq.${sess.session.user.id}${myEmail ? `,patient_email.ilike.${myEmail}` : ""}`)
         .order("scheduled_date", { ascending: false });
@@ -810,8 +811,8 @@ function ApptCard({
           )}
           {(allowCancel || allowReschedule) && a.status !== "cancelled" && a.status !== "completed" && (
             <div className="flex flex-wrap items-center gap-2 pt-1">
-              {allowReschedule && a.treatment_id && remaining > 0 && !rescheduleTooLate && (
-                <Link to="/m/$slug/book/$treatmentId" params={{ slug, treatmentId: a.treatment_id }}>
+              {allowReschedule && a.manage_token && remaining > 0 && !rescheduleTooLate && (
+                <Link to="/m/$slug/manage/$token" params={{ slug, token: a.manage_token }}>
                   <Button size="sm" variant="outline">Reschedule ({remaining} left)</Button>
                 </Link>
               )}
