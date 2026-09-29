@@ -111,9 +111,10 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
     if (!profile) throw new Error("No profile");
 
     // Ensure a bookable "Prescribing clinic" treatment exists so the clinic days
-    // show up as a normal category on the booking page, with a price attached.
+    // show up as a normal category on the booking page and in the clinic's own
+    // new-appointment picker. Always created — without it a day saved with no
+    // price had nothing anyone could book. No price = free (existing price kept).
     const ensureTreatment = async (price: number | null) => {
-      if (price == null) return null;
       let categoryId: string | null = null;
       const { data: cat } = await supabase
         .from("treatment_categories")
