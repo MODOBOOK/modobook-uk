@@ -323,8 +323,8 @@ function VisitDialog({
               placeholder="e.g. 25.00"
             />
             <p className="text-xs text-muted-foreground">
-              Setting a price creates a bookable “Prescribing clinic” treatment in its own category
-              on your booking page. Patients pick their clinic day at checkout.
+              Every clinic date adds a bookable “Prescribing clinic” treatment in its own category,
+              so you and your patients can book it. Leave the price empty for a free appointment.
             </p>
           </div>
 
