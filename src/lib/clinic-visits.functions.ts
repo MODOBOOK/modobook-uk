@@ -183,7 +183,7 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
         await supabase
           .from("treatments")
           .update({
-            price,
+            ...(price != null ? { price } : {}),
             active: true,
             category_id: categoryId,
             requires_prescriber: true,
@@ -202,7 +202,7 @@ export const upsertClinicVisit = createServerFn({ method: "POST" })
           description:
             "Appointment with our prescriber during a prescribing clinic day. Choose your clinic date at checkout.",
           duration: mins,
-          price,
+          price: price ?? 0,
           category_id: categoryId,
           payment_mode: data.payment_mode ?? "full",
           requires_prescriber: true,
