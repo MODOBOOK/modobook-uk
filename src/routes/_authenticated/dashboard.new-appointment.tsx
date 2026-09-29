@@ -538,8 +538,8 @@ function NewAppointmentPage() {
       const depositCents = Math.round(parseFloat(depositAmount || "0") * 100);
 
       const created: { id: string; manageToken: string | null; treatmentName: string }[] = [];
-      for (let i = 0; i < items.length; i++) {
-        const it = items[i];
+      for (let i = 0; i < chained.length; i++) {
+        const it = chained[i];
         const t = treatments.find((x) => x.id === it.treatmentId);
         if (!t) continue;
         // Attach payment-received record to the first appointment only.
