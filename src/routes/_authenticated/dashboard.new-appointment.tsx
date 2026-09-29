@@ -49,6 +49,7 @@ type Treatment = {
   duration: number | null;
   category_id: string | null;
   prescriber_routing?: string | null;
+  requires_prescriber?: boolean | null;
 };
 type Location = { id: string; name: string };
 type Category = { id: string; name: string; sort_order: number | null };
@@ -205,7 +206,7 @@ function NewAppointmentPage() {
     (async () => {
       const { data: t } = await supabase
         .from("treatments")
-        .select("id,name,price,duration,category_id,prescriber_routing")
+        .select("id,name,price,duration,category_id,prescriber_routing,requires_prescriber")
         .eq("profile_id", profile.id)
         .eq("active", true)
         .order("name");
