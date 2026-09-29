@@ -119,6 +119,42 @@ function DashboardLayout() {
     await supabase.auth.signOut({ scope: "local" });
   }
 
+  // Always-visible page search at the top of the desktop sidebar. Uses the
+  // same forgiving matcher as the phone menu (part-words, typos, keywords).
+  const navigate = useNavigate();
+  const [pageQuery, setPageQuery] = useState("");
+  const searchBoxRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) setPageQuery("");
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, []);
+  const pageResults = (() => {
+    if (!pageQuery.trim()) return null;
+    const clinicRole = ((profile as Record<string, unknown>)?.__clinic_role as ClinicRole) ?? "owner";
+    const access = {
+      canManageRota: Boolean((profile as Record<string, unknown>)?.__can_manage_rota),
+      canUsePrescribing: Boolean((profile as Record<string, unknown>)?.__can_use_prescribing),
+    };
+    const pilotOn = pilotFeaturesEnabled(profile?.slug);
+    const groups = menuGroups
+      .map((g) => ({
+        ...g,
+        items: g.items
+          .filter((i) => canAccessRoute(clinicRole, i.to, access))
+          .filter((i) => (i.to === "/dashboard/compliance" ? (profile as { compliance_enabled?: boolean | null })?.compliance_enabled !== false : true))
+          .filter((i) => !(isSoloPlan(profile) && isCollectiveOnlyRoute(i.to)))
+          .filter((i) => (i.to === "/dashboard/memberships" ? membershipsEnabled(profile?.slug) : true))
+          .filter((i) => (i.to === "/dashboard/marketing/sms" ? smsMarketingEnabled(profile?.slug) : true))
+          .filter((i) => (i.to === "/dashboard/waitlist" ? patientWaitlistEnabled(profile?.slug) : true))
+          .filter((i) => !getComingSoonKey(i.to, pilotOn)),
+      }))
+      .filter((g) => g.items.length > 0);
+    return searchMenuItems(pageQuery, groups).slice(0, 8);
+  })();
+
   return (
     <div className="clinic-shell flex min-h-screen bg-background" style={themeStyle}>
       {/* Desktop / iPad sidebar */}
