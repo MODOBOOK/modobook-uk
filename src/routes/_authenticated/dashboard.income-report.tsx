@@ -155,7 +155,7 @@ function IncomeReportPage() {
               ["Discounts given", money(t!.discounts)],
               ["Bookings", String(t!.bookings)],
             ].map(([label, value]) => (
-              <Card key={label}>
+              <Card key={label} className="min-w-0">
                 <CardContent className="p-4">
                   <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
                   <p className="mt-1 font-serif text-2xl">{value}</p>
@@ -164,30 +164,30 @@ function IncomeReportPage() {
             ))}
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Card>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Card className="min-w-0">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">By payment method</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 {data.byMethod.length === 0 && <p className="text-muted-foreground">No income in this period.</p>}
                 {data.byMethod.map((m) => (
-                  <div key={m.label} className="flex items-center justify-between gap-2">
-                    <span className="capitalize">{m.label.replace(/_/g, " ")}</span>
-                    <span className="text-muted-foreground">{m.count} · {money(m.amount)}</span>
+                  <div key={m.label} className="flex flex-nowrap items-center justify-between gap-2">
+                    <span className="min-w-0 truncate capitalize">{m.label.replace(/_/g, " ")}</span>
+                    <span className="shrink-0 text-muted-foreground">{m.count} · {money(m.amount)}</span>
                   </div>
                 ))}
               </CardContent>
             </Card>
-            <Card>
+            <Card className="min-w-0">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">By treatment</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
                 {data.byTreatment.length === 0 && <p className="text-muted-foreground">No income in this period.</p>}
                 {data.byTreatment.map((m) => (
-                  <div key={m.label} className="flex items-center justify-between gap-2">
-                    <span className="truncate">{m.label}</span>
+                  <div key={m.label} className="flex flex-nowrap items-center justify-between gap-2">
+                    <span className="min-w-0 truncate">{m.label}</span>
                     <span className="shrink-0 text-muted-foreground">{m.count} · {money(m.amount)}</span>
                   </div>
                 ))}
@@ -208,7 +208,7 @@ function IncomeReportPage() {
                 {data.rows.map((r) => (
                   <div key={r.id} className="space-y-1 px-4 py-3 text-sm">
                     <div className="flex items-start justify-between gap-2">
-                      <span className="font-medium leading-snug">{r.treatment}</span>
+                      <span className="min-w-0 break-words font-medium leading-snug">{r.treatment}</span>
                       <span className="shrink-0 font-semibold">{money(r.net)}</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
