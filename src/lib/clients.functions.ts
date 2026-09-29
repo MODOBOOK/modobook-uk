@@ -361,20 +361,37 @@ export const importClientsCsv = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const pid = await getProfileId(context.supabase, context.userId);
     if (!pid) throw new Error("No profile");
-    const norm = (s: string) => s.trim().toLowerCase().replace(/[\s_-]+/g, "");
-    const pick = (row: CsvRow, keys: string[]) => {
+    const norm = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+    // Exact header match first; then a loose match so exports that label columns
+    // "Mobile number (incl. country code)" or "Client email address" still land.
+    const pick = (row: CsvRow, keys: string[], exclude: string[] = []) => {
       const map: Record<string, string> = {};
       for (const k of Object.keys(row)) map[norm(k)] = row[k];
       for (const k of keys) {
         const v = map[norm(k)];
         if (v != null && String(v).trim() !== "") return String(v).trim();
       }
+      const headers = Object.keys(map);
+      for (const k of keys) {
+        const nk = norm(k);
+        if (nk.length < 4) continue;
+        for (const h of headers) {
+          if (!h.includes(nk)) continue;
+          if (exclude.some((x) => h.includes(norm(x)))) continue;
+          const v = map[h];
+          if (v != null && String(v).trim() !== "") return String(v).trim();
+        }
+      }
       return "";
+    };
+    const MONTHS: Record<string, string> = {
+      jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
+      jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12",
     };
     const parseDob = (raw: string): string | null => {
       if (!raw) return null;
-      const s = raw.trim();
-      const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s);
+      const s = raw.trim().replace(/^'/, "");
+      const iso = /^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/.exec(s);
       if (iso) return `${iso[1]}-${iso[2].padStart(2,"0")}-${iso[3].padStart(2,"0")}`;
       const dmy = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/.exec(s);
       if (dmy) {
@@ -382,7 +399,29 @@ export const importClientsCsv = createServerFn({ method: "POST" })
         if (y.length === 2) y = (Number(y) > 30 ? "19" : "20") + y;
         return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
       }
+      // "23 May 1993" / "23rd May 1993"
+      const dMonY = /^(\d{1,2})(?:st|nd|rd|th)?[\s\-]+([a-z]{3,})[\s\-,]+(\d{4})$/i.exec(s);
+      if (dMonY) {
+        const m = MONTHS[dMonY[2].slice(0, 3).toLowerCase()];
+        if (m) return `${dMonY[3]}-${m}-${dMonY[1].padStart(2, "0")}`;
+      }
+      // "May 23, 1993"
+      const monDY = /^([a-z]{3,})[\s\-]+(\d{1,2})(?:st|nd|rd|th)?[\s\-,]+(\d{4})$/i.exec(s);
+      if (monDY) {
+        const m = MONTHS[monDY[1].slice(0, 3).toLowerCase()];
+        if (m) return `${monDY[3]}-${m}-${monDY[2].padStart(2, "0")}`;
+      }
       return null;
+    };
+    // Spreadsheets drop the leading 0 and some exports keep +44 / 44 prefixes.
+    const cleanPhone = (raw: string): string | null => {
+      let s = raw.trim().replace(/^'/, "").replace(/[^\d+]/g, "");
+      if (!s) return null;
+      if (s.startsWith("+44")) s = "0" + s.slice(3);
+      else if (s.startsWith("0044")) s = "0" + s.slice(4);
+      else if (/^44\d{9,10}$/.test(s)) s = "0" + s.slice(2);
+      else if (/^7\d{9}$/.test(s)) s = "0" + s;
+      return s.replace(/^\+/, "+") || null;
     };
 
     const inserted: string[] = [];
@@ -444,9 +483,17 @@ export const importClientsCsv = createServerFn({ method: "POST" })
         if (title) full_name = title;
       }
       if (!full_name) { skipped.push(`(missing name) columns: ${Object.keys(row).join(", ")}`); continue; }
-      const email = pick(row, ["email", "email address", "e-mail", "email1", "primary email"]).toLowerCase() || null;
-      const phone = pick(row, ["phone", "mobile", "mobile number", "telephone", "tel", "contact number", "phone number", "cell"]) || null;
-      const dob = parseDob(pick(row, ["dob", "d.o.b", "date of birth", "birthday", "birth date", "dateofbirth"]));
+      const email = pick(
+        row,
+        ["email", "email address", "e-mail", "email1", "primary email"],
+        ["optin", "opt in", "marketing", "consent", "subscribed", "unsubscribe", "verified"],
+      ).toLowerCase() || null;
+      const phone = cleanPhone(pick(
+        row,
+        ["mobile", "mobile number", "phone", "phone number", "telephone", "tel", "contact number", "cell", "mobile phone", "primary phone"],
+        ["emergency", "next of kin", "kin", "gp", "doctor", "surgery", "optin", "opt in", "verified"],
+      ));
+      const dob = parseDob(pick(row, ["dob", "d.o.b", "date of birth", "birthday", "birth date", "dateofbirth", "born"]));
       const address_line1 = pick(row, ["address_line1", "address line 1", "address1", "addressline1", "street", "street address", "line 1"]) || null;
       const address_line2 = pick(row, ["address_line2", "address line 2", "address2", "addressline2", "line 2"]) || null;
       const address = pick(row, ["address", "home address", "full address"]) || [address_line1, address_line2].filter(Boolean).join(", ") || null;
