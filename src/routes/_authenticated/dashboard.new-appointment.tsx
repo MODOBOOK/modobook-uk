@@ -507,7 +507,15 @@ function NewAppointmentPage() {
       toast.error("Choose who the client is seeing");
       return;
     }
-    const missingTime = items.find((it) => !it.treatmentId || !it.startTime);
+    // Fill in any later start times from the first one so a package or a
+    // chained visit only ever needs the one time picked.
+    const chained = chainStarts(items);
+    if (chained.some((it, i) => it.startTime !== items[i].startTime)) setItems(chained);
+    if (chained.some((it) => !it.treatmentId)) {
+      toast.error("One of the items has no treatment linked — remove it and add it again");
+      return;
+    }
+    const missingTime = chained.find((it) => !it.startTime);
     if (missingTime) {
       const name = missingTime.packageName
         ?? treatments.find((x) => x.id === missingTime.treatmentId)?.name
@@ -530,8 +538,8 @@ function NewAppointmentPage() {
       const depositCents = Math.round(parseFloat(depositAmount || "0") * 100);
 
       const created: { id: string; manageToken: string | null; treatmentName: string }[] = [];
-      for (let i = 0; i < items.length; i++) {
-        const it = items[i];
+      for (let i = 0; i < chained.length; i++) {
+        const it = chained[i];
         const t = treatments.find((x) => x.id === it.treatmentId);
         if (!t) continue;
         // Attach payment-received record to the first appointment only.
