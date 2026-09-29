@@ -1,5 +1,5 @@
 import { membershipsEnabled, patientWaitlistEnabled, pilotFeaturesEnabled, practitionerReferralsEnabled, smsMarketingEnabled } from "@/lib/feature-flags";
-import { createFileRoute, Link, Outlet, redirect, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,8 +22,9 @@ import {
   MessageCircle,
   HelpCircle,
   ShieldCheck,
+  Search,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
@@ -47,6 +48,7 @@ import { ClinicSwitcher } from "@/components/ClinicSwitcher";
 import { canAccessRoute, type ClinicRole } from "@/lib/staff-nav";
 import { getComingSoonKey, menuGroups, type MenuGroup, type MenuItem } from "@/lib/menu-groups";
 import { isSoloPlan, isCollectiveOnlyRoute } from "@/lib/menu-groups";
+import { searchMenuItems } from "@/lib/menu-search";
 import { amIAdmin } from "@/lib/admin.functions";
 
 
@@ -117,6 +119,42 @@ function DashboardLayout() {
     await supabase.auth.signOut({ scope: "local" });
   }
 
+  // Always-visible page search at the top of the desktop sidebar. Uses the
+  // same forgiving matcher as the phone menu (part-words, typos, keywords).
+  const navigate = useNavigate();
+  const [pageQuery, setPageQuery] = useState("");
+  const searchBoxRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) setPageQuery("");
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, []);
+  const pageResults = (() => {
+    if (!pageQuery.trim()) return null;
+    const clinicRole = ((profile as Record<string, unknown>)?.__clinic_role as ClinicRole) ?? "owner";
+    const access = {
+      canManageRota: Boolean((profile as Record<string, unknown>)?.__can_manage_rota),
+      canUsePrescribing: Boolean((profile as Record<string, unknown>)?.__can_use_prescribing),
+    };
+    const pilotOn = pilotFeaturesEnabled(profile?.slug);
+    const groups = menuGroups
+      .map((g) => ({
+        ...g,
+        items: g.items
+          .filter((i) => canAccessRoute(clinicRole, i.to, access))
+          .filter((i) => (i.to === "/dashboard/compliance" ? (profile as { compliance_enabled?: boolean | null })?.compliance_enabled !== false : true))
+          .filter((i) => !(isSoloPlan(profile) && isCollectiveOnlyRoute(i.to)))
+          .filter((i) => (i.to === "/dashboard/memberships" ? membershipsEnabled(profile?.slug) : true))
+          .filter((i) => (i.to === "/dashboard/marketing/sms" ? smsMarketingEnabled(profile?.slug) : true))
+          .filter((i) => (i.to === "/dashboard/waitlist" ? patientWaitlistEnabled(profile?.slug) : true))
+          .filter((i) => !getComingSoonKey(i.to, pilotOn)),
+      }))
+      .filter((g) => g.items.length > 0);
+    return searchMenuItems(pageQuery, groups).slice(0, 8);
+  })();
+
   return (
     <div className="clinic-shell flex min-h-screen bg-background" style={themeStyle}>
       {/* Desktop / iPad sidebar */}
@@ -138,6 +176,45 @@ function DashboardLayout() {
           </div>
         </div>
         <ClinicSwitcher />
+        <div ref={searchBoxRef} className="relative px-4 pt-4">
+          <Search className="pointer-events-none absolute left-7 top-1/2 mt-2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={pageQuery}
+            onChange={(e) => setPageQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && pageResults && pageResults.length > 0) {
+                navigate({ to: pageResults[0].to });
+                setPageQuery("");
+              } else if (e.key === "Escape") {
+                setPageQuery("");
+              }
+            }}
+            placeholder="Search pages…"
+            className="h-10 w-full rounded-full border border-border/60 bg-background pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary/50"
+          />
+          {pageResults && (
+            <div className="absolute inset-x-4 top-full z-30 mt-1 overflow-hidden rounded-2xl border border-border/60 bg-popover shadow-lg">
+              {pageResults.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-muted-foreground">Nothing matches “{pageQuery}”.</p>
+              ) : (
+                pageResults.map((r) => (
+                  <button
+                    key={r.to}
+                    type="button"
+                    onClick={() => { navigate({ to: r.to }); setPageQuery(""); }}
+                    className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-muted"
+                  >
+                    <r.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">{r.label}</span>
+                      <span className="block truncate text-xs text-muted-foreground">{r.group}</span>
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+        </div>
         {practitionerReferralsEnabled(profile?.slug) && (
           <div className="px-4 pt-4">
             <Link

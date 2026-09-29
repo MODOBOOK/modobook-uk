@@ -21,6 +21,7 @@ import { ComingSoonDialog, type ComingSoonKey } from "@/components/ComingSoonDia
 import { canAccessRoute, type ClinicRole } from "@/lib/staff-nav";
 import { getComingSoonKey, menuGroups, type MenuItem } from "@/lib/menu-groups";
 import { isSoloPlan, isCollectiveOnlyRoute } from "@/lib/menu-groups";
+import { searchMenuItems } from "@/lib/menu-search";
 
 export const Route = createFileRoute("/_authenticated/dashboard/menu")({
   ssr: false,
@@ -69,14 +70,11 @@ function MenuPage() {
     })).filter((g) => g.items.length > 0);
   }, [profile.associates_enabled, pilot, clinicRole, memberships, smsMarketing, waitlist]);
 
+  // Forgiving search: part-words, small typos and keywords all match
+  // (see src/lib/menu-search.ts). Tapping a result opens that page.
   const searchResults = useMemo(() => {
     if (!query.trim()) return null;
-    const q = query.toLowerCase();
-    return visible.flatMap((g) =>
-      g.items
-        .filter((i) => i.label.toLowerCase().includes(q) || i.description.toLowerCase().includes(q))
-        .map((i) => ({ ...i, group: g.title })),
-    );
+    return searchMenuItems(query, visible);
   }, [query, visible]);
 
   const openGroup = visible.find((g) => g.title === activeGroup) ?? null;
