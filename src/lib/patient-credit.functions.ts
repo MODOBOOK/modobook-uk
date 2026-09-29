@@ -43,6 +43,8 @@ export const getClientCredit = createServerFn({ method: "POST" })
       return { linked: false as const, balanceCents: 0, entries: [] as LedgerRow[] };
     }
 
+    { const { syncMembershipCredits } = await import("./membership-credit-sync.server");
+      await syncMembershipCredits({ profileId: clinicProfileId, patientUserId: account.user_id }); }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows } = await supabaseAdmin
       .from("patient_credit_ledger")
@@ -124,6 +126,8 @@ export const getMyClinicCredit = createServerFn({ method: "POST" })
       .eq("slug", data.slug)
       .maybeSingle();
     if (!profile) return { balanceCents: 0, entries: [] as LedgerRow[] };
+    { const { syncMembershipCredits } = await import("./membership-credit-sync.server");
+      await syncMembershipCredits({ profileId: (profile as { id: string }).id, patientUserId: context.userId }); }
 
     const { data: rows } = await context.supabase
       .from("patient_credit_ledger")
