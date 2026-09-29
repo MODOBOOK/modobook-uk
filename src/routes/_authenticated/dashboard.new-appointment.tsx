@@ -509,7 +509,15 @@ function NewAppointmentPage() {
     }
     // Fill in any later start times from the first one so a package or a
     // chained visit only ever needs the one time picked.
-    const chained = chainStarts(items);
+    // Some phones/iPads don't report a time typed into the Start box until the
+    // box loses focus, so read what is actually showing before checking.
+    const fromScreen = items.map((it) => {
+      if (it.startTime || typeof document === "undefined") return it;
+      const el = document.querySelector<HTMLInputElement>(`input[data-start-key="${it.key}"]`);
+      const v = el?.value?.slice(0, 5) ?? "";
+      return v ? { ...it, startTime: v } : it;
+    });
+    const chained = chainStarts(fromScreen);
     if (chained.some((it, i) => it.startTime !== items[i].startTime)) setItems(chained);
     if (chained.some((it) => !it.treatmentId)) {
       toast.error("One of the items has no treatment linked — remove it and add it again");
@@ -794,7 +802,8 @@ function NewAppointmentPage() {
                     const mm = String(d.getMonth() + 1).padStart(2, "0");
                     const dd = String(d.getDate()).padStart(2, "0");
                     setDate(`${yyyy}-${mm}-${dd}`);
-                    setItems((prev) => prev.map((it, i) => (i === 0 ? { ...it, startTime: "" } : it)));
+                    // Keep any time already picked — the times below still show so it
+                    // can be changed if that time isn't free on the new date.
                   }}
                   disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
                   initialFocus
@@ -804,7 +813,7 @@ function NewAppointmentPage() {
             </Popover>
           </div>
 
-          {date && items.length > 0 && !items[0].startTime && (
+          {date && items.length > 0 && (
             <div>
               <Label>{items[0].packageName ? `Available start times for ${items[0].packageName}` : items.length > 1 ? "Available start times for first treatment" : "Available start times"}</Label>
               {isClinicVisitBooking && clinicVisitDay && (
@@ -826,8 +835,9 @@ function NewAppointmentPage() {
                     <Button
                       key={s}
                       type="button"
-                      variant="outline"
+                      variant={items[0].startTime === s ? "default" : "outline"}
                       size="sm"
+                      aria-pressed={items[0].startTime === s}
                       onClick={() => updateItem(items[0].key, { startTime: s })}
                     >
                       {s}
@@ -871,8 +881,17 @@ function NewAppointmentPage() {
                       <Input
                         type="time"
                         className="h-10 tabular-nums"
+                        data-start-key={it.key}
                         value={it.startTime}
-                        onChange={(e) => updateItem(it.key, { startTime: e.target.value })}
+                        onChange={(e) => updateItem(it.key, { startTime: e.target.value.slice(0, 5) })}
+                        onInput={(e) => {
+                          const v = e.currentTarget.value.slice(0, 5);
+                          if (v !== it.startTime) updateItem(it.key, { startTime: v });
+                        }}
+                        onBlur={(e) => {
+                          const v = e.currentTarget.value.slice(0, 5);
+                          if (v !== it.startTime) updateItem(it.key, { startTime: v });
+                        }}
                       />
                     </div>
                     <div className="space-y-1">
