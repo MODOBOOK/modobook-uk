@@ -172,7 +172,7 @@ function IncomeReportPage() {
               <CardContent className="space-y-2 text-sm">
                 {data.byMethod.length === 0 && <p className="text-muted-foreground">No income in this period.</p>}
                 {data.byMethod.map((m) => (
-                  <div key={m.label} className="flex items-center justify-between gap-2">
+                  <div key={m.label} className="flex flex-nowrap items-center justify-between gap-2">
                     <span className="min-w-0 truncate capitalize">{m.label.replace(/_/g, " ")}</span>
                     <span className="shrink-0 text-muted-foreground">{m.count} · {money(m.amount)}</span>
                   </div>
@@ -186,7 +186,7 @@ function IncomeReportPage() {
               <CardContent className="space-y-2 text-sm">
                 {data.byTreatment.length === 0 && <p className="text-muted-foreground">No income in this period.</p>}
                 {data.byTreatment.map((m) => (
-                  <div key={m.label} className="flex items-center justify-between gap-2">
+                  <div key={m.label} className="flex flex-nowrap items-center justify-between gap-2">
                     <span className="min-w-0 truncate">{m.label}</span>
                     <span className="shrink-0 text-muted-foreground">{m.count} · {money(m.amount)}</span>
                   </div>
