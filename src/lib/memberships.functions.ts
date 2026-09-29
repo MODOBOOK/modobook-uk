@@ -233,6 +233,8 @@ export const listMemberships = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const profile = await getProfile(context.supabase, context.userId);
     if (!profile || !membershipsEnabled(profile.slug)) return [];
+    { const { syncMembershipCredits } = await import("./membership-credit-sync.server");
+      await syncMembershipCredits({ profileId: profile.id }); }
     const { data, error } = await context.supabase
       .from("patient_memberships")
       .select("*, membership_plans(name, price_cents, interval, credit_cents)")
@@ -330,6 +332,8 @@ export const getPatientCreditForClinic = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const profile = await getProfile(context.supabase, context.userId);
     if (!profile || !membershipsEnabled(profile.slug)) return { balanceCents: 0 };
+    { const { syncMembershipCredits } = await import("./membership-credit-sync.server");
+      await syncMembershipCredits({ profileId: profile.id, patientUserId: data.patientUserId }); }
     const { data: rows } = await context.supabase
       .from("patient_credit_ledger")
       .select("delta_pennies")
@@ -440,6 +444,8 @@ export const getMyMembershipForClinic = createServerFn({ method: "GET" })
     const profile = await clinicBySlug(data.slug);
     if (!profile) return { memberships: [], balanceCents: 0 };
     const profileId = (profile as { id: string }).id;
+    { const { syncMembershipCredits } = await import("./membership-credit-sync.server");
+      await syncMembershipCredits({ profileId, patientUserId: userId }); }
 
     const [{ data: memberships }, { data: ledger }] = await Promise.all([
       supabase
@@ -606,6 +612,8 @@ export const previewMembershipCredit = createServerFn({ method: "POST" })
     const profile = await clinicBySlug(data.slug);
     if (!profile) return { applicableCents: 0, balanceCents: 0, mode: null as string | null };
     const profileId = (profile as { id: string }).id;
+    { const { syncMembershipCredits } = await import("./membership-credit-sync.server");
+      await syncMembershipCredits({ profileId, patientUserId: userId }); }
 
     const { data: ledger } = await supabase
       .from("patient_credit_ledger")
