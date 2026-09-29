@@ -342,10 +342,13 @@ function NewAppointmentPage() {
         if (isClinicVisitBooking && firstTreatment) {
           const { data: visits } = await supabase
             .from("prescriber_clinic_visits")
-            .select("start_time,end_time,capacity,location_id")
-            .eq("treatment_id", firstTreatment.id)
-            .eq("visit_date", date);
-          const visit = (visits ?? []).find((v) => matchLoc(v.location_id)) ?? null;
+            .select("start_time,end_time,capacity,location_id,treatment_id,status")
+            .eq("practitioner_profile_id", profile.id)
+            .or(`treatment_id.eq.${firstTreatment.id},treatment_id.is.null`)
+            .eq("visit_date", date)
+            .neq("status", "cancelled");
+          const vs = (visits ?? []).filter((v) => matchLoc(v.location_id));
+          const visit = vs.find((v) => v.treatment_id === firstTreatment.id) ?? vs[0] ?? null;
           if (!visit) { setClinicVisitDay(null); setSlots([]); return; }
           setClinicVisitDay({ start: visit.start_time.slice(0, 5), end: visit.end_time.slice(0, 5) });
           const s = toMin(visit.start_time);

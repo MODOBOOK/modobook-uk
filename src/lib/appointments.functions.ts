@@ -121,6 +121,28 @@ export const createAppointmentForPatient = createServerFn({ method: "POST" })
         insertRow.amount_paid_cents = pr.amountCents || totalCents;
       }
     }
+    // Prescribing clinic days: link the booking to that day's visit so the
+    // prescriber gets the referral — same as patient bookings online.
+    {
+      const { data: tr } = await supabase
+        .from("treatments")
+        .select("prescriber_routing")
+        .eq("id", data.treatmentId)
+        .maybeSingle();
+      if ((tr as { prescriber_routing?: string | null } | null)?.prescriber_routing === "clinic_visit") {
+        const { data: visits } = await supabase
+          .from("prescriber_clinic_visits")
+          .select("id, treatment_id, location_id")
+          .eq("practitioner_profile_id", profile.id)
+          .eq("visit_date", data.date)
+          .neq("status", "cancelled")
+          .or(`treatment_id.eq.${data.treatmentId},treatment_id.is.null`);
+        const vs = ((visits ?? []) as { id: string; treatment_id: string | null; location_id: string | null }[])
+          .filter((v) => !data.locationId || !v.location_id || v.location_id === data.locationId);
+        const visit = vs.find((v) => v.treatment_id === data.treatmentId) ?? vs[0];
+        if (visit) insertRow.clinic_visit_id = visit.id;
+      }
+    }
     const { error } = await supabase.from("appointments").insert(insertRow as never);
     if (error) throw new Error(error.message);
 
