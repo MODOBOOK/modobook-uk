@@ -442,6 +442,22 @@ export const addAvailabilityOverride = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw error;
+    // Opening a day means it should be bookable: clear old whole-day blocks
+    // on that date (partial blocks stay). Clinic-wide editors only.
+    if (!(await getScope(supabase, userId)).ownPractitionerId) {
+      const loc = data.location_id ?? null;
+      let bd = supabase.from("blocked_dates").delete().eq("profile_id", profileId).eq("date", data.date);
+      if (loc) bd = bd.or(`location_id.is.null,location_id.eq.${loc}`);
+      let bt = supabase
+        .from("blocked_times")
+        .delete()
+        .eq("profile_id", profileId)
+        .eq("date", data.date)
+        .lte("start_time", "00:00:00")
+        .gte("end_time", "23:59:00");
+      if (loc) bt = bt.or(`location_id.is.null,location_id.eq.${loc}`);
+      await Promise.all([bd, bt]);
+    }
     return row;
   });
 
