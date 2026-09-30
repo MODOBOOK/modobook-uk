@@ -611,9 +611,11 @@ function ServicesPage() {
               await patchTreat({ data: { id: created.id, ...extras } });
               targetId = created.id;
             }
-            await setConsents({
-              data: { treatmentId: targetId, consentTemplateIds: consent_ids ?? [] },
-            });
+            if (consent_ids !== undefined) {
+              await setConsents({
+                data: { treatmentId: targetId, consentTemplateIds: consent_ids },
+              });
+            }
             await setAftercareTpls({
               data: { treatment_id: targetId, template_ids: aftercare_template_ids ?? [] },
             });
@@ -1635,6 +1637,10 @@ function ServiceDialog({
   const [paymentMode, setPaymentMode] = useState<"full" | "deposit" | "pay_in_clinic">("full");
   const [depositAmount, setDepositAmount] = useState<string>("");
   const [consentIds, setConsentIds] = useState<string[]>([]);
+  // True once we know this treatment's saved consents (or it's a new treatment).
+  // Until then, saving must not overwrite existing consent links with an empty list.
+  const [consentsLoaded, setConsentsLoaded] = useState(true);
+  const [consentsTouched, setConsentsTouched] = useState(false);
   const [aftercareIds, setAftercareIds] = useState<string[]>([]);
   const [autoSendForms, setAutoSendForms] = useState(true);
   const [aftercareHtml, setAftercareHtml] = useState("");
@@ -1739,16 +1745,24 @@ function ServiceDialog({
         setBadge(((t.badge as string) ?? "none") as typeof badge);
 
         const id = String(t.id);
+        setConsentsLoaded(false);
+        setConsentsTouched(false);
         void (async () => {
-          try {
-            const [cons, after, locs, prac] = await Promise.all([
-              fetchTreatConsents({ data: { treatmentId: id } }),
-              fetchTreatAftercare({ data: { treatment_id: id } }),
-              fetchTreatLocPricing({ data: { treatment_id: id } }),
-              fetchTreatPractitioners({ data: { treatment_id: id } }),
-            ]);
-            setConsentIds((cons ?? []) as string[]);
-            setAftercareIds((after ?? []) as string[]);
+          const [consR, afterR, locsR, pracR] = await Promise.allSettled([
+            fetchTreatConsents({ data: { treatmentId: id } }),
+            fetchTreatAftercare({ data: { treatment_id: id } }),
+            fetchTreatLocPricing({ data: { treatment_id: id } }),
+            fetchTreatPractitioners({ data: { treatment_id: id } }),
+          ]);
+          if (consR.status === "fulfilled") {
+            const loaded = (consR.value ?? []) as string[];
+            // Merge with anything ticked while loading.
+            setConsentIds((prev) => Array.from(new Set([...loaded, ...prev])));
+            setConsentsLoaded(true);
+          }
+          if (afterR.status === "fulfilled") setAftercareIds((afterR.value ?? []) as string[]);
+          if (pracR.status === "fulfilled") {
+            const prac = pracR.value;
             setPractitionerIds(((prac ?? []) as Array<{ practitioner_id: string }>).map((r) => r.practitioner_id));
             setPractitionerPrices(
               Object.fromEntries(
@@ -1757,8 +1771,10 @@ function ServiceDialog({
                   .map((r) => [r.practitioner_id, String((r.price_cents as number) / 100)]),
               ),
             );
+          }
+          if (locsR.status === "fulfilled") {
             const map: Record<string, LocOverride> = {};
-            for (const row of (locs ?? []) as { location_id: string; price_cents: number | null; duration_minutes: number | null; available: boolean }[]) {
+            for (const row of (locsR.value ?? []) as { location_id: string; price_cents: number | null; duration_minutes: number | null; available: boolean }[]) {
               map[row.location_id] = {
                 available: row.available !== false,
                 price: row.price_cents == null ? "" : (row.price_cents / 100).toString(),
@@ -1766,8 +1782,6 @@ function ServiceDialog({
               };
             }
             setLocOverrides(map);
-          } catch {
-            /* prefill is best-effort */
           }
         })();
       }
@@ -2303,7 +2317,7 @@ function ServiceDialog({
                   picture_url: pictureUrl ?? undefined,
                   payment_mode: depEnabled ? "deposit" : "full",
                   deposit_amount: depositAmount.trim() ? Number(depositAmount) : undefined,
-                  consent_ids: consentIds,
+                  consent_ids: consentsLoaded || consentsTouched ? consentIds : undefined,
                   aftercare_template_ids: aftercareIds,
                   auto_send_medical_forms: autoSendForms,
                   aftercare_html: aftercareHtml.trim() || null,
