@@ -1640,7 +1640,6 @@ function ServiceDialog({
   // True once we know this treatment's saved consents (or it's a new treatment).
   // Until then, saving must not overwrite existing consent links with an empty list.
   const [consentsLoaded, setConsentsLoaded] = useState(true);
-  const [consentsTouched, setConsentsTouched] = useState(false);
   const [aftercareIds, setAftercareIds] = useState<string[]>([]);
   const [autoSendForms, setAutoSendForms] = useState(true);
   const [aftercareHtml, setAftercareHtml] = useState("");
@@ -1746,7 +1745,6 @@ function ServiceDialog({
 
         const id = String(t.id);
         setConsentsLoaded(false);
-        setConsentsTouched(false);
         void (async () => {
           const [consR, afterR, locsR, pracR] = await Promise.allSettled([
             fetchTreatConsents({ data: { treatmentId: id } }),
@@ -2317,7 +2315,7 @@ function ServiceDialog({
                   picture_url: pictureUrl ?? undefined,
                   payment_mode: depEnabled ? "deposit" : "full",
                   deposit_amount: depositAmount.trim() ? Number(depositAmount) : undefined,
-                  consent_ids: consentsLoaded || consentsTouched ? consentIds : undefined,
+                  consent_ids: consentsLoaded ? consentIds : undefined,
                   aftercare_template_ids: aftercareIds,
                   auto_send_medical_forms: autoSendForms,
                   aftercare_html: aftercareHtml.trim() || null,
