@@ -40,9 +40,6 @@ export const listFormAllocation = createServerFn({ method: "GET" })
       { data: mfs },
       { data: cts },
       { data: acs },
-      { data: mLinks },
-      { data: cLinks },
-      { data: aLinks },
     ] = await Promise.all([
       supabase
         .from("treatments")
