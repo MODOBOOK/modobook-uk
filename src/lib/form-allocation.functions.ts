@@ -40,9 +40,6 @@ export const listFormAllocation = createServerFn({ method: "GET" })
       { data: mfs },
       { data: cts },
       { data: acs },
-      { data: mLinks },
-      { data: cLinks },
-      { data: aLinks },
     ] = await Promise.all([
       supabase
         .from("treatments")
@@ -67,10 +64,21 @@ export const listFormAllocation = createServerFn({ method: "GET" })
         .or(ownOrSystem)
         .order("is_system", { ascending: false })
         .order("name"),
-      supabase.from("treatment_medical_forms").select("treatment_id, template_id"),
-      supabase.from("treatment_consents").select("treatment_id, consent_template_id"),
-      supabase.from("treatment_aftercare_templates").select("treatment_id, template_id"),
+      Promise.resolve({ data: null }),
+      Promise.resolve({ data: null }),
+      Promise.resolve({ data: null }),
     ]);
+
+    // Only load links for this clinic's treatments — unfiltered queries hit the
+    // 1,000-row cap across all clinics and silently dropped saved links.
+    const tids = ((treatments ?? []) as { id: string }[]).map((t) => t.id);
+    const [{ data: mLinks }, { data: cLinks }, { data: aLinks }] = tids.length
+      ? await Promise.all([
+          supabase.from("treatment_medical_forms").select("treatment_id, template_id").in("treatment_id", tids).limit(5000),
+          supabase.from("treatment_consents").select("treatment_id, consent_template_id").in("treatment_id", tids).limit(5000),
+          supabase.from("treatment_aftercare_templates").select("treatment_id, template_id").in("treatment_id", tids).limit(5000),
+        ])
+      : [{ data: [] }, { data: [] }, { data: [] }];
 
     const links: Record<
       string,
