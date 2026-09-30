@@ -1694,6 +1694,7 @@ function ServiceDialog({
       setPaymentMode("full");
       setDepositAmount("");
       setConsentIds([]);
+      setConsentsLoaded(true);
       setAftercareIds([]);
       setAutoSendForms(true);
       setAftercareHtml("");
