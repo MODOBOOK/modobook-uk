@@ -177,6 +177,8 @@ const Email = ({
                             </tbody>
                           </table>
                         ) : null}
+
+                        {closingOverride?.trim() ? <Text style={{ margin: '24px 0 0', color: palette.muted, fontSize: '13px', lineHeight: '21px' }}>{closingOverride}</Text> : null}
                       </td>
                     </tr>
                   </tbody>
