@@ -77,6 +77,9 @@ const Email = ({
   logoUrl,
   clinicImageUrl,
   brandColor,
+  introOverride,
+  bodyOverride,
+  closingOverride,
   preparationNotes,
   cancellationPolicy,
   directionsUrl,
@@ -118,9 +121,14 @@ const Email = ({
                         <Text style={{ margin: '0 0 16px', color: palette.text, fontFamily: "Georgia, 'Times New Roman', serif", fontSize: '28px', fontWeight: 400, lineHeight: '35px' }}>
                           Your appointment is confirmed
                         </Text>
-                        <Text style={{ margin: '0 0 28px', color: palette.text, fontSize: '15px', lineHeight: '24px' }}>
-                          Dear {patientName}, thank you for booking with us. We look forward to seeing you.
-                        </Text>
+                        {introOverride?.trim() ? (
+                          <Text style={{ margin: '0 0 28px', color: palette.text, fontSize: '15px', lineHeight: '24px' }}>{introOverride}</Text>
+                        ) : (
+                          <Text style={{ margin: '0 0 28px', color: palette.text, fontSize: '15px', lineHeight: '24px' }}>
+                            Dear {patientName}, thank you for booking with us. We look forward to seeing you.
+                          </Text>
+                        )}
+                        <BodyOverride text={bodyOverride} />
 
                         <table role="presentation" cellPadding="0" cellSpacing="0" width="100%" style={{ width: '100%', borderCollapse: 'collapse', borderTop: `1px solid ${palette.border}`, borderBottom: `1px solid ${palette.border}`, margin: '0 0 28px' }}>
                           <tbody>
