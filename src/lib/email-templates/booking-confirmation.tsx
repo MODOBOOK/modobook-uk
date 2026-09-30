@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Body, Head, Html, Img, Link, Preview, Text } from '@react-email/components'
 import type { TemplateEntry } from './registry'
+import { BodyOverride } from './_modo-brand'
 
 interface Props {
   patientName?: string
@@ -22,6 +23,9 @@ interface Props {
   clinicImageUrl?: string | null
   brandColor?: string | null
   subjectOverride?: string | null
+  introOverride?: string | null
+  bodyOverride?: string | null
+  closingOverride?: string | null
   preparationNotes?: string | null
   cancellationPolicy?: string | null
   directionsUrl?: string | null
