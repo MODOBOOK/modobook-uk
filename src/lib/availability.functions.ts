@@ -443,9 +443,11 @@ export const addAvailabilityOverride = createServerFn({ method: "POST" })
       .single();
     if (error) throw error;
     // Opening a day means it should be bookable: clear old whole-day blocks
-    // on that date (partial blocks stay). Team members only clear their own.
+    // on that date (partial blocks stay). Only clear blocks for the practitioner
+    // this window is for (plus clinic-wide blocks) — never other staff's days off.
     {
       const ownPid = (await getScope(supabase, userId)).ownPractitionerId;
+      const targetPid = ownPid ?? data.practitioner_id ?? null;
       const loc = data.location_id ?? null;
       let bd = supabase.from("blocked_dates").delete().eq("profile_id", profileId).eq("date", data.date);
       if (loc) bd = bd.or(`location_id.is.null,location_id.eq.${loc}`);
@@ -457,9 +459,9 @@ export const addAvailabilityOverride = createServerFn({ method: "POST" })
         .lte("start_time", "00:00:00")
         .gte("end_time", "23:59:00");
       if (loc) bt = bt.or(`location_id.is.null,location_id.eq.${loc}`);
-      if (ownPid) {
-        bd = bd.eq("practitioner_id", ownPid);
-        bt = bt.eq("practitioner_id", ownPid);
+      if (targetPid) {
+        bd = bd.or(`practitioner_id.is.null,practitioner_id.eq.${targetPid}`);
+        bt = bt.or(`practitioner_id.is.null,practitioner_id.eq.${targetPid}`);
       }
       await Promise.all([bd, bt]);
     }
