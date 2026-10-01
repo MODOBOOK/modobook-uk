@@ -24,7 +24,7 @@ import { AiGenerateAftercareDialog } from "@/components/aftercare/AiGenerateAfte
 
 export const Route = createFileRoute("/_authenticated/dashboard/aftercare")({
   component: AftercarePage,
-  errorComponent: ({ error }) => <div className="p-6 text-sm text-destructive">{error.message}</div>,
+  errorComponent: ({ error }) => <div className="p-6 text-sm text-destructive">{error instanceof Error ? error.message : String(error)}</div>,
   notFoundComponent: () => <div className="p-6 text-sm">Not found.</div>,
 });
 

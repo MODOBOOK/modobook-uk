@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/admin/audit")({
     <div className="mx-auto max-w-md p-6 text-center">
       <Shield className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
       <h1 className="text-lg font-semibold">Admin only</h1>
-      <p className="mt-1 text-sm text-muted-foreground">{error.message}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{error instanceof Error ? error.message : String(error)}</p>
     </div>
   ),
   component: Page,
