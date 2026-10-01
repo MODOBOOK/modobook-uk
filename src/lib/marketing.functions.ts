@@ -683,7 +683,7 @@ async function collectBulkOptInCandidates(supabase: any, ownerId: string) {
   const noAppointment = withEmail.length - customers.length
 
   // Exclude suppressed / previously unsubscribed emails.
-  const emails = Array.from(new Set(customers.map((r) => (r.email || '').toLowerCase())))
+  const emails = Array.from(new Set(withEmail.map((r) => (r.email || '').toLowerCase())))
   const suppressedSet = new Set<string>()
   for (let i = 0; i < emails.length; i += 500) {
     const chunk = emails.slice(i, i + 500)
@@ -691,13 +691,18 @@ async function collectBulkOptInCandidates(supabase: any, ownerId: string) {
     const { data: sup } = await supabase.from('suppressed_emails').select('email').in('email', chunk)
     for (const s of (sup || []) as any[]) suppressedSet.add(String(s.email).toLowerCase())
   }
-  const eligible = customers.filter((r) => !suppressedSet.has((r.email || '').toLowerCase()))
-  const suppressed = customers.length - eligible.length
+  const ok = (r: { email: string | null }) => !suppressedSet.has((r.email || '').toLowerCase())
+  const eligible = customers.filter(ok)
+  // Imported patients (e.g. from a previous booking system) with no MODO booking.
+  // Only included when the clinic separately confirms they were real customers.
+  const imported = withEmail.filter((r) => (bookedByClient.get(r.id) || []).length === 0).filter(ok)
+  const suppressed = withEmail.length - eligible.length - imported.length
 
   return {
     totalActive: rows.length,
     alreadyOptedIn,
     eligible: eligible.map((r) => r.id),
+    imported: imported.map((r) => r.id),
     skippedNoEmail: noEmail,
     skippedNoAppointment: noAppointment,
     skippedUnsubscribed: suppressed,
@@ -709,7 +714,7 @@ export const previewBulkMarketingOptIn = createServerFn({ method: 'GET' })
   .handler(async ({ context }) => {
     const ownerId = await getOwnerProfileId(context.supabase, context.userId)
     const res = await collectBulkOptInCandidates(context.supabase, ownerId)
-    return { ...res, eligible: res.eligible.length }
+    return { ...res, eligible: res.eligible.length, imported: res.imported.length }
   })
 
 export const bulkMarketingOptIn = createServerFn({ method: 'POST' })
@@ -722,6 +727,8 @@ export const bulkMarketingOptIn = createServerFn({ method: 'POST' })
       optOutOffered: z.boolean(),
       responsible: z.boolean(),
     }),
+    includeImported: z.boolean().optional(),
+    importedCustomers: z.boolean().optional(),
   }).parse(raw))
   .handler(async ({ data, context }) => {
     const a = data.acknowledgements
@@ -732,20 +739,29 @@ export const bulkMarketingOptIn = createServerFn({ method: 'POST' })
       throw new Error('Type OPT IN to confirm.')
     }
     const ownerId = await getOwnerProfileId(context.supabase, context.userId)
-    const { eligible } = await collectBulkOptInCandidates(context.supabase, ownerId)
+    if (data.includeImported && !data.importedCustomers) {
+      throw new Error('Confirm that your imported patients were real customers of your clinic.')
+    }
+    const cand = await collectBulkOptInCandidates(context.supabase, ownerId)
+    const eligible = data.includeImported ? [...cand.eligible, ...cand.imported] : cand.eligible
+    const importedSet = new Set(cand.imported)
     if (!eligible.length) return { ok: true, updated: 0 }
 
     const nowIso = new Date().toISOString()
     let updated = 0
     for (let i = 0; i < eligible.length; i += 200) {
       const chunk = eligible.slice(i, i + 200)
-      const { error } = await context.supabase.from('clinic_clients').update({
-        marketing_opt_in: true,
-        marketing_opt_in_at: nowIso,
-        marketing_opt_in_source: 'practitioner_bulk_soft_optin',
-      }).in('id', chunk).eq('profile_id', ownerId).eq('marketing_opt_in', false)
-      if (error) throw new Error(error.message)
-      updated += chunk.length
+      for (const imp of [false, true]) {
+        const ids = chunk.filter((id) => importedSet.has(id) === imp)
+        if (!ids.length) continue
+        const { error } = await context.supabase.from('clinic_clients').update({
+          marketing_opt_in: true,
+          marketing_opt_in_at: nowIso,
+          marketing_opt_in_source: imp ? 'practitioner_bulk_soft_optin_imported' : 'practitioner_bulk_soft_optin',
+        }).in('id', ids).eq('profile_id', ownerId).eq('marketing_opt_in', false)
+        if (error) throw new Error(error.message)
+        updated += ids.length
+      }
     }
     return { ok: true, updated }
   })

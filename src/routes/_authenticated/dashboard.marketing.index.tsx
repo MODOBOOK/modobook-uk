@@ -152,22 +152,26 @@ function BulkOptInDialog({ onDone }: { onDone: () => void }) {
   const preview = useServerFn(previewBulkMarketingOptIn)
   const run = useServerFn(bulkMarketingOptIn)
   const [open, setOpen] = useState(false)
-  const [data, setData] = useState<{ totalActive: number; alreadyOptedIn: number; eligible: number; skippedNoEmail: number; skippedNoAppointment: number; skippedUnsubscribed: number } | null>(null)
+  const [data, setData] = useState<{ totalActive: number; alreadyOptedIn: number; eligible: number; imported: number; skippedNoEmail: number; skippedNoAppointment: number; skippedUnsubscribed: number } | null>(null)
   const [busy, setBusy] = useState(false)
   const [confirmText, setConfirmText] = useState('')
   const [ack, setAck] = useState({ existingCustomers: false, similarServices: false, optOutOffered: false, responsible: false })
-  const allAck = ack.existingCustomers && ack.similarServices && ack.optOutOffered && ack.responsible
+  const [incImported, setIncImported] = useState(false)
+  const [impAck, setImpAck] = useState(false)
+  const allAck = (!incImported || impAck) && ack.existingCustomers && ack.similarServices && ack.optOutOffered && ack.responsible
 
   useEffect(() => {
     if (!open) return
-    setData(null); setConfirmText(''); setAck({ existingCustomers: false, similarServices: false, optOutOffered: false, responsible: false })
+    setData(null); setConfirmText(''); setIncImported(false); setImpAck(false); setAck({ existingCustomers: false, similarServices: false, optOutOffered: false, responsible: false })
     preview().then((d: any) => setData(d)).catch((e: any) => toast.error(e.message))
   }, [open])
+
+  const total = data ? data.eligible + (incImported ? data.imported : 0) : 0
 
   async function handleRun() {
     setBusy(true)
     try {
-      const res: any = await run({ data: { confirmText, acknowledgements: ack } })
+      const res: any = await run({ data: { confirmText, acknowledgements: ack, includeImported: incImported, importedCustomers: impAck } })
       toast.success(`${res.updated} patient${res.updated === 1 ? '' : 's'} opted in`)
       setOpen(false); onDone()
     } catch (e) { toast.error(e instanceof Error ? e.message : 'Failed') }
@@ -195,14 +199,25 @@ function BulkOptInDialog({ onDone }: { onDone: () => void }) {
         ) : (
           <>
             <div className="rounded-lg border border-border p-3 text-sm space-y-1">
-              <p className="font-medium">{data.eligible} patient{data.eligible === 1 ? '' : 's'} will be opted in</p>
+              <p className="font-medium">{total} patient{total === 1 ? '' : 's'} will be opted in</p>
               <p className="text-xs text-muted-foreground">Out of {data.totalActive} patients. {data.alreadyOptedIn} already opted in.</p>
               <ul className="text-xs text-muted-foreground list-disc pl-4 pt-1 space-y-0.5">
-                <li>{data.skippedNoAppointment} skipped &mdash; never booked with you</li>
+                {!incImported && <li>{data.imported} skipped &mdash; no booking in MODO yet (e.g. imported from another system)</li>}
                 <li>{data.skippedNoEmail} skipped &mdash; no email address</li>
                 <li>{data.skippedUnsubscribed} skipped &mdash; previously unsubscribed</li>
               </ul>
             </div>
+
+            {data.imported > 0 && (
+              <div className="rounded-lg border border-border p-3 space-y-2">
+                <AckRow checked={incImported} onChange={(v) => { setIncImported(v); if (!v) setImpAck(false) }}
+                  label={`Also include ${data.imported} patients who haven't booked through MODO yet (for example, imported from my old booking system).`} />
+                {incImported && (
+                  <AckRow checked={impAck} onChange={setImpAck}
+                    label="I confirm these imported patients were genuine customers of my clinic (they booked or had treatment with me before) and were given the chance to say no to marketing." />
+                )}
+              </div>
+            )}
 
             <div className="space-y-2 text-sm">
               <AckRow checked={ack.existingCustomers} onChange={(v) => setAck((p) => ({ ...p, existingCustomers: v }))}
@@ -224,7 +239,7 @@ function BulkOptInDialog({ onDone }: { onDone: () => void }) {
 
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={handleRun} disabled={busy || !data || !data.eligible || !allAck || confirmText.trim().toUpperCase() !== 'OPT IN'}>
+          <Button onClick={handleRun} disabled={busy || !data || !total || !allAck || confirmText.trim().toUpperCase() !== 'OPT IN'}>
             {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Opt them in
           </Button>
         </DialogFooter>
