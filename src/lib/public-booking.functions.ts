@@ -761,7 +761,7 @@ export const getPublicPaymentOptions = createServerFn({ method: "GET" })
     const { data: prof } = await supabaseAdmin
       .from("profiles")
       .select(
-        "stripe_connect_account_id,stripe_connect_onboarding_status,payment_card_full_enabled,payment_deposit_enabled,require_deposit_to_confirm,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,deposit_amount_cents,deposit_type,deposit_percent,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_bnpl_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,allow_pay_in_clinic,cash_only_balance,payment_card_capture_enabled,card_capture_policy_text",
+        "stripe_connect_account_id,stripe_connect_onboarding_status,payment_card_full_enabled,payment_deposit_enabled,require_deposit_to_confirm,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,deposit_amount_cents,deposit_type,deposit_percent,deposit_per_booking,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_bnpl_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,allow_pay_in_clinic,cash_only_balance,payment_card_capture_enabled,card_capture_policy_text",
       )
       .eq("slug", data.slug.toLowerCase())
       .maybeSingle();
@@ -798,6 +798,7 @@ export const getPublicPaymentOptions = createServerFn({ method: "GET" })
       depositCents: Math.max(0, Number(prof.deposit_amount_cents ?? 0)),
       depositType: ((prof as { deposit_type?: string | null }).deposit_type as "fixed" | "percent" | null) === "percent" ? "percent" as const : "fixed" as const,
       depositPercent: Math.max(0, Math.min(100, Number((prof as { deposit_percent?: number | null }).deposit_percent ?? 0))),
+      depositPerBooking: !!(prof as { deposit_per_booking?: boolean | null }).deposit_per_booking,
       passFees: !!prof.payment_pass_fees_to_customer,
       surcharges: {
         cardPercent: prof.payment_surcharge_card_enabled ? Number(prof.payment_surcharge_card_percent ?? 0) : 0,
@@ -850,7 +851,7 @@ export const requestBooking = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prof } = await supabaseAdmin
       .from("profiles")
-      .select("auto_confirm_bookings,require_account_to_book,slug,clinic_name,stripe_connect_account_id,stripe_connect_onboarding_status,payment_deposit_enabled,require_deposit_to_confirm,deposit_amount_cents,deposit_type,deposit_percent,payment_card_full_enabled,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_bnpl_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,save_card_on_file,payment_card_capture_enabled,card_capture_policy_text,allow_pay_in_clinic,cash_only_balance")
+      .select("auto_confirm_bookings,require_account_to_book,slug,clinic_name,stripe_connect_account_id,stripe_connect_onboarding_status,payment_deposit_enabled,require_deposit_to_confirm,deposit_amount_cents,deposit_type,deposit_percent,deposit_per_booking,payment_card_full_enabled,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_bnpl_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,save_card_on_file,payment_card_capture_enabled,card_capture_policy_text,allow_pay_in_clinic,cash_only_balance")
       .eq("id", data.profileId)
       .maybeSingle();
     {
@@ -1182,6 +1183,7 @@ async function maybeCreateBookingCheckout(args: {
     deposit_amount_cents?: number | null;
     deposit_type?: string | null;
     deposit_percent?: number | string | null;
+    deposit_per_booking?: boolean | null;
     payment_card_full_enabled?: boolean | null;
     payment_klarna_enabled?: boolean | null;
     payment_clearpay_enabled?: boolean | null;
@@ -1329,6 +1331,22 @@ async function maybeCreateBookingCheckout(args: {
           treatment as { deposit_amount?: number | null; price?: number | null },
         ]),
       );
+      // Per-booking deposit: one deposit for the whole booking, ignoring
+      // per-treatment overrides. Fixed = one flat amount; percent = % of total.
+      if (p.deposit_per_booking) {
+        if (depositTypeMode === "percent" && depositPct > 0) {
+          let base = 0;
+          for (const r of rows ?? []) {
+            const row = r as { treatment_id?: string | null; total_amount?: number | null; model_slot_id?: string | null };
+            const t = row.treatment_id ? treatmentsById.get(row.treatment_id) : undefined;
+            base += row.model_slot_id && row.total_amount != null
+              ? Math.round(Number(row.total_amount) * 100)
+              : Math.round(Number(t?.price ?? 0) * 100);
+          }
+          return Math.round((base * depositPct) / 100);
+        }
+        return depositPer;
+      }
       let total = 0;
       for (const r of rows ?? []) {
         const row = r as {
@@ -1357,7 +1375,7 @@ async function maybeCreateBookingCheckout(args: {
       }
       return total;
     } catch {
-      return depositPer * args.appointmentIds.length;
+      return p.deposit_per_booking ? depositPer : depositPer * args.appointmentIds.length;
     }
   }
 
@@ -1745,7 +1763,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prof } = await supabaseAdmin
       .from("profiles")
-      .select("auto_confirm_bookings,require_account_to_book,slug,clinic_name,stripe_connect_account_id,stripe_connect_onboarding_status,payment_deposit_enabled,require_deposit_to_confirm,deposit_amount_cents,deposit_type,deposit_percent,payment_card_full_enabled,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_bnpl_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,save_card_on_file,payment_card_capture_enabled,card_capture_policy_text,allow_pay_in_clinic,cash_only_balance")
+      .select("auto_confirm_bookings,require_account_to_book,slug,clinic_name,stripe_connect_account_id,stripe_connect_onboarding_status,payment_deposit_enabled,require_deposit_to_confirm,deposit_amount_cents,deposit_type,deposit_percent,deposit_per_booking,payment_card_full_enabled,payment_klarna_enabled,payment_clearpay_enabled,payment_pass_fees_to_customer,payment_surcharge_card_enabled,payment_surcharge_card_percent,payment_surcharge_bnpl_enabled,payment_surcharge_bnpl_percent,payment_surcharge_deposit_enabled,payment_surcharge_deposit_percent,stripe_fee_pass_to_patient,stripe_fee_bnpl_pass_to_patient,stripe_fee_card_percent,stripe_fee_card_fixed_cents,stripe_fee_bnpl_percent,stripe_fee_bnpl_fixed_cents,save_card_on_file,payment_card_capture_enabled,card_capture_policy_text,allow_pay_in_clinic,cash_only_balance")
       .eq("id", data.profileId)
       .maybeSingle();
     {
