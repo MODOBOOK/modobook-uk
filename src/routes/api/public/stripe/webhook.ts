@@ -609,21 +609,32 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 ? si.customer
                 : si.customer?.id ?? null;
               for (const apptId of ids) {
-                const { data: appt } = await supabaseAdmin
+                // appointments has no client_id column — selecting it made the
+                // whole update fail, so saved cards were never recorded.
+                const { data: appt, error: apptErr } = await supabaseAdmin
                   .from("appointments")
-                  .update({ status: "confirmed", card_captured_at: new Date().toISOString() } as never)
+                  .update({
+                    status: "confirmed",
+                    card_captured_at: new Date().toISOString(),
+                    payment_hold_expires_at: null,
+                  } as never)
                   .eq("id", apptId)
-                  .select("client_id")
+                  .select("profile_id, patient_email")
                   .maybeSingle();
-                const clientId = (appt as { client_id?: string | null } | null)?.client_id ?? null;
-                if (clientId && (customerId || paymentMethodId)) {
+                if (apptErr) {
+                  console.error("[stripe webhook] card_capture appointment update failed", apptErr);
+                  continue;
+                }
+                const a = appt as { profile_id?: string | null; patient_email?: string | null } | null;
+                if (a?.profile_id && a.patient_email && (customerId || paymentMethodId)) {
                   await supabaseAdmin
                     .from("clinic_clients")
                     .update({
                       ...(customerId ? { stripe_customer_id: customerId } : {}),
                       ...(paymentMethodId ? { stripe_payment_method_id: paymentMethodId } : {}),
                     } as never)
-                    .eq("id", clientId);
+                    .eq("profile_id", a.profile_id)
+                    .ilike("email", a.patient_email);
                 }
                 paidAppointmentIds.push(apptId);
               }
