@@ -26,6 +26,7 @@ type ConfiguredOptions = {
   depositCents: number;
   depositType: "fixed" | "percent";
   depositPercent: number;
+  depositPerBooking?: boolean;
   passFees: boolean;
   surcharges: { cardPercent: number; bnplPercent: number; depositPercent: number };
   stripeFee: {
@@ -84,7 +85,7 @@ function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent,
   // the rest of the basket.
   const allItemsWaived = !!depositItems && depositItems.length > 0
     && depositItems.every((it) => it.overrideCents != null && it.overrideCents <= 0);
-  const depositWaived = depositItems ? allItemsWaived : effectiveOverride === 0;
+  const depositWaived = (opts && "depositPerBooking" in opts && opts.depositPerBooking) ? false : depositItems ? allItemsWaived : effectiveOverride === 0;
 
   const effectiveDepositCents = useMemo(() => {
     if (!configured) return 0;
@@ -92,6 +93,12 @@ function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent,
     // Multi-treatment: per treatment, use its override when set (zero waives
     // just that treatment), otherwise the clinic default for that treatment —
     // mirroring the server-side calculation.
+    if (o.depositPerBooking) {
+      if (o.depositType === "percent" && o.depositPercent > 0) {
+        return Math.round((treatmentTotalCents * o.depositPercent) / 100);
+      }
+      return o.depositCents;
+    }
     if (depositItems) {
       let total = 0;
       for (const it of depositItems) {

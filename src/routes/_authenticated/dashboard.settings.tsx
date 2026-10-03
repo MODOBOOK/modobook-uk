@@ -44,6 +44,7 @@ function SettingsPage() {
     payment_card_full_enabled: profile.payment_card_full_enabled !== false,
     payment_deposit_enabled: !!profile.payment_deposit_enabled,
     deposit_type: (((profile as { deposit_type?: string | null }).deposit_type ?? "fixed") === "percent" ? "percent" : "fixed") as "fixed" | "percent",
+    deposit_per_booking: !!(profile as { deposit_per_booking?: boolean | null }).deposit_per_booking,
     deposit_pounds: ((profile.deposit_amount_cents as number | null) ?? 0) > 0
       ? String(((profile.deposit_amount_cents as number) ?? 0) / 100)
       : "",
@@ -256,6 +257,30 @@ const [saving, setSaving] = useState(false);
                     Percent (%)
                   </button>
                 </div>
+              </div>
+              <div>
+                <Label>Charge deposit</Label>
+                <div className="mt-1 inline-flex rounded-lg border p-1">
+                  <button
+                    type="button"
+                    onClick={() => set("deposit_per_booking", false)}
+                    className={`rounded-md px-3 py-1 text-sm ${!s.deposit_per_booking ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                  >
+                    Per treatment
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => set("deposit_per_booking", true)}
+                    className={`rounded-md px-3 py-1 text-sm ${s.deposit_per_booking ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                  >
+                    Per booking
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {s.deposit_per_booking
+                    ? "One deposit for the whole booking, however many treatments are booked. Treatment-level deposits are ignored."
+                    : "Each treatment booked adds its own deposit. Treatment-level deposits override this."}
+                </p>
               </div>
               {s.deposit_type === "fixed" ? (
                 <div>

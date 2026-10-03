@@ -7984,6 +7984,7 @@ export type Database = {
           created_at: string
           deletion_requested_at: string | null
           deposit_amount_cents: number | null
+          deposit_per_booking: boolean
           deposit_percent: number
           deposit_policy_text: string | null
           deposit_type: string
@@ -8132,6 +8133,7 @@ export type Database = {
           created_at?: string
           deletion_requested_at?: string | null
           deposit_amount_cents?: number | null
+          deposit_per_booking?: boolean
           deposit_percent?: number
           deposit_policy_text?: string | null
           deposit_type?: string
@@ -8280,6 +8282,7 @@ export type Database = {
           created_at?: string
           deletion_requested_at?: string | null
           deposit_amount_cents?: number | null
+          deposit_per_booking?: boolean
           deposit_percent?: number
           deposit_policy_text?: string | null
           deposit_type?: string
