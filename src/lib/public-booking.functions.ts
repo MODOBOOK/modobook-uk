@@ -1333,7 +1333,7 @@ async function maybeCreateBookingCheckout(args: {
       );
       // Per-booking deposit: one deposit for the whole booking, ignoring
       // per-treatment overrides. Fixed = one flat amount; percent = % of total.
-      if (p.deposit_per_booking) {
+      if (p?.deposit_per_booking) {
         if (depositTypeMode === "percent" && depositPct > 0) {
           let base = 0;
           for (const r of rows ?? []) {
@@ -1375,7 +1375,7 @@ async function maybeCreateBookingCheckout(args: {
       }
       return total;
     } catch {
-      return p.deposit_per_booking ? depositPer : depositPer * args.appointmentIds.length;
+      return p?.deposit_per_booking ? depositPer : depositPer * args.appointmentIds.length;
     }
   }
 
