@@ -335,6 +335,83 @@ function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent,
   const isCardCapture = chosen?.mode === "card_capture";
   const policyText = (o.cardCapturePolicy ?? "").trim() || DEFAULT_POLICY;
 
+  // Aesthetics by Nurse Ryan: "Secure with card details" sits above "Pay in
+  // full" so patients don't mistake card capture for paying everything now.
+  const amountOrder: BookingMode[] = slug === "aestheticsbynurseryan"
+    ? ["deposit", "card_capture", "full", "cash"]
+    : ["deposit", "full", "card_capture", "cash"];
+
+  const renderAmountButton = (mode: BookingMode) => {
+    switch (mode) {
+      case "deposit":
+        return (
+          <button
+            key="deposit"
+            type="button"
+            onClick={() => selectMode("deposit")}
+            className="text-left rounded-xl border-2 px-3 py-2.5 transition"
+            style={optionStyle(chosen?.mode === "deposit")}
+          >
+            <div className="text-sm font-semibold">Pay deposit</div>
+            <div className="text-xs opacity-75">{formatGBP(effectiveDepositCents)} now — card saved securely for the clinic's booking policy</div>
+          </button>
+        );
+      case "full":
+        return (
+          <button
+            key="full"
+            type="button"
+            onClick={() => selectMode("full")}
+            className="text-left rounded-xl border-2 px-3 py-2.5 transition"
+            style={optionStyle(chosen?.mode === "full")}
+          >
+            <div className="text-sm font-semibold">{splitInfo ? "Pay per session" : "Pay in full"}</div>
+            <div className="text-xs opacity-75">
+              £{totalAmount.toFixed(2)} now{splitInfo ? ` — then £${((splitInfo.remainingPerSessionCents ?? Math.round(totalAmount * 100)) / 100).toFixed(2)} at each of your remaining ${splitInfo.sessionCount - 1} session${splitInfo.sessionCount - 1 === 1 ? "" : "s"}` : ""}
+            </div>
+          </button>
+        );
+      case "card_capture":
+        return (
+          <button
+            key="card_capture"
+            type="button"
+            onClick={() => selectMode("card_capture")}
+            className="text-left rounded-xl border-2 px-3 py-2.5 transition sm:col-span-2"
+            style={optionStyle(isCardCapture)}
+          >
+            <div className="text-sm font-semibold flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5" /> Secure with card details
+            </div>
+            <div className="text-xs opacity-75">
+              Nothing charged today — your card is stored securely and only used if the clinic's cancellation policy applies.
+            </div>
+          </button>
+        );
+      case "cash":
+        return (
+          <button
+            key="cash"
+            type="button"
+            onClick={() => selectMode("cash")}
+            className="text-left rounded-xl border-2 px-3 py-2.5 transition sm:col-span-2"
+            style={optionStyle(chosen?.mode === "cash" || chosen?.mode === "cash_deposit")}
+          >
+            <div className="text-sm font-semibold">Pay in cash at your appointment</div>
+            <div className="text-xs opacity-75">
+              {cashDepositAvailable && cashFullAvailable
+                ? "Choose below: secure with a deposit now, or pay the full amount in cash on the day."
+                : cashDepositAvailable
+                  ? `Pay ${formatGBP(effectiveDepositCents)} deposit now by card — the rest in cash on the day.`
+                  : `Nothing to pay now — please bring £${totalAmount.toFixed(2)} in cash on the day.`}
+            </div>
+          </button>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="rounded-2xl border-2 p-4 sm:p-5" style={cardStyle}>
       <div className="flex items-center gap-2 mb-3">
