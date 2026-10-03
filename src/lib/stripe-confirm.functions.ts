@@ -257,3 +257,104 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
 
     return { ok: true as const, updated: confirmedAppointmentIds.length, cardSaved };
   });
+
+/**
+ * Reconcile a card-capture SetupIntent (card saved, nothing charged) when the
+ * patient lands back on their account page. Webhook-independent fallback;
+ * idempotent. Only confirms appointments named in the SetupIntent's metadata,
+ * and only when Stripe says the card was saved.
+ */
+export const confirmCardCaptureSetupIntent = createServerFn({ method: "POST" })
+  .inputValidator((i: { setupIntentId: string; slug: string }) => i)
+  .handler(async ({ data }) => {
+    const { setupIntentId, slug } = data;
+    if (!setupIntentId?.startsWith("seti_") || !slug) return { ok: false, reason: "missing_input" as const };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("id, stripe_connect_account_id")
+      .eq("slug", slug)
+      .maybeSingle();
+    const prof = profile as { id?: string; stripe_connect_account_id?: string | null } | null;
+    const accountId = prof?.stripe_connect_account_id;
+    if (!accountId || !prof?.id) return { ok: false, reason: "no_connected_account" as const };
+
+    const Stripe = (await import("stripe")).default;
+    const keys = [
+      process.env.STRIPE_LIVE_API_KEY,
+      process.env.STRIPE_TEST_API_KEY,
+      process.env.STRIPE_SECRET_KEY,
+      process.env.STRIPE_PLATFORM_SECRET_KEY,
+    ].filter((k, i, a): k is string => Boolean(k) && a.indexOf(k) === i);
+
+    let si: import("stripe").Stripe.SetupIntent | null = null;
+    for (const key of keys) {
+      const s = new Stripe(key, { apiVersion: "2026-06-24.dahlia", typescript: true });
+      try {
+        si = await s.setupIntents.retrieve(setupIntentId, { expand: ["payment_method"] }, { stripeAccount: accountId });
+        break;
+      } catch {
+        /* try next key */
+      }
+    }
+    if (!si) return { ok: false, reason: "retrieve_failed" as const };
+    if (si.status !== "succeeded") return { ok: false, reason: "not_saved" as const, status: si.status };
+    const metadata = si.metadata ?? {};
+    if (metadata.kind !== "card_capture") return { ok: false, reason: "wrong_kind" as const };
+
+    const ids = String(metadata.appointment_ids ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+    const { data: appts } = await supabaseAdmin
+      .from("appointments")
+      .select("id, status, card_captured_at, patient_email")
+      .in("id", ids)
+      .eq("profile_id", prof.id);
+    const rows = (appts ?? []) as Array<{ id: string; status: string; card_captured_at: string | null; patient_email: string | null }>;
+
+    const newlyConfirmed: string[] = [];
+    for (const r of rows) {
+      if (r.card_captured_at && r.status === "confirmed") continue;
+      if (r.status === "cancelled") continue; // never silently resurrect a freed slot
+      const { error } = await supabaseAdmin
+        .from("appointments")
+        .update({ status: "confirmed", card_captured_at: new Date().toISOString(), payment_hold_expires_at: null } as never)
+        .eq("id", r.id);
+      if (!error) newlyConfirmed.push(r.id);
+    }
+
+    const pm = si.payment_method as import("stripe").Stripe.PaymentMethod | string | null;
+    const pmObj = typeof pm === "string" ? null : pm;
+    const pmId = typeof pm === "string" ? pm : pm?.id ?? null;
+    const customerId = typeof si.customer === "string" ? si.customer : si.customer?.id ?? null;
+    const email = (metadata.patient_email || rows[0]?.patient_email || "").toLowerCase().trim();
+    if (email && (pmId || customerId)) {
+      await supabaseAdmin
+        .from("clinic_clients")
+        .update({
+          ...(customerId ? { stripe_customer_id: customerId } : {}),
+          ...(pmId ? { stripe_payment_method_id: pmId } : {}),
+          ...(pmObj?.card
+            ? {
+                card_brand: pmObj.card.brand,
+                card_last4: pmObj.card.last4,
+                card_exp_month: pmObj.card.exp_month,
+                card_exp_year: pmObj.card.exp_year,
+                card_saved_at: new Date().toISOString(),
+                card_save_consent_at: new Date().toISOString(),
+              }
+            : {}),
+        } as never)
+        .eq("profile_id", prof.id)
+        .ilike("email", email);
+    }
+
+    if (newlyConfirmed.length > 0) {
+      try {
+        const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
+        await sendBookingConfirmationEmails(newlyConfirmed);
+      } catch (e) {
+        console.error("[confirmCardCaptureSetupIntent] confirmation email failed", e);
+      }
+    }
+    return { ok: true as const, updated: newlyConfirmed.length };
+  });

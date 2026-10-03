@@ -306,6 +306,31 @@ function Account() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
+    // Card capture (card saved, nothing charged) returns with ?card_saved=1&si=…
+    const siId = url.searchParams.get("si");
+    if (siId && url.searchParams.get("card_saved") === "1") {
+      let stop = false;
+      (async () => {
+        try {
+          const mod = await import("@/lib/stripe-confirm.functions");
+          const res = await mod.confirmCardCaptureSetupIntent({ data: { setupIntentId: siId, slug } });
+          if (stop) return;
+          if ((res as { ok?: boolean }).ok) {
+            toast.success("Card saved — your booking is confirmed");
+            loadAll();
+            url.searchParams.delete("si");
+            url.searchParams.delete("card_saved");
+            url.searchParams.delete("setup_intent");
+            url.searchParams.delete("setup_intent_client_secret");
+            url.searchParams.delete("redirect_status");
+            window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
+          }
+        } catch (e) {
+          console.error("[confirm card capture] failed", e);
+        }
+      })();
+      return () => { stop = true; };
+    }
     const sessionId = url.searchParams.get("session_id");
     const piId = url.searchParams.get("pi");
     const paid = url.searchParams.get("paid");
