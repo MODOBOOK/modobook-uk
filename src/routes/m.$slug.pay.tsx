@@ -247,12 +247,37 @@ function CardForm({
     onConfirming();
     // Card capture confirms a SetupIntent (no charge); deposits and full
     // payments confirm a PaymentIntent. Same embedded form either way.
-    const { error } = setupMode
-      ? await stripe.confirmSetup({ elements, confirmParams: { return_url: returnUrl } })
-      : await stripe.confirmPayment({ elements, confirmParams: { return_url: returnUrl } });
+    if (setupMode) {
+      // Confirm without redirecting where possible, then record the saved card
+      // and confirm the booking directly — doesn't rely on the webhook or the
+      // account page loading afterwards.
+      const { error, setupIntent } = await stripe.confirmSetup({
+        elements,
+        confirmParams: { return_url: returnUrl },
+        redirect: "if_required",
+      });
+      if (error) {
+        onPaymentError();
+        setMessage(error.message ?? "Could not save your card. Please try again.");
+        setSubmitting(false);
+        return;
+      }
+      if (setupIntent?.id) {
+        try {
+          const slug = window.location.pathname.split("/")[2] ?? "";
+          const { confirmCardCaptureSetupIntent } = await import("@/lib/stripe-confirm.functions");
+          await confirmCardCaptureSetupIntent({ data: { setupIntentId: setupIntent.id, slug } });
+        } catch (e) {
+          console.error("[pay] confirm card capture failed", e);
+        }
+      }
+      window.location.href = returnUrl;
+      return;
+    }
+    const { error } = await stripe.confirmPayment({ elements, confirmParams: { return_url: returnUrl } });
     if (error) {
       onPaymentError();
-      setMessage(error.message ?? (setupMode ? "Could not save your card. Please try again." : "Payment failed. Please try again."));
+      setMessage(error.message ?? "Payment failed. Please try again.");
       setSubmitting(false);
     }
   }
