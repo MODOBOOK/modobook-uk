@@ -9,280 +9,206 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as AppRouteImport } from './routes/app'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as DemoRouteImport } from './routes/demo'
-import { Route as FaqRouteImport } from './routes/faq'
-import { Route as FeaturesRouteImport } from './routes/features'
-import { Route as HairBeautyWaitlistRouteImport } from './routes/hair-beauty-waitlist'
-import { Route as PrescriberHubRouteImport } from './routes/prescriber-hub'
-import { Route as PricingRouteImport } from './routes/pricing'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as RewardsRouteImport } from './routes/rewards'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as TlaCompetitionRouteImport } from './routes/tla-competition'
-import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as WaitlistRouteImport } from './routes/waitlist'
-import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as AuthenticatedAdminPrescribersRouteImport } from './routes/_authenticated/admin-prescribers'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedHubRouteImport } from './routes/_authenticated/hub'
-import { Route as AuthenticatedMobileRouteImport } from './routes/_authenticated/mobile'
-import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
-import { Route as AuthenticatedPrescriberRouteImport } from './routes/_authenticated/prescriber'
-import { Route as BookSlugRouteImport } from './routes/book.$slug'
-import { Route as CTokenRouteImport } from './routes/c.$token'
-import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
-import { Route as FTokenRouteImport } from './routes/f.$token'
-import { Route as MSlugRouteImport } from './routes/m.$slug'
-import { Route as MobileLoginRouteImport } from './routes/mobile.login'
-import { Route as PlanTokenRouteImport } from './routes/plan.$token'
-import { Route as PrivacyAcceptableUseRouteImport } from './routes/privacy.acceptable-use'
-import { Route as PrivacyBreachResponseRouteImport } from './routes/privacy.breach-response'
-import { Route as PrivacyComplaintsRouteImport } from './routes/privacy.complaints'
-import { Route as PrivacyCookiesRouteImport } from './routes/privacy.cookies'
-import { Route as PrivacyDpaRouteImport } from './routes/privacy.dpa'
-import { Route as PrivacyDpiaRouteImport } from './routes/privacy.dpia'
-import { Route as PrivacyRetentionRouteImport } from './routes/privacy.retention'
-import { Route as RCodeRouteImport } from './routes/r.$code'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
+import { Route as TlaCompetitionRouteImport } from './routes/tla-competition'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as RewardsRouteImport } from './routes/rewards'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrescriberHubRouteImport } from './routes/prescriber-hub'
+import { Route as HairBeautyWaitlistRouteImport } from './routes/hair-beauty-waitlist'
+import { Route as FeaturesRouteImport } from './routes/features'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as DemoRouteImport } from './routes/demo'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AppRouteImport } from './routes/app'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as StaffAcceptTokenRouteImport } from './routes/staff-accept.$token'
-import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
-import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
-import { Route as AuthenticatedAdminCompetitionRouteImport } from './routes/_authenticated/admin.competition'
-import { Route as AuthenticatedAdminEmailsRouteImport } from './routes/_authenticated/admin.emails'
-import { Route as AuthenticatedAdminHairBeautyRouteImport } from './routes/_authenticated/admin.hair-beauty'
-import { Route as AuthenticatedAdminHealthRouteImport } from './routes/_authenticated/admin.health'
-import { Route as AuthenticatedAdminInsightsRouteImport } from './routes/_authenticated/admin.insights'
-import { Route as AuthenticatedAdminPractitionersRouteImport } from './routes/_authenticated/admin.practitioners'
-import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
-import { Route as AuthenticatedDashboardAboutRouteImport } from './routes/_authenticated/dashboard.about'
-import { Route as AuthenticatedDashboardAddonsRouteImport } from './routes/_authenticated/dashboard.addons'
-import { Route as AuthenticatedDashboardAftercareRouteImport } from './routes/_authenticated/dashboard.aftercare'
-import { Route as AuthenticatedDashboardAiImportRouteImport } from './routes/_authenticated/dashboard.ai-import'
-import { Route as AuthenticatedDashboardAnalyticsRouteImport } from './routes/_authenticated/dashboard.analytics'
-import { Route as AuthenticatedDashboardAppearanceRouteImport } from './routes/_authenticated/dashboard.appearance'
-import { Route as AuthenticatedDashboardAvailabilityRouteImport } from './routes/_authenticated/dashboard.availability'
-import { Route as AuthenticatedDashboardBillingRouteImport } from './routes/_authenticated/dashboard.billing'
-import { Route as AuthenticatedDashboardBioRouteImport } from './routes/_authenticated/dashboard.bio'
-import { Route as AuthenticatedDashboardBookingFlowRouteImport } from './routes/_authenticated/dashboard.booking-flow'
-import { Route as AuthenticatedDashboardBookingsRouteImport } from './routes/_authenticated/dashboard.bookings'
-import { Route as AuthenticatedDashboardBrandingRouteImport } from './routes/_authenticated/dashboard.branding'
-import { Route as AuthenticatedDashboardCategoriesRouteImport } from './routes/_authenticated/dashboard.categories'
-import { Route as AuthenticatedDashboardClinicRouteImport } from './routes/_authenticated/dashboard.clinic'
-import { Route as AuthenticatedDashboardComingSoonRouteImport } from './routes/_authenticated/dashboard.coming-soon'
-import { Route as AuthenticatedDashboardCommissionReportRouteImport } from './routes/_authenticated/dashboard.commission-report'
-import { Route as AuthenticatedDashboardComplianceRouteImport } from './routes/_authenticated/dashboard.compliance'
-import { Route as AuthenticatedDashboardConsentFormsRouteImport } from './routes/_authenticated/dashboard.consent-forms'
-import { Route as AuthenticatedDashboardDesignStudioRouteImport } from './routes/_authenticated/dashboard.design-studio'
-import { Route as AuthenticatedDashboardDiscountsRouteImport } from './routes/_authenticated/dashboard.discounts'
-import { Route as AuthenticatedDashboardEmailsRouteImport } from './routes/_authenticated/dashboard.emails'
-import { Route as AuthenticatedDashboardExpensesRouteImport } from './routes/_authenticated/dashboard.expenses'
-import { Route as AuthenticatedDashboardFindPrescriberRouteImport } from './routes/_authenticated/dashboard.find-prescriber'
-import { Route as AuthenticatedDashboardFormAllocationRouteImport } from './routes/_authenticated/dashboard.form-allocation'
-import { Route as AuthenticatedDashboardGiftCardsRouteImport } from './routes/_authenticated/dashboard.gift-cards'
-import { Route as AuthenticatedDashboardHelpRouteImport } from './routes/_authenticated/dashboard.help'
-import { Route as AuthenticatedDashboardIncomeRouteImport } from './routes/_authenticated/dashboard.income'
-import { Route as AuthenticatedDashboardIncomeReportRouteImport } from './routes/_authenticated/dashboard.income-report'
-import { Route as AuthenticatedDashboardInvoicesRouteImport } from './routes/_authenticated/dashboard.invoices'
-import { Route as AuthenticatedDashboardLocationsRouteImport } from './routes/_authenticated/dashboard.locations'
-import { Route as AuthenticatedDashboardMarketingRouteImport } from './routes/_authenticated/dashboard.marketing'
-import { Route as AuthenticatedDashboardMedicalFormsRouteImport } from './routes/_authenticated/dashboard.medical-forms'
-import { Route as AuthenticatedDashboardMembershipsRouteImport } from './routes/_authenticated/dashboard.memberships'
-import { Route as AuthenticatedDashboardMenuRouteImport } from './routes/_authenticated/dashboard.menu'
-import { Route as AuthenticatedDashboardModelSlotsRouteImport } from './routes/_authenticated/dashboard.model-slots'
-import { Route as AuthenticatedDashboardNewAppointmentRouteImport } from './routes/_authenticated/dashboard.new-appointment'
-import { Route as AuthenticatedDashboardPackagesRouteImport } from './routes/_authenticated/dashboard.packages'
-import { Route as AuthenticatedDashboardPartnerReferralsRouteImport } from './routes/_authenticated/dashboard.partner-referrals'
-import { Route as AuthenticatedDashboardPatientsRouteImport } from './routes/_authenticated/dashboard.patients'
-import { Route as AuthenticatedDashboardPaymentsRouteImport } from './routes/_authenticated/dashboard.payments'
-import { Route as AuthenticatedDashboardPoliciesRouteImport } from './routes/_authenticated/dashboard.policies'
-import { Route as AuthenticatedDashboardPractitionersRouteImport } from './routes/_authenticated/dashboard.practitioners'
-import { Route as AuthenticatedDashboardPreTreatmentRouteImport } from './routes/_authenticated/dashboard.pre-treatment'
-import { Route as AuthenticatedDashboardPrivacyRouteImport } from './routes/_authenticated/dashboard.privacy'
-import { Route as AuthenticatedDashboardProductsRouteImport } from './routes/_authenticated/dashboard.products'
-import { Route as AuthenticatedDashboardReferralsRouteImport } from './routes/_authenticated/dashboard.referrals'
-import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
-import { Route as AuthenticatedDashboardRewardsRouteImport } from './routes/_authenticated/dashboard.rewards'
-import { Route as AuthenticatedDashboardRoomRentalRouteImport } from './routes/_authenticated/dashboard.room-rental'
-import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
-import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard.settings'
-import { Route as AuthenticatedDashboardStaffRouteImport } from './routes/_authenticated/dashboard.staff'
-import { Route as AuthenticatedDashboardStaffAnalyticsRouteImport } from './routes/_authenticated/dashboard.staff-analytics'
-import { Route as AuthenticatedDashboardTrainingRouteImport } from './routes/_authenticated/dashboard.training'
-import { Route as AuthenticatedDashboardTreatmentsRouteImport } from './routes/_authenticated/dashboard.treatments'
-import { Route as AuthenticatedDashboardUpcomingRouteImport } from './routes/_authenticated/dashboard.upcoming'
-import { Route as AuthenticatedDashboardWaitlistRouteImport } from './routes/_authenticated/dashboard.waitlist'
-import { Route as AuthenticatedHubIndexRouteImport } from './routes/_authenticated/hub.index'
-import { Route as AuthenticatedHubConnectionsRouteImport } from './routes/_authenticated/hub.connections'
-import { Route as AuthenticatedHubFindPrescriberRouteImport } from './routes/_authenticated/hub.find-prescriber'
-import { Route as AuthenticatedHubPrescribingRouteImport } from './routes/_authenticated/hub.prescribing'
-import { Route as AuthenticatedHubReferralsRouteImport } from './routes/_authenticated/hub.referrals'
-import { Route as AuthenticatedHubVerificationRouteImport } from './routes/_authenticated/hub.verification'
-import { Route as AuthenticatedHubVisitsRouteImport } from './routes/_authenticated/hub.visits'
-import { Route as AuthenticatedMobileIndexRouteImport } from './routes/_authenticated/mobile.index'
-import { Route as AuthenticatedMobileClientsRouteImport } from './routes/_authenticated/mobile.clients'
-import { Route as AuthenticatedPrescriberIndexRouteImport } from './routes/_authenticated/prescriber.index'
-import { Route as AuthenticatedPrescriberConnectionsRouteImport } from './routes/_authenticated/prescriber.connections'
-import { Route as AuthenticatedPrescriberDashboardRouteImport } from './routes/_authenticated/prescriber.dashboard'
-import { Route as AuthenticatedPrescriberDirectionsRouteImport } from './routes/_authenticated/prescriber.directions'
-import { Route as AuthenticatedPrescriberDirectoryRouteImport } from './routes/_authenticated/prescriber.directory'
-import { Route as AuthenticatedPrescriberInvoicesRouteImport } from './routes/_authenticated/prescriber.invoices'
-import { Route as AuthenticatedPrescriberLibraryRouteImport } from './routes/_authenticated/prescriber.library'
-import { Route as AuthenticatedPrescriberRequestsRouteImport } from './routes/_authenticated/prescriber.requests'
-import { Route as AuthenticatedPrescriberVisitsRouteImport } from './routes/_authenticated/prescriber.visits'
-import { Route as ApiPublicCalendarRouteImport } from './routes/api/public/calendar'
-import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as RCodeRouteImport } from './routes/r.$code'
+import { Route as PrivacyRetentionRouteImport } from './routes/privacy.retention'
+import { Route as PrivacyDpiaRouteImport } from './routes/privacy.dpia'
+import { Route as PrivacyDpaRouteImport } from './routes/privacy.dpa'
+import { Route as PrivacyCookiesRouteImport } from './routes/privacy.cookies'
+import { Route as PrivacyComplaintsRouteImport } from './routes/privacy.complaints'
+import { Route as PrivacyBreachResponseRouteImport } from './routes/privacy.breach-response'
+import { Route as PrivacyAcceptableUseRouteImport } from './routes/privacy.acceptable-use'
+import { Route as PlanTokenRouteImport } from './routes/plan.$token'
+import { Route as MobileLoginRouteImport } from './routes/mobile.login'
+import { Route as MSlugRouteImport } from './routes/m.$slug'
+import { Route as FTokenRouteImport } from './routes/f.$token'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as CTokenRouteImport } from './routes/c.$token'
+import { Route as BookSlugRouteImport } from './routes/book.$slug'
+import { Route as AuthenticatedPrescriberRouteImport } from './routes/_authenticated/prescriber'
+import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedMobileRouteImport } from './routes/_authenticated/mobile'
+import { Route as AuthenticatedHubRouteImport } from './routes/_authenticated/hub'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedAdminPrescribersRouteImport } from './routes/_authenticated/admin-prescribers'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as MSlugIndexRouteImport } from './routes/m.$slug.index'
-import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
-import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
-import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
-import { Route as MSlugBookMultiRouteImport } from './routes/m.$slug.book-multi'
-import { Route as MSlugGiftCardsRouteImport } from './routes/m.$slug.gift-cards'
-import { Route as MSlugMembershipsRouteImport } from './routes/m.$slug.memberships'
-import { Route as MSlugPayRouteImport } from './routes/m.$slug.pay'
-import { Route as MSlugReviewsRouteImport } from './routes/m.$slug.reviews'
-import { Route as MSlugRewardsRouteImport } from './routes/m.$slug.rewards'
-import { Route as MSlugRoomrentalRouteImport } from './routes/m.$slug.roomrental'
+import { Route as AuthenticatedPrescriberIndexRouteImport } from './routes/_authenticated/prescriber.index'
+import { Route as AuthenticatedMobileIndexRouteImport } from './routes/_authenticated/mobile.index'
+import { Route as AuthenticatedHubIndexRouteImport } from './routes/_authenticated/hub.index'
+import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard.index'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as MSlugTrainingRouteImport } from './routes/m.$slug.training'
-import { Route as AuthenticatedAdminPractitionersIndexRouteImport } from './routes/_authenticated/admin.practitioners.index'
-import { Route as AuthenticatedAdminPractitionersIdRouteImport } from './routes/_authenticated/admin.practitioners.$id'
-import { Route as AuthenticatedDashboardAssociatesIndexRouteImport } from './routes/_authenticated/dashboard.associates.index'
-import { Route as AuthenticatedDashboardAssociatesIdRouteImport } from './routes/_authenticated/dashboard.associates.$id'
-import { Route as AuthenticatedDashboardConsultationsIndexRouteImport } from './routes/_authenticated/dashboard.consultations.index'
-import { Route as AuthenticatedDashboardConsultationsIdRouteImport } from './routes/_authenticated/dashboard.consultations.$id'
-import { Route as AuthenticatedDashboardMarketingIndexRouteImport } from './routes/_authenticated/dashboard.marketing.index'
-import { Route as AuthenticatedDashboardMarketingAnalyticsRouteImport } from './routes/_authenticated/dashboard.marketing.analytics'
-import { Route as AuthenticatedDashboardMarketingAutomationsRouteImport } from './routes/_authenticated/dashboard.marketing.automations'
-import { Route as AuthenticatedDashboardMarketingSegmentsRouteImport } from './routes/_authenticated/dashboard.marketing.segments'
-import { Route as AuthenticatedDashboardMarketingSmsRouteImport } from './routes/_authenticated/dashboard.marketing.sms'
-import { Route as AuthenticatedDashboardMarketingTemplatesRouteImport } from './routes/_authenticated/dashboard.marketing.templates'
-import { Route as AuthenticatedDashboardNotificationsIndexRouteImport } from './routes/_authenticated/dashboard.notifications.index'
-import { Route as AuthenticatedDashboardNotificationsEmailRouteImport } from './routes/_authenticated/dashboard.notifications.email'
-import { Route as AuthenticatedDashboardNotificationsSmsRouteImport } from './routes/_authenticated/dashboard.notifications.sms'
-import { Route as AuthenticatedDashboardPatientsIndexRouteImport } from './routes/_authenticated/dashboard.patients.index'
-import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_authenticated/dashboard.patients.$id'
-import { Route as AuthenticatedDashboardRxRequestsIndexRouteImport } from './routes/_authenticated/dashboard.rx-requests.index'
-import { Route as AuthenticatedDashboardRxRequestsNewRouteImport } from './routes/_authenticated/dashboard.rx-requests.new'
-import { Route as AuthenticatedDashboardTrainingIndexRouteImport } from './routes/_authenticated/dashboard.training.index'
-import { Route as AuthenticatedDashboardTrainingBookingsRouteImport } from './routes/_authenticated/dashboard.training.bookings'
-import { Route as AuthenticatedMobileBookingIdRouteImport } from './routes/_authenticated/mobile.booking.$id'
-import { Route as AuthenticatedPrescriberRequestsIdRouteImport } from './routes/_authenticated/prescriber.requests.$id'
-import { Route as ApiPublicBookingReleaseRouteImport } from './routes/api/public/booking/release'
-import { Route as ApiPublicHooksAftercareDispatchRouteImport } from './routes/api/public/hooks/aftercare-dispatch'
-import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
-import { Route as ApiPublicHooksBillingReconcileRouteImport } from './routes/api/public/hooks/billing-reconcile'
-import { Route as ApiPublicHooksComplianceRemindersRouteImport } from './routes/api/public/hooks/compliance-reminders'
-import { Route as ApiPublicHooksDailyScheduleDigestRouteImport } from './routes/api/public/hooks/daily-schedule-digest'
-import { Route as ApiPublicHooksDemoResetRouteImport } from './routes/api/public/hooks/demo-reset'
-import { Route as ApiPublicHooksHealthDigestRouteImport } from './routes/api/public/hooks/health-digest'
-import { Route as ApiPublicHooksMarketingAutomationsRouteImport } from './routes/api/public/hooks/marketing-automations'
-import { Route as ApiPublicHooksMarketingDispatchRouteImport } from './routes/api/public/hooks/marketing-dispatch'
-import { Route as ApiPublicHooksRebookRemindersRouteImport } from './routes/api/public/hooks/rebook-reminders'
-import { Route as ApiPublicHooksReviewEmailsRouteImport } from './routes/api/public/hooks/review-emails'
-import { Route as ApiPublicMedicalFormTokenRouteImport } from './routes/api.public.medical-form.$token'
-import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push/dispatch'
-import { Route as ApiPublicStripeOauthCallbackRouteImport } from './routes/api/public/stripe/oauth-callback'
-import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
-import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp/webhook'
-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
-import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
-import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
-import { Route as MSlugBookIndexRouteImport } from './routes/m.$slug.book.index'
-import { Route as MSlugBookTreatmentIdRouteImport } from './routes/m.$slug.book.$treatmentId'
-import { Route as MSlugManageTokenRouteImport } from './routes/m.$slug.manage.$token'
+import { Route as MSlugRoomrentalRouteImport } from './routes/m.$slug.roomrental'
+import { Route as MSlugRewardsRouteImport } from './routes/m.$slug.rewards'
+import { Route as MSlugReviewsRouteImport } from './routes/m.$slug.reviews'
+import { Route as MSlugPayRouteImport } from './routes/m.$slug.pay'
+import { Route as MSlugMembershipsRouteImport } from './routes/m.$slug.memberships'
+import { Route as MSlugGiftCardsRouteImport } from './routes/m.$slug.gift-cards'
+import { Route as MSlugBookMultiRouteImport } from './routes/m.$slug.book-multi'
+import { Route as MSlugAuthRouteImport } from './routes/m.$slug.auth'
+import { Route as MSlugAccountRouteImport } from './routes/m.$slug.account'
+import { Route as MSlugAboutRouteImport } from './routes/m.$slug.about'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
+import { Route as ApiPublicCalendarRouteImport } from './routes/api/public/calendar'
+import { Route as AuthenticatedPrescriberVisitsRouteImport } from './routes/_authenticated/prescriber.visits'
+import { Route as AuthenticatedPrescriberRequestsRouteImport } from './routes/_authenticated/prescriber.requests'
+import { Route as AuthenticatedPrescriberLibraryRouteImport } from './routes/_authenticated/prescriber.library'
+import { Route as AuthenticatedPrescriberInvoicesRouteImport } from './routes/_authenticated/prescriber.invoices'
+import { Route as AuthenticatedPrescriberDirectoryRouteImport } from './routes/_authenticated/prescriber.directory'
+import { Route as AuthenticatedPrescriberDirectionsRouteImport } from './routes/_authenticated/prescriber.directions'
+import { Route as AuthenticatedPrescriberDashboardRouteImport } from './routes/_authenticated/prescriber.dashboard'
+import { Route as AuthenticatedPrescriberConnectionsRouteImport } from './routes/_authenticated/prescriber.connections'
+import { Route as AuthenticatedMobileClientsRouteImport } from './routes/_authenticated/mobile.clients'
+import { Route as AuthenticatedHubVisitsRouteImport } from './routes/_authenticated/hub.visits'
+import { Route as AuthenticatedHubVerificationRouteImport } from './routes/_authenticated/hub.verification'
+import { Route as AuthenticatedHubReferralsRouteImport } from './routes/_authenticated/hub.referrals'
+import { Route as AuthenticatedHubPrescribingRouteImport } from './routes/_authenticated/hub.prescribing'
+import { Route as AuthenticatedHubFindPrescriberRouteImport } from './routes/_authenticated/hub.find-prescriber'
+import { Route as AuthenticatedHubConnectionsRouteImport } from './routes/_authenticated/hub.connections'
+import { Route as AuthenticatedDashboardWaitlistRouteImport } from './routes/_authenticated/dashboard.waitlist'
+import { Route as AuthenticatedDashboardUpcomingRouteImport } from './routes/_authenticated/dashboard.upcoming'
+import { Route as AuthenticatedDashboardTreatmentsRouteImport } from './routes/_authenticated/dashboard.treatments'
+import { Route as AuthenticatedDashboardTrainingRouteImport } from './routes/_authenticated/dashboard.training'
+import { Route as AuthenticatedDashboardStaffAnalyticsRouteImport } from './routes/_authenticated/dashboard.staff-analytics'
+import { Route as AuthenticatedDashboardStaffRouteImport } from './routes/_authenticated/dashboard.staff'
+import { Route as AuthenticatedDashboardSettingsRouteImport } from './routes/_authenticated/dashboard.settings'
+import { Route as AuthenticatedDashboardServicesRouteImport } from './routes/_authenticated/dashboard.services'
+import { Route as AuthenticatedDashboardRoomRentalRouteImport } from './routes/_authenticated/dashboard.room-rental'
+import { Route as AuthenticatedDashboardRewardsRouteImport } from './routes/_authenticated/dashboard.rewards'
+import { Route as AuthenticatedDashboardReviewsRouteImport } from './routes/_authenticated/dashboard.reviews'
+import { Route as AuthenticatedDashboardReferralsRouteImport } from './routes/_authenticated/dashboard.referrals'
+import { Route as AuthenticatedDashboardProductsRouteImport } from './routes/_authenticated/dashboard.products'
+import { Route as AuthenticatedDashboardPrivacyRouteImport } from './routes/_authenticated/dashboard.privacy'
+import { Route as AuthenticatedDashboardPreTreatmentRouteImport } from './routes/_authenticated/dashboard.pre-treatment'
+import { Route as AuthenticatedDashboardPractitionersRouteImport } from './routes/_authenticated/dashboard.practitioners'
+import { Route as AuthenticatedDashboardPoliciesRouteImport } from './routes/_authenticated/dashboard.policies'
+import { Route as AuthenticatedDashboardPaymentsRouteImport } from './routes/_authenticated/dashboard.payments'
+import { Route as AuthenticatedDashboardPatientsRouteImport } from './routes/_authenticated/dashboard.patients'
+import { Route as AuthenticatedDashboardPartnerReferralsRouteImport } from './routes/_authenticated/dashboard.partner-referrals'
+import { Route as AuthenticatedDashboardPackagesRouteImport } from './routes/_authenticated/dashboard.packages'
+import { Route as AuthenticatedDashboardNewAppointmentRouteImport } from './routes/_authenticated/dashboard.new-appointment'
+import { Route as AuthenticatedDashboardModelSlotsRouteImport } from './routes/_authenticated/dashboard.model-slots'
+import { Route as AuthenticatedDashboardMenuRouteImport } from './routes/_authenticated/dashboard.menu'
+import { Route as AuthenticatedDashboardMembershipsRouteImport } from './routes/_authenticated/dashboard.memberships'
+import { Route as AuthenticatedDashboardMedicalFormsRouteImport } from './routes/_authenticated/dashboard.medical-forms'
+import { Route as AuthenticatedDashboardMarketingRouteImport } from './routes/_authenticated/dashboard.marketing'
+import { Route as AuthenticatedDashboardLocationsRouteImport } from './routes/_authenticated/dashboard.locations'
+import { Route as AuthenticatedDashboardInvoicesRouteImport } from './routes/_authenticated/dashboard.invoices'
+import { Route as AuthenticatedDashboardIncomeReportRouteImport } from './routes/_authenticated/dashboard.income-report'
+import { Route as AuthenticatedDashboardIncomeRouteImport } from './routes/_authenticated/dashboard.income'
+import { Route as AuthenticatedDashboardHelpRouteImport } from './routes/_authenticated/dashboard.help'
+import { Route as AuthenticatedDashboardGiftCardsRouteImport } from './routes/_authenticated/dashboard.gift-cards'
+import { Route as AuthenticatedDashboardFormAllocationRouteImport } from './routes/_authenticated/dashboard.form-allocation'
+import { Route as AuthenticatedDashboardFindPrescriberRouteImport } from './routes/_authenticated/dashboard.find-prescriber'
+import { Route as AuthenticatedDashboardExpensesRouteImport } from './routes/_authenticated/dashboard.expenses'
+import { Route as AuthenticatedDashboardEmailsRouteImport } from './routes/_authenticated/dashboard.emails'
+import { Route as AuthenticatedDashboardDiscountsRouteImport } from './routes/_authenticated/dashboard.discounts'
+import { Route as AuthenticatedDashboardDesignStudioRouteImport } from './routes/_authenticated/dashboard.design-studio'
+import { Route as AuthenticatedDashboardConsentFormsRouteImport } from './routes/_authenticated/dashboard.consent-forms'
+import { Route as AuthenticatedDashboardComplianceRouteImport } from './routes/_authenticated/dashboard.compliance'
+import { Route as AuthenticatedDashboardCommissionReportRouteImport } from './routes/_authenticated/dashboard.commission-report'
+import { Route as AuthenticatedDashboardComingSoonRouteImport } from './routes/_authenticated/dashboard.coming-soon'
+import { Route as AuthenticatedDashboardClinicRouteImport } from './routes/_authenticated/dashboard.clinic'
+import { Route as AuthenticatedDashboardCategoriesRouteImport } from './routes/_authenticated/dashboard.categories'
+import { Route as AuthenticatedDashboardBrandingRouteImport } from './routes/_authenticated/dashboard.branding'
+import { Route as AuthenticatedDashboardBookingsRouteImport } from './routes/_authenticated/dashboard.bookings'
+import { Route as AuthenticatedDashboardBookingFlowRouteImport } from './routes/_authenticated/dashboard.booking-flow'
+import { Route as AuthenticatedDashboardBioRouteImport } from './routes/_authenticated/dashboard.bio'
+import { Route as AuthenticatedDashboardBillingRouteImport } from './routes/_authenticated/dashboard.billing'
+import { Route as AuthenticatedDashboardAvailabilityRouteImport } from './routes/_authenticated/dashboard.availability'
+import { Route as AuthenticatedDashboardAppearanceRouteImport } from './routes/_authenticated/dashboard.appearance'
+import { Route as AuthenticatedDashboardAnalyticsRouteImport } from './routes/_authenticated/dashboard.analytics'
+import { Route as AuthenticatedDashboardAiImportRouteImport } from './routes/_authenticated/dashboard.ai-import'
+import { Route as AuthenticatedDashboardAftercareRouteImport } from './routes/_authenticated/dashboard.aftercare'
+import { Route as AuthenticatedDashboardAddonsRouteImport } from './routes/_authenticated/dashboard.addons'
+import { Route as AuthenticatedDashboardAboutRouteImport } from './routes/_authenticated/dashboard.about'
+import { Route as AuthenticatedAdminPractitionersRouteImport } from './routes/_authenticated/admin.practitioners'
+import { Route as AuthenticatedAdminInsightsRouteImport } from './routes/_authenticated/admin.insights'
+import { Route as AuthenticatedAdminHealthRouteImport } from './routes/_authenticated/admin.health'
+import { Route as AuthenticatedAdminHairBeautyRouteImport } from './routes/_authenticated/admin.hair-beauty'
+import { Route as AuthenticatedAdminEmailsRouteImport } from './routes/_authenticated/admin.emails'
+import { Route as AuthenticatedAdminCompetitionRouteImport } from './routes/_authenticated/admin.competition'
+import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
 import { Route as MSlugTrainingIndexRouteImport } from './routes/m.$slug.training.index'
+import { Route as MSlugBookIndexRouteImport } from './routes/m.$slug.book.index'
+import { Route as AuthenticatedDashboardTrainingIndexRouteImport } from './routes/_authenticated/dashboard.training.index'
+import { Route as AuthenticatedDashboardRxRequestsIndexRouteImport } from './routes/_authenticated/dashboard.rx-requests.index'
+import { Route as AuthenticatedDashboardPatientsIndexRouteImport } from './routes/_authenticated/dashboard.patients.index'
+import { Route as AuthenticatedDashboardNotificationsIndexRouteImport } from './routes/_authenticated/dashboard.notifications.index'
+import { Route as AuthenticatedDashboardMarketingIndexRouteImport } from './routes/_authenticated/dashboard.marketing.index'
+import { Route as AuthenticatedDashboardConsultationsIndexRouteImport } from './routes/_authenticated/dashboard.consultations.index'
+import { Route as AuthenticatedDashboardAssociatesIndexRouteImport } from './routes/_authenticated/dashboard.associates.index'
+import { Route as AuthenticatedAdminPractitionersIndexRouteImport } from './routes/_authenticated/admin.practitioners.index'
 import { Route as MSlugTrainingCourseIdRouteImport } from './routes/m.$slug.training.$courseId'
-import { Route as AuthenticatedDashboardMarketingCampaignsIdRouteImport } from './routes/_authenticated/dashboard.marketing.campaigns.$id'
+import { Route as MSlugManageTokenRouteImport } from './routes/m.$slug.manage.$token'
+import { Route as MSlugBookTreatmentIdRouteImport } from './routes/m.$slug.book.$treatmentId'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiPublicWhatsappWebhookRouteImport } from './routes/api/public/whatsapp/webhook'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe/webhook'
+import { Route as ApiPublicStripeOauthCallbackRouteImport } from './routes/api/public/stripe/oauth-callback'
+import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push/dispatch'
+import { Route as ApiPublicMedicalFormTokenRouteImport } from './routes/api.public.medical-form.$token'
+import { Route as ApiPublicHooksReviewEmailsRouteImport } from './routes/api/public/hooks/review-emails'
+import { Route as ApiPublicHooksRebookRemindersRouteImport } from './routes/api/public/hooks/rebook-reminders'
+import { Route as ApiPublicHooksMarketingDispatchRouteImport } from './routes/api/public/hooks/marketing-dispatch'
+import { Route as ApiPublicHooksMarketingAutomationsRouteImport } from './routes/api/public/hooks/marketing-automations'
+import { Route as ApiPublicHooksHealthDigestRouteImport } from './routes/api/public/hooks/health-digest'
+import { Route as ApiPublicHooksDemoResetRouteImport } from './routes/api/public/hooks/demo-reset'
+import { Route as ApiPublicHooksDailyScheduleDigestRouteImport } from './routes/api/public/hooks/daily-schedule-digest'
+import { Route as ApiPublicHooksComplianceRemindersRouteImport } from './routes/api/public/hooks/compliance-reminders'
+import { Route as ApiPublicHooksBillingReconcileRouteImport } from './routes/api/public/hooks/billing-reconcile'
+import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
+import { Route as ApiPublicHooksAftercareDispatchRouteImport } from './routes/api/public/hooks/aftercare-dispatch'
+import { Route as ApiPublicBookingReleaseRouteImport } from './routes/api/public/booking/release'
+import { Route as AuthenticatedPrescriberRequestsIdRouteImport } from './routes/_authenticated/prescriber.requests.$id'
+import { Route as AuthenticatedMobileBookingIdRouteImport } from './routes/_authenticated/mobile.booking.$id'
+import { Route as AuthenticatedDashboardTrainingBookingsRouteImport } from './routes/_authenticated/dashboard.training.bookings'
+import { Route as AuthenticatedDashboardRxRequestsNewRouteImport } from './routes/_authenticated/dashboard.rx-requests.new'
+import { Route as AuthenticatedDashboardPatientsIdRouteImport } from './routes/_authenticated/dashboard.patients.$id'
+import { Route as AuthenticatedDashboardNotificationsSmsRouteImport } from './routes/_authenticated/dashboard.notifications.sms'
+import { Route as AuthenticatedDashboardNotificationsEmailRouteImport } from './routes/_authenticated/dashboard.notifications.email'
+import { Route as AuthenticatedDashboardMarketingTemplatesRouteImport } from './routes/_authenticated/dashboard.marketing.templates'
+import { Route as AuthenticatedDashboardMarketingSmsRouteImport } from './routes/_authenticated/dashboard.marketing.sms'
+import { Route as AuthenticatedDashboardMarketingSegmentsRouteImport } from './routes/_authenticated/dashboard.marketing.segments'
+import { Route as AuthenticatedDashboardMarketingAutomationsRouteImport } from './routes/_authenticated/dashboard.marketing.automations'
+import { Route as AuthenticatedDashboardMarketingAnalyticsRouteImport } from './routes/_authenticated/dashboard.marketing.analytics'
+import { Route as AuthenticatedDashboardConsultationsIdRouteImport } from './routes/_authenticated/dashboard.consultations.$id'
+import { Route as AuthenticatedDashboardAssociatesIdRouteImport } from './routes/_authenticated/dashboard.associates.$id'
+import { Route as AuthenticatedAdminPractitionersIdRouteImport } from './routes/_authenticated/admin.practitioners.$id'
 import { Route as AuthenticatedDashboardPatientsIdIndexRouteImport } from './routes/_authenticated/dashboard.patients.$id.index'
-import { Route as AuthenticatedDashboardPatientsIdDetailsRouteImport } from './routes/_authenticated/dashboard.patients.$id.details'
-import { Route as AuthenticatedDashboardPatientsIdInvoicesRouteImport } from './routes/_authenticated/dashboard.patients.$id.invoices'
-import { Route as AuthenticatedDashboardPatientsIdMedicationsRouteImport } from './routes/_authenticated/dashboard.patients.$id.medications'
-import { Route as AuthenticatedDashboardPatientsIdPhotosRouteImport } from './routes/_authenticated/dashboard.patients.$id.photos'
 import { Route as AuthenticatedDashboardPatientsIdTimelineRouteImport } from './routes/_authenticated/dashboard.patients.$id.timeline'
+import { Route as AuthenticatedDashboardPatientsIdPhotosRouteImport } from './routes/_authenticated/dashboard.patients.$id.photos'
+import { Route as AuthenticatedDashboardPatientsIdMedicationsRouteImport } from './routes/_authenticated/dashboard.patients.$id.medications'
+import { Route as AuthenticatedDashboardPatientsIdInvoicesRouteImport } from './routes/_authenticated/dashboard.patients.$id.invoices'
+import { Route as AuthenticatedDashboardPatientsIdDetailsRouteImport } from './routes/_authenticated/dashboard.patients.$id.details'
+import { Route as AuthenticatedDashboardMarketingCampaignsIdRouteImport } from './routes/_authenticated/dashboard.marketing.campaigns.$id'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DemoRoute = DemoRouteImport.update({
-  id: '/demo',
-  path: '/demo',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FaqRoute = FaqRouteImport.update({
-  id: '/faq',
-  path: '/faq',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FeaturesRoute = FeaturesRouteImport.update({
-  id: '/features',
-  path: '/features',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HairBeautyWaitlistRoute = HairBeautyWaitlistRouteImport.update({
-  id: '/hair-beauty-waitlist',
-  path: '/hair-beauty-waitlist',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrescriberHubRoute = PrescriberHubRouteImport.update({
-  id: '/prescriber-hub',
-  path: '/prescriber-hub',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RewardsRoute = RewardsRouteImport.update({
-  id: '/rewards',
-  path: '/rewards',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TlaCompetitionRoute = TlaCompetitionRouteImport.update({
-  id: '/tla-competition',
-  path: '/tla-competition',
+const WaitlistRoute = WaitlistRouteImport.update({
+  id: '/waitlist',
+  path: '/waitlist',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
@@ -290,14 +216,188 @@ const UnsubscribeRoute = UnsubscribeRouteImport.update({
   path: '/unsubscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
-const WaitlistRoute = WaitlistRouteImport.update({
-  id: '/waitlist',
-  path: '/waitlist',
+const TlaCompetitionRoute = TlaCompetitionRouteImport.update({
+  id: '/tla-competition',
+  path: '/tla-competition',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RewardsRoute = RewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrescriberHubRoute = PrescriberHubRouteImport.update({
+  id: '/prescriber-hub',
+  path: '/prescriber-hub',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HairBeautyWaitlistRoute = HairBeautyWaitlistRouteImport.update({
+  id: '/hair-beauty-waitlist',
+  path: '/hair-beauty-waitlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeaturesRoute = FeaturesRouteImport.update({
+  id: '/features',
+  path: '/features',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StaffAcceptTokenRoute = StaffAcceptTokenRouteImport.update({
+  id: '/staff-accept/$token',
+  path: '/staff-accept/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RCodeRoute = RCodeRouteImport.update({
+  id: '/r/$code',
+  path: '/r/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRetentionRoute = PrivacyRetentionRouteImport.update({
+  id: '/retention',
+  path: '/retention',
+  getParentRoute: () => PrivacyRoute,
+} as any)
+const PrivacyDpiaRoute = PrivacyDpiaRouteImport.update({
+  id: '/dpia',
+  path: '/dpia',
+  getParentRoute: () => PrivacyRoute,
+} as any)
+const PrivacyDpaRoute = PrivacyDpaRouteImport.update({
+  id: '/dpa',
+  path: '/dpa',
+  getParentRoute: () => PrivacyRoute,
+} as any)
+const PrivacyCookiesRoute = PrivacyCookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
+  getParentRoute: () => PrivacyRoute,
+} as any)
+const PrivacyComplaintsRoute = PrivacyComplaintsRouteImport.update({
+  id: '/complaints',
+  path: '/complaints',
+  getParentRoute: () => PrivacyRoute,
+} as any)
+const PrivacyBreachResponseRoute = PrivacyBreachResponseRouteImport.update({
+  id: '/breach-response',
+  path: '/breach-response',
+  getParentRoute: () => PrivacyRoute,
+} as any)
+const PrivacyAcceptableUseRoute = PrivacyAcceptableUseRouteImport.update({
+  id: '/acceptable-use',
+  path: '/acceptable-use',
+  getParentRoute: () => PrivacyRoute,
+} as any)
+const PlanTokenRoute = PlanTokenRouteImport.update({
+  id: '/plan/$token',
+  path: '/plan/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MobileLoginRoute = MobileLoginRouteImport.update({
+  id: '/mobile/login',
+  path: '/mobile/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MSlugRoute = MSlugRouteImport.update({
+  id: '/m/$slug',
+  path: '/m/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FTokenRoute = FTokenRouteImport.update({
+  id: '/f/$token',
+  path: '/f/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CTokenRoute = CTokenRouteImport.update({
+  id: '/c/$token',
+  path: '/c/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookSlugRoute = BookSlugRouteImport.update({
+  id: '/book/$slug',
+  path: '/book/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedPrescriberRoute = AuthenticatedPrescriberRouteImport.update({
+  id: '/prescriber',
+  path: '/prescriber',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedMobileRoute = AuthenticatedMobileRouteImport.update({
+  id: '/mobile',
+  path: '/mobile',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedHubRoute = AuthenticatedHubRouteImport.update({
+  id: '/hub',
+  path: '/hub',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedAdminPrescribersRoute =
@@ -306,597 +406,113 @@ const AuthenticatedAdminPrescribersRoute =
     path: '/admin-prescribers',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedHubRoute = AuthenticatedHubRouteImport.update({
-  id: '/hub',
-  path: '/hub',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedMobileRoute = AuthenticatedMobileRouteImport.update({
-  id: '/mobile',
-  path: '/mobile',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedPrescriberRoute = AuthenticatedPrescriberRouteImport.update({
-  id: '/prescriber',
-  path: '/prescriber',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const BookSlugRoute = BookSlugRouteImport.update({
-  id: '/book/$slug',
-  path: '/book/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CTokenRoute = CTokenRouteImport.update({
-  id: '/c/$token',
-  path: '/c/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
-  id: '/email/unsubscribe',
-  path: '/email/unsubscribe',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FTokenRoute = FTokenRouteImport.update({
-  id: '/f/$token',
-  path: '/f/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MSlugRoute = MSlugRouteImport.update({
-  id: '/m/$slug',
-  path: '/m/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MobileLoginRoute = MobileLoginRouteImport.update({
-  id: '/mobile/login',
-  path: '/mobile/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PlanTokenRoute = PlanTokenRouteImport.update({
-  id: '/plan/$token',
-  path: '/plan/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyAcceptableUseRoute = PrivacyAcceptableUseRouteImport.update({
-  id: '/acceptable-use',
-  path: '/acceptable-use',
-  getParentRoute: () => PrivacyRoute,
-} as any)
-const PrivacyBreachResponseRoute = PrivacyBreachResponseRouteImport.update({
-  id: '/breach-response',
-  path: '/breach-response',
-  getParentRoute: () => PrivacyRoute,
-} as any)
-const PrivacyComplaintsRoute = PrivacyComplaintsRouteImport.update({
-  id: '/complaints',
-  path: '/complaints',
-  getParentRoute: () => PrivacyRoute,
-} as any)
-const PrivacyCookiesRoute = PrivacyCookiesRouteImport.update({
-  id: '/cookies',
-  path: '/cookies',
-  getParentRoute: () => PrivacyRoute,
-} as any)
-const PrivacyDpaRoute = PrivacyDpaRouteImport.update({
-  id: '/dpa',
-  path: '/dpa',
-  getParentRoute: () => PrivacyRoute,
-} as any)
-const PrivacyDpiaRoute = PrivacyDpiaRouteImport.update({
-  id: '/dpia',
-  path: '/dpia',
-  getParentRoute: () => PrivacyRoute,
-} as any)
-const PrivacyRetentionRoute = PrivacyRetentionRouteImport.update({
-  id: '/retention',
-  path: '/retention',
-  getParentRoute: () => PrivacyRoute,
-} as any)
-const RCodeRoute = RCodeRouteImport.update({
-  id: '/r/$code',
-  path: '/r/$code',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StaffAcceptTokenRoute = StaffAcceptTokenRouteImport.update({
-  id: '/staff-accept/$token',
-  path: '/staff-accept/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+const MSlugIndexRoute = MSlugIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AuthenticatedAdminRoute,
+  getParentRoute: () => MSlugRoute,
 } as any)
-const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
-  id: '/audit',
-  path: '/audit',
-  getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
-const AuthenticatedAdminCompetitionRoute =
-  AuthenticatedAdminCompetitionRouteImport.update({
-    id: '/competition',
-    path: '/competition',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminEmailsRoute =
-  AuthenticatedAdminEmailsRouteImport.update({
-    id: '/emails',
-    path: '/emails',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminHairBeautyRoute =
-  AuthenticatedAdminHairBeautyRouteImport.update({
-    id: '/hair-beauty',
-    path: '/hair-beauty',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminHealthRoute =
-  AuthenticatedAdminHealthRouteImport.update({
-    id: '/health',
-    path: '/health',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminInsightsRoute =
-  AuthenticatedAdminInsightsRouteImport.update({
-    id: '/insights',
-    path: '/insights',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminPractitionersRoute =
-  AuthenticatedAdminPractitionersRouteImport.update({
-    id: '/practitioners',
-    path: '/practitioners',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedDashboardIndexRoute =
-  AuthenticatedDashboardIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardAboutRoute =
-  AuthenticatedDashboardAboutRouteImport.update({
-    id: '/about',
-    path: '/about',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardAddonsRoute =
-  AuthenticatedDashboardAddonsRouteImport.update({
-    id: '/addons',
-    path: '/addons',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardAftercareRoute =
-  AuthenticatedDashboardAftercareRouteImport.update({
-    id: '/aftercare',
-    path: '/aftercare',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardAiImportRoute =
-  AuthenticatedDashboardAiImportRouteImport.update({
-    id: '/ai-import',
-    path: '/ai-import',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardAnalyticsRoute =
-  AuthenticatedDashboardAnalyticsRouteImport.update({
-    id: '/analytics',
-    path: '/analytics',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardAppearanceRoute =
-  AuthenticatedDashboardAppearanceRouteImport.update({
-    id: '/appearance',
-    path: '/appearance',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardAvailabilityRoute =
-  AuthenticatedDashboardAvailabilityRouteImport.update({
-    id: '/availability',
-    path: '/availability',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardBillingRoute =
-  AuthenticatedDashboardBillingRouteImport.update({
-    id: '/billing',
-    path: '/billing',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardBioRoute =
-  AuthenticatedDashboardBioRouteImport.update({
-    id: '/bio',
-    path: '/bio',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardBookingFlowRoute =
-  AuthenticatedDashboardBookingFlowRouteImport.update({
-    id: '/booking-flow',
-    path: '/booking-flow',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardBookingsRoute =
-  AuthenticatedDashboardBookingsRouteImport.update({
-    id: '/bookings',
-    path: '/bookings',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardBrandingRoute =
-  AuthenticatedDashboardBrandingRouteImport.update({
-    id: '/branding',
-    path: '/branding',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardCategoriesRoute =
-  AuthenticatedDashboardCategoriesRouteImport.update({
-    id: '/categories',
-    path: '/categories',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardClinicRoute =
-  AuthenticatedDashboardClinicRouteImport.update({
-    id: '/clinic',
-    path: '/clinic',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardComingSoonRoute =
-  AuthenticatedDashboardComingSoonRouteImport.update({
-    id: '/coming-soon',
-    path: '/coming-soon',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardCommissionReportRoute =
-  AuthenticatedDashboardCommissionReportRouteImport.update({
-    id: '/commission-report',
-    path: '/commission-report',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardComplianceRoute =
-  AuthenticatedDashboardComplianceRouteImport.update({
-    id: '/compliance',
-    path: '/compliance',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardConsentFormsRoute =
-  AuthenticatedDashboardConsentFormsRouteImport.update({
-    id: '/consent-forms',
-    path: '/consent-forms',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardDesignStudioRoute =
-  AuthenticatedDashboardDesignStudioRouteImport.update({
-    id: '/design-studio',
-    path: '/design-studio',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardDiscountsRoute =
-  AuthenticatedDashboardDiscountsRouteImport.update({
-    id: '/discounts',
-    path: '/discounts',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardEmailsRoute =
-  AuthenticatedDashboardEmailsRouteImport.update({
-    id: '/emails',
-    path: '/emails',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardExpensesRoute =
-  AuthenticatedDashboardExpensesRouteImport.update({
-    id: '/expenses',
-    path: '/expenses',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardFindPrescriberRoute =
-  AuthenticatedDashboardFindPrescriberRouteImport.update({
-    id: '/find-prescriber',
-    path: '/find-prescriber',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardFormAllocationRoute =
-  AuthenticatedDashboardFormAllocationRouteImport.update({
-    id: '/form-allocation',
-    path: '/form-allocation',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardGiftCardsRoute =
-  AuthenticatedDashboardGiftCardsRouteImport.update({
-    id: '/gift-cards',
-    path: '/gift-cards',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardHelpRoute =
-  AuthenticatedDashboardHelpRouteImport.update({
-    id: '/help',
-    path: '/help',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardIncomeRoute =
-  AuthenticatedDashboardIncomeRouteImport.update({
-    id: '/income',
-    path: '/income',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardIncomeReportRoute =
-  AuthenticatedDashboardIncomeReportRouteImport.update({
-    id: '/income-report',
-    path: '/income-report',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardInvoicesRoute =
-  AuthenticatedDashboardInvoicesRouteImport.update({
-    id: '/invoices',
-    path: '/invoices',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardLocationsRoute =
-  AuthenticatedDashboardLocationsRouteImport.update({
-    id: '/locations',
-    path: '/locations',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardMarketingRoute =
-  AuthenticatedDashboardMarketingRouteImport.update({
-    id: '/marketing',
-    path: '/marketing',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardMedicalFormsRoute =
-  AuthenticatedDashboardMedicalFormsRouteImport.update({
-    id: '/medical-forms',
-    path: '/medical-forms',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardMembershipsRoute =
-  AuthenticatedDashboardMembershipsRouteImport.update({
-    id: '/memberships',
-    path: '/memberships',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardMenuRoute =
-  AuthenticatedDashboardMenuRouteImport.update({
-    id: '/menu',
-    path: '/menu',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardModelSlotsRoute =
-  AuthenticatedDashboardModelSlotsRouteImport.update({
-    id: '/model-slots',
-    path: '/model-slots',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardNewAppointmentRoute =
-  AuthenticatedDashboardNewAppointmentRouteImport.update({
-    id: '/new-appointment',
-    path: '/new-appointment',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardPackagesRoute =
-  AuthenticatedDashboardPackagesRouteImport.update({
-    id: '/packages',
-    path: '/packages',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardPartnerReferralsRoute =
-  AuthenticatedDashboardPartnerReferralsRouteImport.update({
-    id: '/partner-referrals',
-    path: '/partner-referrals',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardPatientsRoute =
-  AuthenticatedDashboardPatientsRouteImport.update({
-    id: '/patients',
-    path: '/patients',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardPaymentsRoute =
-  AuthenticatedDashboardPaymentsRouteImport.update({
-    id: '/payments',
-    path: '/payments',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardPoliciesRoute =
-  AuthenticatedDashboardPoliciesRouteImport.update({
-    id: '/policies',
-    path: '/policies',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardPractitionersRoute =
-  AuthenticatedDashboardPractitionersRouteImport.update({
-    id: '/practitioners',
-    path: '/practitioners',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardPreTreatmentRoute =
-  AuthenticatedDashboardPreTreatmentRouteImport.update({
-    id: '/pre-treatment',
-    path: '/pre-treatment',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardPrivacyRoute =
-  AuthenticatedDashboardPrivacyRouteImport.update({
-    id: '/privacy',
-    path: '/privacy',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardProductsRoute =
-  AuthenticatedDashboardProductsRouteImport.update({
-    id: '/products',
-    path: '/products',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardReferralsRoute =
-  AuthenticatedDashboardReferralsRouteImport.update({
-    id: '/referrals',
-    path: '/referrals',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardReviewsRoute =
-  AuthenticatedDashboardReviewsRouteImport.update({
-    id: '/reviews',
-    path: '/reviews',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardRewardsRoute =
-  AuthenticatedDashboardRewardsRouteImport.update({
-    id: '/rewards',
-    path: '/rewards',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardRoomRentalRoute =
-  AuthenticatedDashboardRoomRentalRouteImport.update({
-    id: '/room-rental',
-    path: '/room-rental',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardServicesRoute =
-  AuthenticatedDashboardServicesRouteImport.update({
-    id: '/services',
-    path: '/services',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardSettingsRoute =
-  AuthenticatedDashboardSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardStaffRoute =
-  AuthenticatedDashboardStaffRouteImport.update({
-    id: '/staff',
-    path: '/staff',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardStaffAnalyticsRoute =
-  AuthenticatedDashboardStaffAnalyticsRouteImport.update({
-    id: '/staff-analytics',
-    path: '/staff-analytics',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardTrainingRoute =
-  AuthenticatedDashboardTrainingRouteImport.update({
-    id: '/training',
-    path: '/training',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardTreatmentsRoute =
-  AuthenticatedDashboardTreatmentsRouteImport.update({
-    id: '/treatments',
-    path: '/treatments',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardUpcomingRoute =
-  AuthenticatedDashboardUpcomingRouteImport.update({
-    id: '/upcoming',
-    path: '/upcoming',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardWaitlistRoute =
-  AuthenticatedDashboardWaitlistRouteImport.update({
-    id: '/waitlist',
-    path: '/waitlist',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedHubIndexRoute = AuthenticatedHubIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedHubRoute,
-} as any)
-const AuthenticatedHubConnectionsRoute =
-  AuthenticatedHubConnectionsRouteImport.update({
-    id: '/connections',
-    path: '/connections',
-    getParentRoute: () => AuthenticatedHubRoute,
-  } as any)
-const AuthenticatedHubFindPrescriberRoute =
-  AuthenticatedHubFindPrescriberRouteImport.update({
-    id: '/find-prescriber',
-    path: '/find-prescriber',
-    getParentRoute: () => AuthenticatedHubRoute,
-  } as any)
-const AuthenticatedHubPrescribingRoute =
-  AuthenticatedHubPrescribingRouteImport.update({
-    id: '/prescribing',
-    path: '/prescribing',
-    getParentRoute: () => AuthenticatedHubRoute,
-  } as any)
-const AuthenticatedHubReferralsRoute =
-  AuthenticatedHubReferralsRouteImport.update({
-    id: '/referrals',
-    path: '/referrals',
-    getParentRoute: () => AuthenticatedHubRoute,
-  } as any)
-const AuthenticatedHubVerificationRoute =
-  AuthenticatedHubVerificationRouteImport.update({
-    id: '/verification',
-    path: '/verification',
-    getParentRoute: () => AuthenticatedHubRoute,
-  } as any)
-const AuthenticatedHubVisitsRoute = AuthenticatedHubVisitsRouteImport.update({
-  id: '/visits',
-  path: '/visits',
-  getParentRoute: () => AuthenticatedHubRoute,
-} as any)
-const AuthenticatedMobileIndexRoute =
-  AuthenticatedMobileIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedMobileRoute,
-  } as any)
-const AuthenticatedMobileClientsRoute =
-  AuthenticatedMobileClientsRouteImport.update({
-    id: '/clients',
-    path: '/clients',
-    getParentRoute: () => AuthenticatedMobileRoute,
-  } as any)
 const AuthenticatedPrescriberIndexRoute =
   AuthenticatedPrescriberIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedPrescriberRoute,
   } as any)
-const AuthenticatedPrescriberConnectionsRoute =
-  AuthenticatedPrescriberConnectionsRouteImport.update({
-    id: '/connections',
-    path: '/connections',
-    getParentRoute: () => AuthenticatedPrescriberRoute,
+const AuthenticatedMobileIndexRoute =
+  AuthenticatedMobileIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedMobileRoute,
   } as any)
-const AuthenticatedPrescriberDashboardRoute =
-  AuthenticatedPrescriberDashboardRouteImport.update({
-    id: '/dashboard',
-    path: '/dashboard',
-    getParentRoute: () => AuthenticatedPrescriberRoute,
+const AuthenticatedHubIndexRoute = AuthenticatedHubIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedHubRoute,
+} as any)
+const AuthenticatedDashboardIndexRoute =
+  AuthenticatedDashboardIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const AuthenticatedPrescriberDirectionsRoute =
-  AuthenticatedPrescriberDirectionsRouteImport.update({
-    id: '/directions',
-    path: '/directions',
-    getParentRoute: () => AuthenticatedPrescriberRoute,
-  } as any)
-const AuthenticatedPrescriberDirectoryRoute =
-  AuthenticatedPrescriberDirectoryRouteImport.update({
-    id: '/directory',
-    path: '/directory',
-    getParentRoute: () => AuthenticatedPrescriberRoute,
-  } as any)
-const AuthenticatedPrescriberInvoicesRoute =
-  AuthenticatedPrescriberInvoicesRouteImport.update({
-    id: '/invoices',
-    path: '/invoices',
-    getParentRoute: () => AuthenticatedPrescriberRoute,
-  } as any)
-const AuthenticatedPrescriberLibraryRoute =
-  AuthenticatedPrescriberLibraryRouteImport.update({
-    id: '/library',
-    path: '/library',
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const MSlugTrainingRoute = MSlugTrainingRouteImport.update({
+  id: '/training',
+  path: '/training',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const MSlugRoomrentalRoute = MSlugRoomrentalRouteImport.update({
+  id: '/roomrental',
+  path: '/roomrental',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const MSlugRewardsRoute = MSlugRewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const MSlugReviewsRoute = MSlugReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const MSlugPayRoute = MSlugPayRouteImport.update({
+  id: '/pay',
+  path: '/pay',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const MSlugMembershipsRoute = MSlugMembershipsRouteImport.update({
+  id: '/memberships',
+  path: '/memberships',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const MSlugGiftCardsRoute = MSlugGiftCardsRouteImport.update({
+  id: '/gift-cards',
+  path: '/gift-cards',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const MSlugBookMultiRoute = MSlugBookMultiRouteImport.update({
+  id: '/book-multi',
+  path: '/book-multi',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const MSlugAuthRoute = MSlugAuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const MSlugAccountRoute = MSlugAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const MSlugAboutRoute = MSlugAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicCalendarRoute = ApiPublicCalendarRouteImport.update({
+  id: '/api/public/calendar',
+  path: '/api/public/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedPrescriberVisitsRoute =
+  AuthenticatedPrescriberVisitsRouteImport.update({
+    id: '/visits',
+    path: '/visits',
     getParentRoute: () => AuthenticatedPrescriberRoute,
   } as any)
 const AuthenticatedPrescriberRequestsRoute =
@@ -905,170 +521,486 @@ const AuthenticatedPrescriberRequestsRoute =
     path: '/requests',
     getParentRoute: () => AuthenticatedPrescriberRoute,
   } as any)
-const AuthenticatedPrescriberVisitsRoute =
-  AuthenticatedPrescriberVisitsRouteImport.update({
-    id: '/visits',
-    path: '/visits',
+const AuthenticatedPrescriberLibraryRoute =
+  AuthenticatedPrescriberLibraryRouteImport.update({
+    id: '/library',
+    path: '/library',
     getParentRoute: () => AuthenticatedPrescriberRoute,
   } as any)
-const ApiPublicCalendarRoute = ApiPublicCalendarRouteImport.update({
-  id: '/api/public/calendar',
-  path: '/api/public/calendar',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
-  id: '/lovable/email/suppression',
-  path: '/lovable/email/suppression',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MSlugIndexRoute = MSlugIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const MSlugAboutRoute = MSlugAboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const MSlugAccountRoute = MSlugAccountRouteImport.update({
-  id: '/account',
-  path: '/account',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const MSlugAuthRoute = MSlugAuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const MSlugBookMultiRoute = MSlugBookMultiRouteImport.update({
-  id: '/book-multi',
-  path: '/book-multi',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const MSlugGiftCardsRoute = MSlugGiftCardsRouteImport.update({
-  id: '/gift-cards',
-  path: '/gift-cards',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const MSlugMembershipsRoute = MSlugMembershipsRouteImport.update({
-  id: '/memberships',
-  path: '/memberships',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const MSlugPayRoute = MSlugPayRouteImport.update({
-  id: '/pay',
-  path: '/pay',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const MSlugReviewsRoute = MSlugReviewsRouteImport.update({
-  id: '/reviews',
-  path: '/reviews',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const MSlugRewardsRoute = MSlugRewardsRouteImport.update({
-  id: '/rewards',
-  path: '/rewards',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const MSlugRoomrentalRoute = MSlugRoomrentalRouteImport.update({
-  id: '/roomrental',
-  path: '/roomrental',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const MSlugTrainingRoute = MSlugTrainingRouteImport.update({
-  id: '/training',
-  path: '/training',
-  getParentRoute: () => MSlugRoute,
-} as any)
-const AuthenticatedAdminPractitionersIndexRoute =
-  AuthenticatedAdminPractitionersIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedAdminPractitionersRoute,
+const AuthenticatedPrescriberInvoicesRoute =
+  AuthenticatedPrescriberInvoicesRouteImport.update({
+    id: '/invoices',
+    path: '/invoices',
+    getParentRoute: () => AuthenticatedPrescriberRoute,
   } as any)
-const AuthenticatedAdminPractitionersIdRoute =
-  AuthenticatedAdminPractitionersIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedAdminPractitionersRoute,
+const AuthenticatedPrescriberDirectoryRoute =
+  AuthenticatedPrescriberDirectoryRouteImport.update({
+    id: '/directory',
+    path: '/directory',
+    getParentRoute: () => AuthenticatedPrescriberRoute,
   } as any)
-const AuthenticatedDashboardAssociatesIndexRoute =
-  AuthenticatedDashboardAssociatesIndexRouteImport.update({
-    id: '/associates/',
-    path: '/associates/',
+const AuthenticatedPrescriberDirectionsRoute =
+  AuthenticatedPrescriberDirectionsRouteImport.update({
+    id: '/directions',
+    path: '/directions',
+    getParentRoute: () => AuthenticatedPrescriberRoute,
+  } as any)
+const AuthenticatedPrescriberDashboardRoute =
+  AuthenticatedPrescriberDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedPrescriberRoute,
+  } as any)
+const AuthenticatedPrescriberConnectionsRoute =
+  AuthenticatedPrescriberConnectionsRouteImport.update({
+    id: '/connections',
+    path: '/connections',
+    getParentRoute: () => AuthenticatedPrescriberRoute,
+  } as any)
+const AuthenticatedMobileClientsRoute =
+  AuthenticatedMobileClientsRouteImport.update({
+    id: '/clients',
+    path: '/clients',
+    getParentRoute: () => AuthenticatedMobileRoute,
+  } as any)
+const AuthenticatedHubVisitsRoute = AuthenticatedHubVisitsRouteImport.update({
+  id: '/visits',
+  path: '/visits',
+  getParentRoute: () => AuthenticatedHubRoute,
+} as any)
+const AuthenticatedHubVerificationRoute =
+  AuthenticatedHubVerificationRouteImport.update({
+    id: '/verification',
+    path: '/verification',
+    getParentRoute: () => AuthenticatedHubRoute,
+  } as any)
+const AuthenticatedHubReferralsRoute =
+  AuthenticatedHubReferralsRouteImport.update({
+    id: '/referrals',
+    path: '/referrals',
+    getParentRoute: () => AuthenticatedHubRoute,
+  } as any)
+const AuthenticatedHubPrescribingRoute =
+  AuthenticatedHubPrescribingRouteImport.update({
+    id: '/prescribing',
+    path: '/prescribing',
+    getParentRoute: () => AuthenticatedHubRoute,
+  } as any)
+const AuthenticatedHubFindPrescriberRoute =
+  AuthenticatedHubFindPrescriberRouteImport.update({
+    id: '/find-prescriber',
+    path: '/find-prescriber',
+    getParentRoute: () => AuthenticatedHubRoute,
+  } as any)
+const AuthenticatedHubConnectionsRoute =
+  AuthenticatedHubConnectionsRouteImport.update({
+    id: '/connections',
+    path: '/connections',
+    getParentRoute: () => AuthenticatedHubRoute,
+  } as any)
+const AuthenticatedDashboardWaitlistRoute =
+  AuthenticatedDashboardWaitlistRouteImport.update({
+    id: '/waitlist',
+    path: '/waitlist',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const AuthenticatedDashboardAssociatesIdRoute =
-  AuthenticatedDashboardAssociatesIdRouteImport.update({
-    id: '/associates/$id',
-    path: '/associates/$id',
+const AuthenticatedDashboardUpcomingRoute =
+  AuthenticatedDashboardUpcomingRouteImport.update({
+    id: '/upcoming',
+    path: '/upcoming',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const AuthenticatedDashboardConsultationsIndexRoute =
-  AuthenticatedDashboardConsultationsIndexRouteImport.update({
-    id: '/consultations/',
-    path: '/consultations/',
+const AuthenticatedDashboardTreatmentsRoute =
+  AuthenticatedDashboardTreatmentsRouteImport.update({
+    id: '/treatments',
+    path: '/treatments',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const AuthenticatedDashboardConsultationsIdRoute =
-  AuthenticatedDashboardConsultationsIdRouteImport.update({
-    id: '/consultations/$id',
-    path: '/consultations/$id',
+const AuthenticatedDashboardTrainingRoute =
+  AuthenticatedDashboardTrainingRouteImport.update({
+    id: '/training',
+    path: '/training',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const AuthenticatedDashboardMarketingIndexRoute =
-  AuthenticatedDashboardMarketingIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
+const AuthenticatedDashboardStaffAnalyticsRoute =
+  AuthenticatedDashboardStaffAnalyticsRouteImport.update({
+    id: '/staff-analytics',
+    path: '/staff-analytics',
+    getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const AuthenticatedDashboardMarketingAnalyticsRoute =
-  AuthenticatedDashboardMarketingAnalyticsRouteImport.update({
+const AuthenticatedDashboardStaffRoute =
+  AuthenticatedDashboardStaffRouteImport.update({
+    id: '/staff',
+    path: '/staff',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardSettingsRoute =
+  AuthenticatedDashboardSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardServicesRoute =
+  AuthenticatedDashboardServicesRouteImport.update({
+    id: '/services',
+    path: '/services',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardRoomRentalRoute =
+  AuthenticatedDashboardRoomRentalRouteImport.update({
+    id: '/room-rental',
+    path: '/room-rental',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardRewardsRoute =
+  AuthenticatedDashboardRewardsRouteImport.update({
+    id: '/rewards',
+    path: '/rewards',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardReviewsRoute =
+  AuthenticatedDashboardReviewsRouteImport.update({
+    id: '/reviews',
+    path: '/reviews',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardReferralsRoute =
+  AuthenticatedDashboardReferralsRouteImport.update({
+    id: '/referrals',
+    path: '/referrals',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardProductsRoute =
+  AuthenticatedDashboardProductsRouteImport.update({
+    id: '/products',
+    path: '/products',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardPrivacyRoute =
+  AuthenticatedDashboardPrivacyRouteImport.update({
+    id: '/privacy',
+    path: '/privacy',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardPreTreatmentRoute =
+  AuthenticatedDashboardPreTreatmentRouteImport.update({
+    id: '/pre-treatment',
+    path: '/pre-treatment',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardPractitionersRoute =
+  AuthenticatedDashboardPractitionersRouteImport.update({
+    id: '/practitioners',
+    path: '/practitioners',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardPoliciesRoute =
+  AuthenticatedDashboardPoliciesRouteImport.update({
+    id: '/policies',
+    path: '/policies',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardPaymentsRoute =
+  AuthenticatedDashboardPaymentsRouteImport.update({
+    id: '/payments',
+    path: '/payments',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardPatientsRoute =
+  AuthenticatedDashboardPatientsRouteImport.update({
+    id: '/patients',
+    path: '/patients',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardPartnerReferralsRoute =
+  AuthenticatedDashboardPartnerReferralsRouteImport.update({
+    id: '/partner-referrals',
+    path: '/partner-referrals',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardPackagesRoute =
+  AuthenticatedDashboardPackagesRouteImport.update({
+    id: '/packages',
+    path: '/packages',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardNewAppointmentRoute =
+  AuthenticatedDashboardNewAppointmentRouteImport.update({
+    id: '/new-appointment',
+    path: '/new-appointment',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardModelSlotsRoute =
+  AuthenticatedDashboardModelSlotsRouteImport.update({
+    id: '/model-slots',
+    path: '/model-slots',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardMenuRoute =
+  AuthenticatedDashboardMenuRouteImport.update({
+    id: '/menu',
+    path: '/menu',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardMembershipsRoute =
+  AuthenticatedDashboardMembershipsRouteImport.update({
+    id: '/memberships',
+    path: '/memberships',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardMedicalFormsRoute =
+  AuthenticatedDashboardMedicalFormsRouteImport.update({
+    id: '/medical-forms',
+    path: '/medical-forms',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardMarketingRoute =
+  AuthenticatedDashboardMarketingRouteImport.update({
+    id: '/marketing',
+    path: '/marketing',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardLocationsRoute =
+  AuthenticatedDashboardLocationsRouteImport.update({
+    id: '/locations',
+    path: '/locations',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardInvoicesRoute =
+  AuthenticatedDashboardInvoicesRouteImport.update({
+    id: '/invoices',
+    path: '/invoices',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardIncomeReportRoute =
+  AuthenticatedDashboardIncomeReportRouteImport.update({
+    id: '/income-report',
+    path: '/income-report',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardIncomeRoute =
+  AuthenticatedDashboardIncomeRouteImport.update({
+    id: '/income',
+    path: '/income',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardHelpRoute =
+  AuthenticatedDashboardHelpRouteImport.update({
+    id: '/help',
+    path: '/help',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardGiftCardsRoute =
+  AuthenticatedDashboardGiftCardsRouteImport.update({
+    id: '/gift-cards',
+    path: '/gift-cards',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardFormAllocationRoute =
+  AuthenticatedDashboardFormAllocationRouteImport.update({
+    id: '/form-allocation',
+    path: '/form-allocation',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardFindPrescriberRoute =
+  AuthenticatedDashboardFindPrescriberRouteImport.update({
+    id: '/find-prescriber',
+    path: '/find-prescriber',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardExpensesRoute =
+  AuthenticatedDashboardExpensesRouteImport.update({
+    id: '/expenses',
+    path: '/expenses',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardEmailsRoute =
+  AuthenticatedDashboardEmailsRouteImport.update({
+    id: '/emails',
+    path: '/emails',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardDiscountsRoute =
+  AuthenticatedDashboardDiscountsRouteImport.update({
+    id: '/discounts',
+    path: '/discounts',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardDesignStudioRoute =
+  AuthenticatedDashboardDesignStudioRouteImport.update({
+    id: '/design-studio',
+    path: '/design-studio',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardConsentFormsRoute =
+  AuthenticatedDashboardConsentFormsRouteImport.update({
+    id: '/consent-forms',
+    path: '/consent-forms',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardComplianceRoute =
+  AuthenticatedDashboardComplianceRouteImport.update({
+    id: '/compliance',
+    path: '/compliance',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardCommissionReportRoute =
+  AuthenticatedDashboardCommissionReportRouteImport.update({
+    id: '/commission-report',
+    path: '/commission-report',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardComingSoonRoute =
+  AuthenticatedDashboardComingSoonRouteImport.update({
+    id: '/coming-soon',
+    path: '/coming-soon',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardClinicRoute =
+  AuthenticatedDashboardClinicRouteImport.update({
+    id: '/clinic',
+    path: '/clinic',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardCategoriesRoute =
+  AuthenticatedDashboardCategoriesRouteImport.update({
+    id: '/categories',
+    path: '/categories',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardBrandingRoute =
+  AuthenticatedDashboardBrandingRouteImport.update({
+    id: '/branding',
+    path: '/branding',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardBookingsRoute =
+  AuthenticatedDashboardBookingsRouteImport.update({
+    id: '/bookings',
+    path: '/bookings',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardBookingFlowRoute =
+  AuthenticatedDashboardBookingFlowRouteImport.update({
+    id: '/booking-flow',
+    path: '/booking-flow',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardBioRoute =
+  AuthenticatedDashboardBioRouteImport.update({
+    id: '/bio',
+    path: '/bio',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardBillingRoute =
+  AuthenticatedDashboardBillingRouteImport.update({
+    id: '/billing',
+    path: '/billing',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardAvailabilityRoute =
+  AuthenticatedDashboardAvailabilityRouteImport.update({
+    id: '/availability',
+    path: '/availability',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardAppearanceRoute =
+  AuthenticatedDashboardAppearanceRouteImport.update({
+    id: '/appearance',
+    path: '/appearance',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardAnalyticsRoute =
+  AuthenticatedDashboardAnalyticsRouteImport.update({
     id: '/analytics',
     path: '/analytics',
-    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
-  } as any)
-const AuthenticatedDashboardMarketingAutomationsRoute =
-  AuthenticatedDashboardMarketingAutomationsRouteImport.update({
-    id: '/automations',
-    path: '/automations',
-    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
-  } as any)
-const AuthenticatedDashboardMarketingSegmentsRoute =
-  AuthenticatedDashboardMarketingSegmentsRouteImport.update({
-    id: '/segments',
-    path: '/segments',
-    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
-  } as any)
-const AuthenticatedDashboardMarketingSmsRoute =
-  AuthenticatedDashboardMarketingSmsRouteImport.update({
-    id: '/sms',
-    path: '/sms',
-    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
-  } as any)
-const AuthenticatedDashboardMarketingTemplatesRoute =
-  AuthenticatedDashboardMarketingTemplatesRouteImport.update({
-    id: '/templates',
-    path: '/templates',
-    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
-  } as any)
-const AuthenticatedDashboardNotificationsIndexRoute =
-  AuthenticatedDashboardNotificationsIndexRouteImport.update({
-    id: '/notifications/',
-    path: '/notifications/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const AuthenticatedDashboardNotificationsEmailRoute =
-  AuthenticatedDashboardNotificationsEmailRouteImport.update({
-    id: '/notifications/email',
-    path: '/notifications/email',
+const AuthenticatedDashboardAiImportRoute =
+  AuthenticatedDashboardAiImportRouteImport.update({
+    id: '/ai-import',
+    path: '/ai-import',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const AuthenticatedDashboardNotificationsSmsRoute =
-  AuthenticatedDashboardNotificationsSmsRouteImport.update({
-    id: '/notifications/sms',
-    path: '/notifications/sms',
+const AuthenticatedDashboardAftercareRoute =
+  AuthenticatedDashboardAftercareRouteImport.update({
+    id: '/aftercare',
+    path: '/aftercare',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardAddonsRoute =
+  AuthenticatedDashboardAddonsRouteImport.update({
+    id: '/addons',
+    path: '/addons',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardAboutRoute =
+  AuthenticatedDashboardAboutRouteImport.update({
+    id: '/about',
+    path: '/about',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedAdminPractitionersRoute =
+  AuthenticatedAdminPractitionersRouteImport.update({
+    id: '/practitioners',
+    path: '/practitioners',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminInsightsRoute =
+  AuthenticatedAdminInsightsRouteImport.update({
+    id: '/insights',
+    path: '/insights',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminHealthRoute =
+  AuthenticatedAdminHealthRouteImport.update({
+    id: '/health',
+    path: '/health',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminHairBeautyRoute =
+  AuthenticatedAdminHairBeautyRouteImport.update({
+    id: '/hair-beauty',
+    path: '/hair-beauty',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminEmailsRoute =
+  AuthenticatedAdminEmailsRouteImport.update({
+    id: '/emails',
+    path: '/emails',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminCompetitionRoute =
+  AuthenticatedAdminCompetitionRouteImport.update({
+    id: '/competition',
+    path: '/competition',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const MSlugTrainingIndexRoute = MSlugTrainingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MSlugTrainingRoute,
+} as any)
+const MSlugBookIndexRoute = MSlugBookIndexRouteImport.update({
+  id: '/book/',
+  path: '/book/',
+  getParentRoute: () => MSlugRoute,
+} as any)
+const AuthenticatedDashboardTrainingIndexRoute =
+  AuthenticatedDashboardTrainingIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDashboardTrainingRoute,
+  } as any)
+const AuthenticatedDashboardRxRequestsIndexRoute =
+  AuthenticatedDashboardRxRequestsIndexRouteImport.update({
+    id: '/rx-requests/',
+    path: '/rx-requests/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 const AuthenticatedDashboardPatientsIndexRoute =
@@ -1077,160 +1009,55 @@ const AuthenticatedDashboardPatientsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDashboardPatientsRoute,
   } as any)
-const AuthenticatedDashboardPatientsIdRoute =
-  AuthenticatedDashboardPatientsIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedDashboardPatientsRoute,
-  } as any)
-const AuthenticatedDashboardRxRequestsIndexRoute =
-  AuthenticatedDashboardRxRequestsIndexRouteImport.update({
-    id: '/rx-requests/',
-    path: '/rx-requests/',
+const AuthenticatedDashboardNotificationsIndexRoute =
+  AuthenticatedDashboardNotificationsIndexRouteImport.update({
+    id: '/notifications/',
+    path: '/notifications/',
     getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const AuthenticatedDashboardRxRequestsNewRoute =
-  AuthenticatedDashboardRxRequestsNewRouteImport.update({
-    id: '/rx-requests/new',
-    path: '/rx-requests/new',
-    getParentRoute: () => AuthenticatedDashboardRoute,
-  } as any)
-const AuthenticatedDashboardTrainingIndexRoute =
-  AuthenticatedDashboardTrainingIndexRouteImport.update({
+const AuthenticatedDashboardMarketingIndexRoute =
+  AuthenticatedDashboardMarketingIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => AuthenticatedDashboardTrainingRoute,
+    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
   } as any)
-const AuthenticatedDashboardTrainingBookingsRoute =
-  AuthenticatedDashboardTrainingBookingsRouteImport.update({
-    id: '/bookings',
-    path: '/bookings',
-    getParentRoute: () => AuthenticatedDashboardTrainingRoute,
+const AuthenticatedDashboardConsultationsIndexRoute =
+  AuthenticatedDashboardConsultationsIndexRouteImport.update({
+    id: '/consultations/',
+    path: '/consultations/',
+    getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const AuthenticatedMobileBookingIdRoute =
-  AuthenticatedMobileBookingIdRouteImport.update({
-    id: '/booking/$id',
-    path: '/booking/$id',
-    getParentRoute: () => AuthenticatedMobileRoute,
+const AuthenticatedDashboardAssociatesIndexRoute =
+  AuthenticatedDashboardAssociatesIndexRouteImport.update({
+    id: '/associates/',
+    path: '/associates/',
+    getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
-const AuthenticatedPrescriberRequestsIdRoute =
-  AuthenticatedPrescriberRequestsIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedPrescriberRequestsRoute,
+const AuthenticatedAdminPractitionersIndexRoute =
+  AuthenticatedAdminPractitionersIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminPractitionersRoute,
   } as any)
-const ApiPublicBookingReleaseRoute = ApiPublicBookingReleaseRouteImport.update({
-  id: '/api/public/booking/release',
-  path: '/api/public/booking/release',
-  getParentRoute: () => rootRouteImport,
+const MSlugTrainingCourseIdRoute = MSlugTrainingCourseIdRouteImport.update({
+  id: '/$courseId',
+  path: '/$courseId',
+  getParentRoute: () => MSlugTrainingRoute,
 } as any)
-const ApiPublicHooksAftercareDispatchRoute =
-  ApiPublicHooksAftercareDispatchRouteImport.update({
-    id: '/api/public/hooks/aftercare-dispatch',
-    path: '/api/public/hooks/aftercare-dispatch',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksAppointmentRemindersRoute =
-  ApiPublicHooksAppointmentRemindersRouteImport.update({
-    id: '/api/public/hooks/appointment-reminders',
-    path: '/api/public/hooks/appointment-reminders',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksBillingReconcileRoute =
-  ApiPublicHooksBillingReconcileRouteImport.update({
-    id: '/api/public/hooks/billing-reconcile',
-    path: '/api/public/hooks/billing-reconcile',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksComplianceRemindersRoute =
-  ApiPublicHooksComplianceRemindersRouteImport.update({
-    id: '/api/public/hooks/compliance-reminders',
-    path: '/api/public/hooks/compliance-reminders',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksDailyScheduleDigestRoute =
-  ApiPublicHooksDailyScheduleDigestRouteImport.update({
-    id: '/api/public/hooks/daily-schedule-digest',
-    path: '/api/public/hooks/daily-schedule-digest',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksDemoResetRoute = ApiPublicHooksDemoResetRouteImport.update({
-  id: '/api/public/hooks/demo-reset',
-  path: '/api/public/hooks/demo-reset',
-  getParentRoute: () => rootRouteImport,
+const MSlugManageTokenRoute = MSlugManageTokenRouteImport.update({
+  id: '/manage/$token',
+  path: '/manage/$token',
+  getParentRoute: () => MSlugRoute,
 } as any)
-const ApiPublicHooksHealthDigestRoute =
-  ApiPublicHooksHealthDigestRouteImport.update({
-    id: '/api/public/hooks/health-digest',
-    path: '/api/public/hooks/health-digest',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksMarketingAutomationsRoute =
-  ApiPublicHooksMarketingAutomationsRouteImport.update({
-    id: '/api/public/hooks/marketing-automations',
-    path: '/api/public/hooks/marketing-automations',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksMarketingDispatchRoute =
-  ApiPublicHooksMarketingDispatchRouteImport.update({
-    id: '/api/public/hooks/marketing-dispatch',
-    path: '/api/public/hooks/marketing-dispatch',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksRebookRemindersRoute =
-  ApiPublicHooksRebookRemindersRouteImport.update({
-    id: '/api/public/hooks/rebook-reminders',
-    path: '/api/public/hooks/rebook-reminders',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksReviewEmailsRoute =
-  ApiPublicHooksReviewEmailsRouteImport.update({
-    id: '/api/public/hooks/review-emails',
-    path: '/api/public/hooks/review-emails',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicMedicalFormTokenRoute =
-  ApiPublicMedicalFormTokenRouteImport.update({
-    id: '/api/public/medical-form/$token',
-    path: '/api/public/medical-form/$token',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicPushDispatchRoute = ApiPublicPushDispatchRouteImport.update({
-  id: '/api/public/push/dispatch',
-  path: '/api/public/push/dispatch',
-  getParentRoute: () => rootRouteImport,
+const MSlugBookTreatmentIdRoute = MSlugBookTreatmentIdRouteImport.update({
+  id: '/book/$treatmentId',
+  path: '/book/$treatmentId',
+  getParentRoute: () => MSlugRoute,
 } as any)
-const ApiPublicStripeOauthCallbackRoute =
-  ApiPublicStripeOauthCallbackRouteImport.update({
-    id: '/api/public/stripe/oauth-callback',
-    path: '/api/public/stripe/oauth-callback',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
-  id: '/api/public/stripe/webhook',
-  path: '/api/public/stripe/webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicWhatsappWebhookRoute =
-  ApiPublicWhatsappWebhookRouteImport.update({
-    id: '/api/public/whatsapp/webhook',
-    path: '/api/public/whatsapp/webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
-  id: '/lovable/email/auth/preview',
-  path: '/lovable/email/auth/preview',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
-  id: '/lovable/email/auth/webhook',
-  path: '/lovable/email/auth/webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LovableEmailQueueProcessRoute =
-  LovableEmailQueueProcessRouteImport.update({
-    id: '/lovable/email/queue/process',
-    path: '/lovable/email/queue/process',
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
     getParentRoute: () => rootRouteImport,
   } as any)
 const LovableEmailTransactionalPreviewRoute =
@@ -1239,42 +1066,209 @@ const LovableEmailTransactionalPreviewRoute =
     path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
-const LovableEmailTransactionalSendRoute =
-  LovableEmailTransactionalSendRouteImport.update({
-    id: '/lovable/email/transactional/send',
-    path: '/lovable/email/transactional/send',
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
-const MSlugBookIndexRoute = MSlugBookIndexRouteImport.update({
-  id: '/book/',
-  path: '/book/',
-  getParentRoute: () => MSlugRoute,
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const MSlugBookTreatmentIdRoute = MSlugBookTreatmentIdRouteImport.update({
-  id: '/book/$treatmentId',
-  path: '/book/$treatmentId',
-  getParentRoute: () => MSlugRoute,
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const MSlugManageTokenRoute = MSlugManageTokenRouteImport.update({
-  id: '/manage/$token',
-  path: '/manage/$token',
-  getParentRoute: () => MSlugRoute,
+const ApiPublicWhatsappWebhookRoute =
+  ApiPublicWhatsappWebhookRouteImport.update({
+    id: '/api/public/whatsapp/webhook',
+    path: '/api/public/whatsapp/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe/webhook',
+  path: '/api/public/stripe/webhook',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const MSlugTrainingIndexRoute = MSlugTrainingIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => MSlugTrainingRoute,
+const ApiPublicStripeOauthCallbackRoute =
+  ApiPublicStripeOauthCallbackRouteImport.update({
+    id: '/api/public/stripe/oauth-callback',
+    path: '/api/public/stripe/oauth-callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPushDispatchRoute = ApiPublicPushDispatchRouteImport.update({
+  id: '/api/public/push/dispatch',
+  path: '/api/public/push/dispatch',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const MSlugTrainingCourseIdRoute = MSlugTrainingCourseIdRouteImport.update({
-  id: '/$courseId',
-  path: '/$courseId',
-  getParentRoute: () => MSlugTrainingRoute,
+const ApiPublicMedicalFormTokenRoute =
+  ApiPublicMedicalFormTokenRouteImport.update({
+    id: '/api/public/medical-form/$token',
+    path: '/api/public/medical-form/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksReviewEmailsRoute =
+  ApiPublicHooksReviewEmailsRouteImport.update({
+    id: '/api/public/hooks/review-emails',
+    path: '/api/public/hooks/review-emails',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksRebookRemindersRoute =
+  ApiPublicHooksRebookRemindersRouteImport.update({
+    id: '/api/public/hooks/rebook-reminders',
+    path: '/api/public/hooks/rebook-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksMarketingDispatchRoute =
+  ApiPublicHooksMarketingDispatchRouteImport.update({
+    id: '/api/public/hooks/marketing-dispatch',
+    path: '/api/public/hooks/marketing-dispatch',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksMarketingAutomationsRoute =
+  ApiPublicHooksMarketingAutomationsRouteImport.update({
+    id: '/api/public/hooks/marketing-automations',
+    path: '/api/public/hooks/marketing-automations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksHealthDigestRoute =
+  ApiPublicHooksHealthDigestRouteImport.update({
+    id: '/api/public/hooks/health-digest',
+    path: '/api/public/hooks/health-digest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksDemoResetRoute = ApiPublicHooksDemoResetRouteImport.update({
+  id: '/api/public/hooks/demo-reset',
+  path: '/api/public/hooks/demo-reset',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedDashboardMarketingCampaignsIdRoute =
-  AuthenticatedDashboardMarketingCampaignsIdRouteImport.update({
-    id: '/campaigns/$id',
-    path: '/campaigns/$id',
+const ApiPublicHooksDailyScheduleDigestRoute =
+  ApiPublicHooksDailyScheduleDigestRouteImport.update({
+    id: '/api/public/hooks/daily-schedule-digest',
+    path: '/api/public/hooks/daily-schedule-digest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksComplianceRemindersRoute =
+  ApiPublicHooksComplianceRemindersRouteImport.update({
+    id: '/api/public/hooks/compliance-reminders',
+    path: '/api/public/hooks/compliance-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksBillingReconcileRoute =
+  ApiPublicHooksBillingReconcileRouteImport.update({
+    id: '/api/public/hooks/billing-reconcile',
+    path: '/api/public/hooks/billing-reconcile',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksAppointmentRemindersRoute =
+  ApiPublicHooksAppointmentRemindersRouteImport.update({
+    id: '/api/public/hooks/appointment-reminders',
+    path: '/api/public/hooks/appointment-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksAftercareDispatchRoute =
+  ApiPublicHooksAftercareDispatchRouteImport.update({
+    id: '/api/public/hooks/aftercare-dispatch',
+    path: '/api/public/hooks/aftercare-dispatch',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicBookingReleaseRoute = ApiPublicBookingReleaseRouteImport.update({
+  id: '/api/public/booking/release',
+  path: '/api/public/booking/release',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedPrescriberRequestsIdRoute =
+  AuthenticatedPrescriberRequestsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedPrescriberRequestsRoute,
+  } as any)
+const AuthenticatedMobileBookingIdRoute =
+  AuthenticatedMobileBookingIdRouteImport.update({
+    id: '/booking/$id',
+    path: '/booking/$id',
+    getParentRoute: () => AuthenticatedMobileRoute,
+  } as any)
+const AuthenticatedDashboardTrainingBookingsRoute =
+  AuthenticatedDashboardTrainingBookingsRouteImport.update({
+    id: '/bookings',
+    path: '/bookings',
+    getParentRoute: () => AuthenticatedDashboardTrainingRoute,
+  } as any)
+const AuthenticatedDashboardRxRequestsNewRoute =
+  AuthenticatedDashboardRxRequestsNewRouteImport.update({
+    id: '/rx-requests/new',
+    path: '/rx-requests/new',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardPatientsIdRoute =
+  AuthenticatedDashboardPatientsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedDashboardPatientsRoute,
+  } as any)
+const AuthenticatedDashboardNotificationsSmsRoute =
+  AuthenticatedDashboardNotificationsSmsRouteImport.update({
+    id: '/notifications/sms',
+    path: '/notifications/sms',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardNotificationsEmailRoute =
+  AuthenticatedDashboardNotificationsEmailRouteImport.update({
+    id: '/notifications/email',
+    path: '/notifications/email',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardMarketingTemplatesRoute =
+  AuthenticatedDashboardMarketingTemplatesRouteImport.update({
+    id: '/templates',
+    path: '/templates',
     getParentRoute: () => AuthenticatedDashboardMarketingRoute,
+  } as any)
+const AuthenticatedDashboardMarketingSmsRoute =
+  AuthenticatedDashboardMarketingSmsRouteImport.update({
+    id: '/sms',
+    path: '/sms',
+    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
+  } as any)
+const AuthenticatedDashboardMarketingSegmentsRoute =
+  AuthenticatedDashboardMarketingSegmentsRouteImport.update({
+    id: '/segments',
+    path: '/segments',
+    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
+  } as any)
+const AuthenticatedDashboardMarketingAutomationsRoute =
+  AuthenticatedDashboardMarketingAutomationsRouteImport.update({
+    id: '/automations',
+    path: '/automations',
+    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
+  } as any)
+const AuthenticatedDashboardMarketingAnalyticsRoute =
+  AuthenticatedDashboardMarketingAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
+  } as any)
+const AuthenticatedDashboardConsultationsIdRoute =
+  AuthenticatedDashboardConsultationsIdRouteImport.update({
+    id: '/consultations/$id',
+    path: '/consultations/$id',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedDashboardAssociatesIdRoute =
+  AuthenticatedDashboardAssociatesIdRouteImport.update({
+    id: '/associates/$id',
+    path: '/associates/$id',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+const AuthenticatedAdminPractitionersIdRoute =
+  AuthenticatedAdminPractitionersIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminPractitionersRoute,
   } as any)
 const AuthenticatedDashboardPatientsIdIndexRoute =
   AuthenticatedDashboardPatientsIdIndexRouteImport.update({
@@ -1282,22 +1276,10 @@ const AuthenticatedDashboardPatientsIdIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedDashboardPatientsIdRoute,
   } as any)
-const AuthenticatedDashboardPatientsIdDetailsRoute =
-  AuthenticatedDashboardPatientsIdDetailsRouteImport.update({
-    id: '/details',
-    path: '/details',
-    getParentRoute: () => AuthenticatedDashboardPatientsIdRoute,
-  } as any)
-const AuthenticatedDashboardPatientsIdInvoicesRoute =
-  AuthenticatedDashboardPatientsIdInvoicesRouteImport.update({
-    id: '/invoices',
-    path: '/invoices',
-    getParentRoute: () => AuthenticatedDashboardPatientsIdRoute,
-  } as any)
-const AuthenticatedDashboardPatientsIdMedicationsRoute =
-  AuthenticatedDashboardPatientsIdMedicationsRouteImport.update({
-    id: '/medications',
-    path: '/medications',
+const AuthenticatedDashboardPatientsIdTimelineRoute =
+  AuthenticatedDashboardPatientsIdTimelineRouteImport.update({
+    id: '/timeline',
+    path: '/timeline',
     getParentRoute: () => AuthenticatedDashboardPatientsIdRoute,
   } as any)
 const AuthenticatedDashboardPatientsIdPhotosRoute =
@@ -1306,11 +1288,29 @@ const AuthenticatedDashboardPatientsIdPhotosRoute =
     path: '/photos',
     getParentRoute: () => AuthenticatedDashboardPatientsIdRoute,
   } as any)
-const AuthenticatedDashboardPatientsIdTimelineRoute =
-  AuthenticatedDashboardPatientsIdTimelineRouteImport.update({
-    id: '/timeline',
-    path: '/timeline',
+const AuthenticatedDashboardPatientsIdMedicationsRoute =
+  AuthenticatedDashboardPatientsIdMedicationsRouteImport.update({
+    id: '/medications',
+    path: '/medications',
     getParentRoute: () => AuthenticatedDashboardPatientsIdRoute,
+  } as any)
+const AuthenticatedDashboardPatientsIdInvoicesRoute =
+  AuthenticatedDashboardPatientsIdInvoicesRouteImport.update({
+    id: '/invoices',
+    path: '/invoices',
+    getParentRoute: () => AuthenticatedDashboardPatientsIdRoute,
+  } as any)
+const AuthenticatedDashboardPatientsIdDetailsRoute =
+  AuthenticatedDashboardPatientsIdDetailsRouteImport.update({
+    id: '/details',
+    path: '/details',
+    getParentRoute: () => AuthenticatedDashboardPatientsIdRoute,
+  } as any)
+const AuthenticatedDashboardMarketingCampaignsIdRoute =
+  AuthenticatedDashboardMarketingCampaignsIdRouteImport.update({
+    id: '/campaigns/$id',
+    path: '/campaigns/$id',
+    getParentRoute: () => AuthenticatedDashboardMarketingRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -2533,116 +2533,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/demo': {
-      id: '/demo'
-      path: '/demo'
-      fullPath: '/demo'
-      preLoaderRoute: typeof DemoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/faq': {
-      id: '/faq'
-      path: '/faq'
-      fullPath: '/faq'
-      preLoaderRoute: typeof FaqRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/features': {
-      id: '/features'
-      path: '/features'
-      fullPath: '/features'
-      preLoaderRoute: typeof FeaturesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hair-beauty-waitlist': {
-      id: '/hair-beauty-waitlist'
-      path: '/hair-beauty-waitlist'
-      fullPath: '/hair-beauty-waitlist'
-      preLoaderRoute: typeof HairBeautyWaitlistRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/prescriber-hub': {
-      id: '/prescriber-hub'
-      path: '/prescriber-hub'
-      fullPath: '/prescriber-hub'
-      preLoaderRoute: typeof PrescriberHubRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rewards': {
-      id: '/rewards'
-      path: '/rewards'
-      fullPath: '/rewards'
-      preLoaderRoute: typeof RewardsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tla-competition': {
-      id: '/tla-competition'
-      path: '/tla-competition'
-      fullPath: '/tla-competition'
-      preLoaderRoute: typeof TlaCompetitionRouteImport
+    '/waitlist': {
+      id: '/waitlist'
+      path: '/waitlist'
+      fullPath: '/waitlist'
+      preLoaderRoute: typeof WaitlistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/unsubscribe': {
@@ -2652,165 +2547,116 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/waitlist': {
-      id: '/waitlist'
-      path: '/waitlist'
-      fullPath: '/waitlist'
-      preLoaderRoute: typeof WaitlistRouteImport
+    '/tla-competition': {
+      id: '/tla-competition'
+      path: '/tla-competition'
+      fullPath: '/tla-competition'
+      preLoaderRoute: typeof TlaCompetitionRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/admin-prescribers': {
-      id: '/_authenticated/admin-prescribers'
-      path: '/admin-prescribers'
-      fullPath: '/admin-prescribers'
-      preLoaderRoute: typeof AuthenticatedAdminPrescribersRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/hub': {
-      id: '/_authenticated/hub'
-      path: '/hub'
-      fullPath: '/hub'
-      preLoaderRoute: typeof AuthenticatedHubRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/mobile': {
-      id: '/_authenticated/mobile'
-      path: '/mobile'
-      fullPath: '/mobile'
-      preLoaderRoute: typeof AuthenticatedMobileRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/onboarding': {
-      id: '/_authenticated/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/prescriber': {
-      id: '/_authenticated/prescriber'
-      path: '/prescriber'
-      fullPath: '/prescriber'
-      preLoaderRoute: typeof AuthenticatedPrescriberRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/book/$slug': {
-      id: '/book/$slug'
-      path: '/book/$slug'
-      fullPath: '/book/$slug'
-      preLoaderRoute: typeof BookSlugRouteImport
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/c/$token': {
-      id: '/c/$token'
-      path: '/c/$token'
-      fullPath: '/c/$token'
-      preLoaderRoute: typeof CTokenRouteImport
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/email/unsubscribe': {
-      id: '/email/unsubscribe'
-      path: '/email/unsubscribe'
-      fullPath: '/email/unsubscribe'
-      preLoaderRoute: typeof EmailUnsubscribeRouteImport
+    '/rewards': {
+      id: '/rewards'
+      path: '/rewards'
+      fullPath: '/rewards'
+      preLoaderRoute: typeof RewardsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/f/$token': {
-      id: '/f/$token'
-      path: '/f/$token'
-      fullPath: '/f/$token'
-      preLoaderRoute: typeof FTokenRouteImport
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/m/$slug': {
-      id: '/m/$slug'
-      path: '/m/$slug'
-      fullPath: '/m/$slug'
-      preLoaderRoute: typeof MSlugRouteImport
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/mobile/login': {
-      id: '/mobile/login'
-      path: '/mobile/login'
-      fullPath: '/mobile/login'
-      preLoaderRoute: typeof MobileLoginRouteImport
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/plan/$token': {
-      id: '/plan/$token'
-      path: '/plan/$token'
-      fullPath: '/plan/$token'
-      preLoaderRoute: typeof PlanTokenRouteImport
+    '/prescriber-hub': {
+      id: '/prescriber-hub'
+      path: '/prescriber-hub'
+      fullPath: '/prescriber-hub'
+      preLoaderRoute: typeof PrescriberHubRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/privacy/acceptable-use': {
-      id: '/privacy/acceptable-use'
-      path: '/acceptable-use'
-      fullPath: '/privacy/acceptable-use'
-      preLoaderRoute: typeof PrivacyAcceptableUseRouteImport
-      parentRoute: typeof PrivacyRoute
+    '/hair-beauty-waitlist': {
+      id: '/hair-beauty-waitlist'
+      path: '/hair-beauty-waitlist'
+      fullPath: '/hair-beauty-waitlist'
+      preLoaderRoute: typeof HairBeautyWaitlistRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/privacy/breach-response': {
-      id: '/privacy/breach-response'
-      path: '/breach-response'
-      fullPath: '/privacy/breach-response'
-      preLoaderRoute: typeof PrivacyBreachResponseRouteImport
-      parentRoute: typeof PrivacyRoute
+    '/features': {
+      id: '/features'
+      path: '/features'
+      fullPath: '/features'
+      preLoaderRoute: typeof FeaturesRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/privacy/complaints': {
-      id: '/privacy/complaints'
-      path: '/complaints'
-      fullPath: '/privacy/complaints'
-      preLoaderRoute: typeof PrivacyComplaintsRouteImport
-      parentRoute: typeof PrivacyRoute
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/privacy/cookies': {
-      id: '/privacy/cookies'
-      path: '/cookies'
-      fullPath: '/privacy/cookies'
-      preLoaderRoute: typeof PrivacyCookiesRouteImport
-      parentRoute: typeof PrivacyRoute
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/privacy/dpa': {
-      id: '/privacy/dpa'
-      path: '/dpa'
-      fullPath: '/privacy/dpa'
-      preLoaderRoute: typeof PrivacyDpaRouteImport
-      parentRoute: typeof PrivacyRoute
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/privacy/dpia': {
-      id: '/privacy/dpia'
-      path: '/dpia'
-      fullPath: '/privacy/dpia'
-      preLoaderRoute: typeof PrivacyDpiaRouteImport
-      parentRoute: typeof PrivacyRoute
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/privacy/retention': {
-      id: '/privacy/retention'
-      path: '/retention'
-      fullPath: '/privacy/retention'
-      preLoaderRoute: typeof PrivacyRetentionRouteImport
-      parentRoute: typeof PrivacyRoute
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/r/$code': {
-      id: '/r/$code'
-      path: '/r/$code'
-      fullPath: '/r/$code'
-      preLoaderRoute: typeof RCodeRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/staff-accept/$token': {
@@ -2820,607 +2666,159 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StaffAcceptTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/admin/': {
-      id: '/_authenticated/admin/'
-      path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/audit': {
-      id: '/_authenticated/admin/audit'
-      path: '/audit'
-      fullPath: '/admin/audit'
-      preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/competition': {
-      id: '/_authenticated/admin/competition'
-      path: '/competition'
-      fullPath: '/admin/competition'
-      preLoaderRoute: typeof AuthenticatedAdminCompetitionRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/emails': {
-      id: '/_authenticated/admin/emails'
-      path: '/emails'
-      fullPath: '/admin/emails'
-      preLoaderRoute: typeof AuthenticatedAdminEmailsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/hair-beauty': {
-      id: '/_authenticated/admin/hair-beauty'
-      path: '/hair-beauty'
-      fullPath: '/admin/hair-beauty'
-      preLoaderRoute: typeof AuthenticatedAdminHairBeautyRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/health': {
-      id: '/_authenticated/admin/health'
-      path: '/health'
-      fullPath: '/admin/health'
-      preLoaderRoute: typeof AuthenticatedAdminHealthRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/insights': {
-      id: '/_authenticated/admin/insights'
-      path: '/insights'
-      fullPath: '/admin/insights'
-      preLoaderRoute: typeof AuthenticatedAdminInsightsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/practitioners': {
-      id: '/_authenticated/admin/practitioners'
-      path: '/practitioners'
-      fullPath: '/admin/practitioners'
-      preLoaderRoute: typeof AuthenticatedAdminPractitionersRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/dashboard/': {
-      id: '/_authenticated/dashboard/'
-      path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/about': {
-      id: '/_authenticated/dashboard/about'
-      path: '/about'
-      fullPath: '/dashboard/about'
-      preLoaderRoute: typeof AuthenticatedDashboardAboutRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/addons': {
-      id: '/_authenticated/dashboard/addons'
-      path: '/addons'
-      fullPath: '/dashboard/addons'
-      preLoaderRoute: typeof AuthenticatedDashboardAddonsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/aftercare': {
-      id: '/_authenticated/dashboard/aftercare'
-      path: '/aftercare'
-      fullPath: '/dashboard/aftercare'
-      preLoaderRoute: typeof AuthenticatedDashboardAftercareRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/ai-import': {
-      id: '/_authenticated/dashboard/ai-import'
-      path: '/ai-import'
-      fullPath: '/dashboard/ai-import'
-      preLoaderRoute: typeof AuthenticatedDashboardAiImportRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/analytics': {
-      id: '/_authenticated/dashboard/analytics'
-      path: '/analytics'
-      fullPath: '/dashboard/analytics'
-      preLoaderRoute: typeof AuthenticatedDashboardAnalyticsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/appearance': {
-      id: '/_authenticated/dashboard/appearance'
-      path: '/appearance'
-      fullPath: '/dashboard/appearance'
-      preLoaderRoute: typeof AuthenticatedDashboardAppearanceRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/availability': {
-      id: '/_authenticated/dashboard/availability'
-      path: '/availability'
-      fullPath: '/dashboard/availability'
-      preLoaderRoute: typeof AuthenticatedDashboardAvailabilityRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/billing': {
-      id: '/_authenticated/dashboard/billing'
-      path: '/billing'
-      fullPath: '/dashboard/billing'
-      preLoaderRoute: typeof AuthenticatedDashboardBillingRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/bio': {
-      id: '/_authenticated/dashboard/bio'
-      path: '/bio'
-      fullPath: '/dashboard/bio'
-      preLoaderRoute: typeof AuthenticatedDashboardBioRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/booking-flow': {
-      id: '/_authenticated/dashboard/booking-flow'
-      path: '/booking-flow'
-      fullPath: '/dashboard/booking-flow'
-      preLoaderRoute: typeof AuthenticatedDashboardBookingFlowRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/bookings': {
-      id: '/_authenticated/dashboard/bookings'
-      path: '/bookings'
-      fullPath: '/dashboard/bookings'
-      preLoaderRoute: typeof AuthenticatedDashboardBookingsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/branding': {
-      id: '/_authenticated/dashboard/branding'
-      path: '/branding'
-      fullPath: '/dashboard/branding'
-      preLoaderRoute: typeof AuthenticatedDashboardBrandingRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/categories': {
-      id: '/_authenticated/dashboard/categories'
-      path: '/categories'
-      fullPath: '/dashboard/categories'
-      preLoaderRoute: typeof AuthenticatedDashboardCategoriesRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/clinic': {
-      id: '/_authenticated/dashboard/clinic'
-      path: '/clinic'
-      fullPath: '/dashboard/clinic'
-      preLoaderRoute: typeof AuthenticatedDashboardClinicRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/coming-soon': {
-      id: '/_authenticated/dashboard/coming-soon'
-      path: '/coming-soon'
-      fullPath: '/dashboard/coming-soon'
-      preLoaderRoute: typeof AuthenticatedDashboardComingSoonRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/commission-report': {
-      id: '/_authenticated/dashboard/commission-report'
-      path: '/commission-report'
-      fullPath: '/dashboard/commission-report'
-      preLoaderRoute: typeof AuthenticatedDashboardCommissionReportRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/compliance': {
-      id: '/_authenticated/dashboard/compliance'
-      path: '/compliance'
-      fullPath: '/dashboard/compliance'
-      preLoaderRoute: typeof AuthenticatedDashboardComplianceRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/consent-forms': {
-      id: '/_authenticated/dashboard/consent-forms'
-      path: '/consent-forms'
-      fullPath: '/dashboard/consent-forms'
-      preLoaderRoute: typeof AuthenticatedDashboardConsentFormsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/design-studio': {
-      id: '/_authenticated/dashboard/design-studio'
-      path: '/design-studio'
-      fullPath: '/dashboard/design-studio'
-      preLoaderRoute: typeof AuthenticatedDashboardDesignStudioRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/discounts': {
-      id: '/_authenticated/dashboard/discounts'
-      path: '/discounts'
-      fullPath: '/dashboard/discounts'
-      preLoaderRoute: typeof AuthenticatedDashboardDiscountsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/emails': {
-      id: '/_authenticated/dashboard/emails'
-      path: '/emails'
-      fullPath: '/dashboard/emails'
-      preLoaderRoute: typeof AuthenticatedDashboardEmailsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/expenses': {
-      id: '/_authenticated/dashboard/expenses'
-      path: '/expenses'
-      fullPath: '/dashboard/expenses'
-      preLoaderRoute: typeof AuthenticatedDashboardExpensesRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/find-prescriber': {
-      id: '/_authenticated/dashboard/find-prescriber'
-      path: '/find-prescriber'
-      fullPath: '/dashboard/find-prescriber'
-      preLoaderRoute: typeof AuthenticatedDashboardFindPrescriberRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/form-allocation': {
-      id: '/_authenticated/dashboard/form-allocation'
-      path: '/form-allocation'
-      fullPath: '/dashboard/form-allocation'
-      preLoaderRoute: typeof AuthenticatedDashboardFormAllocationRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/gift-cards': {
-      id: '/_authenticated/dashboard/gift-cards'
-      path: '/gift-cards'
-      fullPath: '/dashboard/gift-cards'
-      preLoaderRoute: typeof AuthenticatedDashboardGiftCardsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/help': {
-      id: '/_authenticated/dashboard/help'
-      path: '/help'
-      fullPath: '/dashboard/help'
-      preLoaderRoute: typeof AuthenticatedDashboardHelpRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/income': {
-      id: '/_authenticated/dashboard/income'
-      path: '/income'
-      fullPath: '/dashboard/income'
-      preLoaderRoute: typeof AuthenticatedDashboardIncomeRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/income-report': {
-      id: '/_authenticated/dashboard/income-report'
-      path: '/income-report'
-      fullPath: '/dashboard/income-report'
-      preLoaderRoute: typeof AuthenticatedDashboardIncomeReportRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/invoices': {
-      id: '/_authenticated/dashboard/invoices'
-      path: '/invoices'
-      fullPath: '/dashboard/invoices'
-      preLoaderRoute: typeof AuthenticatedDashboardInvoicesRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/locations': {
-      id: '/_authenticated/dashboard/locations'
-      path: '/locations'
-      fullPath: '/dashboard/locations'
-      preLoaderRoute: typeof AuthenticatedDashboardLocationsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/marketing': {
-      id: '/_authenticated/dashboard/marketing'
-      path: '/marketing'
-      fullPath: '/dashboard/marketing'
-      preLoaderRoute: typeof AuthenticatedDashboardMarketingRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/medical-forms': {
-      id: '/_authenticated/dashboard/medical-forms'
-      path: '/medical-forms'
-      fullPath: '/dashboard/medical-forms'
-      preLoaderRoute: typeof AuthenticatedDashboardMedicalFormsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/memberships': {
-      id: '/_authenticated/dashboard/memberships'
-      path: '/memberships'
-      fullPath: '/dashboard/memberships'
-      preLoaderRoute: typeof AuthenticatedDashboardMembershipsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/menu': {
-      id: '/_authenticated/dashboard/menu'
-      path: '/menu'
-      fullPath: '/dashboard/menu'
-      preLoaderRoute: typeof AuthenticatedDashboardMenuRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/model-slots': {
-      id: '/_authenticated/dashboard/model-slots'
-      path: '/model-slots'
-      fullPath: '/dashboard/model-slots'
-      preLoaderRoute: typeof AuthenticatedDashboardModelSlotsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/new-appointment': {
-      id: '/_authenticated/dashboard/new-appointment'
-      path: '/new-appointment'
-      fullPath: '/dashboard/new-appointment'
-      preLoaderRoute: typeof AuthenticatedDashboardNewAppointmentRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/packages': {
-      id: '/_authenticated/dashboard/packages'
-      path: '/packages'
-      fullPath: '/dashboard/packages'
-      preLoaderRoute: typeof AuthenticatedDashboardPackagesRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/partner-referrals': {
-      id: '/_authenticated/dashboard/partner-referrals'
-      path: '/partner-referrals'
-      fullPath: '/dashboard/partner-referrals'
-      preLoaderRoute: typeof AuthenticatedDashboardPartnerReferralsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/patients': {
-      id: '/_authenticated/dashboard/patients'
-      path: '/patients'
-      fullPath: '/dashboard/patients'
-      preLoaderRoute: typeof AuthenticatedDashboardPatientsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/payments': {
-      id: '/_authenticated/dashboard/payments'
-      path: '/payments'
-      fullPath: '/dashboard/payments'
-      preLoaderRoute: typeof AuthenticatedDashboardPaymentsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/policies': {
-      id: '/_authenticated/dashboard/policies'
-      path: '/policies'
-      fullPath: '/dashboard/policies'
-      preLoaderRoute: typeof AuthenticatedDashboardPoliciesRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/practitioners': {
-      id: '/_authenticated/dashboard/practitioners'
-      path: '/practitioners'
-      fullPath: '/dashboard/practitioners'
-      preLoaderRoute: typeof AuthenticatedDashboardPractitionersRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/pre-treatment': {
-      id: '/_authenticated/dashboard/pre-treatment'
-      path: '/pre-treatment'
-      fullPath: '/dashboard/pre-treatment'
-      preLoaderRoute: typeof AuthenticatedDashboardPreTreatmentRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/privacy': {
-      id: '/_authenticated/dashboard/privacy'
-      path: '/privacy'
-      fullPath: '/dashboard/privacy'
-      preLoaderRoute: typeof AuthenticatedDashboardPrivacyRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/products': {
-      id: '/_authenticated/dashboard/products'
-      path: '/products'
-      fullPath: '/dashboard/products'
-      preLoaderRoute: typeof AuthenticatedDashboardProductsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/referrals': {
-      id: '/_authenticated/dashboard/referrals'
-      path: '/referrals'
-      fullPath: '/dashboard/referrals'
-      preLoaderRoute: typeof AuthenticatedDashboardReferralsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/reviews': {
-      id: '/_authenticated/dashboard/reviews'
-      path: '/reviews'
-      fullPath: '/dashboard/reviews'
-      preLoaderRoute: typeof AuthenticatedDashboardReviewsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/rewards': {
-      id: '/_authenticated/dashboard/rewards'
-      path: '/rewards'
-      fullPath: '/dashboard/rewards'
-      preLoaderRoute: typeof AuthenticatedDashboardRewardsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/room-rental': {
-      id: '/_authenticated/dashboard/room-rental'
-      path: '/room-rental'
-      fullPath: '/dashboard/room-rental'
-      preLoaderRoute: typeof AuthenticatedDashboardRoomRentalRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/services': {
-      id: '/_authenticated/dashboard/services'
-      path: '/services'
-      fullPath: '/dashboard/services'
-      preLoaderRoute: typeof AuthenticatedDashboardServicesRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/settings': {
-      id: '/_authenticated/dashboard/settings'
-      path: '/settings'
-      fullPath: '/dashboard/settings'
-      preLoaderRoute: typeof AuthenticatedDashboardSettingsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/staff': {
-      id: '/_authenticated/dashboard/staff'
-      path: '/staff'
-      fullPath: '/dashboard/staff'
-      preLoaderRoute: typeof AuthenticatedDashboardStaffRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/staff-analytics': {
-      id: '/_authenticated/dashboard/staff-analytics'
-      path: '/staff-analytics'
-      fullPath: '/dashboard/staff-analytics'
-      preLoaderRoute: typeof AuthenticatedDashboardStaffAnalyticsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/training': {
-      id: '/_authenticated/dashboard/training'
-      path: '/training'
-      fullPath: '/dashboard/training'
-      preLoaderRoute: typeof AuthenticatedDashboardTrainingRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/treatments': {
-      id: '/_authenticated/dashboard/treatments'
-      path: '/treatments'
-      fullPath: '/dashboard/treatments'
-      preLoaderRoute: typeof AuthenticatedDashboardTreatmentsRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/upcoming': {
-      id: '/_authenticated/dashboard/upcoming'
-      path: '/upcoming'
-      fullPath: '/dashboard/upcoming'
-      preLoaderRoute: typeof AuthenticatedDashboardUpcomingRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/waitlist': {
-      id: '/_authenticated/dashboard/waitlist'
-      path: '/waitlist'
-      fullPath: '/dashboard/waitlist'
-      preLoaderRoute: typeof AuthenticatedDashboardWaitlistRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/hub/': {
-      id: '/_authenticated/hub/'
-      path: '/'
-      fullPath: '/hub/'
-      preLoaderRoute: typeof AuthenticatedHubIndexRouteImport
-      parentRoute: typeof AuthenticatedHubRoute
-    }
-    '/_authenticated/hub/connections': {
-      id: '/_authenticated/hub/connections'
-      path: '/connections'
-      fullPath: '/hub/connections'
-      preLoaderRoute: typeof AuthenticatedHubConnectionsRouteImport
-      parentRoute: typeof AuthenticatedHubRoute
-    }
-    '/_authenticated/hub/find-prescriber': {
-      id: '/_authenticated/hub/find-prescriber'
-      path: '/find-prescriber'
-      fullPath: '/hub/find-prescriber'
-      preLoaderRoute: typeof AuthenticatedHubFindPrescriberRouteImport
-      parentRoute: typeof AuthenticatedHubRoute
-    }
-    '/_authenticated/hub/prescribing': {
-      id: '/_authenticated/hub/prescribing'
-      path: '/prescribing'
-      fullPath: '/hub/prescribing'
-      preLoaderRoute: typeof AuthenticatedHubPrescribingRouteImport
-      parentRoute: typeof AuthenticatedHubRoute
-    }
-    '/_authenticated/hub/referrals': {
-      id: '/_authenticated/hub/referrals'
-      path: '/referrals'
-      fullPath: '/hub/referrals'
-      preLoaderRoute: typeof AuthenticatedHubReferralsRouteImport
-      parentRoute: typeof AuthenticatedHubRoute
-    }
-    '/_authenticated/hub/verification': {
-      id: '/_authenticated/hub/verification'
-      path: '/verification'
-      fullPath: '/hub/verification'
-      preLoaderRoute: typeof AuthenticatedHubVerificationRouteImport
-      parentRoute: typeof AuthenticatedHubRoute
-    }
-    '/_authenticated/hub/visits': {
-      id: '/_authenticated/hub/visits'
-      path: '/visits'
-      fullPath: '/hub/visits'
-      preLoaderRoute: typeof AuthenticatedHubVisitsRouteImport
-      parentRoute: typeof AuthenticatedHubRoute
-    }
-    '/_authenticated/mobile/': {
-      id: '/_authenticated/mobile/'
-      path: '/'
-      fullPath: '/mobile/'
-      preLoaderRoute: typeof AuthenticatedMobileIndexRouteImport
-      parentRoute: typeof AuthenticatedMobileRoute
-    }
-    '/_authenticated/mobile/clients': {
-      id: '/_authenticated/mobile/clients'
-      path: '/clients'
-      fullPath: '/mobile/clients'
-      preLoaderRoute: typeof AuthenticatedMobileClientsRouteImport
-      parentRoute: typeof AuthenticatedMobileRoute
-    }
-    '/_authenticated/prescriber/': {
-      id: '/_authenticated/prescriber/'
-      path: '/'
-      fullPath: '/prescriber/'
-      preLoaderRoute: typeof AuthenticatedPrescriberIndexRouteImport
-      parentRoute: typeof AuthenticatedPrescriberRoute
-    }
-    '/_authenticated/prescriber/connections': {
-      id: '/_authenticated/prescriber/connections'
-      path: '/connections'
-      fullPath: '/prescriber/connections'
-      preLoaderRoute: typeof AuthenticatedPrescriberConnectionsRouteImport
-      parentRoute: typeof AuthenticatedPrescriberRoute
-    }
-    '/_authenticated/prescriber/dashboard': {
-      id: '/_authenticated/prescriber/dashboard'
+    '/r/$code': {
+      id: '/r/$code'
+      path: '/r/$code'
+      fullPath: '/r/$code'
+      preLoaderRoute: typeof RCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy/retention': {
+      id: '/privacy/retention'
+      path: '/retention'
+      fullPath: '/privacy/retention'
+      preLoaderRoute: typeof PrivacyRetentionRouteImport
+      parentRoute: typeof PrivacyRoute
+    }
+    '/privacy/dpia': {
+      id: '/privacy/dpia'
+      path: '/dpia'
+      fullPath: '/privacy/dpia'
+      preLoaderRoute: typeof PrivacyDpiaRouteImport
+      parentRoute: typeof PrivacyRoute
+    }
+    '/privacy/dpa': {
+      id: '/privacy/dpa'
+      path: '/dpa'
+      fullPath: '/privacy/dpa'
+      preLoaderRoute: typeof PrivacyDpaRouteImport
+      parentRoute: typeof PrivacyRoute
+    }
+    '/privacy/cookies': {
+      id: '/privacy/cookies'
+      path: '/cookies'
+      fullPath: '/privacy/cookies'
+      preLoaderRoute: typeof PrivacyCookiesRouteImport
+      parentRoute: typeof PrivacyRoute
+    }
+    '/privacy/complaints': {
+      id: '/privacy/complaints'
+      path: '/complaints'
+      fullPath: '/privacy/complaints'
+      preLoaderRoute: typeof PrivacyComplaintsRouteImport
+      parentRoute: typeof PrivacyRoute
+    }
+    '/privacy/breach-response': {
+      id: '/privacy/breach-response'
+      path: '/breach-response'
+      fullPath: '/privacy/breach-response'
+      preLoaderRoute: typeof PrivacyBreachResponseRouteImport
+      parentRoute: typeof PrivacyRoute
+    }
+    '/privacy/acceptable-use': {
+      id: '/privacy/acceptable-use'
+      path: '/acceptable-use'
+      fullPath: '/privacy/acceptable-use'
+      preLoaderRoute: typeof PrivacyAcceptableUseRouteImport
+      parentRoute: typeof PrivacyRoute
+    }
+    '/plan/$token': {
+      id: '/plan/$token'
+      path: '/plan/$token'
+      fullPath: '/plan/$token'
+      preLoaderRoute: typeof PlanTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mobile/login': {
+      id: '/mobile/login'
+      path: '/mobile/login'
+      fullPath: '/mobile/login'
+      preLoaderRoute: typeof MobileLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/m/$slug': {
+      id: '/m/$slug'
+      path: '/m/$slug'
+      fullPath: '/m/$slug'
+      preLoaderRoute: typeof MSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/f/$token': {
+      id: '/f/$token'
+      path: '/f/$token'
+      fullPath: '/f/$token'
+      preLoaderRoute: typeof FTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/c/$token': {
+      id: '/c/$token'
+      path: '/c/$token'
+      fullPath: '/c/$token'
+      preLoaderRoute: typeof CTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book/$slug': {
+      id: '/book/$slug'
+      path: '/book/$slug'
+      fullPath: '/book/$slug'
+      preLoaderRoute: typeof BookSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/prescriber': {
+      id: '/_authenticated/prescriber'
+      path: '/prescriber'
+      fullPath: '/prescriber'
+      preLoaderRoute: typeof AuthenticatedPrescriberRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/onboarding': {
+      id: '/_authenticated/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/mobile': {
+      id: '/_authenticated/mobile'
+      path: '/mobile'
+      fullPath: '/mobile'
+      preLoaderRoute: typeof AuthenticatedMobileRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/hub': {
+      id: '/_authenticated/hub'
+      path: '/hub'
+      fullPath: '/hub'
+      preLoaderRoute: typeof AuthenticatedHubRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
       path: '/dashboard'
-      fullPath: '/prescriber/dashboard'
-      preLoaderRoute: typeof AuthenticatedPrescriberDashboardRouteImport
-      parentRoute: typeof AuthenticatedPrescriberRoute
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/prescriber/directions': {
-      id: '/_authenticated/prescriber/directions'
-      path: '/directions'
-      fullPath: '/prescriber/directions'
-      preLoaderRoute: typeof AuthenticatedPrescriberDirectionsRouteImport
-      parentRoute: typeof AuthenticatedPrescriberRoute
+    '/_authenticated/admin-prescribers': {
+      id: '/_authenticated/admin-prescribers'
+      path: '/admin-prescribers'
+      fullPath: '/admin-prescribers'
+      preLoaderRoute: typeof AuthenticatedAdminPrescribersRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/prescriber/directory': {
-      id: '/_authenticated/prescriber/directory'
-      path: '/directory'
-      fullPath: '/prescriber/directory'
-      preLoaderRoute: typeof AuthenticatedPrescriberDirectoryRouteImport
-      parentRoute: typeof AuthenticatedPrescriberRoute
-    }
-    '/_authenticated/prescriber/invoices': {
-      id: '/_authenticated/prescriber/invoices'
-      path: '/invoices'
-      fullPath: '/prescriber/invoices'
-      preLoaderRoute: typeof AuthenticatedPrescriberInvoicesRouteImport
-      parentRoute: typeof AuthenticatedPrescriberRoute
-    }
-    '/_authenticated/prescriber/library': {
-      id: '/_authenticated/prescriber/library'
-      path: '/library'
-      fullPath: '/prescriber/library'
-      preLoaderRoute: typeof AuthenticatedPrescriberLibraryRouteImport
-      parentRoute: typeof AuthenticatedPrescriberRoute
-    }
-    '/_authenticated/prescriber/requests': {
-      id: '/_authenticated/prescriber/requests'
-      path: '/requests'
-      fullPath: '/prescriber/requests'
-      preLoaderRoute: typeof AuthenticatedPrescriberRequestsRouteImport
-      parentRoute: typeof AuthenticatedPrescriberRoute
-    }
-    '/_authenticated/prescriber/visits': {
-      id: '/_authenticated/prescriber/visits'
-      path: '/visits'
-      fullPath: '/prescriber/visits'
-      preLoaderRoute: typeof AuthenticatedPrescriberVisitsRouteImport
-      parentRoute: typeof AuthenticatedPrescriberRoute
-    }
-    '/api/public/calendar': {
-      id: '/api/public/calendar'
-      path: '/api/public/calendar'
-      fullPath: '/api/public/calendar'
-      preLoaderRoute: typeof ApiPublicCalendarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/suppression': {
-      id: '/lovable/email/suppression'
-      path: '/lovable/email/suppression'
-      fullPath: '/lovable/email/suppression'
-      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/m/$slug/': {
       id: '/m/$slug/'
@@ -3429,67 +2827,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MSlugIndexRouteImport
       parentRoute: typeof MSlugRoute
     }
-    '/m/$slug/about': {
-      id: '/m/$slug/about'
-      path: '/about'
-      fullPath: '/m/$slug/about'
-      preLoaderRoute: typeof MSlugAboutRouteImport
-      parentRoute: typeof MSlugRoute
+    '/_authenticated/prescriber/': {
+      id: '/_authenticated/prescriber/'
+      path: '/'
+      fullPath: '/prescriber/'
+      preLoaderRoute: typeof AuthenticatedPrescriberIndexRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRoute
     }
-    '/m/$slug/account': {
-      id: '/m/$slug/account'
-      path: '/account'
-      fullPath: '/m/$slug/account'
-      preLoaderRoute: typeof MSlugAccountRouteImport
-      parentRoute: typeof MSlugRoute
+    '/_authenticated/mobile/': {
+      id: '/_authenticated/mobile/'
+      path: '/'
+      fullPath: '/mobile/'
+      preLoaderRoute: typeof AuthenticatedMobileIndexRouteImport
+      parentRoute: typeof AuthenticatedMobileRoute
     }
-    '/m/$slug/auth': {
-      id: '/m/$slug/auth'
-      path: '/auth'
-      fullPath: '/m/$slug/auth'
-      preLoaderRoute: typeof MSlugAuthRouteImport
-      parentRoute: typeof MSlugRoute
+    '/_authenticated/hub/': {
+      id: '/_authenticated/hub/'
+      path: '/'
+      fullPath: '/hub/'
+      preLoaderRoute: typeof AuthenticatedHubIndexRouteImport
+      parentRoute: typeof AuthenticatedHubRoute
     }
-    '/m/$slug/book-multi': {
-      id: '/m/$slug/book-multi'
-      path: '/book-multi'
-      fullPath: '/m/$slug/book-multi'
-      preLoaderRoute: typeof MSlugBookMultiRouteImport
-      parentRoute: typeof MSlugRoute
+    '/_authenticated/dashboard/': {
+      id: '/_authenticated/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
     }
-    '/m/$slug/gift-cards': {
-      id: '/m/$slug/gift-cards'
-      path: '/gift-cards'
-      fullPath: '/m/$slug/gift-cards'
-      preLoaderRoute: typeof MSlugGiftCardsRouteImport
-      parentRoute: typeof MSlugRoute
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/m/$slug/memberships': {
-      id: '/m/$slug/memberships'
-      path: '/memberships'
-      fullPath: '/m/$slug/memberships'
-      preLoaderRoute: typeof MSlugMembershipsRouteImport
-      parentRoute: typeof MSlugRoute
-    }
-    '/m/$slug/pay': {
-      id: '/m/$slug/pay'
-      path: '/pay'
-      fullPath: '/m/$slug/pay'
-      preLoaderRoute: typeof MSlugPayRouteImport
-      parentRoute: typeof MSlugRoute
-    }
-    '/m/$slug/reviews': {
-      id: '/m/$slug/reviews'
-      path: '/reviews'
-      fullPath: '/m/$slug/reviews'
-      preLoaderRoute: typeof MSlugReviewsRouteImport
-      parentRoute: typeof MSlugRoute
-    }
-    '/m/$slug/rewards': {
-      id: '/m/$slug/rewards'
-      path: '/rewards'
-      fullPath: '/m/$slug/rewards'
-      preLoaderRoute: typeof MSlugRewardsRouteImport
+    '/m/$slug/training': {
+      id: '/m/$slug/training'
+      path: '/training'
+      fullPath: '/m/$slug/training'
+      preLoaderRoute: typeof MSlugTrainingRouteImport
       parentRoute: typeof MSlugRoute
     }
     '/m/$slug/roomrental': {
@@ -3499,116 +2876,662 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MSlugRoomrentalRouteImport
       parentRoute: typeof MSlugRoute
     }
-    '/m/$slug/training': {
-      id: '/m/$slug/training'
-      path: '/training'
-      fullPath: '/m/$slug/training'
-      preLoaderRoute: typeof MSlugTrainingRouteImport
+    '/m/$slug/rewards': {
+      id: '/m/$slug/rewards'
+      path: '/rewards'
+      fullPath: '/m/$slug/rewards'
+      preLoaderRoute: typeof MSlugRewardsRouteImport
       parentRoute: typeof MSlugRoute
     }
-    '/_authenticated/admin/practitioners/': {
-      id: '/_authenticated/admin/practitioners/'
-      path: '/'
-      fullPath: '/admin/practitioners/'
-      preLoaderRoute: typeof AuthenticatedAdminPractitionersIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminPractitionersRoute
+    '/m/$slug/reviews': {
+      id: '/m/$slug/reviews'
+      path: '/reviews'
+      fullPath: '/m/$slug/reviews'
+      preLoaderRoute: typeof MSlugReviewsRouteImport
+      parentRoute: typeof MSlugRoute
     }
-    '/_authenticated/admin/practitioners/$id': {
-      id: '/_authenticated/admin/practitioners/$id'
-      path: '/$id'
-      fullPath: '/admin/practitioners/$id'
-      preLoaderRoute: typeof AuthenticatedAdminPractitionersIdRouteImport
-      parentRoute: typeof AuthenticatedAdminPractitionersRoute
+    '/m/$slug/pay': {
+      id: '/m/$slug/pay'
+      path: '/pay'
+      fullPath: '/m/$slug/pay'
+      preLoaderRoute: typeof MSlugPayRouteImport
+      parentRoute: typeof MSlugRoute
     }
-    '/_authenticated/dashboard/associates/': {
-      id: '/_authenticated/dashboard/associates/'
-      path: '/associates'
-      fullPath: '/dashboard/associates/'
-      preLoaderRoute: typeof AuthenticatedDashboardAssociatesIndexRouteImport
+    '/m/$slug/memberships': {
+      id: '/m/$slug/memberships'
+      path: '/memberships'
+      fullPath: '/m/$slug/memberships'
+      preLoaderRoute: typeof MSlugMembershipsRouteImport
+      parentRoute: typeof MSlugRoute
+    }
+    '/m/$slug/gift-cards': {
+      id: '/m/$slug/gift-cards'
+      path: '/gift-cards'
+      fullPath: '/m/$slug/gift-cards'
+      preLoaderRoute: typeof MSlugGiftCardsRouteImport
+      parentRoute: typeof MSlugRoute
+    }
+    '/m/$slug/book-multi': {
+      id: '/m/$slug/book-multi'
+      path: '/book-multi'
+      fullPath: '/m/$slug/book-multi'
+      preLoaderRoute: typeof MSlugBookMultiRouteImport
+      parentRoute: typeof MSlugRoute
+    }
+    '/m/$slug/auth': {
+      id: '/m/$slug/auth'
+      path: '/auth'
+      fullPath: '/m/$slug/auth'
+      preLoaderRoute: typeof MSlugAuthRouteImport
+      parentRoute: typeof MSlugRoute
+    }
+    '/m/$slug/account': {
+      id: '/m/$slug/account'
+      path: '/account'
+      fullPath: '/m/$slug/account'
+      preLoaderRoute: typeof MSlugAccountRouteImport
+      parentRoute: typeof MSlugRoute
+    }
+    '/m/$slug/about': {
+      id: '/m/$slug/about'
+      path: '/about'
+      fullPath: '/m/$slug/about'
+      preLoaderRoute: typeof MSlugAboutRouteImport
+      parentRoute: typeof MSlugRoute
+    }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/calendar': {
+      id: '/api/public/calendar'
+      path: '/api/public/calendar'
+      fullPath: '/api/public/calendar'
+      preLoaderRoute: typeof ApiPublicCalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/prescriber/visits': {
+      id: '/_authenticated/prescriber/visits'
+      path: '/visits'
+      fullPath: '/prescriber/visits'
+      preLoaderRoute: typeof AuthenticatedPrescriberVisitsRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRoute
+    }
+    '/_authenticated/prescriber/requests': {
+      id: '/_authenticated/prescriber/requests'
+      path: '/requests'
+      fullPath: '/prescriber/requests'
+      preLoaderRoute: typeof AuthenticatedPrescriberRequestsRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRoute
+    }
+    '/_authenticated/prescriber/library': {
+      id: '/_authenticated/prescriber/library'
+      path: '/library'
+      fullPath: '/prescriber/library'
+      preLoaderRoute: typeof AuthenticatedPrescriberLibraryRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRoute
+    }
+    '/_authenticated/prescriber/invoices': {
+      id: '/_authenticated/prescriber/invoices'
+      path: '/invoices'
+      fullPath: '/prescriber/invoices'
+      preLoaderRoute: typeof AuthenticatedPrescriberInvoicesRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRoute
+    }
+    '/_authenticated/prescriber/directory': {
+      id: '/_authenticated/prescriber/directory'
+      path: '/directory'
+      fullPath: '/prescriber/directory'
+      preLoaderRoute: typeof AuthenticatedPrescriberDirectoryRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRoute
+    }
+    '/_authenticated/prescriber/directions': {
+      id: '/_authenticated/prescriber/directions'
+      path: '/directions'
+      fullPath: '/prescriber/directions'
+      preLoaderRoute: typeof AuthenticatedPrescriberDirectionsRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRoute
+    }
+    '/_authenticated/prescriber/dashboard': {
+      id: '/_authenticated/prescriber/dashboard'
+      path: '/dashboard'
+      fullPath: '/prescriber/dashboard'
+      preLoaderRoute: typeof AuthenticatedPrescriberDashboardRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRoute
+    }
+    '/_authenticated/prescriber/connections': {
+      id: '/_authenticated/prescriber/connections'
+      path: '/connections'
+      fullPath: '/prescriber/connections'
+      preLoaderRoute: typeof AuthenticatedPrescriberConnectionsRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRoute
+    }
+    '/_authenticated/mobile/clients': {
+      id: '/_authenticated/mobile/clients'
+      path: '/clients'
+      fullPath: '/mobile/clients'
+      preLoaderRoute: typeof AuthenticatedMobileClientsRouteImport
+      parentRoute: typeof AuthenticatedMobileRoute
+    }
+    '/_authenticated/hub/visits': {
+      id: '/_authenticated/hub/visits'
+      path: '/visits'
+      fullPath: '/hub/visits'
+      preLoaderRoute: typeof AuthenticatedHubVisitsRouteImport
+      parentRoute: typeof AuthenticatedHubRoute
+    }
+    '/_authenticated/hub/verification': {
+      id: '/_authenticated/hub/verification'
+      path: '/verification'
+      fullPath: '/hub/verification'
+      preLoaderRoute: typeof AuthenticatedHubVerificationRouteImport
+      parentRoute: typeof AuthenticatedHubRoute
+    }
+    '/_authenticated/hub/referrals': {
+      id: '/_authenticated/hub/referrals'
+      path: '/referrals'
+      fullPath: '/hub/referrals'
+      preLoaderRoute: typeof AuthenticatedHubReferralsRouteImport
+      parentRoute: typeof AuthenticatedHubRoute
+    }
+    '/_authenticated/hub/prescribing': {
+      id: '/_authenticated/hub/prescribing'
+      path: '/prescribing'
+      fullPath: '/hub/prescribing'
+      preLoaderRoute: typeof AuthenticatedHubPrescribingRouteImport
+      parentRoute: typeof AuthenticatedHubRoute
+    }
+    '/_authenticated/hub/find-prescriber': {
+      id: '/_authenticated/hub/find-prescriber'
+      path: '/find-prescriber'
+      fullPath: '/hub/find-prescriber'
+      preLoaderRoute: typeof AuthenticatedHubFindPrescriberRouteImport
+      parentRoute: typeof AuthenticatedHubRoute
+    }
+    '/_authenticated/hub/connections': {
+      id: '/_authenticated/hub/connections'
+      path: '/connections'
+      fullPath: '/hub/connections'
+      preLoaderRoute: typeof AuthenticatedHubConnectionsRouteImport
+      parentRoute: typeof AuthenticatedHubRoute
+    }
+    '/_authenticated/dashboard/waitlist': {
+      id: '/_authenticated/dashboard/waitlist'
+      path: '/waitlist'
+      fullPath: '/dashboard/waitlist'
+      preLoaderRoute: typeof AuthenticatedDashboardWaitlistRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
-    '/_authenticated/dashboard/associates/$id': {
-      id: '/_authenticated/dashboard/associates/$id'
-      path: '/associates/$id'
-      fullPath: '/dashboard/associates/$id'
-      preLoaderRoute: typeof AuthenticatedDashboardAssociatesIdRouteImport
+    '/_authenticated/dashboard/upcoming': {
+      id: '/_authenticated/dashboard/upcoming'
+      path: '/upcoming'
+      fullPath: '/dashboard/upcoming'
+      preLoaderRoute: typeof AuthenticatedDashboardUpcomingRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
-    '/_authenticated/dashboard/consultations/': {
-      id: '/_authenticated/dashboard/consultations/'
-      path: '/consultations'
-      fullPath: '/dashboard/consultations/'
-      preLoaderRoute: typeof AuthenticatedDashboardConsultationsIndexRouteImport
+    '/_authenticated/dashboard/treatments': {
+      id: '/_authenticated/dashboard/treatments'
+      path: '/treatments'
+      fullPath: '/dashboard/treatments'
+      preLoaderRoute: typeof AuthenticatedDashboardTreatmentsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
-    '/_authenticated/dashboard/consultations/$id': {
-      id: '/_authenticated/dashboard/consultations/$id'
-      path: '/consultations/$id'
-      fullPath: '/dashboard/consultations/$id'
-      preLoaderRoute: typeof AuthenticatedDashboardConsultationsIdRouteImport
+    '/_authenticated/dashboard/training': {
+      id: '/_authenticated/dashboard/training'
+      path: '/training'
+      fullPath: '/dashboard/training'
+      preLoaderRoute: typeof AuthenticatedDashboardTrainingRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
-    '/_authenticated/dashboard/marketing/': {
-      id: '/_authenticated/dashboard/marketing/'
-      path: '/'
-      fullPath: '/dashboard/marketing/'
-      preLoaderRoute: typeof AuthenticatedDashboardMarketingIndexRouteImport
-      parentRoute: typeof AuthenticatedDashboardMarketingRoute
+    '/_authenticated/dashboard/staff-analytics': {
+      id: '/_authenticated/dashboard/staff-analytics'
+      path: '/staff-analytics'
+      fullPath: '/dashboard/staff-analytics'
+      preLoaderRoute: typeof AuthenticatedDashboardStaffAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
     }
-    '/_authenticated/dashboard/marketing/analytics': {
-      id: '/_authenticated/dashboard/marketing/analytics'
+    '/_authenticated/dashboard/staff': {
+      id: '/_authenticated/dashboard/staff'
+      path: '/staff'
+      fullPath: '/dashboard/staff'
+      preLoaderRoute: typeof AuthenticatedDashboardStaffRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/settings': {
+      id: '/_authenticated/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof AuthenticatedDashboardSettingsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/services': {
+      id: '/_authenticated/dashboard/services'
+      path: '/services'
+      fullPath: '/dashboard/services'
+      preLoaderRoute: typeof AuthenticatedDashboardServicesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/room-rental': {
+      id: '/_authenticated/dashboard/room-rental'
+      path: '/room-rental'
+      fullPath: '/dashboard/room-rental'
+      preLoaderRoute: typeof AuthenticatedDashboardRoomRentalRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/rewards': {
+      id: '/_authenticated/dashboard/rewards'
+      path: '/rewards'
+      fullPath: '/dashboard/rewards'
+      preLoaderRoute: typeof AuthenticatedDashboardRewardsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/reviews': {
+      id: '/_authenticated/dashboard/reviews'
+      path: '/reviews'
+      fullPath: '/dashboard/reviews'
+      preLoaderRoute: typeof AuthenticatedDashboardReviewsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/referrals': {
+      id: '/_authenticated/dashboard/referrals'
+      path: '/referrals'
+      fullPath: '/dashboard/referrals'
+      preLoaderRoute: typeof AuthenticatedDashboardReferralsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/products': {
+      id: '/_authenticated/dashboard/products'
+      path: '/products'
+      fullPath: '/dashboard/products'
+      preLoaderRoute: typeof AuthenticatedDashboardProductsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/privacy': {
+      id: '/_authenticated/dashboard/privacy'
+      path: '/privacy'
+      fullPath: '/dashboard/privacy'
+      preLoaderRoute: typeof AuthenticatedDashboardPrivacyRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/pre-treatment': {
+      id: '/_authenticated/dashboard/pre-treatment'
+      path: '/pre-treatment'
+      fullPath: '/dashboard/pre-treatment'
+      preLoaderRoute: typeof AuthenticatedDashboardPreTreatmentRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/practitioners': {
+      id: '/_authenticated/dashboard/practitioners'
+      path: '/practitioners'
+      fullPath: '/dashboard/practitioners'
+      preLoaderRoute: typeof AuthenticatedDashboardPractitionersRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/policies': {
+      id: '/_authenticated/dashboard/policies'
+      path: '/policies'
+      fullPath: '/dashboard/policies'
+      preLoaderRoute: typeof AuthenticatedDashboardPoliciesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/payments': {
+      id: '/_authenticated/dashboard/payments'
+      path: '/payments'
+      fullPath: '/dashboard/payments'
+      preLoaderRoute: typeof AuthenticatedDashboardPaymentsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/patients': {
+      id: '/_authenticated/dashboard/patients'
+      path: '/patients'
+      fullPath: '/dashboard/patients'
+      preLoaderRoute: typeof AuthenticatedDashboardPatientsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/partner-referrals': {
+      id: '/_authenticated/dashboard/partner-referrals'
+      path: '/partner-referrals'
+      fullPath: '/dashboard/partner-referrals'
+      preLoaderRoute: typeof AuthenticatedDashboardPartnerReferralsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/packages': {
+      id: '/_authenticated/dashboard/packages'
+      path: '/packages'
+      fullPath: '/dashboard/packages'
+      preLoaderRoute: typeof AuthenticatedDashboardPackagesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/new-appointment': {
+      id: '/_authenticated/dashboard/new-appointment'
+      path: '/new-appointment'
+      fullPath: '/dashboard/new-appointment'
+      preLoaderRoute: typeof AuthenticatedDashboardNewAppointmentRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/model-slots': {
+      id: '/_authenticated/dashboard/model-slots'
+      path: '/model-slots'
+      fullPath: '/dashboard/model-slots'
+      preLoaderRoute: typeof AuthenticatedDashboardModelSlotsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/menu': {
+      id: '/_authenticated/dashboard/menu'
+      path: '/menu'
+      fullPath: '/dashboard/menu'
+      preLoaderRoute: typeof AuthenticatedDashboardMenuRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/memberships': {
+      id: '/_authenticated/dashboard/memberships'
+      path: '/memberships'
+      fullPath: '/dashboard/memberships'
+      preLoaderRoute: typeof AuthenticatedDashboardMembershipsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/medical-forms': {
+      id: '/_authenticated/dashboard/medical-forms'
+      path: '/medical-forms'
+      fullPath: '/dashboard/medical-forms'
+      preLoaderRoute: typeof AuthenticatedDashboardMedicalFormsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/marketing': {
+      id: '/_authenticated/dashboard/marketing'
+      path: '/marketing'
+      fullPath: '/dashboard/marketing'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/locations': {
+      id: '/_authenticated/dashboard/locations'
+      path: '/locations'
+      fullPath: '/dashboard/locations'
+      preLoaderRoute: typeof AuthenticatedDashboardLocationsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/invoices': {
+      id: '/_authenticated/dashboard/invoices'
+      path: '/invoices'
+      fullPath: '/dashboard/invoices'
+      preLoaderRoute: typeof AuthenticatedDashboardInvoicesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/income-report': {
+      id: '/_authenticated/dashboard/income-report'
+      path: '/income-report'
+      fullPath: '/dashboard/income-report'
+      preLoaderRoute: typeof AuthenticatedDashboardIncomeReportRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/income': {
+      id: '/_authenticated/dashboard/income'
+      path: '/income'
+      fullPath: '/dashboard/income'
+      preLoaderRoute: typeof AuthenticatedDashboardIncomeRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/help': {
+      id: '/_authenticated/dashboard/help'
+      path: '/help'
+      fullPath: '/dashboard/help'
+      preLoaderRoute: typeof AuthenticatedDashboardHelpRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/gift-cards': {
+      id: '/_authenticated/dashboard/gift-cards'
+      path: '/gift-cards'
+      fullPath: '/dashboard/gift-cards'
+      preLoaderRoute: typeof AuthenticatedDashboardGiftCardsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/form-allocation': {
+      id: '/_authenticated/dashboard/form-allocation'
+      path: '/form-allocation'
+      fullPath: '/dashboard/form-allocation'
+      preLoaderRoute: typeof AuthenticatedDashboardFormAllocationRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/find-prescriber': {
+      id: '/_authenticated/dashboard/find-prescriber'
+      path: '/find-prescriber'
+      fullPath: '/dashboard/find-prescriber'
+      preLoaderRoute: typeof AuthenticatedDashboardFindPrescriberRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/expenses': {
+      id: '/_authenticated/dashboard/expenses'
+      path: '/expenses'
+      fullPath: '/dashboard/expenses'
+      preLoaderRoute: typeof AuthenticatedDashboardExpensesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/emails': {
+      id: '/_authenticated/dashboard/emails'
+      path: '/emails'
+      fullPath: '/dashboard/emails'
+      preLoaderRoute: typeof AuthenticatedDashboardEmailsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/discounts': {
+      id: '/_authenticated/dashboard/discounts'
+      path: '/discounts'
+      fullPath: '/dashboard/discounts'
+      preLoaderRoute: typeof AuthenticatedDashboardDiscountsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/design-studio': {
+      id: '/_authenticated/dashboard/design-studio'
+      path: '/design-studio'
+      fullPath: '/dashboard/design-studio'
+      preLoaderRoute: typeof AuthenticatedDashboardDesignStudioRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/consent-forms': {
+      id: '/_authenticated/dashboard/consent-forms'
+      path: '/consent-forms'
+      fullPath: '/dashboard/consent-forms'
+      preLoaderRoute: typeof AuthenticatedDashboardConsentFormsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/compliance': {
+      id: '/_authenticated/dashboard/compliance'
+      path: '/compliance'
+      fullPath: '/dashboard/compliance'
+      preLoaderRoute: typeof AuthenticatedDashboardComplianceRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/commission-report': {
+      id: '/_authenticated/dashboard/commission-report'
+      path: '/commission-report'
+      fullPath: '/dashboard/commission-report'
+      preLoaderRoute: typeof AuthenticatedDashboardCommissionReportRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/coming-soon': {
+      id: '/_authenticated/dashboard/coming-soon'
+      path: '/coming-soon'
+      fullPath: '/dashboard/coming-soon'
+      preLoaderRoute: typeof AuthenticatedDashboardComingSoonRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/clinic': {
+      id: '/_authenticated/dashboard/clinic'
+      path: '/clinic'
+      fullPath: '/dashboard/clinic'
+      preLoaderRoute: typeof AuthenticatedDashboardClinicRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/categories': {
+      id: '/_authenticated/dashboard/categories'
+      path: '/categories'
+      fullPath: '/dashboard/categories'
+      preLoaderRoute: typeof AuthenticatedDashboardCategoriesRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/branding': {
+      id: '/_authenticated/dashboard/branding'
+      path: '/branding'
+      fullPath: '/dashboard/branding'
+      preLoaderRoute: typeof AuthenticatedDashboardBrandingRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/bookings': {
+      id: '/_authenticated/dashboard/bookings'
+      path: '/bookings'
+      fullPath: '/dashboard/bookings'
+      preLoaderRoute: typeof AuthenticatedDashboardBookingsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/booking-flow': {
+      id: '/_authenticated/dashboard/booking-flow'
+      path: '/booking-flow'
+      fullPath: '/dashboard/booking-flow'
+      preLoaderRoute: typeof AuthenticatedDashboardBookingFlowRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/bio': {
+      id: '/_authenticated/dashboard/bio'
+      path: '/bio'
+      fullPath: '/dashboard/bio'
+      preLoaderRoute: typeof AuthenticatedDashboardBioRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/billing': {
+      id: '/_authenticated/dashboard/billing'
+      path: '/billing'
+      fullPath: '/dashboard/billing'
+      preLoaderRoute: typeof AuthenticatedDashboardBillingRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/availability': {
+      id: '/_authenticated/dashboard/availability'
+      path: '/availability'
+      fullPath: '/dashboard/availability'
+      preLoaderRoute: typeof AuthenticatedDashboardAvailabilityRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/appearance': {
+      id: '/_authenticated/dashboard/appearance'
+      path: '/appearance'
+      fullPath: '/dashboard/appearance'
+      preLoaderRoute: typeof AuthenticatedDashboardAppearanceRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/analytics': {
+      id: '/_authenticated/dashboard/analytics'
       path: '/analytics'
-      fullPath: '/dashboard/marketing/analytics'
-      preLoaderRoute: typeof AuthenticatedDashboardMarketingAnalyticsRouteImport
-      parentRoute: typeof AuthenticatedDashboardMarketingRoute
-    }
-    '/_authenticated/dashboard/marketing/automations': {
-      id: '/_authenticated/dashboard/marketing/automations'
-      path: '/automations'
-      fullPath: '/dashboard/marketing/automations'
-      preLoaderRoute: typeof AuthenticatedDashboardMarketingAutomationsRouteImport
-      parentRoute: typeof AuthenticatedDashboardMarketingRoute
-    }
-    '/_authenticated/dashboard/marketing/segments': {
-      id: '/_authenticated/dashboard/marketing/segments'
-      path: '/segments'
-      fullPath: '/dashboard/marketing/segments'
-      preLoaderRoute: typeof AuthenticatedDashboardMarketingSegmentsRouteImport
-      parentRoute: typeof AuthenticatedDashboardMarketingRoute
-    }
-    '/_authenticated/dashboard/marketing/sms': {
-      id: '/_authenticated/dashboard/marketing/sms'
-      path: '/sms'
-      fullPath: '/dashboard/marketing/sms'
-      preLoaderRoute: typeof AuthenticatedDashboardMarketingSmsRouteImport
-      parentRoute: typeof AuthenticatedDashboardMarketingRoute
-    }
-    '/_authenticated/dashboard/marketing/templates': {
-      id: '/_authenticated/dashboard/marketing/templates'
-      path: '/templates'
-      fullPath: '/dashboard/marketing/templates'
-      preLoaderRoute: typeof AuthenticatedDashboardMarketingTemplatesRouteImport
-      parentRoute: typeof AuthenticatedDashboardMarketingRoute
-    }
-    '/_authenticated/dashboard/notifications/': {
-      id: '/_authenticated/dashboard/notifications/'
-      path: '/notifications'
-      fullPath: '/dashboard/notifications/'
-      preLoaderRoute: typeof AuthenticatedDashboardNotificationsIndexRouteImport
+      fullPath: '/dashboard/analytics'
+      preLoaderRoute: typeof AuthenticatedDashboardAnalyticsRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
-    '/_authenticated/dashboard/notifications/email': {
-      id: '/_authenticated/dashboard/notifications/email'
-      path: '/notifications/email'
-      fullPath: '/dashboard/notifications/email'
-      preLoaderRoute: typeof AuthenticatedDashboardNotificationsEmailRouteImport
+    '/_authenticated/dashboard/ai-import': {
+      id: '/_authenticated/dashboard/ai-import'
+      path: '/ai-import'
+      fullPath: '/dashboard/ai-import'
+      preLoaderRoute: typeof AuthenticatedDashboardAiImportRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
-    '/_authenticated/dashboard/notifications/sms': {
-      id: '/_authenticated/dashboard/notifications/sms'
-      path: '/notifications/sms'
-      fullPath: '/dashboard/notifications/sms'
-      preLoaderRoute: typeof AuthenticatedDashboardNotificationsSmsRouteImport
+    '/_authenticated/dashboard/aftercare': {
+      id: '/_authenticated/dashboard/aftercare'
+      path: '/aftercare'
+      fullPath: '/dashboard/aftercare'
+      preLoaderRoute: typeof AuthenticatedDashboardAftercareRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/addons': {
+      id: '/_authenticated/dashboard/addons'
+      path: '/addons'
+      fullPath: '/dashboard/addons'
+      preLoaderRoute: typeof AuthenticatedDashboardAddonsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/about': {
+      id: '/_authenticated/dashboard/about'
+      path: '/about'
+      fullPath: '/dashboard/about'
+      preLoaderRoute: typeof AuthenticatedDashboardAboutRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/admin/practitioners': {
+      id: '/_authenticated/admin/practitioners'
+      path: '/practitioners'
+      fullPath: '/admin/practitioners'
+      preLoaderRoute: typeof AuthenticatedAdminPractitionersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/insights': {
+      id: '/_authenticated/admin/insights'
+      path: '/insights'
+      fullPath: '/admin/insights'
+      preLoaderRoute: typeof AuthenticatedAdminInsightsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/health': {
+      id: '/_authenticated/admin/health'
+      path: '/health'
+      fullPath: '/admin/health'
+      preLoaderRoute: typeof AuthenticatedAdminHealthRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/hair-beauty': {
+      id: '/_authenticated/admin/hair-beauty'
+      path: '/hair-beauty'
+      fullPath: '/admin/hair-beauty'
+      preLoaderRoute: typeof AuthenticatedAdminHairBeautyRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/emails': {
+      id: '/_authenticated/admin/emails'
+      path: '/emails'
+      fullPath: '/admin/emails'
+      preLoaderRoute: typeof AuthenticatedAdminEmailsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/competition': {
+      id: '/_authenticated/admin/competition'
+      path: '/competition'
+      fullPath: '/admin/competition'
+      preLoaderRoute: typeof AuthenticatedAdminCompetitionRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/audit': {
+      id: '/_authenticated/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/m/$slug/training/': {
+      id: '/m/$slug/training/'
+      path: '/'
+      fullPath: '/m/$slug/training/'
+      preLoaderRoute: typeof MSlugTrainingIndexRouteImport
+      parentRoute: typeof MSlugTrainingRoute
+    }
+    '/m/$slug/book/': {
+      id: '/m/$slug/book/'
+      path: '/book'
+      fullPath: '/m/$slug/book/'
+      preLoaderRoute: typeof MSlugBookIndexRouteImport
+      parentRoute: typeof MSlugRoute
+    }
+    '/_authenticated/dashboard/training/': {
+      id: '/_authenticated/dashboard/training/'
+      path: '/'
+      fullPath: '/dashboard/training/'
+      preLoaderRoute: typeof AuthenticatedDashboardTrainingIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardTrainingRoute
+    }
+    '/_authenticated/dashboard/rx-requests/': {
+      id: '/_authenticated/dashboard/rx-requests/'
+      path: '/rx-requests'
+      fullPath: '/dashboard/rx-requests/'
+      preLoaderRoute: typeof AuthenticatedDashboardRxRequestsIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
     '/_authenticated/dashboard/patients/': {
@@ -3618,214 +3541,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardPatientsIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardPatientsRoute
     }
-    '/_authenticated/dashboard/patients/$id': {
-      id: '/_authenticated/dashboard/patients/$id'
-      path: '/$id'
-      fullPath: '/dashboard/patients/$id'
-      preLoaderRoute: typeof AuthenticatedDashboardPatientsIdRouteImport
-      parentRoute: typeof AuthenticatedDashboardPatientsRoute
-    }
-    '/_authenticated/dashboard/rx-requests/': {
-      id: '/_authenticated/dashboard/rx-requests/'
-      path: '/rx-requests'
-      fullPath: '/dashboard/rx-requests/'
-      preLoaderRoute: typeof AuthenticatedDashboardRxRequestsIndexRouteImport
+    '/_authenticated/dashboard/notifications/': {
+      id: '/_authenticated/dashboard/notifications/'
+      path: '/notifications'
+      fullPath: '/dashboard/notifications/'
+      preLoaderRoute: typeof AuthenticatedDashboardNotificationsIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardRoute
     }
-    '/_authenticated/dashboard/rx-requests/new': {
-      id: '/_authenticated/dashboard/rx-requests/new'
-      path: '/rx-requests/new'
-      fullPath: '/dashboard/rx-requests/new'
-      preLoaderRoute: typeof AuthenticatedDashboardRxRequestsNewRouteImport
-      parentRoute: typeof AuthenticatedDashboardRoute
-    }
-    '/_authenticated/dashboard/training/': {
-      id: '/_authenticated/dashboard/training/'
+    '/_authenticated/dashboard/marketing/': {
+      id: '/_authenticated/dashboard/marketing/'
       path: '/'
-      fullPath: '/dashboard/training/'
-      preLoaderRoute: typeof AuthenticatedDashboardTrainingIndexRouteImport
-      parentRoute: typeof AuthenticatedDashboardTrainingRoute
+      fullPath: '/dashboard/marketing/'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardMarketingRoute
     }
-    '/_authenticated/dashboard/training/bookings': {
-      id: '/_authenticated/dashboard/training/bookings'
-      path: '/bookings'
-      fullPath: '/dashboard/training/bookings'
-      preLoaderRoute: typeof AuthenticatedDashboardTrainingBookingsRouteImport
-      parentRoute: typeof AuthenticatedDashboardTrainingRoute
+    '/_authenticated/dashboard/consultations/': {
+      id: '/_authenticated/dashboard/consultations/'
+      path: '/consultations'
+      fullPath: '/dashboard/consultations/'
+      preLoaderRoute: typeof AuthenticatedDashboardConsultationsIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
     }
-    '/_authenticated/mobile/booking/$id': {
-      id: '/_authenticated/mobile/booking/$id'
-      path: '/booking/$id'
-      fullPath: '/mobile/booking/$id'
-      preLoaderRoute: typeof AuthenticatedMobileBookingIdRouteImport
-      parentRoute: typeof AuthenticatedMobileRoute
+    '/_authenticated/dashboard/associates/': {
+      id: '/_authenticated/dashboard/associates/'
+      path: '/associates'
+      fullPath: '/dashboard/associates/'
+      preLoaderRoute: typeof AuthenticatedDashboardAssociatesIndexRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
     }
-    '/_authenticated/prescriber/requests/$id': {
-      id: '/_authenticated/prescriber/requests/$id'
-      path: '/$id'
-      fullPath: '/prescriber/requests/$id'
-      preLoaderRoute: typeof AuthenticatedPrescriberRequestsIdRouteImport
-      parentRoute: typeof AuthenticatedPrescriberRequestsRoute
+    '/_authenticated/admin/practitioners/': {
+      id: '/_authenticated/admin/practitioners/'
+      path: '/'
+      fullPath: '/admin/practitioners/'
+      preLoaderRoute: typeof AuthenticatedAdminPractitionersIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminPractitionersRoute
     }
-    '/api/public/booking/release': {
-      id: '/api/public/booking/release'
-      path: '/api/public/booking/release'
-      fullPath: '/api/public/booking/release'
-      preLoaderRoute: typeof ApiPublicBookingReleaseRouteImport
-      parentRoute: typeof rootRouteImport
+    '/m/$slug/training/$courseId': {
+      id: '/m/$slug/training/$courseId'
+      path: '/$courseId'
+      fullPath: '/m/$slug/training/$courseId'
+      preLoaderRoute: typeof MSlugTrainingCourseIdRouteImport
+      parentRoute: typeof MSlugTrainingRoute
     }
-    '/api/public/hooks/aftercare-dispatch': {
-      id: '/api/public/hooks/aftercare-dispatch'
-      path: '/api/public/hooks/aftercare-dispatch'
-      fullPath: '/api/public/hooks/aftercare-dispatch'
-      preLoaderRoute: typeof ApiPublicHooksAftercareDispatchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/appointment-reminders': {
-      id: '/api/public/hooks/appointment-reminders'
-      path: '/api/public/hooks/appointment-reminders'
-      fullPath: '/api/public/hooks/appointment-reminders'
-      preLoaderRoute: typeof ApiPublicHooksAppointmentRemindersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/billing-reconcile': {
-      id: '/api/public/hooks/billing-reconcile'
-      path: '/api/public/hooks/billing-reconcile'
-      fullPath: '/api/public/hooks/billing-reconcile'
-      preLoaderRoute: typeof ApiPublicHooksBillingReconcileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/compliance-reminders': {
-      id: '/api/public/hooks/compliance-reminders'
-      path: '/api/public/hooks/compliance-reminders'
-      fullPath: '/api/public/hooks/compliance-reminders'
-      preLoaderRoute: typeof ApiPublicHooksComplianceRemindersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/daily-schedule-digest': {
-      id: '/api/public/hooks/daily-schedule-digest'
-      path: '/api/public/hooks/daily-schedule-digest'
-      fullPath: '/api/public/hooks/daily-schedule-digest'
-      preLoaderRoute: typeof ApiPublicHooksDailyScheduleDigestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/demo-reset': {
-      id: '/api/public/hooks/demo-reset'
-      path: '/api/public/hooks/demo-reset'
-      fullPath: '/api/public/hooks/demo-reset'
-      preLoaderRoute: typeof ApiPublicHooksDemoResetRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/health-digest': {
-      id: '/api/public/hooks/health-digest'
-      path: '/api/public/hooks/health-digest'
-      fullPath: '/api/public/hooks/health-digest'
-      preLoaderRoute: typeof ApiPublicHooksHealthDigestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/marketing-automations': {
-      id: '/api/public/hooks/marketing-automations'
-      path: '/api/public/hooks/marketing-automations'
-      fullPath: '/api/public/hooks/marketing-automations'
-      preLoaderRoute: typeof ApiPublicHooksMarketingAutomationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/marketing-dispatch': {
-      id: '/api/public/hooks/marketing-dispatch'
-      path: '/api/public/hooks/marketing-dispatch'
-      fullPath: '/api/public/hooks/marketing-dispatch'
-      preLoaderRoute: typeof ApiPublicHooksMarketingDispatchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/rebook-reminders': {
-      id: '/api/public/hooks/rebook-reminders'
-      path: '/api/public/hooks/rebook-reminders'
-      fullPath: '/api/public/hooks/rebook-reminders'
-      preLoaderRoute: typeof ApiPublicHooksRebookRemindersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/review-emails': {
-      id: '/api/public/hooks/review-emails'
-      path: '/api/public/hooks/review-emails'
-      fullPath: '/api/public/hooks/review-emails'
-      preLoaderRoute: typeof ApiPublicHooksReviewEmailsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/medical-form/$token': {
-      id: '/api/public/medical-form/$token'
-      path: '/api/public/medical-form/$token'
-      fullPath: '/api/public/medical-form/$token'
-      preLoaderRoute: typeof ApiPublicMedicalFormTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/push/dispatch': {
-      id: '/api/public/push/dispatch'
-      path: '/api/public/push/dispatch'
-      fullPath: '/api/public/push/dispatch'
-      preLoaderRoute: typeof ApiPublicPushDispatchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/stripe/oauth-callback': {
-      id: '/api/public/stripe/oauth-callback'
-      path: '/api/public/stripe/oauth-callback'
-      fullPath: '/api/public/stripe/oauth-callback'
-      preLoaderRoute: typeof ApiPublicStripeOauthCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/stripe/webhook': {
-      id: '/api/public/stripe/webhook'
-      path: '/api/public/stripe/webhook'
-      fullPath: '/api/public/stripe/webhook'
-      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/whatsapp/webhook': {
-      id: '/api/public/whatsapp/webhook'
-      path: '/api/public/whatsapp/webhook'
-      fullPath: '/api/public/whatsapp/webhook'
-      preLoaderRoute: typeof ApiPublicWhatsappWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/auth/preview': {
-      id: '/lovable/email/auth/preview'
-      path: '/lovable/email/auth/preview'
-      fullPath: '/lovable/email/auth/preview'
-      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/auth/webhook': {
-      id: '/lovable/email/auth/webhook'
-      path: '/lovable/email/auth/webhook'
-      fullPath: '/lovable/email/auth/webhook'
-      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/queue/process': {
-      id: '/lovable/email/queue/process'
-      path: '/lovable/email/queue/process'
-      fullPath: '/lovable/email/queue/process'
-      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/transactional/preview': {
-      id: '/lovable/email/transactional/preview'
-      path: '/lovable/email/transactional/preview'
-      fullPath: '/lovable/email/transactional/preview'
-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/transactional/send': {
-      id: '/lovable/email/transactional/send'
-      path: '/lovable/email/transactional/send'
-      fullPath: '/lovable/email/transactional/send'
-      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/m/$slug/book/': {
-      id: '/m/$slug/book/'
-      path: '/book'
-      fullPath: '/m/$slug/book/'
-      preLoaderRoute: typeof MSlugBookIndexRouteImport
+    '/m/$slug/manage/$token': {
+      id: '/m/$slug/manage/$token'
+      path: '/manage/$token'
+      fullPath: '/m/$slug/manage/$token'
+      preLoaderRoute: typeof MSlugManageTokenRouteImport
       parentRoute: typeof MSlugRoute
     }
     '/m/$slug/book/$treatmentId': {
@@ -3835,33 +3597,264 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MSlugBookTreatmentIdRouteImport
       parentRoute: typeof MSlugRoute
     }
-    '/m/$slug/manage/$token': {
-      id: '/m/$slug/manage/$token'
-      path: '/manage/$token'
-      fullPath: '/m/$slug/manage/$token'
-      preLoaderRoute: typeof MSlugManageTokenRouteImport
-      parentRoute: typeof MSlugRoute
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/m/$slug/training/': {
-      id: '/m/$slug/training/'
-      path: '/'
-      fullPath: '/m/$slug/training/'
-      preLoaderRoute: typeof MSlugTrainingIndexRouteImport
-      parentRoute: typeof MSlugTrainingRoute
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/m/$slug/training/$courseId': {
-      id: '/m/$slug/training/$courseId'
-      path: '/$courseId'
-      fullPath: '/m/$slug/training/$courseId'
-      preLoaderRoute: typeof MSlugTrainingCourseIdRouteImport
-      parentRoute: typeof MSlugTrainingRoute
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/dashboard/marketing/campaigns/$id': {
-      id: '/_authenticated/dashboard/marketing/campaigns/$id'
-      path: '/campaigns/$id'
-      fullPath: '/dashboard/marketing/campaigns/$id'
-      preLoaderRoute: typeof AuthenticatedDashboardMarketingCampaignsIdRouteImport
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/whatsapp/webhook': {
+      id: '/api/public/whatsapp/webhook'
+      path: '/api/public/whatsapp/webhook'
+      fullPath: '/api/public/whatsapp/webhook'
+      preLoaderRoute: typeof ApiPublicWhatsappWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/stripe/webhook': {
+      id: '/api/public/stripe/webhook'
+      path: '/api/public/stripe/webhook'
+      fullPath: '/api/public/stripe/webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/stripe/oauth-callback': {
+      id: '/api/public/stripe/oauth-callback'
+      path: '/api/public/stripe/oauth-callback'
+      fullPath: '/api/public/stripe/oauth-callback'
+      preLoaderRoute: typeof ApiPublicStripeOauthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/push/dispatch': {
+      id: '/api/public/push/dispatch'
+      path: '/api/public/push/dispatch'
+      fullPath: '/api/public/push/dispatch'
+      preLoaderRoute: typeof ApiPublicPushDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/medical-form/$token': {
+      id: '/api/public/medical-form/$token'
+      path: '/api/public/medical-form/$token'
+      fullPath: '/api/public/medical-form/$token'
+      preLoaderRoute: typeof ApiPublicMedicalFormTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/review-emails': {
+      id: '/api/public/hooks/review-emails'
+      path: '/api/public/hooks/review-emails'
+      fullPath: '/api/public/hooks/review-emails'
+      preLoaderRoute: typeof ApiPublicHooksReviewEmailsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/rebook-reminders': {
+      id: '/api/public/hooks/rebook-reminders'
+      path: '/api/public/hooks/rebook-reminders'
+      fullPath: '/api/public/hooks/rebook-reminders'
+      preLoaderRoute: typeof ApiPublicHooksRebookRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/marketing-dispatch': {
+      id: '/api/public/hooks/marketing-dispatch'
+      path: '/api/public/hooks/marketing-dispatch'
+      fullPath: '/api/public/hooks/marketing-dispatch'
+      preLoaderRoute: typeof ApiPublicHooksMarketingDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/marketing-automations': {
+      id: '/api/public/hooks/marketing-automations'
+      path: '/api/public/hooks/marketing-automations'
+      fullPath: '/api/public/hooks/marketing-automations'
+      preLoaderRoute: typeof ApiPublicHooksMarketingAutomationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/health-digest': {
+      id: '/api/public/hooks/health-digest'
+      path: '/api/public/hooks/health-digest'
+      fullPath: '/api/public/hooks/health-digest'
+      preLoaderRoute: typeof ApiPublicHooksHealthDigestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/demo-reset': {
+      id: '/api/public/hooks/demo-reset'
+      path: '/api/public/hooks/demo-reset'
+      fullPath: '/api/public/hooks/demo-reset'
+      preLoaderRoute: typeof ApiPublicHooksDemoResetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/daily-schedule-digest': {
+      id: '/api/public/hooks/daily-schedule-digest'
+      path: '/api/public/hooks/daily-schedule-digest'
+      fullPath: '/api/public/hooks/daily-schedule-digest'
+      preLoaderRoute: typeof ApiPublicHooksDailyScheduleDigestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/compliance-reminders': {
+      id: '/api/public/hooks/compliance-reminders'
+      path: '/api/public/hooks/compliance-reminders'
+      fullPath: '/api/public/hooks/compliance-reminders'
+      preLoaderRoute: typeof ApiPublicHooksComplianceRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/billing-reconcile': {
+      id: '/api/public/hooks/billing-reconcile'
+      path: '/api/public/hooks/billing-reconcile'
+      fullPath: '/api/public/hooks/billing-reconcile'
+      preLoaderRoute: typeof ApiPublicHooksBillingReconcileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/appointment-reminders': {
+      id: '/api/public/hooks/appointment-reminders'
+      path: '/api/public/hooks/appointment-reminders'
+      fullPath: '/api/public/hooks/appointment-reminders'
+      preLoaderRoute: typeof ApiPublicHooksAppointmentRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/aftercare-dispatch': {
+      id: '/api/public/hooks/aftercare-dispatch'
+      path: '/api/public/hooks/aftercare-dispatch'
+      fullPath: '/api/public/hooks/aftercare-dispatch'
+      preLoaderRoute: typeof ApiPublicHooksAftercareDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/booking/release': {
+      id: '/api/public/booking/release'
+      path: '/api/public/booking/release'
+      fullPath: '/api/public/booking/release'
+      preLoaderRoute: typeof ApiPublicBookingReleaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/prescriber/requests/$id': {
+      id: '/_authenticated/prescriber/requests/$id'
+      path: '/$id'
+      fullPath: '/prescriber/requests/$id'
+      preLoaderRoute: typeof AuthenticatedPrescriberRequestsIdRouteImport
+      parentRoute: typeof AuthenticatedPrescriberRequestsRoute
+    }
+    '/_authenticated/mobile/booking/$id': {
+      id: '/_authenticated/mobile/booking/$id'
+      path: '/booking/$id'
+      fullPath: '/mobile/booking/$id'
+      preLoaderRoute: typeof AuthenticatedMobileBookingIdRouteImport
+      parentRoute: typeof AuthenticatedMobileRoute
+    }
+    '/_authenticated/dashboard/training/bookings': {
+      id: '/_authenticated/dashboard/training/bookings'
+      path: '/bookings'
+      fullPath: '/dashboard/training/bookings'
+      preLoaderRoute: typeof AuthenticatedDashboardTrainingBookingsRouteImport
+      parentRoute: typeof AuthenticatedDashboardTrainingRoute
+    }
+    '/_authenticated/dashboard/rx-requests/new': {
+      id: '/_authenticated/dashboard/rx-requests/new'
+      path: '/rx-requests/new'
+      fullPath: '/dashboard/rx-requests/new'
+      preLoaderRoute: typeof AuthenticatedDashboardRxRequestsNewRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/patients/$id': {
+      id: '/_authenticated/dashboard/patients/$id'
+      path: '/$id'
+      fullPath: '/dashboard/patients/$id'
+      preLoaderRoute: typeof AuthenticatedDashboardPatientsIdRouteImport
+      parentRoute: typeof AuthenticatedDashboardPatientsRoute
+    }
+    '/_authenticated/dashboard/notifications/sms': {
+      id: '/_authenticated/dashboard/notifications/sms'
+      path: '/notifications/sms'
+      fullPath: '/dashboard/notifications/sms'
+      preLoaderRoute: typeof AuthenticatedDashboardNotificationsSmsRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/notifications/email': {
+      id: '/_authenticated/dashboard/notifications/email'
+      path: '/notifications/email'
+      fullPath: '/dashboard/notifications/email'
+      preLoaderRoute: typeof AuthenticatedDashboardNotificationsEmailRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/marketing/templates': {
+      id: '/_authenticated/dashboard/marketing/templates'
+      path: '/templates'
+      fullPath: '/dashboard/marketing/templates'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingTemplatesRouteImport
       parentRoute: typeof AuthenticatedDashboardMarketingRoute
+    }
+    '/_authenticated/dashboard/marketing/sms': {
+      id: '/_authenticated/dashboard/marketing/sms'
+      path: '/sms'
+      fullPath: '/dashboard/marketing/sms'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingSmsRouteImport
+      parentRoute: typeof AuthenticatedDashboardMarketingRoute
+    }
+    '/_authenticated/dashboard/marketing/segments': {
+      id: '/_authenticated/dashboard/marketing/segments'
+      path: '/segments'
+      fullPath: '/dashboard/marketing/segments'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingSegmentsRouteImport
+      parentRoute: typeof AuthenticatedDashboardMarketingRoute
+    }
+    '/_authenticated/dashboard/marketing/automations': {
+      id: '/_authenticated/dashboard/marketing/automations'
+      path: '/automations'
+      fullPath: '/dashboard/marketing/automations'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingAutomationsRouteImport
+      parentRoute: typeof AuthenticatedDashboardMarketingRoute
+    }
+    '/_authenticated/dashboard/marketing/analytics': {
+      id: '/_authenticated/dashboard/marketing/analytics'
+      path: '/analytics'
+      fullPath: '/dashboard/marketing/analytics'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedDashboardMarketingRoute
+    }
+    '/_authenticated/dashboard/consultations/$id': {
+      id: '/_authenticated/dashboard/consultations/$id'
+      path: '/consultations/$id'
+      fullPath: '/dashboard/consultations/$id'
+      preLoaderRoute: typeof AuthenticatedDashboardConsultationsIdRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/dashboard/associates/$id': {
+      id: '/_authenticated/dashboard/associates/$id'
+      path: '/associates/$id'
+      fullPath: '/dashboard/associates/$id'
+      preLoaderRoute: typeof AuthenticatedDashboardAssociatesIdRouteImport
+      parentRoute: typeof AuthenticatedDashboardRoute
+    }
+    '/_authenticated/admin/practitioners/$id': {
+      id: '/_authenticated/admin/practitioners/$id'
+      path: '/$id'
+      fullPath: '/admin/practitioners/$id'
+      preLoaderRoute: typeof AuthenticatedAdminPractitionersIdRouteImport
+      parentRoute: typeof AuthenticatedAdminPractitionersRoute
     }
     '/_authenticated/dashboard/patients/$id/': {
       id: '/_authenticated/dashboard/patients/$id/'
@@ -3870,25 +3863,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardPatientsIdIndexRouteImport
       parentRoute: typeof AuthenticatedDashboardPatientsIdRoute
     }
-    '/_authenticated/dashboard/patients/$id/details': {
-      id: '/_authenticated/dashboard/patients/$id/details'
-      path: '/details'
-      fullPath: '/dashboard/patients/$id/details'
-      preLoaderRoute: typeof AuthenticatedDashboardPatientsIdDetailsRouteImport
-      parentRoute: typeof AuthenticatedDashboardPatientsIdRoute
-    }
-    '/_authenticated/dashboard/patients/$id/invoices': {
-      id: '/_authenticated/dashboard/patients/$id/invoices'
-      path: '/invoices'
-      fullPath: '/dashboard/patients/$id/invoices'
-      preLoaderRoute: typeof AuthenticatedDashboardPatientsIdInvoicesRouteImport
-      parentRoute: typeof AuthenticatedDashboardPatientsIdRoute
-    }
-    '/_authenticated/dashboard/patients/$id/medications': {
-      id: '/_authenticated/dashboard/patients/$id/medications'
-      path: '/medications'
-      fullPath: '/dashboard/patients/$id/medications'
-      preLoaderRoute: typeof AuthenticatedDashboardPatientsIdMedicationsRouteImport
+    '/_authenticated/dashboard/patients/$id/timeline': {
+      id: '/_authenticated/dashboard/patients/$id/timeline'
+      path: '/timeline'
+      fullPath: '/dashboard/patients/$id/timeline'
+      preLoaderRoute: typeof AuthenticatedDashboardPatientsIdTimelineRouteImport
       parentRoute: typeof AuthenticatedDashboardPatientsIdRoute
     }
     '/_authenticated/dashboard/patients/$id/photos': {
@@ -3898,12 +3877,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardPatientsIdPhotosRouteImport
       parentRoute: typeof AuthenticatedDashboardPatientsIdRoute
     }
-    '/_authenticated/dashboard/patients/$id/timeline': {
-      id: '/_authenticated/dashboard/patients/$id/timeline'
-      path: '/timeline'
-      fullPath: '/dashboard/patients/$id/timeline'
-      preLoaderRoute: typeof AuthenticatedDashboardPatientsIdTimelineRouteImport
+    '/_authenticated/dashboard/patients/$id/medications': {
+      id: '/_authenticated/dashboard/patients/$id/medications'
+      path: '/medications'
+      fullPath: '/dashboard/patients/$id/medications'
+      preLoaderRoute: typeof AuthenticatedDashboardPatientsIdMedicationsRouteImport
       parentRoute: typeof AuthenticatedDashboardPatientsIdRoute
+    }
+    '/_authenticated/dashboard/patients/$id/invoices': {
+      id: '/_authenticated/dashboard/patients/$id/invoices'
+      path: '/invoices'
+      fullPath: '/dashboard/patients/$id/invoices'
+      preLoaderRoute: typeof AuthenticatedDashboardPatientsIdInvoicesRouteImport
+      parentRoute: typeof AuthenticatedDashboardPatientsIdRoute
+    }
+    '/_authenticated/dashboard/patients/$id/details': {
+      id: '/_authenticated/dashboard/patients/$id/details'
+      path: '/details'
+      fullPath: '/dashboard/patients/$id/details'
+      preLoaderRoute: typeof AuthenticatedDashboardPatientsIdDetailsRouteImport
+      parentRoute: typeof AuthenticatedDashboardPatientsIdRoute
+    }
+    '/_authenticated/dashboard/marketing/campaigns/$id': {
+      id: '/_authenticated/dashboard/marketing/campaigns/$id'
+      path: '/campaigns/$id'
+      fullPath: '/dashboard/marketing/campaigns/$id'
+      preLoaderRoute: typeof AuthenticatedDashboardMarketingCampaignsIdRouteImport
+      parentRoute: typeof AuthenticatedDashboardMarketingRoute
     }
   }
 }
