@@ -8,6 +8,7 @@ import {
   adminOpenViewAs,
   adminEditPractitioner,
   adminSetActive,
+  adminDeletePractitioner,
   adminSetLoginEmail,
   adminListAudit,
 } from "@/lib/admin-console.functions";
@@ -224,7 +225,53 @@ function Overview({ data, onChanged }: { data: any; onChanged: () => void }) {
           </Button>
         </CardContent>
       </Card>
+
+      <DeleteAccountCard p={p} />
     </div>
+  );
+}
+
+function DeleteAccountCard({ p }: { p: any }) {
+  const del = useServerFn(adminDeletePractitioner);
+  const [confirm, setConfirm] = useState("");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const target = p.slug || p.clinic_name || p.full_name;
+
+  async function run() {
+    if (!window.confirm("Permanently delete this account and ALL its data? This cannot be undone.")) return;
+    setBusy(true);
+    try {
+      await del({ data: { id: p.id, confirm, reason: reason.trim() } });
+      toast.success("Account and data deleted");
+      window.location.href = "/admin/practitioners";
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card className="md:col-span-2 border-destructive/50">
+      <CardHeader>
+        <CardTitle className="text-base text-destructive">Delete account and all data</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <p className="text-sm text-muted-foreground">
+          Permanently removes their login, booking page, treatments, bookings, patients, forms and
+          everything else. This cannot be undone — export anything you need first.
+        </p>
+        <Textarea placeholder="Reason (required, logged)" value={reason} onChange={(e) => setReason(e.target.value)} rows={2} />
+        <Input placeholder={`Type "${target}" to confirm`} value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+        <Button
+          variant="destructive"
+          disabled={busy || reason.trim().length < 3 || confirm.trim().toLowerCase() !== String(target ?? "").toLowerCase()}
+          onClick={run}
+        >
+          {busy ? "Deleting…" : "Delete everything"}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
