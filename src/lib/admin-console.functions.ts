@@ -264,6 +264,55 @@ export const adminSetLoginEmail = createServerFn({ method: "POST" })
     return { ok: true, email };
   });
 
+// ---- Permanent delete (everything) ---------------------------------------
+// Removes the clinic profile (cascades to its treatments, bookings, patients,
+// forms, etc.) and the practitioner's login. Irreversible. Requires the admin
+// to type the clinic slug (or name) exactly as confirmation.
+export const adminDeletePractitioner = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: { id: string; confirm: string; reason: string }) => i)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    if (!data.reason || data.reason.trim().length < 3) throw new Error("A short reason is required.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const { data: p, error } = await db
+      .from("profiles")
+      .select("id, user_id, slug, clinic_name, full_name, email")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!p) throw new Error("Not found");
+    const expected = (p.slug || p.clinic_name || p.full_name || "").trim().toLowerCase();
+    if (!expected || data.confirm.trim().toLowerCase() !== expected) {
+      throw new Error(`Type "${p.slug || p.clinic_name || p.full_name}" to confirm.`);
+    }
+    if (p.user_id === context.userId) throw new Error("You can't delete your own account here.");
+
+    await logAction(context, {
+      target_profile_id: null,
+      action: "account_delete",
+      reason: data.reason,
+      diff: { deleted: { id: p.id, slug: p.slug, clinic_name: p.clinic_name, email: p.email } },
+    });
+
+    const { error: delErr } = await db.from("profiles").delete().eq("id", p.id);
+    if (delErr) throw new Error(`Could not delete clinic data: ${delErr.message}`);
+
+    if (p.user_id) {
+      // Only remove the login if it doesn't own/staff another clinic.
+      const [{ data: otherProfiles }, { data: staff }] = await Promise.all([
+        db.from("profiles").select("id").eq("user_id", p.user_id).limit(1),
+        db.from("staff_members").select("id").eq("user_id", p.user_id).limit(1),
+      ]);
+      if (!otherProfiles?.length && !staff?.length) {
+        const { error: authErr } = await db.auth.admin.deleteUser(p.user_id);
+        if (authErr) console.error("[adminDeletePractitioner] auth delete failed", authErr);
+      }
+    }
+    return { ok: true };
+  });
+
 
 // ---- Audit log ----------------------------------------------------------
 
