@@ -299,6 +299,33 @@ export const adminDeletePractitioner = createServerFn({ method: "POST" })
     const { error: delErr } = await db.from("profiles").delete().eq("id", p.id);
     if (delErr) throw new Error(`Could not delete clinic data: ${delErr.message}`);
 
+    // Remove every stored file filed under this clinic (and its login) in all buckets.
+    try {
+      const prefixes = Array.from(new Set([p.id, p.user_id].filter(Boolean))) as string[];
+      const { data: buckets } = await db.storage.listBuckets();
+      for (const b of buckets ?? []) {
+        for (const prefix of prefixes) {
+          const stack = [prefix];
+          while (stack.length) {
+            const dir = stack.pop()!;
+            for (let offset = 0; ; offset += 1000) {
+              const { data: items } = await db.storage.from(b.name).list(dir, { limit: 1000, offset });
+              if (!items?.length) break;
+              const files: string[] = [];
+              for (const it of items) {
+                if (it.id) files.push(`${dir}/${it.name}`);
+                else stack.push(`${dir}/${it.name}`);
+              }
+              if (files.length) await db.storage.from(b.name).remove(files);
+              if (items.length < 1000) break;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("[adminDeletePractitioner] storage cleanup failed", e);
+    }
+
     if (p.user_id) {
       // Only remove the login if it doesn't own/staff another clinic.
       const [{ data: otherProfiles }, { data: staff }] = await Promise.all([

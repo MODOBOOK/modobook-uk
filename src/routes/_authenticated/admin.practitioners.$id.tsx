@@ -258,7 +258,7 @@ function DeleteAccountCard({ p }: { p: any }) {
       </CardHeader>
       <CardContent className="space-y-2">
         <p className="text-sm text-muted-foreground">
-          Permanently removes their login, booking page, treatments, bookings, patients, forms and
+          Permanently removes their login, booking page, treatments, bookings, patients, forms, photos, files and
           everything else. This cannot be undone — export anything you need first.
         </p>
         <Textarea placeholder="Reason (required, logged)" value={reason} onChange={(e) => setReason(e.target.value)} rows={2} />
