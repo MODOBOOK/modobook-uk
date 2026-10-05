@@ -1054,7 +1054,7 @@ export const requestBooking = createServerFn({ method: "POST" })
     const payNotes: { waived?: boolean } = {};
     try {
       payment = await maybeCreateBookingCheckout({
-        profile: await resolvePayoutProfile(prof, data.profileId, data.practitionerId ?? null),
+        profile: await resolvePayoutProfile(prof, data.profileId, assignedPractitionerId ?? data.practitionerId ?? null),
         appointmentIds: [id],
         totalAmount: data.basePrice,
         patientEmail: data.patientEmail,
@@ -2024,7 +2024,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     try {
       const totalAmount = data.bookings.reduce((sum, b) => sum + b.priceCents / 100, 0);
       payment = await maybeCreateBookingCheckout({
-        profile: await resolvePayoutProfile(prof, data.profileId, data.practitionerId ?? null),
+        profile: await resolvePayoutProfile(prof, data.profileId, assignedPractitionerId ?? data.practitionerId ?? null),
         appointmentIds: created.map((c) => c.id),
         totalAmount,
         patientEmail: data.patientEmail,
