@@ -1054,7 +1054,7 @@ export const requestBooking = createServerFn({ method: "POST" })
     const payNotes: { waived?: boolean } = {};
     try {
       payment = await maybeCreateBookingCheckout({
-        profile: await resolvePayoutProfile(prof, data.profileId, data.practitionerId ?? null),
+        profile: await resolvePayoutProfile(prof, data.profileId, assignedPractitionerId ?? data.practitionerId ?? null),
         appointmentIds: [id],
         totalAmount: data.basePrice,
         patientEmail: data.patientEmail,
@@ -1859,6 +1859,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     let cursor = data.startTime;
     const created: { id: string; treatmentId: string }[] = [];
     const consents: { token: string; consent_template_id: string }[] = [];
+    let firstAssignedPractitionerId: string | null = null;
     for (const b of data.bookings) {
 
       const id = crypto.randomUUID();
@@ -1884,7 +1885,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         profile_id: data.profileId,
         treatment_id: b.treatmentId,
         location_id: data.locationId ?? null,
-        practitioner_id: assignedPractitionerId,
+        practitioner_id: (firstAssignedPractitionerId ??= assignedPractitionerId ?? null, assignedPractitionerId),
         scheduled_date: data.date,
         start_time: cursor,
         end_time: end,
@@ -2024,7 +2025,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     try {
       const totalAmount = data.bookings.reduce((sum, b) => sum + b.priceCents / 100, 0);
       payment = await maybeCreateBookingCheckout({
-        profile: await resolvePayoutProfile(prof, data.profileId, data.practitionerId ?? null),
+        profile: await resolvePayoutProfile(prof, data.profileId, firstAssignedPractitionerId ?? data.practitionerId ?? null),
         appointmentIds: created.map((c) => c.id),
         totalAmount,
         patientEmail: data.patientEmail,
