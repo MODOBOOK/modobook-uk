@@ -85,7 +85,9 @@ function DashboardIndex() {
       .filter((a) => a.scheduled_date >= today && a.status !== "cancelled")
       .slice(0, 5);
     const todayBookings = todays.filter((a) => a.status !== "cancelled").length;
-    const todayCancellations = todays.filter((a) => a.status === "cancelled").length;
+    const todayCancellations = todays.filter(
+      (a) => a.status === "cancelled" && a.payment_status !== "pending",
+    ).length;
     const now = new Date();
     const weekEnd = new Date();
     weekEnd.setDate(weekEnd.getDate() + 7);
