@@ -85,7 +85,9 @@ function DashboardIndex() {
       .filter((a) => a.scheduled_date >= today && a.status !== "cancelled")
       .slice(0, 5);
     const todayBookings = todays.filter((a) => a.status !== "cancelled").length;
-    const todayCancellations = todays.filter((a) => a.status === "cancelled").length;
+    const todayCancellations = todays.filter(
+      (a) => a.status === "cancelled" && a.payment_status !== "pending",
+    ).length;
     const now = new Date();
     const weekEnd = new Date();
     weekEnd.setDate(weekEnd.getDate() + 7);
@@ -121,8 +123,13 @@ function DashboardIndex() {
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
     const sundayIso = localIso(sunday);
+    // Only real cancellations. Abandoned booking attempts (patients who never
+    // finished payment — their hold is released and the row shows "cancelled"
+    // while payment is still "pending") must not inflate this number.
+    const isRealCancellation = (a: Appt) =>
+      a.status === "cancelled" && a.payment_status !== "pending";
     const cancelledThisWeek = appts.filter(
-      (a) => a.status === "cancelled" && a.scheduled_date >= mondayIso && a.scheduled_date <= sundayIso,
+      (a) => isRealCancellation(a) && a.scheduled_date >= mondayIso && a.scheduled_date <= sundayIso,
     ).length;
     return { todays, upcoming, todayBookings, todayCancellations, weekCount, monthBookings, salesToday, salesWeek, salesMonth, thisMonthName, nextMonthName, nextMonthBookings, nextMonthSales, cancelledThisWeek };
   }, [appts, today, income]);
