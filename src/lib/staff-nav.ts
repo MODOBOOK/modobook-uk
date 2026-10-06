@@ -96,7 +96,7 @@ export function canAccessRoute(
 
 export const ROLE_LABEL: Record<ClinicRole, string> = {
   owner: "Owner",
-  admin: "Clinic admin",
+  admin: "Manager",
   practitioner: "Practitioner",
   receptionist: "Receptionist",
   viewer: "Viewer",

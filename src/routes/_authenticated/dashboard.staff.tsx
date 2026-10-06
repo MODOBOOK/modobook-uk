@@ -35,7 +35,7 @@ type Staff = {
 type Practitioner = { id: string; name: string };
 
 const ROLES: { value: StaffRole; label: string; desc: string; icon: any }[] = [
-  { value: "admin", label: "Admin", desc: "Full access · not bookable", icon: ShieldCheck },
+  { value: "admin", label: "Manager", desc: "Full access · not bookable", icon: ShieldCheck },
   { value: "practitioner", label: "Practitioner", desc: "Bookable clinician · £9.99/mo seat", icon: Stethoscope },
   { value: "receptionist", label: "Receptionist", desc: "Bookings & patients · not bookable", icon: UserRound },
   { value: "viewer", label: "Viewer", desc: "Read-only access", icon: Eye },
