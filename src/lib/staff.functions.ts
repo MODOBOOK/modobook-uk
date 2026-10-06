@@ -129,7 +129,7 @@ export const inviteStaff = createServerFn({ method: "POST" })
       const { data: prof } = await context.supabase
         .from("profiles").select("clinic_name").eq("id", profileId).maybeSingle();
       const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
-      const roleLabel = data.role === "admin" ? "Admin" : data.role === "practitioner" ? "Practitioner" : data.role === "receptionist" ? "Receptionist" : "Viewer";
+      const roleLabel = data.role === "admin" ? "Manager" : data.role === "practitioner" ? "Practitioner" : data.role === "receptionist" ? "Receptionist" : "Viewer";
       await tryEnqueueAppEmail({
         templateName: "staff-invite",
         recipientEmail: email,
@@ -245,7 +245,7 @@ export const resendStaffInvite = createServerFn({ method: "POST" })
       const branding = await getPractitionerBranding(profileId);
       const { data: prof } = await context.supabase.from("profiles").select("clinic_name").eq("id", profileId).maybeSingle();
       const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
-      const roleLabel = row.role === "admin" ? "Admin" : row.role === "practitioner" ? "Practitioner" : row.role === "receptionist" ? "Receptionist" : "Viewer";
+      const roleLabel = row.role === "admin" ? "Manager" : row.role === "practitioner" ? "Practitioner" : row.role === "receptionist" ? "Receptionist" : "Viewer";
       await tryEnqueueAppEmail({
         templateName: "staff-invite",
         recipientEmail: row.invited_email,
