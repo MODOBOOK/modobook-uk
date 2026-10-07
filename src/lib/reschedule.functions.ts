@@ -259,11 +259,16 @@ export const getRescheduleSlotsByToken = createServerFn({ method: "GET" })
   });
 
 export const rescheduleByToken = createServerFn({ method: "POST" })
-  .inputValidator((input: { token: string; date: string; startTime: string }) => input)
+  .inputValidator((input: { token: string; date: string; startTime: string; moveGroup?: boolean }) => input)
   .handler(async ({ data }) => {
     const { supabaseAdmin, appt } = await loadByToken(data.token);
     if (!appt) return { ok: false as const, error: "Appointment not found." };
     if (appt.status === "cancelled") return { ok: false as const, error: "This appointment was cancelled." };
+
+    // When the patient asks to move the whole visit, every appointment they
+    // have that day moves together, keeping the same order and gaps.
+    const group = data.moveGroup ? await loadGroup(supabaseAdmin, appt) : [appt];
+    const groupIds = new Set(group.map((g) => g.id));
 
     const { data: profile } = await supabaseAdmin
       .from("profiles")
