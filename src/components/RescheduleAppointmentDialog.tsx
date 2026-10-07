@@ -67,8 +67,8 @@ export function RescheduleAppointmentDialog({
     }
     setBusy(true);
     try {
-      await call({ data: { appointmentId, date, startTime: start, endTime: end, locationId: chosenLocation ?? undefined, notifyPatient: notify } });
-      toast.success("Appointment rescheduled");
+      await call({ data: { appointmentId, date, startTime: start, endTime: end, locationId: chosenLocation ?? undefined, notifyPatient: notify, moveGroup: moveGroup && groupCount > 1 } });
+      toast.success(moveGroup && groupCount > 1 ? "Appointments rescheduled" : "Appointment rescheduled");
       onRescheduled?.({ date, start: `${start}:00`, end: `${end}:00` });
       onOpenChange(false);
     } catch (e) {
@@ -87,6 +87,19 @@ export function RescheduleAppointmentDialog({
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
+          {groupCount > 1 && (
+            <div className="space-y-1.5 rounded-md border p-3 text-sm">
+              <p className="font-medium">This patient has {groupCount} appointments on this day.</p>
+              <label className="flex items-center gap-2">
+                <input type="radio" checked={moveGroup} onChange={() => setMoveGroup(true)} />
+                Move all {groupCount} together
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="radio" checked={!moveGroup} onChange={() => setMoveGroup(false)} />
+                Move just this one
+              </label>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label htmlFor="rs-date">Date</Label>
             <Input id="rs-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
