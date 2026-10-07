@@ -3098,6 +3098,7 @@ export type Database = {
           remind_email: boolean
           remind_in_app: boolean
           remind_when_overdue: boolean
+          room: string | null
           sort_order: number
           updated_at: string
         }
@@ -3117,6 +3118,7 @@ export type Database = {
           remind_email?: boolean
           remind_in_app?: boolean
           remind_when_overdue?: boolean
+          room?: string | null
           sort_order?: number
           updated_at?: string
         }
@@ -3136,6 +3138,7 @@ export type Database = {
           remind_email?: boolean
           remind_in_app?: boolean
           remind_when_overdue?: boolean
+          room?: string | null
           sort_order?: number
           updated_at?: string
         }
