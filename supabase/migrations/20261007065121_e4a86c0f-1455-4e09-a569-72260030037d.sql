@@ -1,0 +1,1 @@
+ALTER TABLE public.compliance_check_templates ADD COLUMN IF NOT EXISTS room text;
