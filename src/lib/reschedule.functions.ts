@@ -41,6 +41,32 @@ async function loadByToken(token: string) {
   return { supabaseAdmin, appt: (appt as ApptRow | null) ?? null };
 }
 
+/**
+ * Other appointments for the same patient on the same day at the same clinic.
+ * A multi-treatment booking is stored as one row per treatment, so these are
+ * the rows that should move together when the patient picks "move them all".
+ */
+async function loadGroup(
+  supabaseAdmin: Awaited<ReturnType<typeof loadByToken>>["supabaseAdmin"],
+  appt: ApptRow,
+) {
+  let q = supabaseAdmin
+    .from("appointments")
+    .select(
+      "id, profile_id, treatment_id, location_id, practitioner_id, scheduled_date, start_time, end_time, status, reschedule_count, patient_name, patient_email, patient_phone",
+    )
+    .eq("profile_id", appt.profile_id)
+    .eq("scheduled_date", appt.scheduled_date)
+    .neq("status", "cancelled")
+    .order("start_time");
+  // Match the patient by the strongest detail we have.
+  if (appt.patient_email) q = q.eq("patient_email", appt.patient_email);
+  else if (appt.patient_phone) q = q.eq("patient_phone", appt.patient_phone);
+  else q = q.eq("patient_name", appt.patient_name ?? "");
+  const { data } = await q;
+  return ((data ?? []) as ApptRow[]).sort((a, z) => toMinutes(a.start_time) - toMinutes(z.start_time));
+}
+
 export const getRescheduleContextByToken = createServerFn({ method: "GET" })
   .inputValidator((input: { token: string }) => input)
   .handler(async ({ data }) => {
@@ -60,11 +86,22 @@ export const getRescheduleContextByToken = createServerFn({ method: "GET" })
       slug?: string | null;
     };
 
+    const group = await loadGroup(supabaseAdmin, appt);
+    const groupCount = group.length;
+    // Total chair time when the whole group moves together: from the first
+    // start to the last end, so gaps between treatments are kept.
+    const groupDurationMinutes =
+      groupCount > 1
+        ? toMinutes(group[groupCount - 1]!.end_time) - toMinutes(group[0]!.start_time)
+        : Math.max(5, toMinutes(appt.end_time) - toMinutes(appt.start_time));
+
     const base = {
       profileId: appt.profile_id,
       locationId: appt.location_id,
       practitionerId: appt.practitioner_id,
       durationMinutes: Math.max(5, toMinutes(appt.end_time) - toMinutes(appt.start_time)),
+      groupCount,
+      groupDurationMinutes,
       slug: p.slug ?? null,
       usedCount: appt.reschedule_count ?? 0,
       maxCount: p.patient_reschedule_max ?? null,
@@ -93,12 +130,17 @@ export const getRescheduleContextByToken = createServerFn({ method: "GET" })
 
 /** Free start times on a given date for this appointment's length and location. */
 export const getRescheduleSlotsByToken = createServerFn({ method: "GET" })
-  .inputValidator((input: { token: string; date: string }) => input)
+  .inputValidator((input: { token: string; date: string; moveGroup?: boolean }) => input)
   .handler(async ({ data }) => {
     const { supabaseAdmin, appt } = await loadByToken(data.token);
     if (!appt) return { slots: [] as string[] };
 
-    const duration = Math.max(5, toMinutes(appt.end_time) - toMinutes(appt.start_time));
+    // Moving the whole group needs a gap long enough for every treatment.
+    const group = data.moveGroup ? await loadGroup(supabaseAdmin, appt) : [appt];
+    const groupIds = new Set(group.map((g) => g.id));
+    const duration = data.moveGroup
+      ? toMinutes(group[group.length - 1]!.end_time) - toMinutes(group[0]!.start_time)
+      : Math.max(5, toMinutes(appt.end_time) - toMinutes(appt.start_time));
     const locId = appt.location_id;
     const pracId = appt.practitioner_id;
     const matchPract = (row: string | null | undefined) => !pracId || !row || row === pracId;
@@ -177,7 +219,7 @@ export const getRescheduleSlotsByToken = createServerFn({ method: "GET" })
 
     const busy = [
       ...(busyRes.data ?? [])
-        .filter((b) => b.id !== appt.id)
+        .filter((b) => !groupIds.has(b.id))
         .filter((b) => matchLoc(b.location_id) && matchPract((b as { practitioner_id?: string | null }).practitioner_id))
         .map((b) => ({ start: toMinutes(b.start_time as string) - bufferBefore, end: toMinutes(b.end_time as string) + bufferAfter })),
       ...(blockedTimesRes.data ?? [])
@@ -217,11 +259,16 @@ export const getRescheduleSlotsByToken = createServerFn({ method: "GET" })
   });
 
 export const rescheduleByToken = createServerFn({ method: "POST" })
-  .inputValidator((input: { token: string; date: string; startTime: string }) => input)
+  .inputValidator((input: { token: string; date: string; startTime: string; moveGroup?: boolean }) => input)
   .handler(async ({ data }) => {
     const { supabaseAdmin, appt } = await loadByToken(data.token);
     if (!appt) return { ok: false as const, error: "Appointment not found." };
     if (appt.status === "cancelled") return { ok: false as const, error: "This appointment was cancelled." };
+
+    // When the patient asks to move the whole visit, every appointment they
+    // have that day moves together, keeping the same order and gaps.
+    const group = data.moveGroup ? await loadGroup(supabaseAdmin, appt) : [appt];
+    const groupIds = new Set(group.map((g) => g.id));
 
     const { data: profile } = await supabaseAdmin
       .from("profiles")
@@ -244,9 +291,18 @@ export const rescheduleByToken = createServerFn({ method: "POST" })
         return { ok: false as const, error: `Appointments can only be changed more than ${cutoff} hours beforehand.` };
     }
 
-    const duration = Math.max(5, toMinutes(appt.end_time) - toMinutes(appt.start_time));
     const startHM = data.startTime.length === 5 ? `${data.startTime}:00` : data.startTime;
-    const endHM = `${fromMinutes(toMinutes(data.startTime) + duration)}:00`;
+    // The chosen time is the new start of the first appointment; the rest of
+    // the group keeps its original offset from that start.
+    const anchorStart = toMinutes(group[0]!.start_time);
+    const newTimes = group.map((g) => {
+      const offset = toMinutes(g.start_time) - anchorStart;
+      const s = toMinutes(data.startTime) + offset;
+      return { id: g.id, start: s, end: s + Math.max(5, toMinutes(g.end_time) - toMinutes(g.start_time)) };
+    });
+    const wantStart = newTimes[0]!.start;
+    const wantEnd = Math.max(...newTimes.map((t) => t.end));
+    const endHM = `${fromMinutes(wantEnd)}:00`;
 
     // Re-check the slot is still free right before moving the booking.
     const { data: clashing } = await supabaseAdmin
@@ -255,11 +311,9 @@ export const rescheduleByToken = createServerFn({ method: "POST" })
       .eq("profile_id", appt.profile_id)
       .eq("scheduled_date", data.date)
       .neq("status", "cancelled");
-    const wantStart = toMinutes(startHM);
-    const wantEnd = wantStart + duration;
     const taken = (clashing ?? []).some(
       (b) =>
-        b.id !== appt.id &&
+        !groupIds.has(b.id) &&
         (!b.location_id || !appt.location_id || b.location_id === appt.location_id) &&
         (!appt.practitioner_id || !b.practitioner_id || b.practitioner_id === appt.practitioner_id) &&
         toMinutes(b.start_time as string) < wantEnd &&
@@ -267,16 +321,19 @@ export const rescheduleByToken = createServerFn({ method: "POST" })
     );
     if (taken) return { ok: false as const, error: "Sorry, that time has just been taken. Please pick another." };
 
-    const { error } = await supabaseAdmin
-      .from("appointments")
-      .update({
-        scheduled_date: data.date,
-        start_time: startHM,
-        end_time: endHM,
-        reschedule_count: (appt.reschedule_count ?? 0) + 1,
-      } as never)
-      .eq("id", appt.id);
-    if (error) return { ok: false as const, error: "Could not move the appointment. Please try again." };
+    for (const t of newTimes) {
+      const g = group.find((x) => x.id === t.id)!;
+      const { error } = await supabaseAdmin
+        .from("appointments")
+        .update({
+          scheduled_date: data.date,
+          start_time: `${fromMinutes(t.start)}:00`,
+          end_time: `${fromMinutes(t.end)}:00`,
+          reschedule_count: (g.reschedule_count ?? 0) + 1,
+        } as never)
+        .eq("id", t.id);
+      if (error) return { ok: false as const, error: "Could not move the appointment. Please try again." };
+    }
 
     try {
       const { tryEnqueueAppEmail, formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
@@ -292,7 +349,7 @@ export const rescheduleByToken = createServerFn({ method: "POST" })
       if (appt.patient_email) {
         const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
         await sendBookingConfirmationEmails(
-          [appt.id],
+          newTimes.map((t) => t.id),
           `booking-reschedule-${data.date}-${startHM}`,
         );
       }

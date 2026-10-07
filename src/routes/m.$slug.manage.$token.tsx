@@ -170,23 +170,25 @@ function ReschedulePanel({
   const todayIso = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState(currentDate > todayIso ? currentDate : todayIso);
   const [saving, setSaving] = useState(false);
+  const [moveGroup, setMoveGroup] = useState(true);
 
   const ctxQ = useQuery({
     queryKey: ["reschedule-ctx", token],
     queryFn: () => ctxFn({ data: { token } }),
   });
+  const groupCount = ctxQ.data?.allowed ? (ctxQ.data.groupCount ?? 1) : 1;
   const slotsQ = useQuery({
-    queryKey: ["reschedule-slots", token, date],
-    queryFn: () => slotsFn({ data: { token, date } }),
+    queryKey: ["reschedule-slots", token, date, moveGroup && groupCount > 1],
+    queryFn: () => slotsFn({ data: { token, date, moveGroup: moveGroup && groupCount > 1 } }),
     enabled: !!ctxQ.data?.allowed,
   });
 
   async function pick(time: string) {
     setSaving(true);
     try {
-      const r = await moveFn({ data: { token, date, startTime: time } });
+      const r = await moveFn({ data: { token, date, startTime: time, moveGroup: moveGroup && groupCount > 1 } });
       if (r.ok) {
-        toast.success("Appointment moved");
+        toast.success(moveGroup && groupCount > 1 ? "Appointments moved" : "Appointment moved");
         onDone(r.date!, r.startTime!);
       } else {
         toast.error(r.error ?? "Could not move the appointment");
@@ -207,6 +209,19 @@ function ReschedulePanel({
           <p className="text-muted-foreground">{ctxQ.data?.reason ?? "Changes aren't available for this appointment."}</p>
         ) : (
           <>
+            {groupCount > 1 && (
+              <div className="space-y-1.5 rounded-md border p-3">
+                <p className="font-medium">You have {groupCount} appointments on this day.</p>
+                <label className="flex items-center gap-2">
+                  <input type="radio" checked={moveGroup} onChange={() => setMoveGroup(true)} />
+                  Move all {groupCount} together
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="radio" checked={!moveGroup} onChange={() => setMoveGroup(false)} />
+                  Move just this one
+                </label>
+              </div>
+            )}
             <input
               type="date"
               value={date}

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { rescheduleAppointment, listRescheduleLocations } from "@/lib/appointments.functions";
+import { rescheduleAppointment, listRescheduleLocations, getAppointmentGroupCount } from "@/lib/appointments.functions";
 import { CalendarClock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,8 +36,17 @@ export function RescheduleAppointmentDialog({
   const [busy, setBusy] = useState(false);
   const [locationId, setLocationId] = useState<string | null>(null);
   const [locationTouched, setLocationTouched] = useState(false);
+  const [moveGroup, setMoveGroup] = useState(true);
   const call = useServerFn(rescheduleAppointment);
   const fetchLocations = useServerFn(listRescheduleLocations);
+  const fetchGroupCount = useServerFn(getAppointmentGroupCount);
+
+  const { data: groupData } = useQuery({
+    queryKey: ["reschedule-group-count", appointmentId],
+    enabled: open,
+    queryFn: () => fetchGroupCount({ data: { appointmentId } }),
+  });
+  const groupCount = groupData?.count ?? 1;
 
   const { data: locData } = useQuery({
     queryKey: ["reschedule-locations", appointmentId, date, start, end],
@@ -58,8 +67,8 @@ export function RescheduleAppointmentDialog({
     }
     setBusy(true);
     try {
-      await call({ data: { appointmentId, date, startTime: start, endTime: end, locationId: chosenLocation ?? undefined, notifyPatient: notify } });
-      toast.success("Appointment rescheduled");
+      await call({ data: { appointmentId, date, startTime: start, endTime: end, locationId: chosenLocation ?? undefined, notifyPatient: notify, moveGroup: moveGroup && groupCount > 1 } });
+      toast.success(moveGroup && groupCount > 1 ? "Appointments rescheduled" : "Appointment rescheduled");
       onRescheduled?.({ date, start: `${start}:00`, end: `${end}:00` });
       onOpenChange(false);
     } catch (e) {
@@ -78,6 +87,19 @@ export function RescheduleAppointmentDialog({
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
+          {groupCount > 1 && (
+            <div className="space-y-1.5 rounded-md border p-3 text-sm">
+              <p className="font-medium">This patient has {groupCount} appointments on this day.</p>
+              <label className="flex items-center gap-2">
+                <input type="radio" checked={moveGroup} onChange={() => setMoveGroup(true)} />
+                Move all {groupCount} together
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="radio" checked={!moveGroup} onChange={() => setMoveGroup(false)} />
+                Move just this one
+              </label>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label htmlFor="rs-date">Date</Label>
             <Input id="rs-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
