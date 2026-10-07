@@ -243,6 +243,7 @@ export const saveCheckTemplate = createServerFn({ method: "POST" })
       id?: string;
       name: string;
       kind: string;
+      room?: string | null;
       description?: string | null;
       frequency: string;
       fields: unknown[];
@@ -263,6 +264,7 @@ export const saveCheckTemplate = createServerFn({ method: "POST" })
       profile_id: a.profileId,
       name: data.name.trim(),
       kind: data.kind || "custom",
+      room: data.room?.trim() || null,
       description: data.description?.trim() || null,
       frequency: data.frequency,
       fields: data.fields ?? [],

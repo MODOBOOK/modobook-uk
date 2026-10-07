@@ -279,6 +279,7 @@ function Page() {
         <TabsList>
           <TabsTrigger value="due">Due</TabsTrigger>
           <TabsTrigger value="checks">Checks</TabsTrigger>
+          <TabsTrigger value="cleaning">Cleaning</TabsTrigger>
           <TabsTrigger value="audits">Audits</TabsTrigger>
           <TabsTrigger value="actions">Action plan</TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
@@ -370,6 +371,110 @@ function Page() {
           )}
         </TabsContent>
 
+        {/* ---- Cleaning schedule (per room) ---- */}
+        <TabsContent value="cleaning" className="mt-4 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-muted-foreground">
+              Set cleaning checks for each room, how often they're due and when you get reminded.
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                const room = prompt("Which room? (e.g. Treatment room 1, Reception, Toilet)")?.trim();
+                if (!room) return;
+                setEditCheck({
+                  name: `${room} clean`,
+                  kind: "cleaning",
+                  room,
+                  description: "",
+                  frequency: "daily",
+                  fields: [
+                    { key: "surfaces", label: "Surfaces wiped with approved disinfectant", type: "yesno" },
+                    { key: "floor", label: "Floor cleaned", type: "yesno" },
+                    { key: "bins", label: "Bins emptied", type: "yesno" },
+                    { key: "notes", label: "Notes", type: "text" },
+                  ],
+                  next_due_on: today,
+                  custom_interval_days: 30,
+                  remind_days_before: 0,
+                  remind_when_overdue: true,
+                  remind_email: true,
+                  remind_in_app: true,
+                  active: true,
+                });
+              }}
+            >
+              <Plus className="mr-1.5 h-4 w-4" /> Add room
+            </Button>
+          </div>
+          {(() => {
+            const list = (data?.checkTemplates ?? []).filter((t: Any) => t.kind === "cleaning");
+            if (!list.length) return <Empty text="No cleaning checks yet — add a room to start." />;
+            const groups = new Map<string, Any[]>();
+            for (const t of list) {
+              const k = t.room?.trim() || "General";
+              groups.set(k, [...(groups.get(k) ?? []), t]);
+            }
+            return [...groups.entries()]
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([room, items]) => (
+                <Card key={room}>
+                  <CardContent className="space-y-2 p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-medium">{room}</h3>
+                      {room !== "General" && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() =>
+                            setEditCheck({
+                              name: `${room} weekly deep clean`,
+                              kind: "cleaning",
+                              room,
+                              description: "",
+                              frequency: "weekly",
+                              fields: [{ key: "f1", label: "", type: "yesno" }],
+                              next_due_on: today,
+                              custom_interval_days: 30,
+                              remind_days_before: 0,
+                              remind_when_overdue: true,
+                              remind_email: true,
+                              remind_in_app: true,
+                              active: true,
+                            })
+                          }
+                        >
+                          <Plus className="mr-1 h-4 w-4" /> Add check
+                        </Button>
+                      )}
+                    </div>
+                    {items.map((t: Any) => (
+                      <div key={t.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm font-medium">{t.name}</span>
+                            {!t.active && <Badge variant="secondary">Paused</Badge>}
+                            <DueBadge due={t.next_due_on} today={today} />
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {frequencyLabel(t.frequency)} · {(t.fields ?? []).length} question
+                            {(t.fields ?? []).length === 1 ? "" : "s"}
+                            {t.remind_email || t.remind_in_app ? " · alerts on" : " · alerts off"}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => openCheck(t)}>Complete</Button>
+                          <Button size="sm" variant="outline" onClick={() => setEditCheck(t)}>Edit</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              ));
+          })()}
+        </TabsContent>
+
         {/* ---- Checks ---- */}
         <TabsContent value="checks" className="mt-4 space-y-3">
           <div className="flex justify-end">
@@ -410,7 +515,7 @@ function Page() {
                       <DueBadge due={t.next_due_on} today={today} />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {CHECK_KIND_LABELS[t.kind] ?? "Check"} · {frequencyLabel(t.frequency)} ·{" "}
+                      {t.room ? `${t.room} · ` : ""}{CHECK_KIND_LABELS[t.kind] ?? "Check"} · {frequencyLabel(t.frequency)} ·{" "}
                       {(t.fields ?? []).length} question{(t.fields ?? []).length === 1 ? "" : "s"}
                     </p>
                   </div>
@@ -1001,6 +1106,16 @@ function Page() {
                   </Select>
                 </div>
               </div>
+              {editCheck.kind === "cleaning" && (
+                <div className="space-y-1.5">
+                  <Label>Room</Label>
+                  <Input
+                    placeholder="e.g. Treatment room 1"
+                    value={editCheck.room ?? ""}
+                    onChange={(e) => setEditCheck({ ...editCheck, room: e.target.value })}
+                  />
+                </div>
+              )}
               <div className="space-y-1.5">
                 <Label>Description</Label>
                 <Textarea
