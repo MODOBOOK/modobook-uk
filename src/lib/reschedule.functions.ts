@@ -130,12 +130,17 @@ export const getRescheduleContextByToken = createServerFn({ method: "GET" })
 
 /** Free start times on a given date for this appointment's length and location. */
 export const getRescheduleSlotsByToken = createServerFn({ method: "GET" })
-  .inputValidator((input: { token: string; date: string }) => input)
+  .inputValidator((input: { token: string; date: string; moveGroup?: boolean }) => input)
   .handler(async ({ data }) => {
     const { supabaseAdmin, appt } = await loadByToken(data.token);
     if (!appt) return { slots: [] as string[] };
 
-    const duration = Math.max(5, toMinutes(appt.end_time) - toMinutes(appt.start_time));
+    // Moving the whole group needs a gap long enough for every treatment.
+    const group = data.moveGroup ? await loadGroup(supabaseAdmin, appt) : [appt];
+    const groupIds = new Set(group.map((g) => g.id));
+    const duration = data.moveGroup
+      ? toMinutes(group[group.length - 1]!.end_time) - toMinutes(group[0]!.start_time)
+      : Math.max(5, toMinutes(appt.end_time) - toMinutes(appt.start_time));
     const locId = appt.location_id;
     const pracId = appt.practitioner_id;
     const matchPract = (row: string | null | undefined) => !pracId || !row || row === pracId;
