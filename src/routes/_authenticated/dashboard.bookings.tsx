@@ -65,7 +65,7 @@ import {
   completeAppointmentCheckout,
 } from "@/lib/payment-links.functions";
 import { refundAppointment } from "@/lib/stripe.functions";
-import { markAppointmentPaymentReceived } from "@/lib/appointments.functions";
+import { markAppointmentPaymentReceived, rescheduleAppointment } from "@/lib/appointments.functions";
 import { listMyLocations } from "@/lib/locations.functions";
 import {
   getOrCreateClientForAppointment,
@@ -322,6 +322,185 @@ function BookingsPage() {
     return (hr - START_HOUR) * hourH;
   })();
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // ---- Hold-and-drag rescheduling ----------------------------------------
+  // Hold an appointment for 3 seconds, then drag it to a new time or day.
+  // The whole visit (same patient, same day) moves together; free gaps light
+  // up while dragging; clashes ask first; patients are never notified.
+  const HOLD_MS = 3000;
+  const moveFn = useServerFn(rescheduleAppointment);
+  const holdRef = useRef<{ timer: ReturnType<typeof setTimeout>; x: number; y: number; id: string } | null>(null);
+  const [holdingId, setHoldingId] = useState<string | null>(null);
+  type DragState = { appt: Appt; group: Appt[]; groupStart: number; groupDur: number; grabOffset: number; date: string; startHr: number };
+  const [drag, setDrag] = useState<DragState | null>(null);
+  const dragRef = useRef<DragState | null>(null);
+  dragRef.current = drag;
+  const suppressClickRef = useRef(false);
+  const [pendingMove, setPendingMove] = useState<{ d: DragState; reason: string } | null>(null);
+
+  const samePatient = (a: Appt, b: Appt) =>
+    a.patient_email ? a.patient_email === b.patient_email
+      : a.patient_phone ? a.patient_phone === b.patient_phone
+      : a.patient_name === b.patient_name;
+
+  function visitGroup(a: Appt) {
+    return appts
+      .filter((x) => x.scheduled_date === a.scheduled_date && x.status !== "cancelled" && samePatient(a, x))
+      .sort((x, z) => parseTime(x.start_time) - parseTime(z.start_time));
+  }
+
+  function cancelHold() {
+    if (holdRef.current) clearTimeout(holdRef.current.timer);
+    holdRef.current = null;
+    setHoldingId(null);
+  }
+
+  function startHold(e: React.PointerEvent, a: Appt) {
+    if (e.button !== undefined && e.button > 0) return;
+    cancelHold();
+    const x = e.clientX, y = e.clientY;
+    const col = (e.currentTarget as HTMLElement).closest("[data-day]") as HTMLElement | null;
+    const rect = col?.getBoundingClientRect();
+    setHoldingId(a.id);
+    holdRef.current = {
+      x, y, id: a.id,
+      timer: setTimeout(() => {
+        holdRef.current = null;
+        setHoldingId(null);
+        const group = visitGroup(a);
+        const g = group.length ? group : [a];
+        const groupStart = parseTime(g[0]!.start_time);
+        const groupEnd = Math.max(...g.map((x) => parseTime(x.end_time)));
+        const pointerHr = rect ? START_HOUR + (y - rect.top) / hourH : groupStart;
+        try { navigator.vibrate?.(30); } catch { /* ignore */ }
+        suppressClickRef.current = true;
+        setDrag({ appt: a, group: g, groupStart, groupDur: groupEnd - groupStart, grabOffset: pointerHr - groupStart, date: a.scheduled_date, startHr: groupStart });
+      }, HOLD_MS),
+    };
+  }
+
+  // Moving before the hold completes means the user is scrolling — cancel.
+  useEffect(() => {
+    function onMove(e: PointerEvent) {
+      const h = holdRef.current;
+      if (h && Math.hypot(e.clientX - h.x, e.clientY - h.y) > 10) cancelHold();
+      const d = dragRef.current;
+      if (!d) return;
+      const el = document.elementFromPoint(e.clientX, e.clientY)?.closest("[data-day]") as HTMLElement | null;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      let hr = START_HOUR + (e.clientY - rect.top) / hourH - d.grabOffset;
+      hr = Math.round(hr * 4) / 4; // 15-minute snap
+      hr = Math.max(START_HOUR, Math.min(hr, END_HOUR + 1 - d.groupDur));
+      const date = el.dataset.day!;
+      if (date !== d.date || hr !== d.startHr) setDrag({ ...d, date, startHr: hr });
+      // Auto-scroll near the edges of the calendar.
+      const sc = scrollRef.current;
+      if (sc) {
+        const r = sc.getBoundingClientRect();
+        if (e.clientY < r.top + 40) sc.scrollBy({ top: -20 });
+        else if (e.clientY > r.bottom - 40) sc.scrollBy({ top: 20 });
+      }
+    }
+    function onUp() {
+      cancelHold();
+      const d = dragRef.current;
+      if (!d) return;
+      setDrag(null);
+      setTimeout(() => { suppressClickRef.current = false; }, 50);
+      void dropAt(d);
+    }
+    function onTouchMove(e: TouchEvent) {
+      if (dragRef.current) e.preventDefault();
+    }
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", cancelHold);
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", cancelHold);
+      window.removeEventListener("touchmove", onTouchMove);
+    };
+  });
+
+  const hrToHM = (h: number) => {
+    const m = Math.round(h * 60);
+    return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+  };
+
+  /** Free gaps (in hours) on a day, ignoring the visit being dragged. */
+  function freeWindows(d: Date, ignoreIds: Set<string>): [number, number][] {
+    let free: [number, number][] = [[START_HOUR, END_HOUR + 1]];
+    const cut = (bs: number, be: number) => {
+      const next: [number, number][] = [];
+      for (const [s, e] of free) {
+        if (be <= s || bs >= e) { next.push([s, e]); continue; }
+        if (bs > s) next.push([s, bs]);
+        if (be < e) next.push([be, e]);
+      }
+      free = next;
+    };
+    for (const seg of unavailableSegments(d)) cut(START_HOUR + seg.top / hourH, START_HOUR + (seg.top + seg.height) / hourH);
+    for (const a of apptsByDate.get(ymd(d)) ?? []) {
+      if (ignoreIds.has(a.id) || a.status === "cancelled") continue;
+      cut(parseTime(a.start_time), parseTime(a.end_time));
+    }
+    return free;
+  }
+
+  function clashReason(d: DragState): string | null {
+    const ids = new Set(d.group.map((g) => g.id));
+    const [y, m, dd] = d.date.split("-").map(Number);
+    const day = new Date(y!, (m ?? 1) - 1, dd);
+    const end = d.startHr + d.groupDur;
+    const others = (apptsByDate.get(d.date) ?? []).filter((a) => !ids.has(a.id) && a.status !== "cancelled");
+    const hit = others.find((a) => parseTime(a.start_time) < end && d.startHr < parseTime(a.end_time));
+    if (hit) return `This overlaps ${hit.patient_name} at ${hit.start_time.slice(0, 5)}.`;
+    const fits = freeWindows(day, ids).some(([s, e]) => s <= d.startHr + 1e-6 && end <= e + 1e-6);
+    if (!fits) return "This is outside your available hours or in blocked time.";
+    return null;
+  }
+
+  async function dropAt(d: DragState, force = false) {
+    if (d.date === d.appt.scheduled_date && Math.abs(d.startHr - d.groupStart) < 1e-6) return;
+    const reason = clashReason(d);
+    if (reason && !force) { setPendingMove({ d, reason }); return; }
+    const a = d.appt;
+    const shift = d.startHr - d.groupStart;
+    const newStart = parseTime(a.start_time) + shift;
+    const newEnd = parseTime(a.end_time) + shift;
+    const before = { date: a.scheduled_date, start: a.start_time.slice(0, 5), end: a.end_time.slice(0, 5) };
+    const moveGroup = d.group.length > 1;
+    // Optimistic update so the card lands immediately.
+    const ids = new Set(d.group.map((g) => g.id));
+    setAppts((prev) => prev.map((x) => ids.has(x.id) ? {
+      ...x, scheduled_date: d.date,
+      start_time: `${hrToHM(parseTime(x.start_time) + shift)}:00`,
+      end_time: `${hrToHM(parseTime(x.end_time) + shift)}:00`,
+    } : x));
+    try {
+      await moveFn({ data: { appointmentId: a.id, date: d.date, startTime: hrToHM(newStart), endTime: hrToHM(newEnd), notifyPatient: false, moveGroup } });
+      const label = `${moveGroup ? `${d.group.length} appointments` : a.patient_name} moved to ${new Date(d.date + "T00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} at ${hrToHM(d.startHr)}`;
+      toast.success(label, {
+        duration: 8000,
+        action: {
+          label: "Undo",
+          onClick: async () => {
+            try {
+              await moveFn({ data: { appointmentId: a.id, date: before.date, startTime: before.start, endTime: before.end, notifyPatient: false, moveGroup } });
+              toast.success("Move undone");
+            } catch (e) { toast.error((e as Error).message); }
+            void refresh();
+          },
+        },
+      });
+    } catch (e) {
+      toast.error((e as Error).message || "Could not move the appointment");
+    }
+    void refresh();
+  }
 
 
   async function refresh() {
@@ -827,6 +1006,7 @@ function BookingsPage() {
                 return (
                   <div
                     key={key}
+                    data-day={key}
                     className="relative cursor-cell border-r last:border-r-0"
                     onClick={(e) => {
                       // Only empty space — appointment/block buttons handle their own clicks.
@@ -853,6 +1033,24 @@ function BookingsPage() {
                         title="No availability"
                       />
                     ))}
+                    {drag && freeWindows(d, new Set(drag.group.map((g) => g.id)))
+                      .filter(([fs, fe]) => fe - fs >= drag.groupDur - 1e-6)
+                      .map(([fs, fe], i) => (
+                        <div key={`f-${i}`} className="pointer-events-none absolute left-0 right-0 z-[1] bg-primary/10 ring-1 ring-inset ring-primary/30"
+                          style={{ top: (fs - START_HOUR) * hourH, height: (fe - fs) * hourH }} />
+                      ))}
+                    {drag && drag.date === key && (() => {
+                      const bad = !!clashReason(drag);
+                      return (
+                        <div className={cn("pointer-events-none absolute left-1 right-1 z-40 rounded-md border-2 border-dashed px-1.5 py-0.5 text-[11px] font-semibold shadow-lg",
+                          bad ? "border-destructive bg-destructive/15 text-destructive" : "border-primary bg-primary/20 text-foreground")}
+                          style={{ top: (drag.startHr - START_HOUR) * hourH, height: Math.max(18, drag.groupDur * hourH) }}>
+                          {hrToHM(drag.startHr)}–{hrToHM(drag.startHr + drag.groupDur)} · {drag.appt.patient_name}
+                          {drag.group.length > 1 && <span className="block font-normal opacity-80">Whole visit ({drag.group.length} treatments)</span>}
+                          {bad && <span className="block font-normal">Clashes — you'll be asked</span>}
+                        </div>
+                      );
+                    })()}
                     {HOURS.map((h) => (
                       <div key={h} className="pointer-events-none absolute left-0 right-0 border-t border-dashed border-muted"
                         style={{ top: (h - START_HOUR) * hourH }} />
@@ -899,7 +1097,9 @@ function BookingsPage() {
                         return (
                           <button
                             key={`a-${a.id}`}
-                            onClick={() => setSelectedAppt(a)}
+                            onPointerDown={(e) => startHold(e, a)}
+                            onContextMenu={(e) => e.preventDefault()}
+                            onClick={() => { if (suppressClickRef.current) return; setSelectedAppt(a); }}
                             className={cn(
                               "absolute flex cursor-pointer flex-col justify-center overflow-hidden rounded-lg border border-foreground/10 py-1 pl-3 pr-2 text-left shadow-sm transition",
                               isCheckedOut && "opacity-60"
@@ -911,6 +1111,11 @@ function BookingsPage() {
                               width: `calc(${widthPct}% - 8px)`,
                               zIndex: 5 + index,
                               backgroundColor: hexToRgba(cardColor, 0.16),
+                              WebkitTouchCallout: "none",
+                              userSelect: "none",
+                              opacity: drag?.group.some((g) => g.id === a.id) ? 0.35 : undefined,
+                              outline: holdingId === a.id ? "2px solid currentColor" : undefined,
+                              animation: holdingId === a.id ? "pulse 1s ease-in-out infinite" : undefined,
                               borderLeft: `4px solid ${cardColor}`,
                               color: "#0f172a",
                             }}
@@ -942,7 +1147,9 @@ function BookingsPage() {
                       return (
                         <button
                           key={`a-${a.id}`}
-                          onClick={() => setSelectedAppt(a)}
+                          onPointerDown={(e) => startHold(e, a)}
+                            onContextMenu={(e) => e.preventDefault()}
+                            onClick={() => { if (suppressClickRef.current) return; setSelectedAppt(a); }}
                           className={cn(
                             "absolute cursor-pointer overflow-hidden rounded-md border border-foreground/25 px-1 py-px text-left text-[10.5px] leading-[1.15] shadow-sm transition hover:z-30 hover:shadow-md sm:px-1.5",
                             isCheckedOut && "opacity-60 line-through decoration-foreground/50"
@@ -954,6 +1161,11 @@ function BookingsPage() {
                             width: `calc(${widthPct}% - 2px)`,
                             zIndex: 5 + index,
                             backgroundColor: hexToRgba(cardColor, isCheckedOut ? 0.25 : 0.45),
+                            WebkitTouchCallout: "none",
+                            userSelect: "none",
+                            opacity: drag?.group.some((g) => g.id === a.id) ? 0.35 : undefined,
+                            outline: holdingId === a.id ? "2px solid currentColor" : undefined,
+                            animation: holdingId === a.id ? "pulse 1s ease-in-out infinite" : undefined,
                             color: "#0f172a",
                           }}
                           title={`${a.start_time.slice(0, 5)}–${a.end_time.slice(0, 5)} · ${a.patient_name} · ${tName ?? "Treatment"}${practitioners.length > 1 ? ` · ${a.practitioners?.name ?? "Unassigned"}` : ""}${a.locations?.name ? ` · ${a.locations.name}` : ""}${isCheckedOut ? " · Checked out" : ""}`}
@@ -1008,6 +1220,18 @@ function BookingsPage() {
 
         </Card>
       )}
+
+      {/* Drag-to-move clash check */}
+      <Dialog open={!!pendingMove} onOpenChange={(o) => !o && setPendingMove(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Move anyway?</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">{pendingMove?.reason}</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingMove(null)}>Cancel</Button>
+            <Button onClick={() => { const pm = pendingMove; setPendingMove(null); if (pm) void dropAt(pm.d, true); }}>Move anyway</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Appointment Checkout sheet */}
       <Dialog open={!!selectedAppt} onOpenChange={(o) => !o && setSelectedAppt(null)}>
