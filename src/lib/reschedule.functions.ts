@@ -86,11 +86,22 @@ export const getRescheduleContextByToken = createServerFn({ method: "GET" })
       slug?: string | null;
     };
 
+    const group = await loadGroup(supabaseAdmin, appt);
+    const groupCount = group.length;
+    // Total chair time when the whole group moves together: from the first
+    // start to the last end, so gaps between treatments are kept.
+    const groupDurationMinutes =
+      groupCount > 1
+        ? toMinutes(group[groupCount - 1]!.end_time) - toMinutes(group[0]!.start_time)
+        : Math.max(5, toMinutes(appt.end_time) - toMinutes(appt.start_time));
+
     const base = {
       profileId: appt.profile_id,
       locationId: appt.location_id,
       practitionerId: appt.practitioner_id,
       durationMinutes: Math.max(5, toMinutes(appt.end_time) - toMinutes(appt.start_time)),
+      groupCount,
+      groupDurationMinutes,
       slug: p.slug ?? null,
       usedCount: appt.reschedule_count ?? 0,
       maxCount: p.patient_reschedule_max ?? null,
