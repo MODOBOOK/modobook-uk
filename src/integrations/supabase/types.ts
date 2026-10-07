@@ -10910,6 +10910,7 @@ export type Database = {
         Args: { p_referral_id: string }
         Returns: Json
       }
+      purge_expired_limited_categories: { Args: never; Returns: number }
       qualify_practitioner_referral: {
         Args: { _referred_profile_id: string }
         Returns: boolean

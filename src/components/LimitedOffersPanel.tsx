@@ -295,7 +295,7 @@ export function LimitedOffersPanel() {
             Limited time package categories
           </p>
           <p className="text-xs text-muted-foreground">
-            Run a whole category as a timed drop — everything inside it hides when the window closes.
+            Run a whole category as a timed drop — when the end date passes, the category and every service inside it are deleted automatically.
           </p>
           {((cats.data ?? []) as unknown as Cat[]).map((c) => (
             <CategoryRow key={c.id} c={c} onSaved={() => cats.refetch()} />
