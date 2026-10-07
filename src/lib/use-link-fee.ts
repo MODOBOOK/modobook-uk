@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { previewLinkFee } from "@/lib/payment-links.functions";
+import { previewLinkFee, getFeesAbsorbed } from "@/lib/payment-links.functions";
 
 /**
  * Live preview of the platform & processing fee that will be added to a
@@ -32,4 +32,16 @@ export function useLinkFee(amountCents: number, enabled: boolean) {
   }, [amountCents, enabled]);
 
   return feeCents;
+}
+
+/** True when the practitioner absorbs fees — "add fees" options should be hidden. */
+export function useFeesAbsorbed() {
+  const fn = useServerFn(getFeesAbsorbed);
+  const [absorbed, setAbsorbed] = useState(true);
+  useEffect(() => {
+    let c = false;
+    fn().then((r) => { if (!c) setAbsorbed(!!r?.absorbed); }).catch(() => {});
+    return () => { c = true; };
+  }, [fn]);
+  return absorbed;
 }

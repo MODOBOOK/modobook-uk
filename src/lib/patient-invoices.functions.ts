@@ -116,7 +116,7 @@ export const savePatientInvoice = createServerFn({ method: "POST" })
       recipient_email: data.recipientEmail?.trim().toLowerCase() || null,
       items,
       subtotal_cents: subtotal,
-      include_fees: data.includeFees ?? true,
+      include_fees: (data.includeFees ?? true) && !(await feesAbsorbed(context.supabase, profileId)),
       notes: data.notes?.trim() || null,
       due_date: data.dueDate || null,
     };
@@ -195,3 +195,8 @@ export const getInvoiceClinicProfile = createServerFn({ method: "GET" })
     if (error) throw error;
     return data;
   });
+
+async function feesAbsorbed(supabase: any, profileId: string): Promise<boolean> {
+  const { data } = await supabase.from("profiles").select("payment_pass_fees_to_customer").eq("id", profileId).maybeSingle();
+  return !data?.payment_pass_fees_to_customer;
+}

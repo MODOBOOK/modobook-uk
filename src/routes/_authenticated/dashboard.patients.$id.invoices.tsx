@@ -1,3 +1,4 @@
+import { useFeesAbsorbed } from "@/lib/use-link-fee";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -47,6 +48,7 @@ function PatientInvoicesPage() {
   const [notes, setNotes] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [includeFees, setIncludeFees] = useState(true);
+  const feesAbsorbed = useFeesAbsorbed();
   const [busy, setBusy] = useState<null | "save" | "link" | "pdf" | "send">(null);
 
   const total = useMemo(
@@ -111,7 +113,7 @@ function PatientInvoicesPage() {
         recipientName: client?.full_name ?? null,
         recipientEmail: email || null,
         items,
-        includeFees,
+        includeFees: includeFees && !feesAbsorbed,
         notes: notes || null,
         dueDate: dueDate || null,
         ...extra,
@@ -164,7 +166,7 @@ function PatientInvoicesPage() {
             kind: "checkout",
             recipientEmail: email,
             recipientName: client?.full_name ?? null,
-            includeFees,
+            includeFees: includeFees && !feesAbsorbed,
           },
         });
         paymentLink = row.stripe_url;
@@ -298,6 +300,7 @@ function PatientInvoicesPage() {
             <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Payment terms, thank you note…" />
           </div>
 
+          {!feesAbsorbed && (
           <label className="flex items-start gap-2 rounded-md border p-3">
             <Checkbox checked={includeFees} onCheckedChange={(v) => setIncludeFees(v === true)} className="mt-0.5" />
             <span className="text-xs">
@@ -305,6 +308,7 @@ function PatientInvoicesPage() {
               <span className="text-muted-foreground">Uses the surcharges set in Payments settings. Shown as its own line on the PDF.</span>
             </span>
           </label>
+          )}
 
           <div className="flex flex-wrap gap-2">
             <Button onClick={onSend} disabled={busy !== null}>

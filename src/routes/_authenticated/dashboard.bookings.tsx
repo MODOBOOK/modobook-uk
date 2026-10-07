@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useLinkFee } from "@/lib/use-link-fee";
+import { useLinkFee, useFeesAbsorbed } from "@/lib/use-link-fee";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
@@ -1246,6 +1246,7 @@ function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState<string | null>(null);
   const [includeFees, setIncludeFees] = useState(true);
+  const feesAbsorbed = useFeesAbsorbed();
   const [feeCents, setFeeCents] = useState(0);
   const previewFee = useLinkFee(Math.round(parseFloat(amount || "0") * 100), includeFees);
 
@@ -1260,7 +1261,7 @@ function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange
           description: desc || "Payment",
           kind: "adhoc",
           recipientEmail: email || null,
-          includeFees,
+          includeFees: includeFees && !feesAbsorbed,
         },
       });
       const u = (row as { stripe_url: string | null }).stripe_url;
@@ -1296,6 +1297,7 @@ function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange
               <Label>Send to (optional email)</Label>
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="patient@example.com" />
             </div>
+            {!feesAbsorbed && (
             <label className="flex items-start gap-2 rounded-md border p-2.5">
               <Checkbox checked={includeFees} onCheckedChange={(v) => setIncludeFees(v === true)} className="mt-0.5" />
               <span className="text-xs">
@@ -1307,6 +1309,7 @@ function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange
                 </span>
               </span>
             </label>
+            )}
             <DialogFooter>
               <Button variant="ghost" onClick={close}>Cancel</Button>
               <Button onClick={submit} disabled={busy}>{busy ? "Creating…" : "Create link"}</Button>
@@ -1809,6 +1812,7 @@ function CheckoutSheet({
   const [depositMethod, setDepositMethod] = useState<"cash" | "card_in_person" | "bank_transfer" | "other">("cash");
   const [busy, setBusy] = useState(false);
   const [addFeesToLink, setAddFeesToLink] = useState(true);
+  const feesAbsorbed = useFeesAbsorbed();
   const [showReschedule, setShowReschedule] = useState(false);
   const cancelled = a.status === "cancelled";
   const isNoShow = a.status === "no_show";
@@ -1950,7 +1954,7 @@ function CheckoutSheet({
           recipientEmail: a.patient_email,
           recipientName: a.patient_name,
           recipientPhone: a.patient_phone,
-          includeFees: addFeesToLink,
+          includeFees: addFeesToLink && !feesAbsorbed,
         },
       });
       const url = (row as { stripe_url: string | null }).stripe_url;
@@ -2251,6 +2255,7 @@ function CheckoutSheet({
           })()}
         </div>
 
+        {!feesAbsorbed && (
         <label className="flex items-start gap-2 rounded-md border p-2.5">
           <Checkbox checked={addFeesToLink} onCheckedChange={(v) => setAddFeesToLink(v === true)} className="mt-0.5" />
           <span className="text-xs">
@@ -2262,6 +2267,7 @@ function CheckoutSheet({
           </span>
           </span>
         </label>
+        )}
 
         <div className="grid grid-cols-2 gap-2">
           <Button disabled={busy} className="bg-slate-900 text-white hover:bg-slate-800" onClick={sendStripeLink}>

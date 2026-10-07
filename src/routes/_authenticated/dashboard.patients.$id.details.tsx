@@ -47,7 +47,7 @@ import { PatientTermsCard } from "@/components/patient/PatientTermsCard";
 
 
 import { logCommunication, sendPatientEmail } from "@/lib/patient-hub.functions";
-import { useLinkFee } from "@/lib/use-link-fee";
+import { useLinkFee, useFeesAbsorbed } from "@/lib/use-link-fee";
 import { createPaymentLink } from "@/lib/payment-links.functions";
 import { chargeCardOnFile, removeCardOnFile } from "@/lib/card-on-file.functions";
 import { TreatmentPlansPanel } from "@/components/TreatmentPlansPanel";
@@ -1519,6 +1519,7 @@ function PaymentLinkDialog({
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState<string | null>(null);
   const [includeFees, setIncludeFees] = useState(true);
+  const feesAbsorbed = useFeesAbsorbed();
   const [feeCents, setFeeCents] = useState(0);
   const previewFee = useLinkFee(Math.round(Number(amount || 0) * 100), includeFees);
 
@@ -1554,7 +1555,7 @@ function PaymentLinkDialog({
           recipientEmail: client.email || undefined,
           recipientName: client.full_name || undefined,
           recipientPhone: client.phone || undefined,
-          includeFees,
+          includeFees: includeFees && !feesAbsorbed,
         },
       });
       setUrl(r?.stripe_url ?? null);
@@ -1620,6 +1621,7 @@ function PaymentLinkDialog({
               <Label htmlFor="pl-desc">Description</Label>
               <Input id="pl-desc" value={description} onChange={e => setDescription(e.target.value)} />
             </div>
+            {!feesAbsorbed && (
             <label className="flex items-start gap-2 rounded-md border p-2.5">
               <Checkbox checked={includeFees} onCheckedChange={(v) => setIncludeFees(v === true)} className="mt-0.5" />
               <span className="text-xs">
@@ -1631,6 +1633,7 @@ function PaymentLinkDialog({
                 </span>
               </span>
             </label>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
