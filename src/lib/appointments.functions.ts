@@ -504,6 +504,37 @@ export const listRescheduleLocations = createServerFn({ method: "POST" })
     return { currentLocationId: (appt as { location_id?: string | null }).location_id ?? null, locations: results };
   });
 
+/** How many appointments this patient has on the same day (for "move them all"). */
+export const getAppointmentGroupCount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { appointmentId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: profile } = await supabase
+      .from("profiles").select("id").eq("id", await __activeProfileId(supabase, userId)).maybeSingle();
+    if (!profile) throw new Error("Profile not found");
+
+    const { data: appt } = await supabase
+      .from("appointments")
+      .select("id, scheduled_date, patient_email, patient_phone, patient_name")
+      .eq("id", data.appointmentId)
+      .eq("profile_id", profile.id)
+      .maybeSingle();
+    if (!appt) return { count: 0 };
+
+    let q = supabase
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("profile_id", profile.id)
+      .eq("scheduled_date", appt.scheduled_date as string)
+      .neq("status", "cancelled");
+    if (appt.patient_email) q = q.eq("patient_email", appt.patient_email);
+    else if (appt.patient_phone) q = q.eq("patient_phone", appt.patient_phone);
+    else q = q.eq("patient_name", (appt.patient_name as string) ?? "");
+    const { count } = await q;
+    return { count: count ?? 0 };
+  });
+
 export const rescheduleAppointment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
@@ -514,6 +545,7 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
       endTime: string;
       locationId?: string | null;
       notifyPatient?: boolean;
+      moveGroup?: boolean;
     }) => input,
   )
   .handler(async ({ data, context }) => {
@@ -534,17 +566,55 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
     const startHM = data.startTime.length === 5 ? `${data.startTime}:00` : data.startTime;
     const endHM = data.endTime.length === 5 ? `${data.endTime}:00` : data.endTime;
 
-    const { error: uErr } = await supabase
-      .from("appointments")
-      .update({
-        scheduled_date: data.date,
-        start_time: startHM,
-        end_time: endHM,
-        ...(data.locationId !== undefined ? { location_id: data.locationId } : {}),
-      } as never)
-      .eq("id", data.appointmentId)
-      .eq("profile_id", profile.id);
-    if (uErr) throw uErr;
+    // Moving the whole visit: every appointment this patient has that day
+    // keeps its original order and gap from the first one.
+    type GroupRow = { id: string; start_time: string; end_time: string };
+    let group: GroupRow[] = [{ id: appt.id, start_time: appt.start_time as string, end_time: appt.end_time as string }];
+    if (data.moveGroup) {
+      let q = supabase
+        .from("appointments")
+        .select("id, start_time, end_time")
+        .eq("profile_id", profile.id)
+        .eq("scheduled_date", appt.scheduled_date as string)
+        .neq("status", "cancelled")
+        .order("start_time");
+      if (appt.patient_email) q = q.eq("patient_email", appt.patient_email);
+      else if (appt.patient_phone) q = q.eq("patient_phone", appt.patient_phone);
+      else q = q.eq("patient_name", (appt.patient_name as string) ?? "");
+      const { data: rows } = await q;
+      if (rows && rows.length > 0) group = rows as GroupRow[];
+    }
+
+    const toMin = (t: string) => {
+      const [h, m] = String(t).split(":").map(Number);
+      return (h || 0) * 60 + (m || 0);
+    };
+    const fromMin = (n: number) =>
+      `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
+
+    // The dialog's start/end apply to the appointment being rescheduled; the
+    // rest of the group shifts by the same amount.
+    const anchor = group.find((g) => g.id === appt.id) ?? group[0]!;
+    const delta = toMin(startHM) - toMin(anchor.start_time);
+    const newTimes = group.map((g) => ({
+      id: g.id,
+      start: toMin(g.start_time) + delta,
+      end: toMin(g.end_time) + delta,
+    }));
+
+    for (const t of newTimes) {
+      const { error: uErr } = await supabase
+        .from("appointments")
+        .update({
+          scheduled_date: data.date,
+          start_time: `${fromMin(t.start)}:00`,
+          end_time: `${fromMin(t.end)}:00`,
+          ...(data.locationId !== undefined && t.id === appt.id ? { location_id: data.locationId } : {}),
+        } as never)
+        .eq("id", t.id)
+        .eq("profile_id", profile.id);
+      if (uErr) throw uErr;
+    }
 
     // When the appointment moved to another location, tell the patient about
     // the new address rather than the old one.
