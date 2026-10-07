@@ -219,7 +219,7 @@ export const getRescheduleSlotsByToken = createServerFn({ method: "GET" })
 
     const busy = [
       ...(busyRes.data ?? [])
-        .filter((b) => b.id !== appt.id)
+        .filter((b) => !groupIds.has(b.id))
         .filter((b) => matchLoc(b.location_id) && matchPract((b as { practitioner_id?: string | null }).practitioner_id))
         .map((b) => ({ start: toMinutes(b.start_time as string) - bufferBefore, end: toMinutes(b.end_time as string) + bufferAfter })),
       ...(blockedTimesRes.data ?? [])
