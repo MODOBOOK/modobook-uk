@@ -8,3 +8,4 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+ - Calendar appointment cards and all their descendants disable native text selection, touch callouts and browser dragging so long presses remain available for rescheduling.

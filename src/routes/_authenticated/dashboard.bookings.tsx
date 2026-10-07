@@ -358,6 +358,7 @@ function BookingsPage() {
   function startHold(e: React.PointerEvent, a: Appt) {
     if (e.button !== undefined && e.button > 0) return;
     cancelHold();
+    window.getSelection()?.removeAllRanges();
     const x = e.clientX, y = e.clientY;
     const col = (e.currentTarget as HTMLElement).closest("[data-day]") as HTMLElement | null;
     const rect = col?.getBoundingClientRect();
@@ -1099,9 +1100,10 @@ function BookingsPage() {
                             key={`a-${a.id}`}
                             onPointerDown={(e) => startHold(e, a)}
                             onContextMenu={(e) => e.preventDefault()}
+                            onDragStart={(e) => e.preventDefault()}
                             onClick={() => { if (suppressClickRef.current) return; setSelectedAppt(a); }}
                             className={cn(
-                              "absolute flex cursor-pointer flex-col justify-center overflow-hidden rounded-lg border border-foreground/10 py-1 pl-3 pr-2 text-left shadow-sm transition",
+                              "calendar-appointment absolute flex cursor-pointer flex-col justify-center overflow-hidden rounded-lg border border-foreground/10 py-1 pl-3 pr-2 text-left shadow-sm transition",
                               isCheckedOut && "opacity-60"
                             )}
                             style={{
@@ -1148,10 +1150,11 @@ function BookingsPage() {
                         <button
                           key={`a-${a.id}`}
                           onPointerDown={(e) => startHold(e, a)}
-                            onContextMenu={(e) => e.preventDefault()}
-                            onClick={() => { if (suppressClickRef.current) return; setSelectedAppt(a); }}
+                          onContextMenu={(e) => e.preventDefault()}
+                          onDragStart={(e) => e.preventDefault()}
+                          onClick={() => { if (suppressClickRef.current) return; setSelectedAppt(a); }}
                           className={cn(
-                            "absolute cursor-pointer overflow-hidden rounded-md border border-foreground/25 px-1 py-px text-left text-[10.5px] leading-[1.15] shadow-sm transition hover:z-30 hover:shadow-md sm:px-1.5",
+                            "calendar-appointment absolute cursor-pointer overflow-hidden rounded-md border border-foreground/25 px-1 py-px text-left text-[10.5px] leading-[1.15] shadow-sm transition hover:z-30 hover:shadow-md sm:px-1.5",
                             isCheckedOut && "opacity-60 line-through decoration-foreground/50"
                           )}
                           style={{

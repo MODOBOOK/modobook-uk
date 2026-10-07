@@ -623,6 +623,15 @@ html, body {
   .rx-theme main :where(.grid) { min-width: 0; }
 }
 
+/* Appointment labels must not invoke iOS selection during hold-to-move. */
+.calendar-appointment,
+.calendar-appointment * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-drag: none;
+}
+
 /* ---------------------------------------------------------------
  * Practitioner studio shell — same modern polish as the prescriber
  * hub, but driven by each clinic's own brand tokens (set inline by
