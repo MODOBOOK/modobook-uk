@@ -209,6 +209,19 @@ function ReschedulePanel({
           <p className="text-muted-foreground">{ctxQ.data?.reason ?? "Changes aren't available for this appointment."}</p>
         ) : (
           <>
+            {groupCount > 1 && (
+              <div className="space-y-1.5 rounded-md border p-3">
+                <p className="font-medium">You have {groupCount} appointments on this day.</p>
+                <label className="flex items-center gap-2">
+                  <input type="radio" checked={moveGroup} onChange={() => setMoveGroup(true)} />
+                  Move all {groupCount} together
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="radio" checked={!moveGroup} onChange={() => setMoveGroup(false)} />
+                  Move just this one
+                </label>
+              </div>
+            )}
             <input
               type="date"
               value={date}

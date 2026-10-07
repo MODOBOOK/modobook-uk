@@ -36,8 +36,17 @@ export function RescheduleAppointmentDialog({
   const [busy, setBusy] = useState(false);
   const [locationId, setLocationId] = useState<string | null>(null);
   const [locationTouched, setLocationTouched] = useState(false);
+  const [moveGroup, setMoveGroup] = useState(true);
   const call = useServerFn(rescheduleAppointment);
   const fetchLocations = useServerFn(listRescheduleLocations);
+  const fetchGroupCount = useServerFn(getAppointmentGroupCount);
+
+  const { data: groupData } = useQuery({
+    queryKey: ["reschedule-group-count", appointmentId],
+    enabled: open,
+    queryFn: () => fetchGroupCount({ data: { appointmentId } }),
+  });
+  const groupCount = groupData?.count ?? 1;
 
   const { data: locData } = useQuery({
     queryKey: ["reschedule-locations", appointmentId, date, start, end],
