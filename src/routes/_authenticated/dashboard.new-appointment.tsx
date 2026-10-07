@@ -499,8 +499,27 @@ function NewAppointmentPage() {
 
   async function submit() {
     if (submitLockRef.current) return;
-    if (items.length === 0 || !date || !patientName || !patientEmail) {
-      toast.error("Add at least one treatment and fill patient name, email and date");
+    // Say exactly what's missing — a picked existing patient can have no
+    // email on file (e.g. imported without one), which used to show a
+    // generic "add a treatment" error even with treatments added.
+    if (items.length === 0) {
+      toast.error("Add at least one treatment");
+      return;
+    }
+    if (!patientName.trim()) {
+      toast.error("Enter the patient's name");
+      return;
+    }
+    if (!patientEmail.trim()) {
+      toast.error(
+        clientId
+          ? "This patient has no email on file — add one in the Email box"
+          : "Enter the patient's email",
+      );
+      return;
+    }
+    if (!date) {
+      toast.error("Pick a date for the appointment");
       return;
     }
     if (practitioners.length > 1 && !practitionerId) {
