@@ -710,7 +710,16 @@ export function CourseOptionsEditor({
                    </div>
                    <div className="flex flex-wrap items-center gap-4">
                     <label className="flex items-center gap-2 text-sm">
-                      <Switch checked={d.split && sessions > 1} disabled={sessions <= 1} onCheckedChange={(v) => patch(o.id, o, { split: v })} />
+                      <Switch
+                        checked={d.split && sessions > 1}
+                        onCheckedChange={(v) => {
+                          if (v && sessions <= 1) {
+                            toast.error("Set \"No. of sessions\" to 2 or more to split the payment across sessions.");
+                            return;
+                          }
+                          patch(o.id, o, { split: v });
+                        }}
+                      />
                       Split payment
                     </label>
                     <label className="flex items-center gap-2 text-sm">
