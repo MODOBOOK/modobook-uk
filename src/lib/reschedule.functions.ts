@@ -349,7 +349,7 @@ export const rescheduleByToken = createServerFn({ method: "POST" })
       if (appt.patient_email) {
         const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
         await sendBookingConfirmationEmails(
-          [appt.id],
+          newTimes.map((t) => t.id),
           `booking-reschedule-${data.date}-${startHM}`,
         );
       }
