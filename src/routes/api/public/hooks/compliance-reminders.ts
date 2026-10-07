@@ -74,10 +74,12 @@ export const Route = createFileRoute('/api/public/hooks/compliance-reminders')({
         for (const [profileId, items] of byClinic) {
           const { data: profile } = await db
             .from('profiles')
-            .select('id, email, clinic_name')
+            .select('id, email, clinic_name, compliance_enabled, plan_tier')
             .eq('id', profileId)
             .maybeSingle()
           if (!profile) continue
+          // Compliance switched off (or not in the plan): no emails or notifications.
+          if (profile.compliance_enabled === false || profile.plan_tier === 'solo') continue
 
           const emailItems = items.filter((i) => i.email)
           if (emailItems.length && profile.email) {
