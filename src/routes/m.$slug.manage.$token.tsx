@@ -170,23 +170,25 @@ function ReschedulePanel({
   const todayIso = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState(currentDate > todayIso ? currentDate : todayIso);
   const [saving, setSaving] = useState(false);
+  const [moveGroup, setMoveGroup] = useState(true);
 
   const ctxQ = useQuery({
     queryKey: ["reschedule-ctx", token],
     queryFn: () => ctxFn({ data: { token } }),
   });
+  const groupCount = ctxQ.data?.allowed ? (ctxQ.data.groupCount ?? 1) : 1;
   const slotsQ = useQuery({
-    queryKey: ["reschedule-slots", token, date],
-    queryFn: () => slotsFn({ data: { token, date } }),
+    queryKey: ["reschedule-slots", token, date, moveGroup && groupCount > 1],
+    queryFn: () => slotsFn({ data: { token, date, moveGroup: moveGroup && groupCount > 1 } }),
     enabled: !!ctxQ.data?.allowed,
   });
 
   async function pick(time: string) {
     setSaving(true);
     try {
-      const r = await moveFn({ data: { token, date, startTime: time } });
+      const r = await moveFn({ data: { token, date, startTime: time, moveGroup: moveGroup && groupCount > 1 } });
       if (r.ok) {
-        toast.success("Appointment moved");
+        toast.success(moveGroup && groupCount > 1 ? "Appointments moved" : "Appointment moved");
         onDone(r.date!, r.startTime!);
       } else {
         toast.error(r.error ?? "Could not move the appointment");

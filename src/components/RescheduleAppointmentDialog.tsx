@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { rescheduleAppointment, listRescheduleLocations } from "@/lib/appointments.functions";
+import { rescheduleAppointment, listRescheduleLocations, getAppointmentGroupCount } from "@/lib/appointments.functions";
 import { CalendarClock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
