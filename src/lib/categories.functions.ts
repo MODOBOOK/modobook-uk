@@ -190,6 +190,33 @@ export const deleteCategory = createServerFn({ method: "POST" })
   .inputValidator((input: { id: string }) => input)
   .handler(async ({ data, context }) => {
     const { supabase } = context;
+    // Time-limited categories take their services with them — they must not
+    // fall back to Uncategorised. Past bookings keep their saved names.
+    const { data: cat } = await supabase
+      .from("treatment_categories")
+      .select("id, profile_id, is_limited")
+      .eq("id", data.id)
+      .maybeSingle();
+    if ((cat as any)?.is_limited) {
+      const { data: all } = await supabase
+        .from("treatment_categories")
+        .select("id, parent_id")
+        .eq("profile_id", (cat as any).profile_id);
+      const ids = new Set<string>([data.id]);
+      let grew = true;
+      while (grew) {
+        grew = false;
+        for (const c of all ?? []) {
+          if (c.parent_id && ids.has(c.parent_id) && !ids.has(c.id)) { ids.add(c.id); grew = true; }
+        }
+      }
+      const { error: tErr } = await supabase
+        .from("treatments")
+        .delete()
+        .eq("profile_id", (cat as any).profile_id)
+        .in("category_id", [...ids]);
+      if (tErr) throw tErr;
+    }
     const { error } = await supabase
       .from("treatment_categories")
       .delete()

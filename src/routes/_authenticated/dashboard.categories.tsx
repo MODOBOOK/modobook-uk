@@ -75,7 +75,9 @@ function CategoriesPage() {
   const deleteFn = useServerFn(deleteCategory);
 
   async function handleDelete(cat: Cat) {
-    if (!confirm(`Delete "${cat.name}" and all its subcategories?`)) return;
+    if (!confirm((cat as any).is_limited
+      ? `Delete time-limited "${cat.name}"? All services inside it will be deleted too.`
+      : `Delete "${cat.name}" and all its subcategories?`)) return;
     try {
       await deleteFn({ data: { id: cat.id } });
       toast.success("Category deleted");
