@@ -53,9 +53,17 @@ export const previewLinkFee = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const profile = await getProfile(context.supabase, context.userId);
     const subtotal = Math.max(0, Math.round(Number(data.amountCents) || 0));
-    if (!profile || subtotal <= 0) return { subtotal_cents: subtotal, surcharge_cents: 0, total_cents: subtotal };
+    if (!profile || subtotal <= 0 || !profile.payment_pass_fees_to_customer) return { subtotal_cents: subtotal, surcharge_cents: 0, total_cents: subtotal };
     const surcharge = computeCardSurchargeCents(subtotal, profile, true);
     return { subtotal_cents: subtotal, surcharge_cents: surcharge, total_cents: subtotal + surcharge };
+  });
+
+// Whether this practitioner absorbs fees themselves (hides every "add fees" option).
+export const getFeesAbsorbed = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profile = await getProfile(context.supabase, context.userId);
+    return { absorbed: !profile?.payment_pass_fees_to_customer };
   });
 
 export const createPaymentLink = createServerFn({ method: "POST" })
@@ -84,7 +92,8 @@ export const createPaymentLink = createServerFn({ method: "POST" })
       throw new Error("Minimum amount is £1.00");
     }
     const subtotalCents = Math.round(data.amountCents);
-    const includeFees = data.includeFees ?? true;
+    // Practitioners who absorb fees never pass them on, whatever the client sent.
+    const includeFees = !!profile.payment_pass_fees_to_customer && (data.includeFees ?? true);
     const surchargeCents = includeFees ? computeCardSurchargeCents(subtotalCents, profile, true) : 0;
     const totalCents = subtotalCents + surchargeCents;
 

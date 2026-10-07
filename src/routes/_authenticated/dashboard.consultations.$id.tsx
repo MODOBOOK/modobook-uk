@@ -1,3 +1,4 @@
+import { useFeesAbsorbed } from "@/lib/use-link-fee";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useServerFn } from "@tanstack/react-start";
@@ -803,7 +804,8 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
   const [generating, setGenerating] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [emailing, setEmailing] = useState(false);
-  const includeFees = invoice?.include_fees !== false;
+  const feesAbsorbed = useFeesAbsorbed();
+  const includeFees = invoice?.include_fees !== false && !feesAbsorbed;
   const feeCents = Number(invoice?.fee_cents ?? 0);
   const items: InvLine[] = Array.isArray(invoice?.items) && invoice.items.length > 0
     ? invoice.items
@@ -1039,6 +1041,7 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
         <Input type="email" value={invoice?.email ?? email ?? ""} onChange={(e) => onChange({ ...invoice, email: e.target.value })} />
       </div>
 
+      {!feesAbsorbed && (
       <label className="flex items-start gap-2 rounded-md border p-3">
         <Checkbox checked={includeFees} onCheckedChange={(v) => onChange({ ...invoice, include_fees: v === true })} className="mt-0.5" />
         <span className="text-xs">
@@ -1046,6 +1049,7 @@ function Step8({ invoice, email, patientName, consultationId, onChange, onComple
           <span className="text-muted-foreground">Uses the card surcharges set in Settings. The fee is shown as its own line on the invoice PDF.</span>
         </span>
       </label>
+      )}
 
       {invoice?.payment_link ? (
         <div className="rounded-md border bg-emerald-50 p-3 text-sm dark:bg-emerald-950/30">
