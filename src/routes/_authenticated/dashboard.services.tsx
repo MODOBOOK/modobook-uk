@@ -296,7 +296,9 @@ function ServicesPage() {
     (t.description ?? "").toLowerCase().includes(q);
 
   async function handleDeleteCat(c: Cat) {
-    if (!confirm(`Delete "${c.name}" and its subcategories? Services inside will become Uncategorised.`)) return;
+    if (!confirm((c as any).is_limited
+      ? `Delete time-limited "${c.name}"? All services inside it will be deleted too.`
+      : `Delete "${c.name}" and its subcategories? Services inside will become Uncategorised.`)) return;
     try {
       await removeCat({ data: { id: c.id } });
       toast.success("Category deleted");
