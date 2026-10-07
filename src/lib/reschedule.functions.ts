@@ -291,9 +291,18 @@ export const rescheduleByToken = createServerFn({ method: "POST" })
         return { ok: false as const, error: `Appointments can only be changed more than ${cutoff} hours beforehand.` };
     }
 
-    const duration = Math.max(5, toMinutes(appt.end_time) - toMinutes(appt.start_time));
     const startHM = data.startTime.length === 5 ? `${data.startTime}:00` : data.startTime;
-    const endHM = `${fromMinutes(toMinutes(data.startTime) + duration)}:00`;
+    // The chosen time is the new start of the first appointment; the rest of
+    // the group keeps its original offset from that start.
+    const anchorStart = toMinutes(group[0]!.start_time);
+    const newTimes = group.map((g) => {
+      const offset = toMinutes(g.start_time) - anchorStart;
+      const s = toMinutes(data.startTime) + offset;
+      return { id: g.id, start: s, end: s + Math.max(5, toMinutes(g.end_time) - toMinutes(g.start_time)) };
+    });
+    const wantStart = newTimes[0]!.start;
+    const wantEnd = Math.max(...newTimes.map((t) => t.end));
+    const endHM = `${fromMinutes(wantEnd)}:00`;
 
     // Re-check the slot is still free right before moving the booking.
     const { data: clashing } = await supabaseAdmin
@@ -302,11 +311,9 @@ export const rescheduleByToken = createServerFn({ method: "POST" })
       .eq("profile_id", appt.profile_id)
       .eq("scheduled_date", data.date)
       .neq("status", "cancelled");
-    const wantStart = toMinutes(startHM);
-    const wantEnd = wantStart + duration;
     const taken = (clashing ?? []).some(
       (b) =>
-        b.id !== appt.id &&
+        !groupIds.has(b.id) &&
         (!b.location_id || !appt.location_id || b.location_id === appt.location_id) &&
         (!appt.practitioner_id || !b.practitioner_id || b.practitioner_id === appt.practitioner_id) &&
         toMinutes(b.start_time as string) < wantEnd &&
@@ -314,16 +321,19 @@ export const rescheduleByToken = createServerFn({ method: "POST" })
     );
     if (taken) return { ok: false as const, error: "Sorry, that time has just been taken. Please pick another." };
 
-    const { error } = await supabaseAdmin
-      .from("appointments")
-      .update({
-        scheduled_date: data.date,
-        start_time: startHM,
-        end_time: endHM,
-        reschedule_count: (appt.reschedule_count ?? 0) + 1,
-      } as never)
-      .eq("id", appt.id);
-    if (error) return { ok: false as const, error: "Could not move the appointment. Please try again." };
+    for (const t of newTimes) {
+      const g = group.find((x) => x.id === t.id)!;
+      const { error } = await supabaseAdmin
+        .from("appointments")
+        .update({
+          scheduled_date: data.date,
+          start_time: `${fromMinutes(t.start)}:00`,
+          end_time: `${fromMinutes(t.end)}:00`,
+          reschedule_count: (g.reschedule_count ?? 0) + 1,
+        } as never)
+        .eq("id", t.id);
+      if (error) return { ok: false as const, error: "Could not move the appointment. Please try again." };
+    }
 
     try {
       const { tryEnqueueAppEmail, formatBookingDateTime, getPractitionerBranding } = await import("@/lib/email/send.server");
