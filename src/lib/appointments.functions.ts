@@ -657,7 +657,7 @@ export const rescheduleAppointment = createServerFn({ method: "POST" })
       try {
         const { sendBookingConfirmationEmails } = await import("@/lib/email/send.server");
         await sendBookingConfirmationEmails(
-          [data.appointmentId],
+          newTimes.map((t) => t.id),
           `booking-reschedule-${data.date}-${startHM}`,
         );
       } catch (e) {
