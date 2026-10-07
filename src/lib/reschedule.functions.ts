@@ -41,6 +41,32 @@ async function loadByToken(token: string) {
   return { supabaseAdmin, appt: (appt as ApptRow | null) ?? null };
 }
 
+/**
+ * Other appointments for the same patient on the same day at the same clinic.
+ * A multi-treatment booking is stored as one row per treatment, so these are
+ * the rows that should move together when the patient picks "move them all".
+ */
+async function loadGroup(
+  supabaseAdmin: Awaited<ReturnType<typeof loadByToken>>["supabaseAdmin"],
+  appt: ApptRow,
+) {
+  let q = supabaseAdmin
+    .from("appointments")
+    .select(
+      "id, profile_id, treatment_id, location_id, practitioner_id, scheduled_date, start_time, end_time, status, reschedule_count, patient_name, patient_email, patient_phone",
+    )
+    .eq("profile_id", appt.profile_id)
+    .eq("scheduled_date", appt.scheduled_date)
+    .neq("status", "cancelled")
+    .order("start_time");
+  // Match the patient by the strongest detail we have.
+  if (appt.patient_email) q = q.eq("patient_email", appt.patient_email);
+  else if (appt.patient_phone) q = q.eq("patient_phone", appt.patient_phone);
+  else q = q.eq("patient_name", appt.patient_name ?? "");
+  const { data } = await q;
+  return ((data ?? []) as ApptRow[]).sort((a, z) => toMinutes(a.start_time) - toMinutes(z.start_time));
+}
+
 export const getRescheduleContextByToken = createServerFn({ method: "GET" })
   .inputValidator((input: { token: string }) => input)
   .handler(async ({ data }) => {
