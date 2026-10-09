@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { COMING_SOON_FEATURES } from "@/components/ComingSoonDialog";
 
@@ -13,6 +12,10 @@ export const Route = createFileRoute("/_authenticated/dashboard/coming-soon")({
         name: "description",
         content: "New MODO features in final testing — upcoming appointments, associate oversight, treatment packages and room rental.",
       },
+      { property: "og:title", content: "Coming soon · MODO" },
+      { property: "og:description", content: "Upcoming MODO features for your clinic." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: ComingSoonPage,
@@ -60,18 +63,6 @@ function ComingSoonPage() {
         ))}
       </div>
 
-      <Card className="bg-muted/40">
-        <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted-foreground">
-            Want early access, or have an idea for what we build next? Message the MODO team.
-          </p>
-          <Button asChild variant="outline" className="rounded-full">
-            <a href="https://wa.me/447385790119" target="_blank" rel="noreferrer">
-              WhatsApp us
-            </a>
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   );
 }
