@@ -1,8 +1,8 @@
 # Mobile redesign — practitioner dashboard
 
 ## Practitioner messages
-- [ ] Check founding-price messages within practitioner pages
-- [ ] Remove early-feature-access contact invitation and verify in preview
+- [x] Check founding-price messages within practitioner pages
+- [x] Remove early-feature-access contact invitation and verify in preview
 
 Goal: MODO runs in an app WebView; dashboard must feel native on phones.
 
