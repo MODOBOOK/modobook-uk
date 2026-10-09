@@ -1,6 +1,8 @@
 # Mobile redesign — practitioner dashboard
 
 ## Practitioner messages
+- [ ] List clinics inactive for four weeks and review clinical-record risks
+- [ ] Draft one-week account-deletion notice and send Ryan one test only
 - [x] Check founding-price messages within practitioner pages
 - [x] Remove early-feature-access contact invitation and verify in preview
 
