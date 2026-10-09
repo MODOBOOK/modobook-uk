@@ -1,8 +1,8 @@
 # Mobile redesign — practitioner dashboard
 
 ## Practitioner messages
-- [ ] List clinics inactive for four weeks and review clinical-record risks
-- [ ] Draft one-week account-deletion notice and send Ryan one test only
+- [x] List clinics with no recorded sign-in for four weeks and flag The Nursing Lab's seven upcoming bookings
+- [x] Draft one-week account-deletion notice and send Ryan one test only; no clinic sends or deletion scheduled
 - [x] Check founding-price messages within practitioner pages
 - [x] Remove early-feature-access contact invitation and verify in preview
 
