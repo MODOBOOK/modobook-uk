@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { SafeHtml } from "@/components/SafeHtml";
 import { getLeafletSignedUrl } from "@/lib/leaflets.functions";
+import { LeafletPdf } from "@/components/LeafletPdf";
 
 /** "Information leaflet" pill + pop-up (text and/or PDF) for the public booking page. */
 export function TreatmentLeafletButton({
@@ -27,11 +28,14 @@ export function TreatmentLeafletButton({
 }) {
   const [open, setOpen] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [urlError, setUrlError] = useState(false);
   const leafletUrl = url || "";
   const leafletTitle = title || `${name} — information`;
 
   useEffect(() => {
     if (!open || !leafletUrl) return;
+    setPdfUrl(null);
+    setUrlError(false);
     if (!leafletUrl.startsWith("storage:")) {
       setPdfUrl(leafletUrl);
       return;
@@ -41,7 +45,7 @@ export function TreatmentLeafletButton({
       .then((r) => {
         if (!cancelled) setPdfUrl(r.url);
       })
-      .catch(() => {});
+      .catch(() => { if (!cancelled) setUrlError(true); });
     return () => {
       cancelled = true;
     };
@@ -51,17 +55,18 @@ export function TreatmentLeafletButton({
 
   return (
     <span onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-      <button
+      <Button
         type="button"
+        variant="outline"
         onClick={() => setOpen(true)}
         className="mt-1 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition hover:opacity-80"
         style={{ borderColor: `${brand}55`, color: brand }}
       >
         <Info className="h-3.5 w-3.5" />
         Information leaflet
-      </button>
+      </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+        <DialogContent className="max-h-[90dvh] min-w-0 overflow-x-hidden overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>{leafletTitle}</DialogTitle>
             <DialogDescription>Patient information for {name}</DialogDescription>
@@ -72,7 +77,7 @@ export function TreatmentLeafletButton({
           {leafletUrl &&
             (pdfUrl ? (
               <div className="space-y-2">
-                <iframe src={pdfUrl} title={leafletTitle} className="h-[55vh] w-full rounded-md border" />
+                <LeafletPdf url={pdfUrl} title={leafletTitle} />
                 <a
                   href={pdfUrl}
                   target="_blank"
@@ -84,7 +89,7 @@ export function TreatmentLeafletButton({
                 </a>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Loading leaflet…</p>
+              <p role={urlError ? "alert" : "status"} className="text-sm text-muted-foreground">{urlError ? "The leaflet couldn’t load. Please close it and try again." : "Loading leaflet…"}</p>
             ))}
           <Button variant="outline" onClick={() => setOpen(false)}>
             Close
