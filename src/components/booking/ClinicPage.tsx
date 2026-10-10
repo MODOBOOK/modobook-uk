@@ -810,6 +810,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
               bold={menuTreatmentBold}
               isSelected={isSelected}
               onToggle={toggleSelect}
+              leafletsEnabled={treatmentLeafletsEnabled(slug)}
               options={arr.map((o) => {
                 const pr = treatmentPricing(o as never, priceFor(o));
                 return {
@@ -827,6 +828,9 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
                 recommended: Boolean((o as { course_recommended?: boolean }).course_recommended),
                 description: o.description,
                 picture_url: (o as { picture_url?: string | null }).picture_url ?? null,
+                leaflet_url: (o as { leaflet_url?: string | null }).leaflet_url ?? null,
+                leaflet_html: (o as { leaflet_html?: string | null }).leaflet_html ?? null,
+                leaflet_title: (o as { leaflet_title?: string | null }).leaflet_title ?? null,
                 full: capFor(o)?.full ?? false,
                 unit_label: (o as { course_unit_label?: string | null }).course_unit_label ?? null,
                 cta_label: (o as { course_cta_label?: string | null }).course_cta_label ?? null,

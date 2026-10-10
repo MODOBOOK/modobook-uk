@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Check, Sparkles } from "lucide-react";
 import { courseGroupLabel } from "@/lib/course-group-label";
+import { TreatmentLeafletButton } from "@/components/TreatmentLeafletButton";
 
 export type CourseOption = {
   id: string;
@@ -31,6 +32,9 @@ export type CourseOption = {
   unit_label?: string | null;
   cta_label?: string | null;
   option_label?: string | null;
+  leaflet_url?: string | null;
+  leaflet_html?: string | null;
+  leaflet_title?: string | null;
 };
 
 function treatmentName(name: string) {
@@ -74,6 +78,7 @@ export function CourseGroupRow({
   bold,
   isSelected,
   onToggle,
+  leafletsEnabled = false,
 }: {
   groupName: string;
   options: CourseOption[];
@@ -86,6 +91,7 @@ export function CourseGroupRow({
   bold: boolean;
   isSelected: (id: string) => boolean;
   onToggle: (id: string) => void;
+  leafletsEnabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -221,6 +227,20 @@ export function CourseGroupRow({
               Read more
             </button>
           )}
+          {leafletsEnabled && (() => {
+            const lo = sorted.find((o) => o.leaflet_url || o.leaflet_html);
+            return lo ? (
+              <div>
+                <TreatmentLeafletButton
+                  name={displayName}
+                  title={lo.leaflet_title}
+                  html={lo.leaflet_html}
+                  url={lo.leaflet_url}
+                  brand={brand}
+                />
+              </div>
+            ) : null;
+          })()}
         </div>
       </div>
 
