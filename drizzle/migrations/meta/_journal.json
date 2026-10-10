@@ -15,6 +15,13 @@
       "when": 1791381852333,
       "tag": "0001_expire_limited_categories",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791643799757,
+      "tag": "0002_migration",
+      "breakpoints": true
     }
   ]
 }
