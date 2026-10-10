@@ -409,6 +409,44 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
       .eq("profile_id", profile.id)
       .maybeSingle();
 
+    // Duplicate-payment guard: never open a new checkout while this clinic
+    // already has a live MODO subscription in Stripe (even if our record lost
+    // the link). Re-link it and send them back instead of charging twice.
+    {
+      const live = ["active", "trialing", "past_due", "incomplete"];
+      let found: any = null;
+      try {
+        const res = await stripe.subscriptions.search({
+          query: `metadata['profile_id']:'${profile.id}'`,
+          limit: 20,
+        });
+        found = res.data.find((s: any) => live.includes(s.status)) ?? null;
+      } catch { /* search unavailable — fall through to email check */ }
+      if (!found && profile.email) {
+        const custs = await stripe.customers.list({ email: profile.email, limit: 10 });
+        for (const c of custs.data) {
+          const subs = await stripe.subscriptions.list({ customer: c.id, status: "all", limit: 10 });
+          found = subs.data.find((s: any) => live.includes(s.status) && s.metadata?.kind === "platform_subscription") ?? null;
+          if (found) break;
+        }
+      }
+      if (found) {
+        const { reconcileSubscriptionFromStripe } = await import("./billing-reconcile.server");
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        await reconcileSubscriptionFromStripe(supabaseAdmin, profile.id, profile.email).catch(() => {});
+        if (existing && !existing.stripe_subscription_id) {
+          await supabaseAdmin
+            .from("practitioner_subscriptions")
+            .update({
+              stripe_subscription_id: found.id,
+              stripe_customer_id: typeof found.customer === "string" ? found.customer : found.customer?.id,
+            })
+            .eq("id", existing.id);
+        }
+        throw new Error("You already have an active MODO subscription — no need to pay again. Refresh this page to see it.");
+      }
+    }
+
     let customerId = existing?.stripe_customer_id as string | null | undefined;
     // Validate the stored customer still exists in the current Stripe mode.
     // A stale customer (e.g. created in test while we're now live, or deleted
