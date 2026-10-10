@@ -52,7 +52,12 @@ export function LeafletPdf({ url, title }: { url: string; title: string }) {
       }
       if (!cancelled) setStatus("ready");
     }
-    void render().catch(() => { if (!cancelled) setStatus("error"); });
+    void render().catch((error: unknown) => {
+      if (!cancelled) {
+        console.error("Leaflet PDF rendering failed", error);
+        setStatus("error");
+      }
+    });
     return () => {
       cancelled = true;
       dispose?.();
