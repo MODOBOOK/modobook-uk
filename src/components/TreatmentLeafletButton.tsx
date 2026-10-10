@@ -58,7 +58,10 @@ export function TreatmentLeafletButton({
       <Button
         type="button"
         variant="outline"
-        onClick={() => setOpen(true)}
+        onClick={(event) => {
+          event.stopPropagation();
+          setOpen(true);
+        }}
         className="mt-1 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition hover:opacity-80"
         style={{ borderColor: `${brand}55`, color: brand }}
       >
