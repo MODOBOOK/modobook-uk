@@ -6,6 +6,9 @@
 
 type AnyClient = any;
 
+export const GENERIC_CONSULTATION_CONSENT =
+  "I, the patient named on this form, confirm that the treatment has been fully explained to me, including the risks, benefits and alternatives. I have had the opportunity to ask questions and I consent to proceed.";
+
 async function ensureFallbackTemplate(
   supabase: AnyClient,
   profileId: string,
@@ -25,7 +28,8 @@ async function ensureFallbackTemplate(
     .insert({
       profile_id: profileId,
       name,
-      body_markdown: body || "Consultation treatment consent.",
+      // Shared template: never store the first patient's personalised wording.
+      body_markdown: GENERIC_CONSULTATION_CONSENT,
       is_system: false,
       requires_signature: true,
     })
