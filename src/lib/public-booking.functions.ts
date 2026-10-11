@@ -541,12 +541,18 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       practitionerId?: string | null;
       /** Total length of what's being booked; days with no gap this long are greyed out. */
       durationMinutes?: number | null;
+      treatmentIds?: string[];
     }) => input,
   )
   .handler(async ({ data }) => {
     const sb = publicClient();
     const pid = data.practitionerId ?? null;
     const matchPract = (rowPract: string | null | undefined) => !pid || !rowPract || rowPract === pid;
+    // With "no preference", days/hours belonging only to practitioners who
+    // don't offer the service being booked must not appear bookable.
+    const eligible = await eligiblePractitionerIds(sb, data.profileId, pid, data.treatmentIds);
+    const grantsAvailability = (rowPract: string | null | undefined) =>
+      !rowPract || (pid ? rowPract === pid : !eligible || eligible.has(rowPract));
     const start = new Date(Date.UTC(data.year, data.month - 1, 1));
     const end = new Date(Date.UTC(data.year, data.month, 0));
     const startIso = start.toISOString().slice(0, 10);
