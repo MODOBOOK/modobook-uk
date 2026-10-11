@@ -379,7 +379,7 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
 
 export const getDayAvailability = createServerFn({ method: "GET" })
   .inputValidator(
-    (input: { profileId: string; date: string; locationId?: string | null; practitionerId?: string | null }) => input,
+    (input: { profileId: string; date: string; locationId?: string | null; practitionerId?: string | null; treatmentIds?: string[] }) => input,
   )
   .handler(async ({ data }) => {
     const sb = publicClient();
@@ -389,6 +389,11 @@ export const getDayAvailability = createServerFn({ method: "GET" })
     // anything up per person.
     const pid = data.practitionerId ?? null;
     const matchPract = (rowPract: string | null | undefined) => !pid || !rowPract || rowPract === pid;
+    // With "no preference", hours belonging to a practitioner who doesn't
+    // offer the service being booked must not create bookable slots.
+    const eligible = await eligiblePractitionerIds(sb, data.profileId, pid, data.treatmentIds);
+    const grantsAvailability = (rowPract: string | null | undefined) =>
+      !rowPract || (pid ? rowPract === pid : !eligible || eligible.has(rowPract));
     // Use admin client to read appointments — anon has no SELECT policy on appointments,
     // so without this booked slots would not appear as busy to public visitors.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
