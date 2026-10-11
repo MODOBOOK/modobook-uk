@@ -160,6 +160,29 @@ function BookTreatmentPage() {
     const row = rows.find((r) => r.practitioner_id === chosenPractitionerId && r.treatment_id === treatment.id);
     return row?.price_cents ?? null;
   })();
+  // With "no preference", only hours belonging to team members who actually
+  // offer this service may create bookable slots.
+  const eligiblePractIds = useMemo(() => {
+    if (chosenPractitionerId) return null;
+    const pracs = (ctx as { practitionerNotice?: Array<{ id: string }> }).practitionerNotice ?? [];
+    const links = (ctx as { practitionerTreatments?: Array<{ practitioner_id: string; treatment_id: string }> }).practitionerTreatments ?? [];
+    if (pracs.length === 0) return null;
+    const byPract = new Map<string, Set<string>>();
+    for (const l of links) {
+      const s = byPract.get(l.practitioner_id) ?? new Set<string>();
+      s.add(l.treatment_id);
+      byPract.set(l.practitioner_id, s);
+    }
+    return new Set(
+      pracs
+        .filter((p) => {
+          const mine = byPract.get(p.id);
+          return !mine || mine.size === 0 || mine.has(treatment.id);
+        })
+        .map((p) => p.id),
+    );
+  }, [chosenPractitionerId, ctx, treatment.id]);
+
   // The chosen team member's own price for this service, when the clinic set one.
   const basePrice = practPriceCents != null ? practPriceCents / 100 : Number(treatment.price ?? 0);
   const pricing = treatmentPricing(treatment as never, basePrice);
@@ -370,6 +393,7 @@ function BookTreatmentPage() {
           locationId,
           practitionerId: chosenPractitionerId,
           durationMinutes: duration,
+          treatmentIds: [treatment.id],
         },
       }),
   });
@@ -412,19 +436,22 @@ function BookTreatmentPage() {
         (r: Rule) =>
           r.day_of_week === dow &&
           (!locationId || !r.location_id || r.location_id === locationId) &&
-          (!chosenPractitionerId ||
-            !(r as { practitioner_id?: string | null }).practitioner_id ||
-            (r as { practitioner_id?: string | null }).practitioner_id === chosenPractitionerId) &&
+          (() => {
+            const rp = (r as { practitioner_id?: string | null }).practitioner_id;
+            if (!rp) return true;
+            if (chosenPractitionerId) return rp === chosenPractitionerId;
+            return !eligiblePractIds || eligiblePractIds.has(rp);
+          })() &&
           ruleAppliesOnDate(r as unknown as { cycle_length?: number; weeks_mask?: number; effective_from?: string | null; effective_to?: string | null }, date, anchor),
       );
     },
-    [ctx.rules, dow, locationId, chosenPractitionerId, date, (ctx as { rotaAnchor?: string | null }).rotaAnchor],
+    [ctx.rules, dow, locationId, chosenPractitionerId, eligiblePractIds, date, (ctx as { rotaAnchor?: string | null }).rotaAnchor],
   );
 
 
   const dayQuery = useQuery({
     queryKey: ["dayAvail", ctx.profileId, date, locationId, chosenPractitionerId],
-    queryFn: () => dayFn({ data: { profileId: ctx.profileId, date, locationId, practitionerId: chosenPractitionerId } }),
+    queryFn: () => dayFn({ data: { profileId: ctx.profileId, date, locationId, practitionerId: chosenPractitionerId, treatmentIds: [treatment.id] } }),
   });
 
   const slots = useMemo(() => {
