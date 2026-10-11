@@ -11,6 +11,28 @@
  *  - the clinic has a single active practitioner, or
  *  - exactly one practitioner is rota'd on at that location/date/time.
  */
+/**
+ * Which treatments a practitioner offers, based on their assigned service
+ * list. A practitioner with no assignments offers everything (matches the
+ * booking-page menu rule); once they have a list, only those services count.
+ */
+export async function practitionerOffersTreatments(
+  supabase: any,
+  profileId: string,
+  practitionerId: string,
+  treatmentIds: string[],
+): Promise<boolean> {
+  if (treatmentIds.length === 0) return true;
+  const { data: rows } = await supabase
+    .from("practitioner_treatments")
+    .select("treatment_id")
+    .eq("profile_id", profileId)
+    .eq("practitioner_id", practitionerId);
+  const mine = new Set((rows ?? []).map((r: { treatment_id: string }) => r.treatment_id));
+  if (mine.size === 0) return true;
+  return treatmentIds.every((id) => mine.has(id));
+}
+
 export async function resolveBookingPractitioner(
   supabase: any,
   args: {
@@ -19,6 +41,8 @@ export async function resolveBookingPractitioner(
     startTime: string;
     endTime?: string | null;
     locationId?: string | null;
+    /** Services being booked — a practitioner is only assigned if they offer them. */
+    treatmentIds?: string[];
   },
 ): Promise<string | null> {
   try {
@@ -29,6 +53,7 @@ export async function resolveBookingPractitioner(
     };
     const start = toMin(args.startTime) ?? 0;
     const end = toMin(args.endTime) ?? start + 1;
+    const treatmentIds = args.treatmentIds ?? [];
 
     const { data: pracs } = await supabase
       .from("practitioners")
@@ -37,7 +62,11 @@ export async function resolveBookingPractitioner(
       .eq("active", true);
     const ids = (pracs ?? []).map((p: { id: string }) => p.id as string);
     if (ids.length === 0) return null;
-    if (ids.length === 1) return ids[0]!;
+    if (ids.length === 1) {
+      return (await practitionerOffersTreatments(supabase, args.profileId, ids[0]!, treatmentIds))
+        ? ids[0]!
+        : null;
+    }
 
     const matchesLocation = (locId: string | null | undefined) =>
       !locId || !args.locationId || locId === args.locationId;
