@@ -2085,7 +2085,9 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
         if (!favIds.length) return null;
         const favs = favIds
           .map((id) => treatments.find((t) => t.id === id))
-          .filter((t): t is Treatment => !!t && t.active !== false);
+          .filter((t): t is Treatment => !!t && t.active !== false)
+          // A chosen practitioner only sees favourites they actually offer.
+          .filter((t) => !practitionerTreatmentIds || practitionerTreatmentIds.has(t.id));
         if (!favs.length) return null;
         const multiPract = practitioners.length > 1;
         const ownerName = displayPrimary;
