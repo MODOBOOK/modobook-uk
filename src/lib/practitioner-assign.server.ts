@@ -104,6 +104,12 @@ export async function resolveBookingPractitioner(
         found.add(r.practitioner_id as string);
       }
     }
+    // Never assign someone who doesn't offer the service being booked.
+    for (const id of [...found]) {
+      if (!(await practitionerOffersTreatments(supabase, args.profileId, id, treatmentIds))) {
+        found.delete(id);
+      }
+    }
     if (found.size === 1) return [...found][0]!;
     return null;
   } catch {
