@@ -33,6 +33,47 @@ export async function practitionerOffersTreatments(
   return treatmentIds.every((id) => mine.has(id));
 }
 
+/**
+ * When the patient hasn't picked a practitioner ("no preference"), which
+ * practitioners could actually take this booking? Used to stop hours
+ * belonging to someone who doesn't offer the service from creating
+ * bookable slots. Returns null when no filtering is needed (a practitioner
+ * was chosen, or no treatments were specified).
+ */
+export async function eligiblePractitionerIds(
+  supabase: any,
+  profileId: string,
+  chosenPractitionerId: string | null,
+  treatmentIds?: string[],
+): Promise<Set<string> | null> {
+  if (chosenPractitionerId) return null;
+  const ids = (treatmentIds ?? []).filter(Boolean);
+  if (ids.length === 0) return null;
+  try {
+    const [{ data: pracs }, { data: links }] = await Promise.all([
+      supabase.from("practitioners").select("id").eq("profile_id", profileId).eq("active", true),
+      supabase.from("practitioner_treatments").select("practitioner_id, treatment_id").eq("profile_id", profileId),
+    ]);
+    const byPract = new Map<string, Set<string>>();
+    for (const l of (links ?? []) as any[]) {
+      const arr = byPract.get(l.practitioner_id) ?? new Set<string>();
+      arr.add(l.treatment_id as string);
+      byPract.set(l.practitioner_id, arr);
+    }
+    return new Set(
+      ((pracs ?? []) as any[])
+        .filter((p) => {
+          const mine = byPract.get(p.id as string);
+          // No service list = offers everything (matches the menu rule).
+          return !mine || mine.size === 0 || ids.every((t) => mine.has(t));
+        })
+        .map((p) => p.id as string),
+    );
+  } catch {
+    return null;
+  }
+}
+
 export async function resolveBookingPractitioner(
   supabase: any,
   args: {
