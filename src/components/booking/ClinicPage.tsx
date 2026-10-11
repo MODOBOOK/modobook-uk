@@ -753,11 +753,24 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
   };
   const visiblePackages = useMemo(
     () =>
-      (packages as LimitedPkg[]).filter(
-        (p) => limitedState(p).live && catWindowLive((p as { category_id?: string | null }).category_id),
-      ),
+      (packages as LimitedPkg[]).filter((p) => {
+        if (!limitedState(p).live || !catWindowLive((p as { category_id?: string | null }).category_id)) return false;
+        // A chosen practitioner only sees packages containing a service they offer.
+        if (practitionerId) {
+          const mine = new Set(
+            practitionerTreatments.filter((l) => l.practitioner_id === practitionerId).map((l) => l.treatment_id),
+          );
+          if (mine.size > 0) {
+            const ids = ((p as { treatment_ids?: string[] | null }).treatment_ids ?? []).filter(Boolean);
+            const single = (p as { treatment_id?: string | null }).treatment_id;
+            const all = ids.length > 0 ? ids : single ? [single] : [];
+            if (all.length > 0 && !all.some((id) => mine.has(id))) return false;
+          }
+        }
+        return true;
+      }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [packages, categories, nowTs],
+    [packages, categories, nowTs, practitionerId, practitionerTreatments],
   );
   const buildersEnabled = packageBuilderEnabled(slug);
   const activeBuilders = (buildersEnabled ? (packageBuilders ?? []) : []).filter(
@@ -2072,7 +2085,9 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
         if (!favIds.length) return null;
         const favs = favIds
           .map((id) => treatments.find((t) => t.id === id))
-          .filter((t): t is Treatment => !!t && t.active !== false);
+          .filter((t): t is Treatment => !!t && t.active !== false)
+          // A chosen practitioner only sees favourites they actually offer.
+          .filter((t) => !practitionerTreatmentIds || practitionerTreatmentIds.has(t.id));
         if (!favs.length) return null;
         const multiPract = practitioners.length > 1;
         const ownerName = displayPrimary;
