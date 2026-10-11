@@ -1880,14 +1880,22 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
           : `Payment plan: Pay in full for ${sessionCount} appointments`
         : null;
       const appointmentNotes = [data.notes, paymentNote].filter(Boolean).join("\n") || null;
+      // A patient-chosen practitioner only stands if they offer this service.
+      const { practitionerOffersTreatments } = await import("./practitioner-assign.server");
+      const chosenPractitionerId =
+        data.practitionerId &&
+        (await practitionerOffersTreatments(sb, data.profileId, data.practitionerId, [b.treatmentId]))
+          ? data.practitionerId
+          : null;
       const assignedPractitionerId =
-        data.practitionerId ??
+        chosenPractitionerId ??
         (await resolveBookingPractitioner(sb, {
           profileId: data.profileId,
           date: data.date,
           startTime: cursor,
           endTime: end,
           locationId: data.locationId ?? null,
+          treatmentIds: [b.treatmentId],
         }));
       const { error } = await sb.from("appointments").insert({
         id,
