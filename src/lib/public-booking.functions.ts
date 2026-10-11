@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { platformFeeCents } from "@/lib/platform-fee";
 import { isFullName, cleanPatientName, FULL_NAME_MESSAGE } from "@/lib/patient-name";
-import { resolveBookingPractitioner } from "./practitioner-assign.server";
+import { eligiblePractitionerIds, resolveBookingPractitioner } from "./practitioner-assign.server";
 
 function publicClient() {
   return createClient<Database>(
@@ -379,7 +379,7 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
 
 export const getDayAvailability = createServerFn({ method: "GET" })
   .inputValidator(
-    (input: { profileId: string; date: string; locationId?: string | null; practitionerId?: string | null }) => input,
+    (input: { profileId: string; date: string; locationId?: string | null; practitionerId?: string | null; treatmentIds?: string[] }) => input,
   )
   .handler(async ({ data }) => {
     const sb = publicClient();
@@ -389,6 +389,11 @@ export const getDayAvailability = createServerFn({ method: "GET" })
     // anything up per person.
     const pid = data.practitionerId ?? null;
     const matchPract = (rowPract: string | null | undefined) => !pid || !rowPract || rowPract === pid;
+    // With "no preference", hours belonging to a practitioner who doesn't
+    // offer the service being booked must not create bookable slots.
+    const eligible = await eligiblePractitionerIds(sb, data.profileId, pid, data.treatmentIds);
+    const grantsAvailability = (rowPract: string | null | undefined) =>
+      !rowPract || (pid ? rowPract === pid : !eligible || eligible.has(rowPract));
     // Use admin client to read appointments — anon has no SELECT policy on appointments,
     // so without this booked slots would not appear as busy to public visitors.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -497,7 +502,7 @@ export const getDayAvailability = createServerFn({ method: "GET" })
     // Overrides with a location only apply at that location; null = every location.
     const scopedOverrides = (overrides ?? [])
       .filter((o) => !o.location_id || !data.locationId || o.location_id === data.locationId)
-      .filter((o) => matchPract((o as { practitioner_id?: string | null }).practitioner_id));
+      .filter((o) => grantsAvailability((o as { practitioner_id?: string | null }).practitioner_id));
 
     // An ad-hoc slot added for this date is an explicit opening, so it beats a
     // closed/blocked day. The daily cap still applies.
@@ -536,12 +541,18 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       practitionerId?: string | null;
       /** Total length of what's being booked; days with no gap this long are greyed out. */
       durationMinutes?: number | null;
+      treatmentIds?: string[];
     }) => input,
   )
   .handler(async ({ data }) => {
     const sb = publicClient();
     const pid = data.practitionerId ?? null;
     const matchPract = (rowPract: string | null | undefined) => !pid || !rowPract || rowPract === pid;
+    // With "no preference", days/hours belonging only to practitioners who
+    // don't offer the service being booked must not appear bookable.
+    const eligible = await eligiblePractitionerIds(sb, data.profileId, pid, data.treatmentIds);
+    const grantsAvailability = (rowPract: string | null | undefined) =>
+      !rowPract || (pid ? rowPract === pid : !eligible || eligible.has(rowPract));
     const start = new Date(Date.UTC(data.year, data.month - 1, 1));
     const end = new Date(Date.UTC(data.year, data.month, 0));
     const startIso = start.toISOString().slice(0, 10);
@@ -572,7 +583,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
     const matchLoc = (rowLoc: string | null) =>
       !data.locationId || !rowLoc || rowLoc === data.locationId;
     const scopedRules = (rules ?? []).filter((r) =>
-      matchPract((r as { practitioner_id?: string | null }).practitioner_id),
+      grantsAvailability((r as { practitioner_id?: string | null }).practitioner_id),
     );
     const activeDays = Array.from(
       new Set(scopedRules.filter((r) => matchLoc(r.location_id)).map((r) => r.day_of_week)),
@@ -590,12 +601,12 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
     );
     const overrideDates = (overrides ?? [])
       .filter((o) => matchLoc(o.location_id))
-      .filter((o) => matchPract((o as { practitioner_id?: string | null }).practitioner_id))
+      .filter((o) => grantsAvailability((o as { practitioner_id?: string | null }).practitioner_id))
       .filter((o) => !locationBlockedDates.has(o.date) || o.location_id === data.locationId)
       .map((o) => o.date);
     const scopedOverrides = (overrides ?? [])
       .filter((o) => matchLoc(o.location_id))
-      .filter((o) => matchPract((o as { practitioner_id?: string | null }).practitioner_id))
+      .filter((o) => grantsAvailability((o as { practitioner_id?: string | null }).practitioner_id))
       .filter((o) => !locationBlockedDates.has(o.date) || o.location_id === data.locationId);
 
     // Expand rota-aware open dates across the month
