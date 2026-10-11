@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { platformFeeCents } from "@/lib/platform-fee";
 import { isFullName, cleanPatientName, FULL_NAME_MESSAGE } from "@/lib/patient-name";
-import { resolveBookingPractitioner } from "./practitioner-assign.server";
+import { eligiblePractitionerIds, resolveBookingPractitioner } from "./practitioner-assign.server";
 
 function publicClient() {
   return createClient<Database>(
@@ -502,7 +502,7 @@ export const getDayAvailability = createServerFn({ method: "GET" })
     // Overrides with a location only apply at that location; null = every location.
     const scopedOverrides = (overrides ?? [])
       .filter((o) => !o.location_id || !data.locationId || o.location_id === data.locationId)
-      .filter((o) => matchPract((o as { practitioner_id?: string | null }).practitioner_id));
+      .filter((o) => grantsAvailability((o as { practitioner_id?: string | null }).practitioner_id));
 
     // An ad-hoc slot added for this date is an explicit opening, so it beats a
     // closed/blocked day. The daily cap still applies.
