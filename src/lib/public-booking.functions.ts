@@ -583,7 +583,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
     const matchLoc = (rowLoc: string | null) =>
       !data.locationId || !rowLoc || rowLoc === data.locationId;
     const scopedRules = (rules ?? []).filter((r) =>
-      matchPract((r as { practitioner_id?: string | null }).practitioner_id),
+      grantsAvailability((r as { practitioner_id?: string | null }).practitioner_id),
     );
     const activeDays = Array.from(
       new Set(scopedRules.filter((r) => matchLoc(r.location_id)).map((r) => r.day_of_week)),
@@ -601,12 +601,12 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
     );
     const overrideDates = (overrides ?? [])
       .filter((o) => matchLoc(o.location_id))
-      .filter((o) => matchPract((o as { practitioner_id?: string | null }).practitioner_id))
+      .filter((o) => grantsAvailability((o as { practitioner_id?: string | null }).practitioner_id))
       .filter((o) => !locationBlockedDates.has(o.date) || o.location_id === data.locationId)
       .map((o) => o.date);
     const scopedOverrides = (overrides ?? [])
       .filter((o) => matchLoc(o.location_id))
-      .filter((o) => matchPract((o as { practitioner_id?: string | null }).practitioner_id))
+      .filter((o) => grantsAvailability((o as { practitioner_id?: string | null }).practitioner_id))
       .filter((o) => !locationBlockedDates.has(o.date) || o.location_id === data.locationId);
 
     // Expand rota-aware open dates across the month
