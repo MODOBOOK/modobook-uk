@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -29,14 +29,27 @@ export function RescheduleAppointmentDialog({
   onRescheduled?: (v: { date: string; start: string; end: string }) => void;
 }) {
   const trim = (v: string) => (v?.length >= 5 ? v.slice(0, 5) : v);
-  const [date, setDate] = useState(initialDate);
-  const [start, setStart] = useState(trim(initialStart));
-  const [end, setEnd] = useState(trim(initialEnd));
+  const [dateState, setDate] = useState(initialDate);
+  const [startState, setStart] = useState(trim(initialStart));
+  const [endState, setEnd] = useState(trim(initialEnd));
   const [notify, setNotify] = useState(true);
   const [busy, setBusy] = useState(false);
   const [locationId, setLocationId] = useState<string | null>(null);
   const [locationTouched, setLocationTouched] = useState(false);
   const [moveGroup, setMoveGroup] = useState(true);
+  const dateRef = useRef<HTMLInputElement>(null);
+  const startRef = useRef<HTMLInputElement>(null);
+  const endRef = useRef<HTMLInputElement>(null);
+  // Re-sync with the appointment each time the window opens (the window can be
+  // mounted before the appointment's times are known, leaving stale blanks).
+  useEffect(() => {
+    if (!open) return;
+    setDate(initialDate || "");
+    setStart(trim(initialStart || ""));
+    setEnd(trim(initialEnd || ""));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, appointmentId, initialDate, initialStart, initialEnd]);
+  const date = dateState, start = startState, end = endState;
   const call = useServerFn(rescheduleAppointment);
   const fetchLocations = useServerFn(listRescheduleLocations);
   const fetchGroupCount = useServerFn(getAppointmentGroupCount);
@@ -57,6 +70,11 @@ export function RescheduleAppointmentDialog({
   const chosenLocation = locationTouched ? locationId : currentLocationId;
 
   async function save() {
+    // Mobile browsers (iOS Safari especially) don't always fire change events
+    // for date/time pickers, so read the inputs directly as a fallback.
+    const date = dateRef.current?.value || dateState;
+    const start = trim(startRef.current?.value || startState);
+    const end = trim(endRef.current?.value || endState);
     if (!date || !start || !end) {
       toast.error("Pick a date and time");
       return;
@@ -102,16 +120,16 @@ export function RescheduleAppointmentDialog({
           )}
           <div className="space-y-1.5">
             <Label htmlFor="rs-date">Date</Label>
-            <Input id="rs-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <Input id="rs-date" ref={dateRef} type="date" value={date} onChange={(e) => setDate(e.target.value)} onInput={(e) => setDate((e.target as HTMLInputElement).value)} onBlur={(e) => setDate(e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="rs-start">Start</Label>
-              <Input id="rs-start" type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+              <Input id="rs-start" ref={startRef} type="time" value={start} onChange={(e) => setStart(e.target.value)} onInput={(e) => setStart((e.target as HTMLInputElement).value)} onBlur={(e) => setStart(e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="rs-end">End</Label>
-              <Input id="rs-end" type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
+              <Input id="rs-end" ref={endRef} type="time" value={end} onChange={(e) => setEnd(e.target.value)} onInput={(e) => setEnd((e.target as HTMLInputElement).value)} onBlur={(e) => setEnd(e.target.value)} />
             </div>
           </div>
           {(locData?.locations?.length ?? 0) > 0 && (
