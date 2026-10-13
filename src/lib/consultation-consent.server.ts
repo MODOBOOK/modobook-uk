@@ -136,10 +136,19 @@ export async function syncConsultationConsent(
     };
     const { data: existing } = await supabase
       .from("appointment_consents")
-      .select("id")
+      .select("id, signature_data, signature_name, signed_at")
       .eq("token", token)
       .maybeSingle();
     if (existing?.id) {
+      // Skip the write when nothing about the signature changed — keeps
+      // consent autosaves light on the server.
+      if (
+        existing.signature_data === signature &&
+        existing.signature_name === signerName &&
+        existing.signed_at === signedAt
+      ) {
+        continue;
+      }
       const { error: uErr } = await supabase
         .from("appointment_consents")
         .update({

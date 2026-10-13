@@ -38,8 +38,27 @@ async function ensureTemplate(
   supabase: AnyClient,
   profileId: string,
   questions: string[],
+  existingId?: string | null,
 ): Promise<string | null> {
   const schema = buildSchema(questions);
+  // When we already know the template, only rewrite its schema if the
+  // questions changed — saves a write on every autosave.
+  if (existingId) {
+    const { data: tpl } = await supabase
+      .from("medical_form_templates")
+      .select("id, schema")
+      .eq("id", existingId)
+      .maybeSingle();
+    if (tpl?.id) {
+      if (JSON.stringify(tpl.schema ?? {}) !== JSON.stringify(schema)) {
+        await supabase
+          .from("medical_form_templates")
+          .update({ schema })
+          .eq("id", tpl.id);
+      }
+      return tpl.id as string;
+    }
+  }
   const { data: existing } = await supabase
     .from("medical_form_templates")
     .select("id")
@@ -142,23 +161,32 @@ export async function syncConsultationMedical(
     return { saved: 0, client_id: cons.patient_id ?? null };
   }
 
-  const clientId = await ensurePatient(supabase, profileId, cons);
-  if (!clientId) return { saved: 0, client_id: null };
-
-  const templateId = await ensureTemplate(supabase, profileId, questions);
-  if (!templateId) return { saved: 0, client_id: clientId };
-
   const response: Record<string, any> = { notes };
   for (const q of questions) response[slug(q)] = answers[q] ? "Yes" : "No";
 
   const token = `consmed-${consultationId}`.slice(0, 120);
-  const now = new Date().toISOString();
 
+  // If the mirrored form already holds exactly this content, skip every
+  // write — keeps autosaves light on the server.
   const { data: existing } = await supabase
     .from("appointment_medical_forms")
-    .select("id")
+    .select("id, client_id, template_id, response")
     .eq("token", token)
     .maybeSingle();
+
+  if (existing?.id && JSON.stringify(existing.response ?? {}) === JSON.stringify(response)) {
+    return { saved: 0, client_id: existing.client_id ?? cons.patient_id ?? null };
+  }
+
+  const clientId = existing?.client_id ?? (await ensurePatient(supabase, profileId, cons));
+  if (!clientId) return { saved: 0, client_id: null };
+
+  const templateId = existing?.template_id
+    ? await ensureTemplate(supabase, profileId, questions, existing.template_id)
+    : await ensureTemplate(supabase, profileId, questions);
+  if (!templateId) return { saved: 0, client_id: clientId };
+
+  const now = new Date().toISOString();
 
   if (existing?.id) {
     const { error: uErr } = await supabase
