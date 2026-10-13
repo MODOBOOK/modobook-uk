@@ -318,7 +318,7 @@ export const purchaseGiftCard = createServerFn({ method: "POST" })
     if (insErr) throw insErr;
 
     const { createCheckoutSession } = await import("./stripe.server");
-    const returnUrl = `${data.return_origin.replace(/\/$/, "")}/m/${data.slug}/gift-cards?purchase=${purchase.id}`;
+    const returnUrl = `${(await import("./safe-origin")).safeOrigin(data.return_origin)}/m/${data.slug}/gift-cards?purchase=${purchase.id}`;
     const session = await createCheckoutSession({
       accountId: prof.stripe_connect_account_id,
       lineItems: [

@@ -150,8 +150,9 @@ export const updateCourse = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase } = context;
     const patch: Record<string, unknown> = {};
+    const ALLOWED = new Set<string>(["name","category","training_category_id","description","cover_image_url","mode","duration_min","day_count","days_consecutive","day_duration_min","price","deposit_amount","payment_mode","allow_split_payment","capacity","prerequisites","require_prereq_confirm","cpd_hours","certificate_template_url","materials_html","kit_list","handout_url","handout_name","active","visibility","scheduling_mode"]);
     for (const k of Object.keys(data)) {
-      if (k === "id") continue;
+      if (!ALLOWED.has(k)) continue;
       patch[k] = (data as Record<string, unknown>)[k];
     }
     const { data: row, error } = await supabase

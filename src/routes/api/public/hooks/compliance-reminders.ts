@@ -11,9 +11,7 @@ export const Route = createFileRoute('/api/public/hooks/compliance-reminders')({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apikey = request.headers.get('apikey')
-        const expected = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY
-        if (!apikey || !expected || apikey !== expected) {
+        if (!(await (await import('@/lib/cron-auth.server')).isAuthorizedCron(request))) {
           return new Response('Unauthorized', { status: 401 })
         }
 

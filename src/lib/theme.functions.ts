@@ -141,6 +141,7 @@ export const upsertMyTheme = createServerFn({ method: "POST" })
     // Sanitize practitioner-controlled fields that end up rendered inside a
     // <style> element on the public /m/:slug page.
     const sanitized: ClinicThemeInput = { ...data };
+    for (const k of ["id", "profile_id", "created_at", "updated_at"]) delete (sanitized as Record<string, unknown>)[k];
     if (typeof sanitized.heading_font === "string") {
       sanitized.heading_font = sanitized.heading_font
         .replace(/[^a-zA-Z0-9\s\-_,'"]/g, "")

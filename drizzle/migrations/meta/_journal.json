@@ -22,6 +22,27 @@
       "when": 1791643799757,
       "tag": "0002_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791877719630,
+      "tag": "0003_cron_hook_secret",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791878200422,
+      "tag": "0004_tighten_public_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791878338344,
+      "tag": "0005_cron_hook_compat_apikey",
+      "breakpoints": true
     }
   ]
 }

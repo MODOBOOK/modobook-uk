@@ -288,8 +288,8 @@ export const cancelAppointmentByToken = createServerFn({ method: "POST" })
     let autoRefundedCents = 0;
     if (ok && a?.id) {
       try {
-        const { autoRefundCancelledAppointment } = await import("./refunds.functions");
-        const r = await autoRefundCancelledAppointment({ data: { appointmentId: a.id } });
+        const { runAutoRefund } = await import("./refunds.server");
+        const r = await runAutoRefund(a.id);
         if (r.refunded) autoRefundedCents = r.refundedCents;
       } catch (e) { console.error("[cancelAppointmentByToken] auto refund failed", e); }
     }

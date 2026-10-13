@@ -483,7 +483,7 @@ export const createTrainingBooking = createServerFn({ method: "POST" })
           .maybeSingle();
         if (prof?.stripe_connect_account_id) {
           const { createCheckoutSession } = await import("./stripe.server");
-          const base = `${data.return_origin.replace(/\/$/, "")}/m/${data.slug}/training/${course.id}?booking=${row.id}`;
+          const base = `${(await import("./safe-origin")).safeOrigin(data.return_origin)}/m/${data.slug}/training/${course.id}?booking=${row.id}`;
           const session = await createCheckoutSession({
             accountId: prof.stripe_connect_account_id,
             lineItems: [{

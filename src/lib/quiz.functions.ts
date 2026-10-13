@@ -38,7 +38,11 @@ export const saveQuizConfig = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
       .from("profiles")
-      .update(data)
+      .update({
+        ...(data.quiz_enabled !== undefined ? { quiz_enabled: !!data.quiz_enabled } : {}),
+        ...(data.quiz_intro !== undefined ? { quiz_intro: data.quiz_intro == null ? null : String(data.quiz_intro).slice(0, 5000) } : {}),
+        ...(data.quiz_outro !== undefined ? { quiz_outro: data.quiz_outro == null ? null : String(data.quiz_outro).slice(0, 5000) } : {}),
+      })
       .eq("id", await __activeProfileId(context.supabase, context.userId));
     if (error) throw error;
     return { ok: true };

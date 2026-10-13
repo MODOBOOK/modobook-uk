@@ -46,7 +46,7 @@ export const launchDemoSession = createServerFn({ method: "POST" })
     }
     const { DEMO_PRACTITIONER_EMAIL, DEMO_PATIENT_EMAIL, DEMO_SLUG } = await import("./demo.server");
     const email = data.role === "practitioner" ? DEMO_PRACTITIONER_EMAIL : DEMO_PATIENT_EMAIL;
-    const origin = (data.origin || "https://modobook.uk").replace(/\/$/, "");
+    const origin = (await import("./safe-origin")).safeOrigin(data.origin);
     const path = data.role === "practitioner" ? "/dashboard" : `/m/${DEMO_SLUG}/account`;
     const redirectTo = `${origin}${path}`;
 

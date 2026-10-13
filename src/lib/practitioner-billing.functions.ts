@@ -514,8 +514,8 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
             extra_practitioners: String(data.extraPractitioners ?? 0),
           },
         },
-        success_url: data.successUrl,
-        cancel_url: data.cancelUrl,
+        success_url: (await import("./safe-origin")).safeUrl(data.successUrl, "/dashboard"),
+        cancel_url: (await import("./safe-origin")).safeUrl(data.cancelUrl, "/dashboard"),
         metadata: {
           profile_id: profile.id,
           plan_id: base.id,
@@ -886,7 +886,7 @@ export const openStripePortal = createServerFn({ method: "POST" })
     const stripe = getStripe();
     const session = await stripe.billingPortal.sessions.create({
       customer: sub.stripe_customer_id,
-      return_url: data.returnUrl,
+      return_url: (await import("./safe-origin")).safeUrl(data.returnUrl, "/dashboard"),
     });
     return { url: session.url };
   });

@@ -13,9 +13,7 @@ export const Route = createFileRoute('/api/public/hooks/billing-reconcile')({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apikey = request.headers.get('apikey')
-        const expected = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY
-        if (!apikey || !expected || apikey !== expected) {
+        if (!(await (await import('@/lib/cron-auth.server')).isAuthorizedCron(request))) {
           return new Response('Unauthorized', { status: 401 })
         }
 
@@ -37,7 +35,7 @@ export const Route = createFileRoute('/api/public/hooks/billing-reconcile')({
           const { data: prof, error: pErr } = body?.profileId
             ? await q.eq('id', body.profileId).maybeSingle()
             : await q.ilike('email', String(body.email)).maybeSingle()
-          if (pErr) return new Response(pErr.message, { status: 500 })
+          if (pErr) return new Response('internal error', { status: 500 })
           if (!prof) return Response.json({ ok: false, error: 'not_found' }, { status: 404 })
           const ok = await reconcileSubscriptionFromStripe(supabaseAdmin, prof.id, prof.email)
           return Response.json({ ok: true, checked: 1, healed: ok ? 1 : 0 })
@@ -48,7 +46,7 @@ export const Route = createFileRoute('/api/public/hooks/billing-reconcile')({
           .from('profiles')
           .select('id, email')
           .limit(2000)
-        if (error) return new Response(error.message, { status: 500 })
+        if (error) return new Response('internal error', { status: 500 })
 
         let checked = 0
         let healed = 0

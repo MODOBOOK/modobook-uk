@@ -198,8 +198,8 @@ export const createSubscriptionCheckout = createServerFn({ method: "POST" })
       mode: "subscription",
       customer: customerId,
       line_items: [{ price: plan.stripe_price_id, quantity: 1 }],
-      success_url: data.successUrl || "https://example.com/subscription/success",
-      cancel_url: data.cancelUrl || "https://example.com/subscription/cancel",
+      success_url: (await import("./safe-origin")).safeUrl(data.successUrl, "/dashboard"),
+      cancel_url: (await import("./safe-origin")).safeUrl(data.cancelUrl, "/dashboard"),
       metadata: { profile_id: prof.id, plan_id: plan.id },
     });
 

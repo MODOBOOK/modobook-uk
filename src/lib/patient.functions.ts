@@ -129,7 +129,9 @@ export const updateMyPatient = createServerFn({ method: "POST" })
     const { supabase, userId, claims } = context;
     const email = (claims as { email?: string } | null)?.email ?? null;
     const patch: Record<string, unknown> = {};
+    const ALLOWED = new Set(["full_name","email","phone","date_of_birth","address_line1","address_line2","city","postcode","country"]);
     for (const [k, v] of Object.entries(data)) {
+      if (!ALLOWED.has(k)) continue;
       if (v !== undefined && v !== "") patch[k] = v;
     }
     const { data: existing } = await supabase

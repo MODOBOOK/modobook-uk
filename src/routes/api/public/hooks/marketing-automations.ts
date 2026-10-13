@@ -6,9 +6,7 @@ export const Route = createFileRoute('/api/public/hooks/marketing-automations')(
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = request.headers.get('apikey') || request.headers.get('Apikey')
-        const expected = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY
-        if (!expected || apiKey !== expected) {
+        if (!(await (await import('@/lib/cron-auth.server')).isAuthorizedCron(request))) {
           return new Response('Unauthorized', { status: 401 })
         }
         const { processAutomations } = await import('@/lib/marketing.functions')
