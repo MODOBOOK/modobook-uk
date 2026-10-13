@@ -36,6 +36,13 @@
       "when": 1791878200422,
       "tag": "0004_tighten_public_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791878338344,
+      "tag": "0005_cron_hook_compat_apikey",
+      "breakpoints": true
     }
   ]
 }
