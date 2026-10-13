@@ -194,7 +194,9 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
                   .from('appointments')
                   .select(apptSelect)
                   .eq('profile_id', clinic.id)
-                  .in('status', ['confirmed', 'pending'])
+                  // Confirmed only: pending bookings are unfinished payments
+                  // (patient left at the payment step) and must not be texted.
+                  .eq('status', 'confirmed')
                   .gte('created_at', new Date(targetMs - 6 * 60_000).toISOString())
                   .lte('created_at', new Date(targetMs + 6 * 60_000).toISOString())
                 for (const raw of fresh ?? []) {
@@ -220,7 +222,7 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
                   .from('appointments')
                   .select(apptSelect)
                   .eq('profile_id', clinic.id)
-                  .in('status', ['confirmed', 'pending'])
+                  .eq('status', 'confirmed')
                   .gte('scheduled_date', new Date(winStart).toISOString().slice(0, 10))
                   .lte('scheduled_date', new Date(winEnd).toISOString().slice(0, 10))
                 for (const raw of appts ?? []) {
