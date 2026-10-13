@@ -35,7 +35,7 @@ export const Route = createFileRoute('/api/public/hooks/daily-schedule-digest')(
             .from('appointments')
             .select('profile_id, patient_name, start_time, treatments(name)')
             .eq('scheduled_date', tomorrowDate)
-            .in('status', ['confirmed', 'pending'])
+            .eq('status', 'confirmed')
             .order('start_time', { ascending: true })
 
           if (apptErr) throw apptErr
@@ -86,7 +86,7 @@ export const Route = createFileRoute('/api/public/hooks/daily-schedule-digest')(
               title,
               body,
               emoji: '📅',
-              link: `/dashboard/calendar${tag}`,
+              link: `/dashboard/bookings${tag}`,
               entity_type: 'appointment_digest',
             })
             if (insErr) {
