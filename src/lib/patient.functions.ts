@@ -233,7 +233,7 @@ export const submitPublicReview = createServerFn({ method: "POST" })
   .inputValidator(
     (input: { profileSlug: string; rating: number; title?: string; body: string; reviewerName: string; reviewerEmail?: string }) => input,
   )
-  .handler(async ({ data }) => {
+    .handler(async ({ data }) => {
     const rating = Math.round(Number(data.rating));
     if (!Number.isFinite(rating) || rating < 1 || rating > 5) throw new Error("Rating must be 1–5");
     const body = (data.body ?? "").trim();
@@ -242,6 +242,11 @@ export const submitPublicReview = createServerFn({ method: "POST" })
     if (body.length > 2000) throw new Error("Review is too long");
     if (!name) throw new Error("Please enter your name");
     if (name.length > 100) throw new Error("Name is too long");
+
+    // Reviewers sometimes type a phone number into the optional title box —
+    // never store or show contact details as a public title.
+    let title = data.title?.trim() || null;
+    if (title && /^\+?[\d\s()-]{8,}$/.test(title)) title = null;
 
     const anon = publicClient();
     const { data: prof, error: pErr } = await anon
@@ -254,7 +259,7 @@ export const submitPublicReview = createServerFn({ method: "POST" })
       profile_id: prof.id,
       patient_id: null,
       rating,
-      title: data.title?.trim() || null,
+      title,
       body,
       approved: false,
       reviewer_name: name,
