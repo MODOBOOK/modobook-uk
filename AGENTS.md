@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
  - Calendar appointment cards and all their descendants disable native text selection, touch callouts and browser dragging so long presses remain available for rescheduling.
  - Patient PDF leaflets use browser-only PDF.js rendering of all pages at container width rather than native iframe viewers, because mobile in-app browsers can crop documents and omit later pages.
+- Scheduled hooks under /api/public/hooks authenticate with the x-cron-secret header checked by isAuthorizedCron (secret lives in private.cron_secret); never accept the publishable key — it is public.
