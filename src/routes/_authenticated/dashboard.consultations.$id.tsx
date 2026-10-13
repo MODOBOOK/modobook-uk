@@ -160,6 +160,7 @@ export function ConsultationWizard() {
   const [c, setC] = useState<any>(null);
   const [step, setStep] = useState(1);
   const dirtyRef = useRef<Record<string, any> | null>(null);
+  const lastSentRef = useRef<Record<string, string>>({});
   const saveTimer = useRef<any>(null);
 
   useEffect(() => {
@@ -178,17 +179,33 @@ export function ConsultationWizard() {
     })();
   }, [id]); // eslint-disable-line
 
-  // autosave
+  // autosave — only sends fields whose value actually changed since the last
+  // successful save, and waits longer between saves to lighten the load.
   const queueSave = useCallback((patch: Record<string, any>) => {
-    dirtyRef.current = { ...(dirtyRef.current ?? {}), ...patch };
+    for (const [k, v] of Object.entries(patch)) {
+      if (lastSentRef.current[k] === JSON.stringify(v)) continue;
+      dirtyRef.current = { ...(dirtyRef.current ?? {}), [k]: v };
+    }
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       const p = dirtyRef.current; dirtyRef.current = null;
       if (!p) return;
+      const toSend: Record<string, any> = {};
+      for (const [k, v] of Object.entries(p)) {
+        if (lastSentRef.current[k] !== JSON.stringify(v)) toSend[k] = v;
+      }
+      if (!Object.keys(toSend).length) return;
       setSaving(true);
-      try { await update({ data: { id, patch: p } }); } catch (e: any) { toast.error("Save failed"); }
+      try {
+        await update({ data: { id, patch: toSend } });
+        for (const [k, v] of Object.entries(toSend)) lastSentRef.current[k] = JSON.stringify(v);
+      } catch (e: any) {
+        // Keep the fields dirty so the next edit retries them.
+        dirtyRef.current = { ...(dirtyRef.current ?? {}), ...toSend };
+        toast.error("Save failed");
+      }
       finally { setSaving(false); }
-    }, 700);
+    }, 1500);
   }, [id, update]);
 
   const setField = (key: string, val: any) => {
