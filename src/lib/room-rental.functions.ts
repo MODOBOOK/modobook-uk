@@ -318,6 +318,13 @@ export const getRoomAvailability = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const { supabaseAdmin, prof } = await resolveClinic(data.slug);
     if (!prof?.room_rental_enabled) return { slots: [] };
+    {
+      const okId = /^[0-9a-f-]{36}$/i.test(String(data.room_id));
+      const { data: own } = okId
+        ? await supabaseAdmin.from("rental_rooms").select("id").eq("id", data.room_id).eq("profile_id", prof.user_id).maybeSingle()
+        : { data: null };
+      if (!own) return { slots: [] };
+    }
     const weekday = new Date(`${data.date}T12:00:00`).getDay();
 
     const [roomRes, hoursRes, blocksRes, bookingsRes] = await Promise.all([
@@ -455,7 +462,7 @@ export const requestRoomBooking = createServerFn({ method: "POST" })
     if (!(price > 0)) throw new Error("This room has no price set for that option");
 
     const { createCheckoutSession } = await import("./stripe.server");
-    const returnUrl = `${data.return_origin.replace(/\/$/, "")}/m/${data.slug}/roomrental?booking=${booking.id}`;
+    const returnUrl = `${(await import("./safe-origin")).safeOrigin(data.return_origin)}/m/${data.slug}/roomrental?booking=${booking.id}`;
     const session = await createCheckoutSession({
       accountId: prof.stripe_connect_account_id,
       lineItems: [
@@ -719,7 +726,7 @@ export const sendRentalInvoice = createServerFn({ method: "POST" })
           booking,
           roomName: room?.name ?? "Room",
           amount: due,
-          origin: data.origin,
+          origin: (await import("./safe-origin")).safeOrigin(data.origin),
         });
       } catch (e) {
         console.error("[room-rental] invoice payment link failed", e);
@@ -732,7 +739,7 @@ export const sendRentalInvoice = createServerFn({ method: "POST" })
       profileId: prof.id,
       booking,
       roomName: room?.name ?? "Room",
-      origin: data.origin,
+      origin: (await import("./safe-origin")).safeOrigin(data.origin),
       message: data.message ?? null,
       payUrl,
     });
@@ -808,7 +815,7 @@ export const createManualRentalBooking = createServerFn({ method: "POST" })
         booking,
         roomName: room.name,
         amount: data.price,
-        origin: data.origin,
+        origin: (await import("./safe-origin")).safeOrigin(data.origin),
       });
       await sb.from("rental_bookings").update({ stripe_session_id: null }).eq("id", booking.id);
       await emailRenter({
@@ -869,7 +876,7 @@ export const sendRentalPaymentLink = createServerFn({ method: "POST" })
       booking,
       roomName: room?.name ?? "Room",
       amount,
-      origin: data.origin,
+      origin: (await import("./safe-origin")).safeOrigin(data.origin),
     });
 
     if (data.email !== false) {
@@ -898,6 +905,13 @@ export const getRoomMonthAvailability = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const { supabaseAdmin, prof } = await resolveClinic(data.slug);
     if (!prof?.room_rental_enabled) return { unavailable: [] as string[] };
+    {
+      const okId = /^[0-9a-f-]{36}$/i.test(String(data.room_id));
+      const { data: own } = okId
+        ? await supabaseAdmin.from("rental_rooms").select("id").eq("id", data.room_id).eq("profile_id", prof.user_id).maybeSingle()
+        : { data: null };
+      if (!own) return { unavailable: [] as string[] };
+    }
 
     const [y, m] = data.month.split("-").map(Number);
     if (!y || !m) return { unavailable: [] as string[] };

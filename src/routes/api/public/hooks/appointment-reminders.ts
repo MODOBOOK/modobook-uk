@@ -9,12 +9,8 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const expected = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY
-        const provided = request.headers.get('apikey') || request.headers.get('x-api-key')
-        if (!expected || !provided || provided !== expected) {
-          return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-            status: 401, headers: { 'Content-Type': 'application/json' },
-          })
+        if (!(await (await import('@/lib/cron-auth.server')).isAuthorizedCron(request))) {
+          return new Response('Unauthorized', { status: 401 })
         }
 
         try {
@@ -259,7 +255,7 @@ export const Route = createFileRoute('/api/public/hooks/appointment-reminders')(
 
         } catch (e) {
           console.error('[reminders] failed', e)
-          return new Response(JSON.stringify({ ok: false, error: e instanceof Error ? e.message : String(e) }), {
+          return new Response(JSON.stringify({ ok: false, error: 'internal error' }), {
             status: 500, headers: { 'Content-Type': 'application/json' },
           })
         }

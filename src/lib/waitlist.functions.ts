@@ -83,10 +83,11 @@ export const checkWaitlistEligibility = createServerFn({ method: 'POST' })
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
     const { data: row } = await supabaseAdmin
       .from('practitioner_waitlist')
-      .select('id,name,clinic_name')
+      .select('id')
       .eq('email', data.email)
       .maybeSingle()
-    return { eligible: !!row, name: row?.name ?? null, clinic: row?.clinic_name ?? null }
+    // Never reveal waitlist names/clinics to anonymous callers.
+    return { eligible: !!row }
   })
 
 const signUpSchema = z.object({
@@ -107,6 +108,18 @@ export const signUpFromWaitlist = createServerFn({ method: 'POST' })
       .select('id,name,clinic_name')
       .eq('email', data.email)
       .maybeSingle()
+
+    // Emails with a pending administrator invite must accept it via the
+    // emailed invite link (which proves ownership) — never via open sign-up.
+    const { data: pendingAdmin } = await (supabaseAdmin as any)
+      .from('admin_invites')
+      .select('id')
+      .ilike('email', data.email)
+      .is('accepted_at', null)
+      .maybeSingle()
+    if (pendingAdmin) {
+      return { ok: false as const, code: 'failed' as const, error: 'Please use the invitation link sent to your email to set up this account.' }
+    }
 
     const { error } = await supabaseAdmin.auth.admin.createUser({
       email: data.email,

@@ -10,9 +10,16 @@ export const sendWhatsAppTest = createServerFn({ method: 'POST' })
     const { supabase, userId } = context
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, clinic_name')
+      .select('id, clinic_name, phone, contact_whatsapp_number')
       .eq('user_id', userId)
       .maybeSingle()
+    // Test texts may only go to the clinic's own saved numbers.
+    const norm = (p: unknown) => String(p ?? '').replace(/[^0-9]/g, '').replace(/^44/, '0').replace(/^0+/, '')
+    const own = [(profile as any)?.phone, (profile as any)?.contact_whatsapp_number, (context.claims as any)?.phone]
+      .map(norm).filter((x) => x.length >= 6)
+    if (!own.includes(norm(data.phone))) {
+      return { ok: false, message: 'Test texts can only be sent to your clinic phone or WhatsApp number saved in Settings.' }
+    }
     const clinic = (profile as { clinic_name?: string } | null)?.clinic_name || 'your clinic'
     const res = await sendWhatsApp({
       profileId: (profile as { id?: string } | null)?.id ?? null,

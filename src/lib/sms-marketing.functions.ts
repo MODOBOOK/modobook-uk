@@ -151,8 +151,8 @@ export const startSmsBlastCheckout = createServerFn({ method: 'POST' })
           },
         },
       ],
-      success_url: `${data.successUrl}${data.successUrl.includes('?') ? '&' : '?'}blast=${blastId}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: data.cancelUrl,
+      success_url: `${(await import('./safe-origin')).safeUrl(data.successUrl, '/dashboard')}${(await import('./safe-origin')).safeUrl(data.successUrl, '/dashboard').includes('?') ? '&' : '?'}blast=${blastId}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: (await import('./safe-origin')).safeUrl(data.cancelUrl, '/dashboard'),
       metadata: { kind: 'sms_blast', sms_blast_id: blastId, profile_id: profileId },
       payment_intent_data: {
         metadata: { kind: 'sms_blast', sms_blast_id: blastId, profile_id: profileId },

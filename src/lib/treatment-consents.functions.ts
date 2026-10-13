@@ -115,7 +115,8 @@ export const resendConsentToClient = createServerFn({ method: "POST" })
 
     const { data: client } = await context.supabase
       .from("clinic_clients").select("full_name, email").eq("id", data.client_id).maybeSingle();
-    const to = data.email || client?.email;
+    // Always send to the patient's email on file, never a caller-chosen address.
+    const to = client?.email;
     if (!to) throw new Error("No email on file for this patient");
 
     const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");

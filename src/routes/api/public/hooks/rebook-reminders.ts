@@ -16,9 +16,7 @@ export const Route = createFileRoute('/api/public/hooks/rebook-reminders')({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apikey = request.headers.get('apikey')
-        const expected = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY
-        if (!apikey || !expected || apikey !== expected) {
+        if (!(await (await import('@/lib/cron-auth.server')).isAuthorizedCron(request))) {
           return new Response('Unauthorized', { status: 401 })
         }
 
@@ -50,7 +48,7 @@ export const Route = createFileRoute('/api/public/hooks/rebook-reminders')({
 
         if (error) {
           console.error('[rebook-reminders] query failed', error)
-          return Response.json({ ok: false, error: error.message }, { status: 500 })
+          return Response.json({ ok: false, error: 'internal error' }, { status: 500 })
         }
 
         // Cache category chains per profile so we can walk up parents once.
@@ -212,7 +210,7 @@ export const Route = createFileRoute('/api/public/hooks/rebook-reminders')({
 
         if (generalProfilesError) {
           console.error('[general-rebook-reminders] profile query failed', generalProfilesError)
-          return Response.json({ ok: false, error: generalProfilesError.message }, { status: 500 })
+          return Response.json({ ok: false, error: 'internal error' }, { status: 500 })
         }
 
         let generalQueued = 0

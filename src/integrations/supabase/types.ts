@@ -11033,6 +11033,7 @@ export type Database = {
           label: string
         }[]
       }
+      verify_cron_secret: { Args: { p_secret: string }; Returns: boolean }
     }
     Enums: {
       app_role: "practitioner" | "admin" | "prescriber"

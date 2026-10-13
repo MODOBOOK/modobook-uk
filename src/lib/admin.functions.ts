@@ -297,7 +297,8 @@ export const adminInvitePractitioner = createServerFn({ method: "POST" })
     full_name?: string | null;
     clinic_name?: string | null;
   }) => i)
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const email = data.email.trim().toLowerCase();
     if (!email) throw new Error("Email is required");

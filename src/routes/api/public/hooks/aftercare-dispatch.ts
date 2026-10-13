@@ -6,10 +6,8 @@ export const Route = createFileRoute("/api/public/hooks/aftercare-dispatch")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apikey = request.headers.get("apikey");
-        const expected = process.env.SUPABASE_PUBLISHABLE_KEY;
-        if (!apikey || apikey !== expected) {
-          return new Response("Unauthorized", { status: 401 });
+        if (!(await (await import('@/lib/cron-auth.server')).isAuthorizedCron(request))) {
+          return new Response('Unauthorized', { status: 401 })
         }
 
         const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -46,7 +44,7 @@ export const Route = createFileRoute("/api/public/hooks/aftercare-dispatch")({
 
         if (error) {
           console.error("[aftercare-dispatch] fetch failed", error);
-          return new Response(JSON.stringify({ ok: false, error: error.message }), { status: 500 });
+          return new Response(JSON.stringify({ ok: false, error: 'internal error' }), { status: 500 });
         }
 
         const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");

@@ -15,6 +15,14 @@ async function getProfileId(supabase: any, userId: string) {
   return data?.id as string | undefined;
 }
 
+/** Clinic-wide rota changes need owner, Manager (admin) role, or rota permission. */
+async function assertCanManageRota(supabase: any, userId: string) {
+  const { resolveClinicAccess } = await import("./clinic-context.server");
+  const a = await resolveClinicAccess(supabase, userId);
+  if (!(a.isOwner || a.role === "admin" || a.canManageRota)) {
+    throw new Error("You don't have permission to change the clinic rota");
+  }
+}
 
 /**
  * Team calendars: a staff member whose access is limited to "own" only ever
@@ -696,6 +704,7 @@ export const endCurrentRota = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { end_date: string; new_start_date?: string | null; copy?: boolean }) => d)
   .handler(async ({ data, context }) => {
+    await assertCanManageRota(context.supabase, context.userId);
     const { supabase } = context;
     const profileId = await getProfileId(supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
@@ -767,6 +776,7 @@ export const updateRotaPeriod = createServerFn({ method: "POST" })
     (d: { ids: string[]; effective_from?: string | null; effective_to?: string | null }) => d,
   )
   .handler(async ({ data, context }) => {
+    await assertCanManageRota(context.supabase, context.userId);
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
     if (!data.ids?.length) return { ok: true, updated: 0 };
@@ -788,6 +798,7 @@ export const deleteRotaPeriod = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { ids: string[] }) => d)
   .handler(async ({ data, context }) => {
+    await assertCanManageRota(context.supabase, context.userId);
     const profileId = await getProfileId(context.supabase, context.userId);
     if (!profileId) throw new Error("Profile not found");
     if (!data.ids?.length) return { ok: true };

@@ -1,3 +1,4 @@
+import { pgq } from "./pgrst-quote";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -253,8 +254,8 @@ export const listConsultationNotesForClient = createServerFn({ method: "GET" })
     if (!client) return [];
 
     const filters = [`patient_id.eq.${client.id}`];
-    if (client.email) filters.push(`patient_email.ilike.${client.email}`);
-    if (client.full_name) filters.push(`patient_name.ilike.${client.full_name}`);
+    if (client.email) filters.push(`patient_email.ilike.${pgq(client.email.replace(/[%_]/g, "\\$&"))}`);
+    if (client.full_name) filters.push(`patient_name.ilike.${pgq(client.full_name.replace(/[%_]/g, "\\$&"))}`);
 
     const { data: rows, error } = await supabase
       .from("consultations")

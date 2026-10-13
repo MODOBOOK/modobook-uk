@@ -1,3 +1,4 @@
+import { pgq } from "./pgrst-quote";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createClient } from "@supabase/supabase-js";
@@ -364,12 +365,15 @@ export const renameCourseGroup = createServerFn({ method: "POST" })
     const newGroup = `${newLabel}${marker}`;
     if (oldGroup === newGroup) return { updated: 0 };
 
-    const { data: rows, error: fetchErr } = await context.supabase
-      .from("treatments")
-      .select("id, name, course_option_label, session_count")
-      .eq("profile_id", profileId)
-      .or(`course_group.eq.${oldGroup},course_groups.cs.{${oldGroup}}`);
+    const sel = "id, name, course_option_label, session_count";
+    const [r1, r2] = await Promise.all([
+      context.supabase.from("treatments").select(sel).eq("profile_id", profileId).eq("course_group", oldGroup),
+      context.supabase.from("treatments").select(sel).eq("profile_id", profileId).contains("course_groups", [oldGroup]),
+    ]);
+    const fetchErr = r1.error ?? r2.error;
     if (fetchErr) throw fetchErr;
+    const seen = new Set<string>();
+    const rows = [...((r1.data as any[]) ?? []), ...((r2.data as any[]) ?? [])].filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true)));
 
     const prefixRe = new RegExp(`^${escapeRegExp(oldLabel)}\\s*[—-]\\s*`, "i");
     let updated = 0;

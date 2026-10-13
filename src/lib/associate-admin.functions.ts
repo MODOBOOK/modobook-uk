@@ -119,9 +119,19 @@ export const uploadAssociateDocumentFile = createServerFn({ method: "POST" })
     const bytes = Uint8Array.from(atob(data.base64), (c) => c.charCodeAt(0));
     if (bytes.byteLength > 15 * 1024 * 1024) throw new Error("File must be under 15MB");
     const safe = data.fileName.replace(/[^\w.\-]+/g, "_").slice(-80);
+    // Only document/image types; content type is derived from the extension, not the caller.
+    const TYPES: Record<string, string> = {
+      pdf: "application/pdf", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg",
+      webp: "image/webp", heic: "image/heic", heif: "image/heif", gif: "image/gif",
+      doc: "application/msword", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      txt: "text/plain",
+    };
+    const ext = (safe.split(".").pop() || "").toLowerCase();
+    const contentType = TYPES[ext];
+    if (!contentType) throw new Error("Please upload a PDF, image or Word document");
     const path = `${prof.id}/${link.id}/${crypto.randomUUID()}-${safe}`;
     const { error } = await admin.storage.from(BUCKET).upload(path, bytes, {
-      contentType: data.contentType || "application/octet-stream",
+      contentType,
       upsert: false,
     });
     if (error) throw new Error(error.message);

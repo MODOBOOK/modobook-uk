@@ -42,7 +42,7 @@ function Page() {
   function exportCsv() {
     const rows = data ?? [];
     const head = ["Joined", "Full name", "Salon", "Type", "Email", "Phone", "Instagram", "Ideas"];
-    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const esc = (v: unknown) => { let s = String(v ?? ""); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };
     const csv = [
       head.join(","),
       ...rows.map((r) =>

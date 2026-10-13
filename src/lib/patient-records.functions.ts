@@ -1,3 +1,4 @@
+import { pgq } from "./pgrst-quote";
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -47,8 +48,8 @@ export const getPatientTimeline = createServerFn({ method: "GET" })
 
     // Appointments (match by email/name — appointments has no client_id fk)
     const orParts = [
-      client.email ? `patient_email.eq.${client.email}` : null,
-      `patient_name.eq.${client.full_name}`,
+      client.email ? `patient_email.eq.${pgq(client.email)}` : null,
+      `patient_name.eq.${pgq(client.full_name ?? "")}`,
     ].filter(Boolean).join(",");
     const { data: appts } = await context.supabase
       .from("appointments").select("id, scheduled_date, start_time, end_time, status, treatment_name_snapshot, total_amount")
@@ -329,8 +330,8 @@ export const generatePatientBrief = createServerFn({ method: "POST" })
       .eq("id", data.clientId).maybeSingle();
 
     const orParts = [
-      client?.email ? `patient_email.eq.${client.email}` : null,
-      client?.full_name ? `patient_name.eq.${client.full_name}` : null,
+      client?.email ? `patient_email.eq.${pgq(client.email)}` : null,
+      client?.full_name ? `patient_name.eq.${pgq(client.full_name)}` : null,
     ].filter(Boolean).join(",");
     const { data: recentAppts } = orParts
       ? await context.supabase

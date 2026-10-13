@@ -491,8 +491,9 @@ export const saveAssociateIncident = createServerFn({ method: "POST" })
       created_by: context.userId,
     };
     if (data.id) {
-      const { error } = await admin.from("associate_incidents").update(payload).eq("id", data.id);
+      const { data: updated, error } = await admin.from("associate_incidents").update(payload).eq("id", data.id).eq("link_id", link.id).select("id");
       if (error) throw new Error(error.message);
+      if (!updated?.length) throw new Error("Incident not found");
       return { ok: true, id: data.id };
     }
     const { data: row, error } = await admin.from("associate_incidents").insert(payload).select("id").maybeSingle();
@@ -511,6 +512,8 @@ export const listMyIncidents = createServerFn({ method: "GET" })
     const admin: any = supabaseAdmin;
     const { data: link } = await admin.from("clinic_associates").select("*").eq("id", data.link_id).maybeSingle();
     if (!link || (link.associate_profile_id !== prof.id && link.clinic_profile_id !== prof.id)) return [];
+    // Associates lose access once the link is no longer active.
+    if (link.clinic_profile_id !== prof.id && link.status !== "active") return [];
     const { data: rows } = await admin
       .from("associate_incidents")
       .select("*")
