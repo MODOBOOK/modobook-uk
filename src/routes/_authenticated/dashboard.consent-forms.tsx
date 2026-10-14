@@ -238,8 +238,42 @@ function ConsentFormsPage() {
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground">
-          System templates · {system.length}
+          Your consent forms · {mine.length}
         </h2>
+        {mine.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No forms of your own yet — clone one of the MODO system templates below or start a new blank one.
+          </p>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {mine.map((t) => (
+              <TemplateCard
+                key={t.id}
+                t={t}
+                editable
+                onEdit={() => openEditor(t)}
+                onClone={async () => {
+                  await clone({ data: { template_id: t.id } });
+                  toast.success("Cloned to your templates");
+                  refresh();
+                }}
+                onDelete={async () => {
+                  if (!confirm("Delete this consent template?")) return;
+                  await remove({ data: { id: t.id } });
+                  refresh();
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+
+      <details className="group space-y-3 rounded-lg border bg-card p-4" open={system.length > 0 && (mine.length === 0 || q.length > 0) ? true : undefined}>
+        <summary className="cursor-pointer select-none text-sm font-semibold text-muted-foreground">
+          MODO system templates · {system.length}
+          <span className="ml-2 font-normal">— tap to browse and clone</span>
+        </summary>
         {loading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : system.length === 0 ? (
@@ -272,40 +306,7 @@ function ConsentFormsPage() {
             ))}
           </div>
         )}
-      </section>
-
-
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted-foreground">
-          Your templates · {mine.length}
-        </h2>
-        {mine.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No custom consent forms yet — clone a system template or start a new blank one.
-          </p>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {mine.map((t) => (
-              <TemplateCard
-                key={t.id}
-                t={t}
-                editable
-                onEdit={() => openEditor(t)}
-                onClone={async () => {
-                  await clone({ data: { template_id: t.id } });
-                  toast.success("Cloned to your templates");
-                  refresh();
-                }}
-                onDelete={async () => {
-                  if (!confirm("Delete this consent template?")) return;
-                  await remove({ data: { id: t.id } });
-                  refresh();
-                }}
-              />
-            ))}
-          </div>
-        )}
-      </section>
+      </details>
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
