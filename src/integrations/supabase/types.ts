@@ -8707,6 +8707,7 @@ export type Database = {
           created_at: string
           deposit_percent: number | null
           description: string | null
+          full_day_hours: number | null
           full_day_rate: number | null
           half_day_hours: number
           half_day_rate: number | null
@@ -8719,6 +8720,7 @@ export type Database = {
           profile_id: string
           quantity: number
           skip_room_selection: boolean
+          slot_step_minutes: number
           sort_order: number
           updated_at: string
         }
@@ -8729,6 +8731,7 @@ export type Database = {
           created_at?: string
           deposit_percent?: number | null
           description?: string | null
+          full_day_hours?: number | null
           full_day_rate?: number | null
           half_day_hours?: number
           half_day_rate?: number | null
@@ -8741,6 +8744,7 @@ export type Database = {
           profile_id: string
           quantity?: number
           skip_room_selection?: boolean
+          slot_step_minutes?: number
           sort_order?: number
           updated_at?: string
         }
@@ -8751,6 +8755,7 @@ export type Database = {
           created_at?: string
           deposit_percent?: number | null
           description?: string | null
+          full_day_hours?: number | null
           full_day_rate?: number | null
           half_day_hours?: number
           half_day_rate?: number | null
@@ -8763,6 +8768,7 @@ export type Database = {
           profile_id?: string
           quantity?: number
           skip_room_selection?: boolean
+          slot_step_minutes?: number
           sort_order?: number
           updated_at?: string
         }

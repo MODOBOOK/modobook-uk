@@ -175,6 +175,8 @@ const roomSchema = z.object({
   half_day_rate: z.number().nonnegative().nullable().optional(),
   full_day_rate: z.number().nonnegative().nullable().optional(),
   half_day_hours: z.number().int().positive().max(12).optional(),
+  full_day_hours: z.number().int().positive().max(12).nullable().optional(),
+  slot_step_minutes: z.union([z.literal(30), z.literal(60)]).optional(),
   min_hours: z.number().positive().max(12).optional(),
   quantity: z.number().int().positive().max(50).optional(),
   skip_room_selection: z.boolean().optional(),
@@ -267,6 +269,58 @@ export const updateRentalBooking = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Move a rental booking to a new date/time, re-checking clashes and re-allocating the room unit. */
+export const rescheduleRentalBooking = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; booking_date: string; start_time: string; end_time: string }) => d)
+  .handler(async ({ data, context }) => {
+    const sb = context.supabase as any;
+    const uid = context.userId;
+    const { data: booking } = await sb
+      .from("rental_bookings").select("*").eq("id", data.id).eq("profile_id", uid).maybeSingle();
+    if (!booking) throw new Error("Booking not found");
+    const s = toMin(data.start_time);
+    const e = toMin(data.end_time);
+    if (e <= s) throw new Error("End time must be after the start time");
+
+    const { data: room } = await sb.from("rental_rooms").select("quantity").eq("id", booking.room_id).maybeSingle();
+    const capacity = Math.max(1, Number(room?.quantity ?? 1));
+    const [clashesRes, blocksRes] = await Promise.all([
+      sb.from("rental_bookings")
+        .select("id,start_time,end_time,unit_index,status,payment_status,payment_mode,created_at")
+        .eq("room_id", booking.room_id).eq("booking_date", data.booking_date)
+        .neq("status", "cancelled").neq("id", booking.id),
+      sb.from("rental_blocks").select("start_time,end_time,units").eq("block_date", data.booking_date)
+        .or(`room_id.eq.${booking.room_id},room_id.is.null`),
+    ]);
+    const others = activeBookings((clashesRes.data ?? []) as any[]);
+    const blocks = (blocksRes.data ?? []) as any[];
+
+    // Keep the same room number if it's still free in the new window; otherwise pick another.
+    const currentUnit = booking.unit_index ? Number(booking.unit_index) : null;
+    let unitIndex: number | null = null;
+    if (
+      currentUnit &&
+      currentUnit <= capacity - blockedUnits(blocks, capacity, s, e) &&
+      !others.some((b: any) => Number(b.unit_index) === currentUnit && s < toMin(b.end_time) && e > toMin(b.start_time))
+    ) {
+      unitIndex = currentUnit;
+    } else {
+      unitIndex = allocateUnit(capacity, blocks, others, s, e);
+    }
+    if (unitIndex == null) throw new Error("That time clashes with another booking or a closure");
+
+    const { error } = await sb.from("rental_bookings").update({
+      booking_date: data.booking_date,
+      start_time: data.start_time,
+      end_time: data.end_time,
+      hours: (e - s) / 60,
+      unit_index: unitIndex,
+    }).eq("id", booking.id);
+    if (error) throw error;
+    return { ok: true };
+  });
+
 /** Toggle the room-rental page on/off for the signed-in clinic. */
 export const setRoomRentalEnabled = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -298,7 +352,7 @@ export const getPublicRooms = createServerFn({ method: "GET" })
     if (!prof.room_rental_enabled) return { enabled: false, clinicName: prof.clinic_name, rooms: [], locations: [] };
     const { data: rooms } = await supabaseAdmin
       .from("rental_rooms")
-      .select("id,name,description,image_url,location_id,hourly_rate,half_day_rate,full_day_rate,half_day_hours,min_hours,quantity,skip_room_selection,deposit_percent,booking_mode")
+      .select("id,name,description,image_url,location_id,hourly_rate,half_day_rate,full_day_rate,half_day_hours,full_day_hours,slot_step_minutes,min_hours,quantity,skip_room_selection,deposit_percent,booking_mode")
       .eq("profile_id", prof.user_id)
       .eq("active", true)
       .order("sort_order");
@@ -328,7 +382,7 @@ export const getRoomAvailability = createServerFn({ method: "GET" })
     const weekday = new Date(`${data.date}T12:00:00`).getDay();
 
     const [roomRes, hoursRes, blocksRes, bookingsRes] = await Promise.all([
-      supabaseAdmin.from("rental_rooms").select("quantity").eq("id", data.room_id).maybeSingle(),
+      supabaseAdmin.from("rental_rooms").select("quantity,slot_step_minutes").eq("id", data.room_id).maybeSingle(),
       supabaseAdmin.from("rental_hours").select("start_time,end_time").eq("room_id", data.room_id).eq("weekday", weekday),
       supabaseAdmin.from("rental_blocks").select("start_time,end_time,units").eq("block_date", data.date)
         .or(`room_id.eq.${data.room_id},room_id.is.null`),
@@ -337,19 +391,20 @@ export const getRoomAvailability = createServerFn({ method: "GET" })
     ]);
 
     const capacity = Math.max(1, Number((roomRes.data as any)?.quantity ?? 1));
+    const step = Number((roomRes.data as any)?.slot_step_minutes) === 30 ? 30 : 60;
     const closedBlocks = (blocksRes.data ?? []) as any[];
     const booked = activeBookings((bookingsRes.data ?? []) as any[]);
 
     const slots: { start: string; end: string; available: boolean; free: number }[] = [];
     for (const h of (hoursRes.data ?? []) as any[]) {
-      for (let m = toMin(h.start_time); m + 60 <= toMin(h.end_time); m += 60) {
-        const usable = capacity - blockedUnits(closedBlocks, capacity, m, m + 60);
-        const used = booked.filter((b) => m < toMin(b.end_time) && m + 60 > toMin(b.start_time)).length;
+      for (let m = toMin(h.start_time); m + step <= toMin(h.end_time); m += step) {
+        const usable = capacity - blockedUnits(closedBlocks, capacity, m, m + step);
+        const used = booked.filter((b) => m < toMin(b.end_time) && m + step > toMin(b.start_time)).length;
         const free = Math.max(0, usable - used);
-        slots.push({ start: fromMin(m), end: fromMin(m + 60), available: free > 0, free });
+        slots.push({ start: fromMin(m), end: fromMin(m + step), available: free > 0, free });
       }
     }
-    return { slots };
+    return { slots, step };
 
 
   });
@@ -505,7 +560,7 @@ export const getOwnerRoomAvailability = createServerFn({ method: "GET" })
     const sb = context.supabase as any;
     const weekday = new Date(`${data.date}T12:00:00`).getDay();
     const [roomRes, hoursRes, blocksRes, bookingsRes] = await Promise.all([
-      sb.from("rental_rooms").select("quantity").eq("id", data.room_id).maybeSingle(),
+      sb.from("rental_rooms").select("quantity,slot_step_minutes").eq("id", data.room_id).maybeSingle(),
       sb.from("rental_hours").select("start_time,end_time").eq("room_id", data.room_id).eq("weekday", weekday),
       sb.from("rental_blocks").select("start_time,end_time,units").eq("block_date", data.date)
         .or(`room_id.eq.${data.room_id},room_id.is.null`),
@@ -513,18 +568,19 @@ export const getOwnerRoomAvailability = createServerFn({ method: "GET" })
         .eq("room_id", data.room_id).eq("booking_date", data.date).neq("status", "cancelled"),
     ]);
     const capacity = Math.max(1, Number(roomRes.data?.quantity ?? 1));
+    const step = Number(roomRes.data?.slot_step_minutes) === 30 ? 30 : 60;
     const closedBlocks = (blocksRes.data ?? []) as any[];
     const booked = activeBookings((bookingsRes.data ?? []) as any[]);
     const slots: { start: string; end: string; available: boolean; free: number }[] = [];
     for (const h of (hoursRes.data ?? []) as any[]) {
-      for (let m = toMin(h.start_time); m + 60 <= toMin(h.end_time); m += 60) {
-        const usable = capacity - blockedUnits(closedBlocks, capacity, m, m + 60);
-        const used = booked.filter((b: any) => m < toMin(b.end_time) && m + 60 > toMin(b.start_time)).length;
+      for (let m = toMin(h.start_time); m + step <= toMin(h.end_time); m += step) {
+        const usable = capacity - blockedUnits(closedBlocks, capacity, m, m + step);
+        const used = booked.filter((b: any) => m < toMin(b.end_time) && m + step > toMin(b.start_time)).length;
         const free = Math.max(0, usable - used);
-        slots.push({ start: fromMin(m), end: fromMin(m + 60), available: free > 0, free });
+        slots.push({ start: fromMin(m), end: fromMin(m + step), available: free > 0, free });
       }
     }
-    return { slots, capacity };
+    return { slots, capacity, step };
   });
 
 async function ownerProfile(sb: any, uid: string) {
@@ -918,10 +974,10 @@ export const getRoomMonthAvailability = createServerFn({ method: "GET" })
     const first = `${y}-${String(m).padStart(2, "0")}-01`;
     const lastDay = new Date(y, m, 0).getDate();
     const last = `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
-    const need = Math.max(1, Math.ceil(Number(data.hours ?? 1)));
+    const needHoursParam = Math.max(0.5, Number(data.hours ?? 1));
 
     const [roomRes, hoursRes, blocksRes, bookingsRes] = await Promise.all([
-      supabaseAdmin.from("rental_rooms").select("quantity").eq("id", data.room_id).maybeSingle(),
+      supabaseAdmin.from("rental_rooms").select("quantity,slot_step_minutes").eq("id", data.room_id).maybeSingle(),
       supabaseAdmin.from("rental_hours").select("weekday,start_time,end_time").eq("room_id", data.room_id),
       supabaseAdmin.from("rental_blocks").select("block_date,start_time,end_time,units")
         .gte("block_date", first).lte("block_date", last)
@@ -933,6 +989,8 @@ export const getRoomMonthAvailability = createServerFn({ method: "GET" })
     ]);
 
     const capacity = Math.max(1, Number((roomRes.data as any)?.quantity ?? 1));
+    const step = Number((roomRes.data as any)?.slot_step_minutes) === 30 ? 30 : 60;
+    const need = Math.max(1, Math.ceil((needHoursParam * 60) / step));
     const openHours = (hoursRes.data ?? []) as any[];
     const allBlocks = (blocksRes.data ?? []) as any[];
     const allBookings = activeBookings((bookingsRes.data ?? []) as any[]);
@@ -952,9 +1010,9 @@ export const getRoomMonthAvailability = createServerFn({ method: "GET" })
       let ok = false;
       for (const h of dayHours) {
         run = 0;
-        for (let mm = toMin(h.start_time); mm + 60 <= toMin(h.end_time); mm += 60) {
-          const usable = capacity - blockedUnits(blocks, capacity, mm, mm + 60);
-          const used = booked.filter((b: any) => mm < toMin(b.end_time) && mm + 60 > toMin(b.start_time)).length;
+        for (let mm = toMin(h.start_time); mm + step <= toMin(h.end_time); mm += step) {
+          const usable = capacity - blockedUnits(blocks, capacity, mm, mm + step);
+          const used = booked.filter((b: any) => mm < toMin(b.end_time) && mm + step > toMin(b.start_time)).length;
           run = usable - used > 0 ? run + 1 : 0;
           if (run >= need) { ok = true; break; }
         }

@@ -19,6 +19,7 @@ type Room = {
   half_day_rate: number | null;
   full_day_rate: number | null;
   half_day_hours: number;
+  full_day_hours: number | null;
   min_hours: number;
   quantity: number;
 };
@@ -59,28 +60,31 @@ export function ManualBookingDialog({
     enabled: Boolean(roomId && date),
   });
   const slots = (availQ.data?.slots ?? []) as { start: string; end: string; available: boolean }[];
+  const stepMin = Number((availQ.data as any)?.step) === 30 ? 30 : 60;
 
-  const blockHours =
-    unit === "hour" ? Math.max(1, Math.ceil(hours))
-      : unit === "half_day" ? room?.half_day_hours || 4
-      : Math.max(slots.length, 1);
+  const durationMin =
+    unit === "hour" ? Math.round(hours * 60)
+      : unit === "half_day" ? (room?.half_day_hours || 4) * 60
+      : room?.full_day_hours ? room.full_day_hours * 60
+      : Math.max(slots.length, 1) * stepMin;
+  const blockSlots = Math.max(1, Math.ceil(durationMin / stepMin));
 
   const startable = useMemo(() => {
     const set = new Set<string>();
-    for (let i = 0; i + blockHours <= slots.length; i++) {
-      const win = slots.slice(i, i + blockHours);
+    for (let i = 0; i + blockSlots <= slots.length; i++) {
+      const win = slots.slice(i, i + blockSlots);
       const contiguous = win.every((s, j) => j === 0 || win[j - 1]!.end === s.start);
       if (contiguous && win.every((s) => s.available)) set.add(slots[i]!.start);
     }
     return set;
-  }, [slots, blockHours]);
+  }, [slots, blockSlots]);
 
   const endTime = useMemo(() => {
     if (!start) return null;
     const i = slots.findIndex((s) => s.start === start);
     if (i < 0) return null;
-    return slots[Math.min(i + blockHours - 1, slots.length - 1)]!.end;
-  }, [start, slots, blockHours]);
+    return slots[Math.min(i + blockSlots - 1, slots.length - 1)]!.end;
+  }, [start, slots, blockSlots]);
 
   const autoPrice =
     unit === "hour" ? Number(room?.hourly_rate ?? 0) * hours
