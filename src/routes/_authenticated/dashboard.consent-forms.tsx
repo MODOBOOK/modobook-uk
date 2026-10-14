@@ -238,11 +238,11 @@ function ConsentFormsPage() {
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground">
-          Your templates · {mine.length}
+          Your consent forms · {mine.length}
         </h2>
         {mine.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No custom consent forms yet — clone a system template or start a new blank one.
+            No forms of your own yet — clone one of the MODO system templates below or start a new blank one.
           </p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -269,7 +269,7 @@ function ConsentFormsPage() {
       </section>
 
 
-      <details className="group space-y-3 rounded-lg border bg-card p-4" open={system.length > 0 && (mine.length === 0 || search.trim().length > 0) ? true : undefined}>
+      <details className="group space-y-3 rounded-lg border bg-card p-4" open={system.length > 0 && (mine.length === 0 || q.length > 0) ? true : undefined}>
         <summary className="cursor-pointer select-none text-sm font-semibold text-muted-foreground">
           MODO system templates · {system.length}
           <span className="ml-2 font-normal">— tap to browse and clone</span>
