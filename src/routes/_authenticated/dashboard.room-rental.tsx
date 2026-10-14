@@ -10,6 +10,7 @@ import {
   addRentalBlock,
   deleteRentalBlock,
   updateRentalBooking,
+  rescheduleRentalBooking,
   setRoomRentalEnabled,
   sendRentalPaymentLink,
   sendRentalInvoice,
@@ -29,7 +30,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ImageUploader } from "@/components/ImageUploader";
-import { Plus, Pencil, Trash2, DoorOpen, Clock, CalendarX2, Copy, Check, CalendarDays, Send, FileText } from "lucide-react";
+import { Plus, Pencil, Trash2, DoorOpen, Clock, CalendarX2, Copy, Check, CalendarDays, Send, FileText, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/room-rental")({
@@ -55,6 +56,8 @@ type Room = {
   half_day_rate: number | null;
   full_day_rate: number | null;
   half_day_hours: number;
+  full_day_hours: number | null;
+  slot_step_minutes: number;
   min_hours: number;
   quantity: number;
   skip_room_selection: boolean;
@@ -91,7 +94,13 @@ function RoomRentalPage() {
   const [editing, setEditing] = useState<Partial<Room> | null>(null);
   const [manual, setManual] = useState<{ roomId?: string; date?: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [renterFilter, setRenterFilter] = useState("all");
   const refresh = () => qc.invalidateQueries({ queryKey: ["my-rental-rooms"] });
+
+  const renters = Array.from(
+    new Map(bookings.map((b) => [String(b.renter_email).toLowerCase(), { email: String(b.renter_email).toLowerCase(), name: b.renter_name as string }])).values(),
+  ).sort((a, b) => a.name.localeCompare(b.name));
+  const filteredBookings = renterFilter === "all" ? bookings : bookings.filter((b) => String(b.renter_email).toLowerCase() === renterFilter);
 
   const publicUrl = profile?.slug ? `https://modobook.uk/m/${profile.slug}/roomrental` : "";
 
@@ -237,10 +246,25 @@ function RoomRentalPage() {
         </TabsContent>
 
         <TabsContent value="bookings" className="mt-4 space-y-3">
+          {renters.length > 1 && (
+            <div className="flex items-center gap-3">
+              <Label className="shrink-0">Show bookings for</Label>
+              <Select value={renterFilter} onValueChange={setRenterFilter}>
+                <SelectTrigger className="w-full sm:max-w-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Everyone</SelectItem>
+                  {renters.map((r) => <SelectItem key={r.email} value={r.email}>{r.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           {bookings.length === 0 && (
             <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">No rental bookings yet.</CardContent></Card>
           )}
-          {bookings.map((b) => (
+          {bookings.length > 0 && filteredBookings.length === 0 && (
+            <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">No bookings for this person.</CardContent></Card>
+          )}
+          {filteredBookings.map((b) => (
             <BookingRow key={b.id} booking={b} roomName={rooms.find((r) => r.id === b.room_id)?.name ?? "Room"} onChanged={refresh} />
           ))}
         </TabsContent>
@@ -297,6 +321,8 @@ function RoomDialog({
           half_day_rate: f.half_day_rate != null && f.half_day_rate !== ("" as never) ? Number(f.half_day_rate) : null,
           full_day_rate: f.full_day_rate != null && f.full_day_rate !== ("" as never) ? Number(f.full_day_rate) : null,
           half_day_hours: Number(f.half_day_hours ?? 4),
+          full_day_hours: f.full_day_hours != null && f.full_day_hours !== ("" as never) ? Number(f.full_day_hours) : null,
+          slot_step_minutes: f.slot_step_minutes === 30 ? 30 : 60,
           min_hours: Number(f.min_hours ?? 1),
           quantity: Math.max(1, Number(f.quantity ?? 1)),
           skip_room_selection: f.skip_room_selection ?? false,
@@ -352,7 +378,24 @@ function RoomDialog({
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div><Label>Hours in a half day</Label><Input type="number" value={f.half_day_hours ?? 4} onChange={(e) => setF({ ...f, half_day_hours: Number(e.target.value) })} /></div>
+            <div>
+              <Label>Hours in a full day</Label>
+              <Input type="number" min="1" max="12" placeholder="Whole opening" value={f.full_day_hours ?? ""} onChange={(e) => setF({ ...f, full_day_hours: e.target.value === "" ? null : Number(e.target.value) })} />
+              <p className="mt-1 text-xs text-muted-foreground">Blank = the full opening window.</p>
+            </div>
             <div><Label>Minimum hours</Label><Input type="number" step="0.5" min="0.5" value={f.min_hours ?? 1} onChange={(e) => setF({ ...f, min_hours: Number(e.target.value) })} /></div>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <Label>Start times offered</Label>
+              <Select value={String(f.slot_step_minutes ?? 60)} onValueChange={(v) => setF({ ...f, slot_step_minutes: Number(v) })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="60">On the hour only</SelectItem>
+                  <SelectItem value="30">Every 30 minutes</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label>How many of this room</Label>
               <Input type="number" min="1" step="1" value={f.quantity ?? 1} onChange={(e) => setF({ ...f, quantity: Number(e.target.value) })} />
@@ -555,12 +598,18 @@ function BlocksCard({ rooms, blocks, onChanged }: { rooms: Room[]; blocks: any[]
 
 function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: string; onChanged: () => void }) {
   const update = useServerFn(updateRentalBooking);
+  const reschedule = useServerFn(rescheduleRentalBooking);
   const sendLink = useServerFn(sendRentalPaymentLink);
   const sendInvoice = useServerFn(sendRentalInvoice);
   const [sending, setSending] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkMessage, setLinkMessage] = useState("");
   const [mode, setMode] = useState<"link" | "invoice">("link");
+  const [editOpen, setEditOpen] = useState(false);
+  const [editBusy, setEditBusy] = useState(false);
+  const [editDate, setEditDate] = useState("");
+  const [editStart, setEditStart] = useState("");
+  const [editEnd, setEditEnd] = useState("");
   return (
     <Card>
       <CardContent className="flex w-full min-w-0 flex-col gap-3 py-4 sm:flex-row sm:items-center sm:gap-4">
@@ -579,6 +628,21 @@ function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: 
           {booking.notes && <p className="mt-1 text-sm">{booking.notes}</p>}
         </div>
         <div className="grid w-full min-w-0 grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
+          {booking.status !== "cancelled" && (
+            <Button
+              className="w-full min-w-0 sm:w-auto"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setEditDate(booking.booking_date);
+                setEditStart(String(booking.start_time).slice(0, 5));
+                setEditEnd(String(booking.end_time).slice(0, 5));
+                setEditOpen(true);
+              }}
+            >
+              <CalendarClock className="mr-2 h-4 w-4 shrink-0" /> <span className="truncate">Edit times</span>
+            </Button>
+          )}
           {booking.status !== "confirmed" && (
             <Button className="w-full min-w-0 sm:w-auto" size="sm" onClick={async () => { await update({ data: { id: booking.id, status: "confirmed" } }); onChanged(); }}>Confirm</Button>
           )}
@@ -610,6 +674,45 @@ function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: 
           )}
         </div>
       </CardContent>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit booking times</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              {booking.renter_name} · {roomName}
+            </p>
+            <div><Label>Date</Label><Input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Start</Label><Input type="time" step={900} value={editStart} onChange={(e) => setEditStart(e.target.value)} /></div>
+              <div><Label>End</Label><Input type="time" step={900} value={editEnd} onChange={(e) => setEditEnd(e.target.value)} /></div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              The price stays as it is — adjust any payment separately. The renter isn't emailed automatically.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button
+              disabled={editBusy}
+              onClick={async () => {
+                if (!editDate || !editStart || !editEnd) return toast.error("Set a date, start and end time");
+                setEditBusy(true);
+                try {
+                  await reschedule({ data: { id: booking.id, booking_date: editDate, start_time: editStart, end_time: editEnd } });
+                  toast.success("Booking times updated");
+                  setEditOpen(false);
+                  onChanged();
+                } catch (e) {
+                  toast.error((e as Error).message);
+                } finally {
+                  setEditBusy(false);
+                }
+              }}
+            >{editBusy ? "Saving…" : "Save times"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
         <DialogContent>

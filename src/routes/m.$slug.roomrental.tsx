@@ -44,6 +44,8 @@ type Room = {
   half_day_rate: number | null;
   full_day_rate: number | null;
   half_day_hours: number;
+  full_day_hours: number | null;
+  slot_step_minutes: number;
   min_hours: number;
   quantity: number;
   skip_room_selection: boolean;
@@ -195,12 +197,17 @@ function BookingPanel({ room, slug, onDone }: { room: Room; slug: string; onDone
     enabled: Boolean(date),
   });
   const slots = (availQ.data?.slots ?? []) as { start: string; end: string; available: boolean }[];
+  const stepMin = Number(availQ.data?.step) === 30 ? 30 : 60;
 
-  const blockHours = unit === "hour" ? Math.ceil(hours) : unit === "half_day" ? room.half_day_hours || 4 : Math.max(slots.length, 1);
+  const durationMin =
+    unit === "hour" ? Math.round(hours * 60)
+    : unit === "half_day" ? (room.half_day_hours || 4) * 60
+    : room.full_day_hours ? room.full_day_hours * 60 : Math.max(slots.length, 1) * stepMin;
+  const blockSlots = Math.max(1, Math.ceil(durationMin / stepMin));
 
   // Grey out whole days on the calendar when nothing long enough is left.
   const monthKey = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}`;
-  const needHours = unit === "hour" ? Math.ceil(hours) : unit === "half_day" ? room.half_day_hours || 4 : 1;
+  const needHours = durationMin / 60;
   const monthQ = useQuery({
     queryKey: ["room-month", slug, room.id, monthKey, needHours],
     queryFn: () => fetchMonth({ data: { slug, room_id: room.id, month: monthKey, hours: needHours } }),
@@ -213,20 +220,20 @@ function BookingPanel({ room, slug, onDone }: { room: Room; slug: string; onDone
 
   const startable = useMemo(() => {
     const set = new Set<string>();
-    for (let i = 0; i + blockHours <= slots.length; i++) {
-      const window = slots.slice(i, i + blockHours);
+    for (let i = 0; i + blockSlots <= slots.length; i++) {
+      const window = slots.slice(i, i + blockSlots);
       const contiguous = window.every((s, j) => j === 0 || window[j - 1]!.end === s.start);
       if (contiguous && window.every((s) => s.available)) set.add(slots[i]!.start);
     }
     return set;
-  }, [slots, blockHours]);
+  }, [slots, blockSlots]);
 
   const endTime = useMemo(() => {
     if (!start) return null;
     const i = slots.findIndex((s) => s.start === start);
     if (i < 0) return null;
-    return slots[Math.min(i + blockHours - 1, slots.length - 1)]!.end;
-  }, [start, slots, blockHours]);
+    return slots[Math.min(i + blockSlots - 1, slots.length - 1)]!.end;
+  }, [start, slots, blockSlots]);
 
   const price =
     unit === "hour" ? (room.hourly_rate ?? 0) * hours
