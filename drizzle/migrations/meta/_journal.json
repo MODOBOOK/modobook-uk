@@ -43,6 +43,13 @@
       "when": 1791878338344,
       "tag": "0005_cron_hook_compat_apikey",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792016474895,
+      "tag": "0006_migration",
+      "breakpoints": true
     }
   ]
 }
