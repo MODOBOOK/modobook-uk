@@ -111,7 +111,7 @@ export function whatsappReminderOnly(slug?: string | null) {
 
 
 /** Course pop-up picker on the public menu (grouped session options). */
-export const COURSE_PICKER_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
+export const COURSE_PICKER_SLUGS: string[] = [];
 
 export function coursePickerEnabled(slug?: string | null) {
   return isFeatureLive(COURSE_PICKER_SLUGS, slug);
