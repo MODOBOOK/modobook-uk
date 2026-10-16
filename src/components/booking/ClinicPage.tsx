@@ -919,7 +919,6 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
   const togglePackageSelect = (id: string) =>
     setSelectedPackageIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   const isPackageSelected = (id: string) => selectedPackageIds.includes(id);
-  const treatById = useMemo(() => new Map(treatments.map((t) => [t.id, t])), [treatments]);
   const addonsFor = useMemo(() => {
     const m = new Map<string, string[]>();
     for (const link of addonLinks) {
