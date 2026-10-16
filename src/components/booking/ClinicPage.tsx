@@ -751,6 +751,16 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
     if (!c || !c.is_limited || !c.limited_ends_at) return null;
     return new Date(c.limited_ends_at).getTime();
   };
+  const treatById = useMemo(() => new Map(treatments.map((t) => [t.id, t])), [treatments]);
+
+  const isAvailableAtLocation = (t: Treatment, locId: string | null = locationId) => {
+    if (!locId) return true;
+    // Only an explicit "unavailable" override for THIS location hides a treatment.
+    // Pricing rows for other locations must never remove it from this menu.
+    const row = pricing.find((p) => p.treatment_id === t.id && p.location_id === locId);
+    return row ? row.available !== false : true;
+  };
+
   const visiblePackages = useMemo(
     () =>
       (packages as LimitedPkg[]).filter((p) => {
@@ -1037,13 +1047,6 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
     return { cap, count, left, full: left <= 0 };
   };
 
-  const isAvailableAtLocation = (t: Treatment, locId: string | null = locationId) => {
-    if (!locId) return true;
-    // Only an explicit "unavailable" override for THIS location hides a treatment.
-    // Pricing rows for other locations must never remove it from this menu.
-    const row = pricing.find((p) => p.treatment_id === t.id && p.location_id === locId);
-    return row ? row.available !== false : true;
-  };
 
 
   // Services can be assigned to specific practitioners. A practitioner with no
