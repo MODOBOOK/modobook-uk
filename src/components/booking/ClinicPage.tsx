@@ -755,22 +755,31 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
     () =>
       (packages as LimitedPkg[]).filter((p) => {
         if (!limitedState(p).live || !catWindowLive((p as { category_id?: string | null }).category_id)) return false;
+        const ids = ((p as { treatment_ids?: string[] | null }).treatment_ids ?? []).filter(Boolean);
+        const single = (p as { treatment_id?: string | null }).treatment_id;
+        const all = ids.length > 0 ? ids : single ? [single] : [];
+        // A package stays bookable while at least one of its treatments is
+        // still offered at this location.
+        if (locationId && all.length > 0) {
+          const anyHere = all.some((id) => {
+            const t = treatById.get(id);
+            return t ? isAvailableAtLocation(t) : false;
+          });
+          if (!anyHere) return false;
+        }
         // A chosen practitioner only sees packages containing a service they offer.
         if (practitionerId) {
           const mine = new Set(
             practitionerTreatments.filter((l) => l.practitioner_id === practitionerId).map((l) => l.treatment_id),
           );
           if (mine.size > 0) {
-            const ids = ((p as { treatment_ids?: string[] | null }).treatment_ids ?? []).filter(Boolean);
-            const single = (p as { treatment_id?: string | null }).treatment_id;
-            const all = ids.length > 0 ? ids : single ? [single] : [];
             if (all.length > 0 && !all.some((id) => mine.has(id))) return false;
           }
         }
         return true;
       }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [packages, categories, nowTs, practitionerId, practitionerTreatments],
+    [packages, categories, nowTs, practitionerId, practitionerTreatments, locationId, pricing, treatById],
   );
   const buildersEnabled = packageBuilderEnabled(slug);
   const activeBuilders = (buildersEnabled ? (packageBuilders ?? []) : []).filter(
@@ -929,7 +938,12 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
       // Adding: check for add-ons
       const t = treatById.get(id);
       const mode = (t as { addon_mode?: string } | undefined)?.addon_mode ?? "optional";
-      const candidates = (addonsFor.get(id) ?? []).filter((aid) => treatById.has(aid) && !prev.includes(aid));
+      const candidates = (addonsFor.get(id) ?? []).filter(
+        (aid) => {
+          const addon = treatById.get(aid);
+          return addon && !prev.includes(aid) && isAvailableAtLocation(addon);
+        },
+      );
       if (mode === "optional" && candidates.length > 0) {
         setAddonPicks(new Set());
         setAddonPrompt({ treatmentId: id, addonIds: candidates });
@@ -1135,7 +1149,9 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
   const heroHeading = theme?.hero_heading;
   const heroSubheading = theme?.hero_subheading;
   const logoUrl = theme?.logo_url;
-  const publicModelSlots = modelSlots.filter((s) => treatById.has(s.treatment_id));
+  const publicModelSlots = modelSlots.filter(
+    (s) => treatById.has(s.treatment_id) && isAvailableAtLocation(treatById.get(s.treatment_id)!, s.location_id ?? locationId),
+  );
   const locById = new Map(locations.map((l) => [l.id, l]));
   const groupedPublicModelSlots: { category: string; items: typeof publicModelSlots }[] = (() => {
     if (publicModelSlots.length === 0) return [];
@@ -2086,6 +2102,8 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
         const favs = favIds
           .map((id) => treatments.find((t) => t.id === id))
           .filter((t): t is Treatment => !!t && t.active !== false)
+          // Hidden at this location stays hidden everywhere on the page.
+          .filter((t) => isAvailableAtLocation(t))
           // A chosen practitioner only sees favourites they actually offer.
           .filter((t) => !practitionerTreatmentIds || practitionerTreatmentIds.has(t.id));
         if (!favs.length) return null;
@@ -2350,7 +2368,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
                   {(() => {
                     const treatById = new Map(treatments.map((t) => [t.id, t]));
                     const slots = modelSlots
-                      .filter((s) => treatById.has(s.treatment_id));
+                      .filter((s) => treatById.has(s.treatment_id) && isAvailableAtLocation(treatById.get(s.treatment_id)!, s.location_id ?? locationId));
                     const locById = new Map(locations.map((l) => [l.id, l]));
                     const modelPosition = profile.model_slots_position === "bottom" ? "bottom" : "top";
 
