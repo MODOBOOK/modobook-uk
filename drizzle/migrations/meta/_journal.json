@@ -57,6 +57,13 @@
       "when": 1792016795082,
       "tag": "0007_rental_room_full_day_hours_and_slot_step",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792194450298,
+      "tag": "0008_pricing_read_policy_include_unavailable",
+      "breakpoints": true
     }
   ]
 }
