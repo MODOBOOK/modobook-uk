@@ -758,6 +758,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
     // Only an explicit "unavailable" override for THIS location hides a treatment.
     // Pricing rows for other locations must never remove it from this menu.
     const row = pricing.find((p) => p.treatment_id === t.id && p.location_id === locId);
+    if (t.name.includes("Spray Tan")) console.log("[DBG avail]", t.id, t.name, "locId=", locId, "row=", row);
     return row ? row.available !== false : true;
   };
 
