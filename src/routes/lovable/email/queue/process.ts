@@ -133,6 +133,23 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
           transactional_emails: state?.transactional_email_ttl_minutes ?? DEFAULT_TRANSACTIONAL_TTL_MINUTES,
         }
 
+        // Hourly cap on bulk marketing sends so a large campaign can't consume
+        // the workspace's daily allowance in one burst and block booking,
+        // form and reminder emails for every other clinic.
+        const hourStart = new Date(Date.now() - (Date.now() % 3_600_000)).toISOString()
+        const { count: marketingSentThisHour, error: marketingCountError } = await supabase
+          .from('email_send_log')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'sent')
+          .gte('created_at', hourStart)
+          .or(
+            'template_name.ilike.%marketing%,template_name.ilike.%broadcast%,template_name.ilike.%campaign%,template_name.ilike.%newsletter%'
+          )
+        if (marketingCountError) {
+          console.error('Failed to count marketing sends this hour', { error: marketingCountError })
+        }
+        const bulkBudget = Math.max(0, MARKETING_HOURLY_CAP - (marketingSentThisHour ?? 0))
+
         let totalProcessed = 0
 
         // 2. Process auth_emails first (priority), then transactional_emails
