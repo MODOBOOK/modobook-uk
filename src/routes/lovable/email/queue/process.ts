@@ -174,10 +174,11 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
           const bulk = rawMessages.filter((m: any) => isBulkMarketing(m?.message ?? {}))
 
           // Cooldown: critical only, and only a small trickle.
-          // Normal: critical first, marketing gets whatever capacity is left.
+          // Normal: critical first, marketing gets whatever hourly bulk
+          // budget remains (60/hour), then capacity left in the batch.
           const candidates = inCooldown
             ? critical.slice(0, 3)
-            : [...critical, ...bulk].slice(0, batchSize)
+            : [...critical, ...bulk.slice(0, bulkBudget)].slice(0, batchSize)
 
           if (!candidates.length) continue
 
