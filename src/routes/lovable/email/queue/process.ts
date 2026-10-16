@@ -7,6 +7,9 @@ const DEFAULT_BATCH_SIZE = 10
 const DEFAULT_SEND_DELAY_MS = 200
 const DEFAULT_AUTH_TTL_MINUTES = 15
 const DEFAULT_TRANSACTIONAL_TTL_MINUTES = 60
+// Bulk marketing emails sent per hour across the whole workspace. Keeps a
+// big campaign from eating the daily allowance and starving booking emails.
+const MARKETING_HOURLY_CAP = 60
 
 // Check if an error is a rate-limit (429) response.
 // Uses EmailAPIError.status when available (email-js >=0.x with structured errors),
@@ -133,6 +136,23 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
           transactional_emails: state?.transactional_email_ttl_minutes ?? DEFAULT_TRANSACTIONAL_TTL_MINUTES,
         }
 
+        // Hourly cap on bulk marketing sends so a large campaign can't consume
+        // the workspace's daily allowance in one burst and block booking,
+        // form and reminder emails for every other clinic.
+        const hourStart = new Date(Date.now() - (Date.now() % 3_600_000)).toISOString()
+        const { count: marketingSentThisHour, error: marketingCountError } = await supabase
+          .from('email_send_log')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'sent')
+          .gte('created_at', hourStart)
+          .or(
+            'template_name.ilike.%marketing%,template_name.ilike.%broadcast%,template_name.ilike.%campaign%,template_name.ilike.%newsletter%'
+          )
+        if (marketingCountError) {
+          console.error('Failed to count marketing sends this hour', { error: marketingCountError })
+        }
+        const bulkBudget = Math.max(0, MARKETING_HOURLY_CAP - (marketingSentThisHour ?? 0))
+
         let totalProcessed = 0
 
         // 2. Process auth_emails first (priority), then transactional_emails
@@ -157,10 +177,11 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
           const bulk = rawMessages.filter((m: any) => isBulkMarketing(m?.message ?? {}))
 
           // Cooldown: critical only, and only a small trickle.
-          // Normal: critical first, marketing gets whatever capacity is left.
+          // Normal: critical first, marketing gets whatever hourly bulk
+          // budget remains (60/hour), then capacity left in the batch.
           const candidates = inCooldown
             ? critical.slice(0, 3)
-            : [...critical, ...bulk].slice(0, batchSize)
+            : [...critical, ...bulk.slice(0, bulkBudget)].slice(0, batchSize)
 
           if (!candidates.length) continue
 
