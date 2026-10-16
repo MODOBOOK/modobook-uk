@@ -7,6 +7,9 @@ const DEFAULT_BATCH_SIZE = 10
 const DEFAULT_SEND_DELAY_MS = 200
 const DEFAULT_AUTH_TTL_MINUTES = 15
 const DEFAULT_TRANSACTIONAL_TTL_MINUTES = 60
+// Bulk marketing emails sent per hour across the whole workspace. Keeps a
+// big campaign from eating the daily allowance and starving booking emails.
+const MARKETING_HOURLY_CAP = 60
 
 // Check if an error is a rate-limit (429) response.
 // Uses EmailAPIError.status when available (email-js >=0.x with structured errors),
