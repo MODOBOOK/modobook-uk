@@ -1024,11 +1024,11 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
     return { cap, count, left, full: left <= 0 };
   };
 
-  const isAvailableAtLocation = (t: Treatment) => {
-    if (!locationId) return true;
+  const isAvailableAtLocation = (t: Treatment, locId: string | null = locationId) => {
+    if (!locId) return true;
     // Only an explicit "unavailable" override for THIS location hides a treatment.
     // Pricing rows for other locations must never remove it from this menu.
-    const row = pricing.find((p) => p.treatment_id === t.id && p.location_id === locationId);
+    const row = pricing.find((p) => p.treatment_id === t.id && p.location_id === locId);
     return row ? row.available !== false : true;
   };
 
