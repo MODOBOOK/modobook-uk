@@ -1076,7 +1076,7 @@ export const requestBooking = createServerFn({ method: "POST" })
     const payNotes: { waived?: boolean } = {};
     try {
       payment = await maybeCreateBookingCheckout({
-        profile: await resolvePayoutProfile(prof, data.profileId, assignedPractitionerId ?? data.practitionerId ?? null),
+        profile: await resolvePayoutProfile(prof, data.profileId, assignedPractitionerId ?? null),
         appointmentIds: [id],
         totalAmount: data.basePrice,
         patientEmail: data.patientEmail,
@@ -1890,7 +1890,9 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       profileId: data.profileId,
       practitionerId: data.practitionerId ?? null,
       treatmentIds: data.bookings.map((b) => b.treatmentId),
+      requireAll: false,
     });
+    const { practitionerOffersTreatments } = await import("./practitioner-assign.server");
     for (const b of data.bookings) {
 
       const id = crypto.randomUUID();
@@ -1904,7 +1906,11 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       const appointmentNotes = [data.notes, paymentNote].filter(Boolean).join("\n") || null;
       // The patient's choice was validated up front (before any row was
       // written) — it is never swapped for someone else.
-      const chosenPractitionerId = validatedPractitionerId;
+      const chosenPractitionerId =
+        validatedPractitionerId &&
+        (await practitionerOffersTreatments(sb, data.profileId, validatedPractitionerId, [b.treatmentId]))
+          ? validatedPractitionerId
+          : null;
       const assignedPractitionerId =
         chosenPractitionerId ??
         (await resolveBookingPractitioner(sb, {
@@ -2060,7 +2066,8 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     try {
       const totalAmount = data.bookings.reduce((sum, b) => sum + b.priceCents / 100, 0);
       payment = await maybeCreateBookingCheckout({
-        profile: await resolvePayoutProfile(prof, data.profileId, firstAssignedPractitionerId ?? data.practitionerId ?? null),
+        // The deposit always follows the practitioner the patient chose.
+        profile: await resolvePayoutProfile(prof, data.profileId, validatedPractitionerId ?? firstAssignedPractitionerId ?? null),
         appointmentIds: created.map((c) => c.id),
         totalAmount,
         patientEmail: data.patientEmail,

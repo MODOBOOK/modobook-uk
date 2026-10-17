@@ -53,6 +53,12 @@ export async function validateChosenPractitioner(
     treatmentIds: string[];
     /** A model slot advertised for a specific team member counts as a choice. */
     fallbackPractitionerId?: string | null;
+    /**
+     * Multi-treatment baskets can include a package item someone else
+     * performs; there the chosen practitioner must offer at least one item
+     * (they still own the booking and its deposit).
+     */
+    requireAll?: boolean;
   },
 ): Promise<string | null> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -68,7 +74,16 @@ export async function validateChosenPractitioner(
     if (!p || p.active === false) {
       throw new Error("The practitioner you chose is no longer available. Please go back and choose again.");
     }
-    if (!(await practitionerOffersTreatments(supabase, args.profileId, chosen, args.treatmentIds))) {
+    const requireAll = args.requireAll !== false;
+    const offers = requireAll
+      ? await practitionerOffersTreatments(supabase, args.profileId, chosen, args.treatmentIds)
+      : args.treatmentIds.length === 0 ||
+        (
+          await Promise.all(
+            args.treatmentIds.map((t) => practitionerOffersTreatments(supabase, args.profileId, chosen, [t])),
+          )
+        ).some(Boolean);
+    if (!offers) {
       throw new Error(
         `${p.name ?? "This practitioner"} doesn't offer this treatment. Please go back and choose another practitioner.`,
       );
