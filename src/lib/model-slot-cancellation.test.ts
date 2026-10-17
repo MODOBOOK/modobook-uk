@@ -1,3 +1,4 @@
+/// <reference types="bun" />
 import { afterAll, beforeAll, expect, test } from "bun:test";
 import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
