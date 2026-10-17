@@ -11,6 +11,7 @@ import { patientWaitlistEnabled } from "@/lib/feature-flags";
 import { ruleAppliesOnDate } from "@/lib/rota";
 
 import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
+import { ChosenPractitioner } from "@/components/booking/ChosenPractitioner";
 import { BookingProgress, type BookingStep } from "@/components/BookingProgress";
 
 import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
@@ -51,9 +52,12 @@ function fromIsoDate(iso: string) {
 }
 
 export const Route = createFileRoute("/m/$slug/book/$treatmentId")({
-  validateSearch: (search: Record<string, unknown>): { locationId?: string; model?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { locationId?: string; model?: string; practitionerId?: string } => ({
     locationId: typeof search.locationId === "string" ? search.locationId : undefined,
     model: typeof search.model === "string" ? search.model : undefined,
+    // The practitioner picked on the clinic page travels in the link so it
+    // survives new tabs, sign-in/sign-up redirects and in-app browsers.
+    practitionerId: typeof search.practitionerId === "string" ? search.practitionerId : undefined,
   }),
   loader: ({ params }) => getBookingContext({ data: { slug: params.slug, treatmentId: params.treatmentId } }),
   component: BookTreatmentPage,
@@ -96,15 +100,39 @@ function BookTreatmentPage() {
   const maxLeadDays = settings?.booking_max_lead_days ?? 90;
   const clinicMinNoticeHours = settings?.booking_min_notice_hours ?? 0;
   const smartTimes = settings?.booking_smart_times_enabled === true;
-  const redirectPath = `/m/${slug}/book/${treatment.id}`;
+  const urlPractitionerId = (search as { practitionerId?: string }).practitionerId ?? null;
+  const redirectPath = `/m/${slug}/book/${treatment.id}${urlPractitionerId ? `?practitionerId=${encodeURIComponent(urlPractitionerId)}` : ""}`;
   const duration = treatment.duration ?? 30;
   // Which practitioner the patient chose on the clinic page (if any) — their
   // hours and diary drive the dates and times we offer.
-  const [chosenPractitionerId, setChosenPractitionerId] = useState<string | null>(null);
+  const [chosenPractitionerId, setChosenPractitionerIdState] = useState<string | null>(urlPractitionerId);
   useEffect(() => {
     if (typeof window === "undefined") return;
-    setChosenPractitionerId(window.sessionStorage.getItem(`modo:practitionerId:${slug}`) || null);
-  }, [slug]);
+    const key = `modo:practitionerId:${slug}`;
+    if (urlPractitionerId) {
+      window.sessionStorage.setItem(key, urlPractitionerId);
+      setChosenPractitionerIdState(urlPractitionerId);
+    } else {
+      setChosenPractitionerIdState(window.sessionStorage.getItem(key) || null);
+    }
+  }, [slug, urlPractitionerId]);
+  const setChosenPractitionerId = (id: string | null) => {
+    setChosenPractitionerIdState(id);
+    setSlot(null);
+    if (typeof window !== "undefined") {
+      const key = `modo:practitionerId:${slug}`;
+      if (id) window.sessionStorage.setItem(key, id);
+      else window.sessionStorage.removeItem(key);
+    }
+  };
+  const practitionerMode =
+    ((ctx as { practitionerSelectionMode?: "required" | "optional" | "first_available" }).practitionerSelectionMode ?? "optional");
+  const practitionerList = ((ctx as { practitionerNotice?: { id: string; name?: string | null; active?: boolean | null }[] }).practitionerNotice ?? []);
+  const needsPractitionerChoice =
+    practitionerMode === "required" &&
+    !search.model &&
+    !chosenPractitionerId &&
+    practitionerList.filter((p) => p.active !== false).length > 1;
 
   // Patient waitlist (pilot clinics) — shown when a date has no free times.
   const waitlistOn = patientWaitlistEnabled(slug);
@@ -895,6 +923,21 @@ function BookTreatmentPage() {
       )}
 
 
+      <ChosenPractitioner
+        practitioners={practitionerList}
+        links={(ctx.practitionerTreatments ?? []) as { practitioner_id: string; treatment_id: string }[]}
+        treatmentIds={[treatment.id]}
+        mode={search.model ? "optional" : practitionerMode}
+        value={chosenPractitionerId}
+        onChange={setChosenPractitionerId}
+        brand={brand}
+      />
+
+      {needsPractitionerChoice ? (
+        <p className="mb-6 rounded-xl border border-dashed px-4 py-6 text-center text-sm opacity-80">
+          Choose your practitioner above to see their available dates and times.
+        </p>
+      ) : (
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="text-base" style={headingStyle}>Pick a date & time</CardTitle>

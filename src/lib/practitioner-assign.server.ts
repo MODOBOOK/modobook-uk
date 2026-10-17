@@ -59,6 +59,8 @@ export async function validateChosenPractitioner(
      * (they still own the booking and its deposit).
      */
     requireAll?: boolean;
+    /** Model-slot bookings are advertised by the clinic; no choice needed. */
+    allowNone?: boolean;
   },
 ): Promise<string | null> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -91,6 +93,7 @@ export async function validateChosenPractitioner(
     return chosen;
   }
   if (args.fallbackPractitionerId) return args.fallbackPractitionerId;
+  if (args.allowNone) return null;
   const [{ data: prof }, { data: pracs }] = await Promise.all([
     supabaseAdmin.from("profiles").select("practitioner_selection_mode").eq("id", args.profileId).maybeSingle(),
     supabaseAdmin.from("practitioners").select("id").eq("profile_id", args.profileId).eq("active", true),

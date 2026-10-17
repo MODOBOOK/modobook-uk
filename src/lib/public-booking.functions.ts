@@ -985,6 +985,7 @@ export const requestBooking = createServerFn({ method: "POST" })
       practitionerId: data.practitionerId ?? null,
       treatmentIds: [data.treatmentId],
       fallbackPractitionerId: modelSlotPractitionerId,
+      allowNone: !!data.modelSlotId,
     });
     const assignedPractitionerId =
       chosenPractitionerId ??
