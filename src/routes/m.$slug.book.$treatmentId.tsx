@@ -1081,6 +1081,7 @@ function BookTreatmentPage() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {authChoice === "pending" ? (
         <Card className="mb-6">
