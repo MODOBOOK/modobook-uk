@@ -11,3 +11,6 @@
  - Calendar appointment cards and all their descendants disable native text selection, touch callouts and browser dragging so long presses remain available for rescheduling.
  - Patient PDF leaflets use browser-only PDF.js rendering of all pages at container width rather than native iframe viewers, because mobile in-app browsers can crop documents and omit later pages.
 - Scheduled hooks under /api/public/hooks authenticate with the x-cron-secret header checked by isAuthorizedCron (secret lives in private.cron_secret); never accept the publishable key — it is public.
+
+- Public bookings never silently replace the patient's chosen practitioner, and "required" clinics refuse bookings with no choice (validateChosenPractitioner); the chosen practitioner travels in the booking link (?practitionerId). Why: the practitioner decides which Stripe account receives the deposit.
+- Payment links tied to an appointment are created on the treating practitioner's payout account (payoutAccountForAppointment). Why: a team member on their own Stripe must receive that booking's money.

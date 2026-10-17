@@ -40,6 +40,7 @@ import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { SafeHtml } from "@/components/SafeHtml";
 import { treatmentPricing } from "@/lib/price-display";
+import { ChosenPractitioner } from "@/components/booking/ChosenPractitioner";
 
 type Rule = Database["public"]["Tables"]["availability_rules"]["Row"];
 type LocOptional = "is_public" | "notes" | "phone" | "coming_soon" | "coming_soon_label";
@@ -81,7 +82,14 @@ function formatSessionSpacing(days?: number | null) {
   return `every ${days} day${days === 1 ? "" : "s"}`;
 }
 
-const searchSchema = z.object({ ids: z.string().optional(), pkgs: z.string().optional(), locationId: z.string().optional() });
+const searchSchema = z.object({
+  ids: z.string().optional(),
+  pkgs: z.string().optional(),
+  locationId: z.string().optional(),
+  // The practitioner picked on the clinic page travels in the link so it
+  // survives new tabs, sign-in/sign-up redirects and in-app browsers.
+  practitionerId: z.string().optional(),
+});
 
 export const Route = createFileRoute("/m/$slug/book-multi")({
   validateSearch: searchSchema,
@@ -102,7 +110,8 @@ function MultiBookPage() {
   const packageIds = (search.pkgs ?? "").split(",").filter(Boolean);
   const selectedPackages = ((ctx as { selectedPackages?: Array<{ id: string; name: string; description?: string | null; is_custom?: boolean; compare_at_price?: number | null; price: number; session_count: number; allow_split_payment?: boolean; firstTreatmentId: string | null; treatmentIds?: string[] }> }).selectedPackages ?? [])
     .filter((p) => packageIds.includes(p.id));
-  const redirectPath = `/m/${slug}/book-multi?ids=${encodeURIComponent(ids.join(","))}${packageIds.length ? `&pkgs=${encodeURIComponent(packageIds.join(","))}` : ""}`;
+  const urlPractitionerId = search.practitionerId ?? null;
+  const redirectPath = `/m/${slug}/book-multi?ids=${encodeURIComponent(ids.join(","))}${packageIds.length ? `&pkgs=${encodeURIComponent(packageIds.join(","))}` : ""}${urlPractitionerId ? `&practitionerId=${encodeURIComponent(urlPractitionerId)}` : ""}`;
 
   const pkgTreatmentIds = (p: { firstTreatmentId: string | null; treatmentIds?: string[] }) =>
     (p.treatmentIds && p.treatmentIds.length ? p.treatmentIds : p.firstTreatmentId ? [p.firstTreatmentId] : []).filter(Boolean);
@@ -168,11 +177,33 @@ function MultiBookPage() {
   // hours and diary drive the dates and times we offer, and their own price
   // wins where the clinic has set one. Declared before any use: reading it
   // later in the component body crashed the whole booking page.
-  const [chosenPractitionerId, setChosenPractitionerId] = useState<string | null>(null);
+  const [chosenPractitionerId, setChosenPractitionerIdState] = useState<string | null>(urlPractitionerId);
   useEffect(() => {
     if (typeof window === "undefined") return;
-    setChosenPractitionerId(window.sessionStorage.getItem(`modo:practitionerId:${slug}`) || null);
-  }, [slug]);
+    const key = `modo:practitionerId:${slug}`;
+    if (urlPractitionerId) {
+      window.sessionStorage.setItem(key, urlPractitionerId);
+      setChosenPractitionerIdState(urlPractitionerId);
+    } else {
+      setChosenPractitionerIdState(window.sessionStorage.getItem(key) || null);
+    }
+  }, [slug, urlPractitionerId]);
+  const setChosenPractitionerId = (id: string | null) => {
+    setChosenPractitionerIdState(id);
+    setSlot(null);
+    if (typeof window !== "undefined") {
+      const key = `modo:practitionerId:${slug}`;
+      if (id) window.sessionStorage.setItem(key, id);
+      else window.sessionStorage.removeItem(key);
+    }
+  };
+  const practitionerMode =
+    ((ctx as { practitionerSelectionMode?: "required" | "optional" | "first_available" }).practitionerSelectionMode ?? "optional");
+  const practitionerList = ((ctx as { practitionerNotice?: { id: string; name?: string | null; active?: boolean | null }[] }).practitionerNotice ?? []);
+  const needsPractitionerChoice =
+    practitionerMode === "required" &&
+    !chosenPractitionerId &&
+    practitionerList.filter((p) => p.active !== false).length > 1;
 
   // A team member can require more (or less) notice than the clinic default.
   const minNoticeHours = (() => {
@@ -1223,6 +1254,22 @@ function MultiBookPage() {
           )}
 
           {step === "datetime" && (
+            <>
+            <ChosenPractitioner
+              practitioners={practitionerList}
+              links={(ctx.practitionerTreatments ?? []) as { practitioner_id: string; treatment_id: string }[]}
+              treatmentIds={selectedTreatmentIds}
+              match="any"
+              mode={practitionerMode}
+              value={chosenPractitionerId}
+              onChange={setChosenPractitionerId}
+              brand={brand}
+            />
+            {needsPractitionerChoice ? (
+              <p className="mb-6 rounded-xl border border-dashed px-4 py-6 text-center text-sm opacity-80">
+                Choose your practitioner above to see their available dates and times.
+              </p>
+            ) : (
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="text-base" style={headingStyle}>Pick a location, date & time</CardTitle>
@@ -1306,6 +1353,8 @@ function MultiBookPage() {
                 </div>
               </CardContent>
             </Card>
+            )}
+            </>
           )}
 
           {step === "details" && (

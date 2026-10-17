@@ -34,6 +34,79 @@ export async function practitionerOffersTreatments(
 }
 
 /**
+ * Validate the practitioner a patient picked before a booking is written.
+ *
+ * The practitioner on a booking decides which Stripe account takes the
+ * deposit, so we never silently swap the patient's choice for someone else:
+ *  - a chosen practitioner must belong to this clinic, be active and offer
+ *    every service being booked, otherwise the booking is refused;
+ *  - when the clinic requires patients to choose (and has more than one
+ *    practitioner), a booking with no choice is refused rather than being
+ *    auto-assigned to whoever happens to be on the rota.
+ * Returns the validated practitioner id (or null when none was needed).
+ */
+export async function validateChosenPractitioner(
+  supabase: any,
+  args: {
+    profileId: string;
+    practitionerId: string | null | undefined;
+    treatmentIds: string[];
+    /** A model slot advertised for a specific team member counts as a choice. */
+    fallbackPractitionerId?: string | null;
+    /**
+     * Multi-treatment baskets can include a package item someone else
+     * performs; there the chosen practitioner must offer at least one item
+     * (they still own the booking and its deposit).
+     */
+    requireAll?: boolean;
+    /** Model-slot bookings are advertised by the clinic; no choice needed. */
+    allowNone?: boolean;
+  },
+): Promise<string | null> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const chosen = args.practitionerId || null;
+  if (chosen) {
+    const { data: pract } = await supabaseAdmin
+      .from("practitioners")
+      .select("id, name, active")
+      .eq("id", chosen)
+      .eq("profile_id", args.profileId)
+      .maybeSingle();
+    const p = pract as { id: string; name?: string | null; active?: boolean | null } | null;
+    if (!p || p.active === false) {
+      throw new Error("The practitioner you chose is no longer available. Please go back and choose again.");
+    }
+    const requireAll = args.requireAll !== false;
+    const offers = requireAll
+      ? await practitionerOffersTreatments(supabase, args.profileId, chosen, args.treatmentIds)
+      : args.treatmentIds.length === 0 ||
+        (
+          await Promise.all(
+            args.treatmentIds.map((t) => practitionerOffersTreatments(supabase, args.profileId, chosen, [t])),
+          )
+        ).some(Boolean);
+    if (!offers) {
+      throw new Error(
+        `${p.name ?? "This practitioner"} doesn't offer this treatment. Please go back and choose another practitioner.`,
+      );
+    }
+    return chosen;
+  }
+  if (args.fallbackPractitionerId) return args.fallbackPractitionerId;
+  if (args.allowNone) return null;
+  const [{ data: prof }, { data: pracs }] = await Promise.all([
+    supabaseAdmin.from("profiles").select("practitioner_selection_mode").eq("id", args.profileId).maybeSingle(),
+    supabaseAdmin.from("practitioners").select("id").eq("profile_id", args.profileId).eq("active", true),
+  ]);
+  const mode = (prof as { practitioner_selection_mode?: string | null } | null)?.practitioner_selection_mode;
+  if (mode === "required" && (pracs ?? []).length > 1) {
+    throw new Error("Please choose your practitioner before booking.");
+  }
+  return null;
+}
+
+
+/**
  * When the patient hasn't picked a practitioner ("no preference"), which
  * practitioners could actually take this booking? Used to stop hours
  * belonging to someone who doesn't offer the service from creating
