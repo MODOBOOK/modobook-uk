@@ -147,9 +147,16 @@ export const getBookingContext = createServerFn({ method: "GET" })
         (
           await sb
             .from("practitioners")
-            .select("id, booking_min_notice_hours")
+            .select("id, name, active, booking_min_notice_hours")
             .eq("profile_id", profile.id)
         ).data ?? [],
+      // Whether patients must pick a practitioner (the booking page shows a
+      // picker if the choice from the clinic page didn't come through).
+      practitionerSelectionMode:
+        ((profile as { practitioner_selection_mode?: string | null }).practitioner_selection_mode ?? "optional") as
+          | "required"
+          | "optional"
+          | "first_available",
     };
   });
 
@@ -358,9 +365,16 @@ export const getMultiBookingContext = createServerFn({ method: "GET" })
         (
           await sb
             .from("practitioners")
-            .select("id, booking_min_notice_hours")
+            .select("id, name, active, booking_min_notice_hours")
             .eq("profile_id", profile.id)
         ).data ?? [],
+      // Whether patients must pick a practitioner (the booking page shows a
+      // picker if the choice from the clinic page didn't come through).
+      practitionerSelectionMode:
+        ((profile as { practitioner_selection_mode?: string | null }).practitioner_selection_mode ?? "optional") as
+          | "required"
+          | "optional"
+          | "first_available",
       locations: bookableLocations,
       rules: rules ?? [],
       theme: theme ?? null,
