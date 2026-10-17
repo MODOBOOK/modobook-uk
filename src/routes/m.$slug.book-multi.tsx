@@ -40,7 +40,6 @@ import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { SafeHtml } from "@/components/SafeHtml";
 import { treatmentPricing } from "@/lib/price-display";
-import { ChosenPractitioner } from "@/components/booking/ChosenPractitioner";
 
 type Rule = Database["public"]["Tables"]["availability_rules"]["Row"];
 type LocOptional = "is_public" | "notes" | "phone" | "coming_soon" | "coming_soon_label";
@@ -204,6 +203,13 @@ function MultiBookPage() {
     practitionerMode === "required" &&
     !chosenPractitionerId &&
     practitionerList.filter((p) => p.active !== false).length > 1;
+  // If the patient's practitioner choice got lost (new tab, in-app browser),
+  // send them back to the clinic page to pick again — never guess for them.
+  useEffect(() => {
+    if (!needsPractitionerChoice || typeof window === "undefined") return;
+    if (window.sessionStorage.getItem(`modo:practitionerId:${slug}`)) return;
+    window.location.replace(`/m/${slug}`);
+  }, [needsPractitionerChoice, slug]);
 
   // A team member can require more (or less) notice than the clinic default.
   const minNoticeHours = (() => {
@@ -1255,19 +1261,9 @@ function MultiBookPage() {
 
           {step === "datetime" && (
             <>
-            <ChosenPractitioner
-              practitioners={practitionerList}
-              links={(ctx.practitionerTreatments ?? []) as { practitioner_id: string; treatment_id: string }[]}
-              treatmentIds={selectedTreatmentIds}
-              match="any"
-              mode={practitionerMode}
-              value={chosenPractitionerId}
-              onChange={setChosenPractitionerId}
-              brand={brand}
-            />
             {needsPractitionerChoice ? (
               <p className="mb-6 rounded-xl border border-dashed px-4 py-6 text-center text-sm opacity-80">
-                Choose your practitioner above to see their available dates and times.
+                Taking you back to choose your practitioner…
               </p>
             ) : (
             <Card className="mb-6">
