@@ -1236,7 +1236,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
                           {s.notes && <p className="mt-1 text-xs italic text-muted-foreground">{s.notes}</p>}
                           <Link
                             to="/m/$slug/book/$treatmentId"
-                            search={{ model: s.id, locationId: s.location_id ?? locationId ?? undefined }}
+                            search={{ model: s.id, locationId: s.location_id ?? locationId ?? undefined, practitionerId: practitionerId ?? undefined }}
                             params={{ slug, treatmentId: t.id }}
                             className="mt-2 inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-white"
                             style={{ backgroundColor: brand }}
@@ -1965,7 +1965,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
               consultTreatmentIds.length === 1 ? (
                 <Link
                   to="/m/$slug/book/$treatmentId"
-                    search={{ locationId: locationId ?? undefined }}
+                    search={{ locationId: locationId ?? undefined, practitionerId: practitionerId ?? undefined }}
                   params={{ slug, treatmentId: consultTreatmentIds[0] }}
                   className="block"
                 >
@@ -2066,7 +2066,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
               {consultTreatmentId ? (
                 <Link
                   to="/m/$slug/book/$treatmentId"
-                    search={{ locationId: locationId ?? undefined }}
+                    search={{ locationId: locationId ?? undefined, practitionerId: practitionerId ?? undefined }}
                   params={{ slug, treatmentId: consultTreatmentId }}
                   className="mt-3 inline-block rounded-full px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
                   style={{ backgroundColor: brand }}
@@ -2151,7 +2151,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
                     {img && (
                       <Link
                         to="/m/$slug/book/$treatmentId"
-                    search={{ locationId: locationId ?? undefined }}
+                    search={{ locationId: locationId ?? undefined, practitionerId: practitionerId ?? undefined }}
                         params={{ slug, treatmentId: t.id }}
                         className="block aspect-[16/10] w-full overflow-hidden bg-muted"
                       >
@@ -2223,7 +2223,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
                         ) : (
                           <Link
                             to="/m/$slug/book/$treatmentId"
-                            search={{ locationId: locationId ?? undefined }}
+                            search={{ locationId: locationId ?? undefined, practitionerId: practitionerId ?? undefined }}
                             params={{ slug, treatmentId: t.id }}
                             className="rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm"
                             style={{ backgroundColor: brand }}
@@ -2453,7 +2453,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
                                           </p>
                                           {s.notes && <p className="mt-1 text-xs italic text-muted-foreground">{s.notes}</p>}
                                           <a
-                                            href={`/m/${slug}/book/${t.id}?model=${s.id}${s.location_id ? `&locationId=${s.location_id}` : locationId ? `&locationId=${locationId}` : ""}`}
+                                            href={`/m/${slug}/book/${t.id}?model=${s.id}${s.location_id ? `&locationId=${s.location_id}` : locationId ? `&locationId=${locationId}` : ""}${practitionerId ? `&practitionerId=${practitionerId}` : ""}`}
                                             className="mt-2 inline-block rounded-md px-3 py-1.5 text-xs font-semibold text-white"
                                             style={{ backgroundColor: brand }}
                                           >
@@ -2694,7 +2694,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
                                   </button>
                                   <Link
                                     to="/m/$slug/book/$treatmentId"
-                    search={{ locationId: locationId ?? undefined }}
+                    search={{ locationId: locationId ?? undefined, practitionerId: practitionerId ?? undefined }}
                                     params={{ slug, treatmentId: firstTreatmentId }}
                                     className="modo-btn px-4 py-1.5 text-sm font-semibold"
                                   >
@@ -2930,6 +2930,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
                     ids: selectedIds.join(","),
                     pkgs: selectedPackageIds.join(","),
                     locationId: locationId ?? undefined,
+                    practitionerId: practitionerId ?? undefined,
                   }}
                 >
                   <Button size="lg" className="h-12 px-6 text-base font-semibold shadow-md" style={{ backgroundColor: brand, color: "#fff" }}>
