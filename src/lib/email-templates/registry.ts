@@ -17,6 +17,8 @@ import { template as prescriberInvoice } from './prescriber-invoice'
 import { template as giftCardDelivery } from './gift-card-delivery'
 import { template as newBookingPractitioner } from './new-booking-practitioner'
 import { template as complianceReminder } from './compliance-reminder'
+import { template as trialActivation } from './trial-activation'
+import { template as trialClosureList } from './trial-closure-list'
 import { template as membershipInvite } from './membership-invite'
 import { template as membershipTerms } from './membership-terms'
 
@@ -52,5 +54,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'gift-card-delivery': giftCardDelivery,
   'new-booking-practitioner': newBookingPractitioner,
   'compliance-reminder': complianceReminder,
+  'trial-activation': trialActivation,
+  'trial-closure-list': trialClosureList,
   'membership-invite': membershipInvite,
 }

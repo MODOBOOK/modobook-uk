@@ -183,6 +183,7 @@ import { Route as ApiPublicHooksMarketingAutomationsRouteImport } from './routes
 import { Route as ApiPublicHooksMarketingDispatchRouteImport } from './routes/api/public/hooks/marketing-dispatch'
 import { Route as ApiPublicHooksRebookRemindersRouteImport } from './routes/api/public/hooks/rebook-reminders'
 import { Route as ApiPublicHooksReviewEmailsRouteImport } from './routes/api/public/hooks/review-emails'
+import { Route as ApiPublicHooksTrialActivationRouteImport } from './routes/api/public/hooks/trial-activation'
 import { Route as ApiPublicMedicalFormTokenRouteImport } from './routes/api.public.medical-form.$token'
 import { Route as ApiPublicPushDispatchRouteImport } from './routes/api/public/push/dispatch'
 import { Route as ApiPublicStripeOauthCallbackRouteImport } from './routes/api/public/stripe/oauth-callback'
@@ -1189,6 +1190,12 @@ const ApiPublicHooksReviewEmailsRoute =
     path: '/api/public/hooks/review-emails',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicHooksTrialActivationRoute =
+  ApiPublicHooksTrialActivationRouteImport.update({
+    id: '/api/public/hooks/trial-activation',
+    path: '/api/public/hooks/trial-activation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicMedicalFormTokenRoute =
   ApiPublicMedicalFormTokenRouteImport.update({
     id: '/api/public/medical-form/$token',
@@ -1479,6 +1486,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/rebook-reminders': typeof ApiPublicHooksRebookRemindersRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
+  '/api/public/hooks/trial-activation': typeof ApiPublicHooksTrialActivationRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
   '/api/public/push/dispatch': typeof ApiPublicPushDispatchRoute
   '/api/public/stripe/oauth-callback': typeof ApiPublicStripeOauthCallbackRoute
@@ -1664,6 +1672,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/rebook-reminders': typeof ApiPublicHooksRebookRemindersRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
+  '/api/public/hooks/trial-activation': typeof ApiPublicHooksTrialActivationRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
   '/api/public/push/dispatch': typeof ApiPublicPushDispatchRoute
   '/api/public/stripe/oauth-callback': typeof ApiPublicStripeOauthCallbackRoute
@@ -1863,6 +1872,7 @@ export interface FileRoutesById {
   '/api/public/hooks/marketing-dispatch': typeof ApiPublicHooksMarketingDispatchRoute
   '/api/public/hooks/rebook-reminders': typeof ApiPublicHooksRebookRemindersRoute
   '/api/public/hooks/review-emails': typeof ApiPublicHooksReviewEmailsRoute
+  '/api/public/hooks/trial-activation': typeof ApiPublicHooksTrialActivationRoute
   '/api/public/medical-form/$token': typeof ApiPublicMedicalFormTokenRoute
   '/api/public/push/dispatch': typeof ApiPublicPushDispatchRoute
   '/api/public/stripe/oauth-callback': typeof ApiPublicStripeOauthCallbackRoute
@@ -2062,6 +2072,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/rebook-reminders'
     | '/api/public/hooks/review-emails'
+    | '/api/public/hooks/trial-activation'
     | '/api/public/medical-form/$token'
     | '/api/public/push/dispatch'
     | '/api/public/stripe/oauth-callback'
@@ -2247,6 +2258,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/rebook-reminders'
     | '/api/public/hooks/review-emails'
+    | '/api/public/hooks/trial-activation'
     | '/api/public/medical-form/$token'
     | '/api/public/push/dispatch'
     | '/api/public/stripe/oauth-callback'
@@ -2445,6 +2457,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/marketing-dispatch'
     | '/api/public/hooks/rebook-reminders'
     | '/api/public/hooks/review-emails'
+    | '/api/public/hooks/trial-activation'
     | '/api/public/medical-form/$token'
     | '/api/public/push/dispatch'
     | '/api/public/stripe/oauth-callback'
@@ -2519,6 +2532,7 @@ export interface RootRouteChildren {
   ApiPublicHooksMarketingDispatchRoute: typeof ApiPublicHooksMarketingDispatchRoute
   ApiPublicHooksRebookRemindersRoute: typeof ApiPublicHooksRebookRemindersRoute
   ApiPublicHooksReviewEmailsRoute: typeof ApiPublicHooksReviewEmailsRoute
+  ApiPublicHooksTrialActivationRoute: typeof ApiPublicHooksTrialActivationRoute
   ApiPublicMedicalFormTokenRoute: typeof ApiPublicMedicalFormTokenRoute
   ApiPublicPushDispatchRoute: typeof ApiPublicPushDispatchRoute
   ApiPublicStripeOauthCallbackRoute: typeof ApiPublicStripeOauthCallbackRoute
@@ -3751,6 +3765,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksReviewEmailsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/trial-activation': {
+      id: '/api/public/hooks/trial-activation'
+      path: '/api/public/hooks/trial-activation'
+      fullPath: '/api/public/hooks/trial-activation'
+      preLoaderRoute: typeof ApiPublicHooksTrialActivationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/medical-form/$token': {
       id: '/api/public/medical-form/$token'
       path: '/api/public/medical-form/$token'
@@ -4464,6 +4485,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksMarketingDispatchRoute: ApiPublicHooksMarketingDispatchRoute,
   ApiPublicHooksRebookRemindersRoute: ApiPublicHooksRebookRemindersRoute,
   ApiPublicHooksReviewEmailsRoute: ApiPublicHooksReviewEmailsRoute,
+  ApiPublicHooksTrialActivationRoute: ApiPublicHooksTrialActivationRoute,
   ApiPublicMedicalFormTokenRoute: ApiPublicMedicalFormTokenRoute,
   ApiPublicPushDispatchRoute: ApiPublicPushDispatchRoute,
   ApiPublicStripeOauthCallbackRoute: ApiPublicStripeOauthCallbackRoute,
