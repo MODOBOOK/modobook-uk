@@ -64,6 +64,13 @@
       "when": 1792194450298,
       "tag": "0008_pricing_read_policy_include_unavailable",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792274337059,
+      "tag": "0009_release_cancelled_model_slots",
+      "breakpoints": true
     }
   ]
 }
