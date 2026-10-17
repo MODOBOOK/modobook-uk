@@ -962,14 +962,16 @@ export const requestBooking = createServerFn({ method: "POST" })
         .maybeSingle();
       modelSlotPractitionerId = (ms as { practitioner_id?: string | null } | null)?.practitioner_id ?? null;
     }
-    // A patient-chosen practitioner only stands if they actually offer this
-    // service — otherwise fall through to auto-assignment.
-    const { practitionerOffersTreatments } = await import("./practitioner-assign.server");
-    const chosenPractitionerId =
-      data.practitionerId &&
-      (await practitionerOffersTreatments(sb, data.profileId, data.practitionerId, [data.treatmentId]))
-        ? data.practitionerId
-        : null;
+    // The practitioner decides whose Stripe account takes the deposit, so the
+    // patient's choice is validated and never silently swapped for someone
+    // else (and "choose your practitioner" clinics never auto-assign).
+    const { validateChosenPractitioner } = await import("./practitioner-assign.server");
+    const chosenPractitionerId = await validateChosenPractitioner(sb, {
+      profileId: data.profileId,
+      practitionerId: data.practitionerId ?? null,
+      treatmentIds: [data.treatmentId],
+      fallbackPractitionerId: modelSlotPractitionerId,
+    });
     const assignedPractitionerId =
       chosenPractitionerId ??
       modelSlotPractitionerId ??
@@ -1880,6 +1882,15 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     const created: { id: string; treatmentId: string }[] = [];
     const consents: { token: string; consent_template_id: string }[] = [];
     let firstAssignedPractitionerId: string | null = null;
+    // Check the patient's practitioner choice once, before writing anything,
+    // so a bad choice can never leave half a booking (or a deposit on the
+    // wrong person's Stripe account).
+    const { validateChosenPractitioner } = await import("./practitioner-assign.server");
+    const validatedPractitionerId = await validateChosenPractitioner(sb, {
+      profileId: data.profileId,
+      practitionerId: data.practitionerId ?? null,
+      treatmentIds: data.bookings.map((b) => b.treatmentId),
+    });
     for (const b of data.bookings) {
 
       const id = crypto.randomUUID();
@@ -1891,13 +1902,9 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
           : `Payment plan: Pay in full for ${sessionCount} appointments`
         : null;
       const appointmentNotes = [data.notes, paymentNote].filter(Boolean).join("\n") || null;
-      // A patient-chosen practitioner only stands if they offer this service.
-      const { practitionerOffersTreatments } = await import("./practitioner-assign.server");
-      const chosenPractitionerId =
-        data.practitionerId &&
-        (await practitionerOffersTreatments(sb, data.profileId, data.practitionerId, [b.treatmentId]))
-          ? data.practitionerId
-          : null;
+      // The patient's choice was validated up front (before any row was
+      // written) — it is never swapped for someone else.
+      const chosenPractitionerId = validatedPractitionerId;
       const assignedPractitionerId =
         chosenPractitionerId ??
         (await resolveBookingPractitioner(sb, {
