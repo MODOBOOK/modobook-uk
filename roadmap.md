@@ -1,8 +1,8 @@
 # Mobile redesign — practitioner dashboard
 
 ## Model-slot booking mismatch
-- [ ] Release cancelled appointment model-slot claims and repair Supreme's stale slots
-- [ ] Verify cancellation regression and preserve confirmed bookings
+- [x] Release cancelled appointment model-slot claims and repair Supreme's stale slots
+- [x] Verify cancellation regression and preserve confirmed bookings
 
 ## Practitioner messages
 - [x] List clinics with no recorded sign-in for four weeks and flag The Nursing Lab's seven upcoming bookings
