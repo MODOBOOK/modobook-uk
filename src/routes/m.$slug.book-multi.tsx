@@ -1254,6 +1254,22 @@ function MultiBookPage() {
           )}
 
           {step === "datetime" && (
+            <>
+            <ChosenPractitioner
+              practitioners={practitionerList}
+              links={(ctx.practitionerTreatments ?? []) as { practitioner_id: string; treatment_id: string }[]}
+              treatmentIds={selectedTreatmentIds}
+              match="any"
+              mode={practitionerMode}
+              value={chosenPractitionerId}
+              onChange={setChosenPractitionerId}
+              brand={brand}
+            />
+            {needsPractitionerChoice ? (
+              <p className="mb-6 rounded-xl border border-dashed px-4 py-6 text-center text-sm opacity-80">
+                Choose your practitioner above to see their available dates and times.
+              </p>
+            ) : (
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="text-base" style={headingStyle}>Pick a location, date & time</CardTitle>
@@ -1337,6 +1353,8 @@ function MultiBookPage() {
                 </div>
               </CardContent>
             </Card>
+            )}
+            </>
           )}
 
           {step === "details" && (
