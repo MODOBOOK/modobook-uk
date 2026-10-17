@@ -97,9 +97,29 @@ export const createPaymentLink = createServerFn({ method: "POST" })
     const surchargeCents = includeFees ? computeCardSurchargeCents(subtotalCents, profile, true) : 0;
     const totalCents = subtotalCents + surchargeCents;
 
+    // A link for a specific booking is paid into the account of the
+    // practitioner treating that patient (a team member on "their own
+    // account" gets it directly), exactly like an online deposit would be.
+    let accountId: string = profile.stripe_connect_account_id;
+    if (data.appointmentId) {
+      const { data: appt } = await context.supabase
+        .from("appointments")
+        .select("practitioner_id")
+        .eq("id", data.appointmentId)
+        .eq("profile_id", profile.id)
+        .maybeSingle();
+      const { payoutAccountForAppointment } = await import("./payout-account.server");
+      accountId =
+        (await payoutAccountForAppointment({
+          profileId: profile.id,
+          practitionerId: (appt as { practitioner_id?: string | null } | null)?.practitioner_id ?? null,
+          clinicAccountId: profile.stripe_connect_account_id,
+        })) ?? profile.stripe_connect_account_id;
+    }
+
     const { createConnectedPaymentLink } = await import("./stripe.server");
     const link = await createConnectedPaymentLink({
-      accountId: profile.stripe_connect_account_id,
+      accountId,
       amountCents: subtotalCents,
       currency: data.currency ?? "gbp",
       description: data.description,
@@ -241,16 +261,35 @@ export const cancelPaymentLink = createServerFn({ method: "POST" })
     if (!profile) throw new Error("Profile not found");
     const { data: row } = await context.supabase
       .from("payment_links")
-      .select("stripe_payment_link_id")
+      .select("stripe_payment_link_id, appointment_id")
       .eq("id", data.id)
       .eq("profile_id", profile.id)
       .single();
     if (row?.stripe_payment_link_id && profile.stripe_connect_account_id) {
-      try {
-        const { deactivatePaymentLink } = await import("./stripe.server");
-        await deactivatePaymentLink(profile.stripe_connect_account_id, row.stripe_payment_link_id);
-      } catch (e) {
-        /* ignore */
+      // The link may live on a team member's own Stripe account.
+      const accounts = new Set<string>([profile.stripe_connect_account_id]);
+      if (row.appointment_id) {
+        const { data: appt } = await context.supabase
+          .from("appointments")
+          .select("practitioner_id")
+          .eq("id", row.appointment_id)
+          .maybeSingle();
+        const { payoutAccountForAppointment } = await import("./payout-account.server");
+        const acct = await payoutAccountForAppointment({
+          profileId: profile.id,
+          practitionerId: (appt as { practitioner_id?: string | null } | null)?.practitioner_id ?? null,
+          clinicAccountId: profile.stripe_connect_account_id,
+        });
+        if (acct) accounts.add(acct);
+      }
+      const { deactivatePaymentLink } = await import("./stripe.server");
+      for (const acct of accounts) {
+        try {
+          await deactivatePaymentLink(acct, row.stripe_payment_link_id);
+          break;
+        } catch {
+          /* not on this account — try the next */
+        }
       }
     }
     const { error } = await context.supabase
