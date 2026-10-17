@@ -11,7 +11,6 @@ import { patientWaitlistEnabled } from "@/lib/feature-flags";
 import { ruleAppliesOnDate } from "@/lib/rota";
 
 import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
-import { ChosenPractitioner } from "@/components/booking/ChosenPractitioner";
 import { BookingProgress, type BookingStep } from "@/components/BookingProgress";
 
 import { listAddonsForBooking, type PublicAddon } from "@/lib/addons.functions";
@@ -133,6 +132,13 @@ function BookTreatmentPage() {
     !search.model &&
     !chosenPractitionerId &&
     practitionerList.filter((p) => p.active !== false).length > 1;
+  // If the patient's practitioner choice got lost (new tab, in-app browser),
+  // send them back to the clinic page to pick again — never guess for them.
+  useEffect(() => {
+    if (!needsPractitionerChoice || typeof window === "undefined") return;
+    if (window.sessionStorage.getItem(`modo:practitionerId:${slug}`)) return;
+    window.location.replace(`/m/${slug}`);
+  }, [needsPractitionerChoice, slug]);
 
   // Patient waitlist (pilot clinics) — shown when a date has no free times.
   const waitlistOn = patientWaitlistEnabled(slug);
@@ -922,20 +928,9 @@ function BookTreatmentPage() {
         </Card>
       )}
 
-
-      <ChosenPractitioner
-        practitioners={practitionerList}
-        links={(ctx.practitionerTreatments ?? []) as { practitioner_id: string; treatment_id: string }[]}
-        treatmentIds={[treatment.id]}
-        mode={search.model ? "optional" : practitionerMode}
-        value={chosenPractitionerId}
-        onChange={setChosenPractitionerId}
-        brand={brand}
-      />
-
       {needsPractitionerChoice ? (
         <p className="mb-6 rounded-xl border border-dashed px-4 py-6 text-center text-sm opacity-80">
-          Choose your practitioner above to see their available dates and times.
+          Taking you back to choose your practitioner…
         </p>
       ) : (
       <Card className="mb-6">
