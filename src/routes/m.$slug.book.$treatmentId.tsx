@@ -251,7 +251,11 @@ function BookTreatmentPage() {
     return ctx.locations[0]?.id ?? null;
   });
 
-  const modelSlotsAll = (ctx as { modelSlots?: Array<{ id: string; location_id: string | null; slot_date: string; start_time: string; end_time: string; price_mode: "fixed" | "percent"; price_value: number }> }).modelSlots ?? [];
+  // Offer-day (model) dates only apply when the patient came from an offer-day
+  // link (?model=). Opening the treatment normally shows the full diary.
+  const modelSlotsAll = search.model
+    ? ((ctx as { modelSlots?: Array<{ id: string; location_id: string | null; slot_date: string; start_time: string; end_time: string; price_mode: "fixed" | "percent"; price_value: number }> }).modelSlots ?? [])
+    : [];
   const modelMode = modelSlotsAll.length > 0;
   const modelSlotsForLoc = useMemo(
     () => modelSlotsAll.filter((s) => !locationId || !s.location_id || s.location_id === locationId),
