@@ -1273,7 +1273,7 @@ function BookingsPage() {
 
       {/* Appointment Checkout sheet */}
       <Dialog open={!!selectedAppt} onOpenChange={(o) => !o && setSelectedAppt(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90dvh] w-[calc(100vw-1rem)] max-w-lg overflow-y-auto overflow-x-hidden">
           <DialogHeader>
             <DialogTitle>Appointment checkout</DialogTitle>
           </DialogHeader>
@@ -2475,9 +2475,9 @@ function CheckoutSheet({
             </Button>
           </div>
           {switchList && (
-            <div className="flex gap-2">
+            <div className="flex min-w-0 gap-2">
               <select
-                className="min-w-0 flex-1 rounded-md border bg-background px-2 py-1.5 text-sm"
+                className="w-0 min-w-0 flex-1 truncate rounded-md border bg-background px-2 py-1.5 text-sm"
                 value={switchTo}
                 onChange={(e) => setSwitchTo(e.target.value)}
               >
