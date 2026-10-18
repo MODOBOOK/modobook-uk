@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { openNotification } from "@/lib/notification-target";
 import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Bell, PartyPopper, Trash2, CheckCheck, Loader2, X, ChevronRight } from "lucide-react";
@@ -95,8 +96,7 @@ function NotificationsPage() {
       setUnread((u) => Math.max(0, u - 1));
       await markOne({ data: { id: n.id } }).catch(() => {});
     }
-    const target = n.resolved_link || n.link;
-    if (target) navigate({ to: target as string });
+    openNotification(n as any, navigate);
   }
 
   async function removeOne(id: string) {

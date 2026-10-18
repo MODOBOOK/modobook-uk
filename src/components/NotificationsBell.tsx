@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { openNotification } from "@/lib/notification-target";
 import { Bell, X, PartyPopper, Trash2, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -179,8 +180,7 @@ export function NotificationsBell({ className }: { className?: string }) {
                   <li key={n.id} className={cn("cursor-pointer", !n.read_at && "bg-primary/[0.03]")}
                     onClick={() => {
                       onOpenItem(n);
-                      const target = n.resolved_link || n.link;
-                      if (target) navigate({ to: target as string });
+                      openNotification(n as any, navigate);
                     }}
                   >
                     {content}
