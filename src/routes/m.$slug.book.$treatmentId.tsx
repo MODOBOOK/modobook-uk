@@ -9,6 +9,7 @@ import { previewMembershipCredit, redeemMembershipCredit } from "@/lib/membershi
 import { joinPatientWaitlist } from "@/lib/patient-waitlist.functions";
 import { patientWaitlistEnabled } from "@/lib/feature-flags";
 import { ruleAppliesOnDate } from "@/lib/rota";
+import { bookingSlotStep } from "@/lib/booking-duration";
 
 import { BookingPaymentPicker } from "@/components/BookingPaymentPicker";
 import { BookingProgress, type BookingStep } from "@/components/BookingProgress";
@@ -498,7 +499,7 @@ function BookTreatmentPage() {
       for (const s of modelSlotsForLoc.filter((s) => s.slot_date === date)) {
         const start = toMinutes(s.start_time);
         const end = toMinutes(s.end_time);
-        for (let t = start; t + duration <= end; t += duration) {
+        for (let t = start; t < end && t + duration <= end; t += bookingSlotStep(null, duration)) {
           out.push(fromMinutes(t));
         }
       }
@@ -523,7 +524,7 @@ function BookTreatmentPage() {
       // Only bookings at the same location should pull times towards them.
       const anchors = busy.filter((b) => !locationId || !b.locId || b.locId === locationId);
       for (const r of allRules) {
-        const step = r.slot_interval ?? duration;
+        const step = bookingSlotStep(r.slot_interval, duration);
         const start = toMinutes(r.start_time);
         const end = toMinutes(r.end_time);
         const candidates = new Set<number>();
@@ -551,6 +552,7 @@ function BookTreatmentPage() {
           for (let t = b.end; t + duration <= end; t += step) candidates.add(t);
         }
         for (const t of Array.from(candidates).sort((a, z) => a - z)) {
+          if (t >= end) continue;
           const slotEnd = t + duration;
           const overlap = busy.some(
             (b) =>
