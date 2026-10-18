@@ -78,6 +78,8 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard/bookings")({
   ssr: false,
+  validateSearch: (s: Record<string, unknown>): { appt?: string } =>
+    typeof s.appt === "string" && s.appt ? { appt: s.appt } : {},
   component: BookingsPage,
 });
 
@@ -536,6 +538,21 @@ function BookingsPage() {
     const i = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(i);
   }, []);
+
+  // Opened from a notification: jump to that day and open the booking.
+  const { appt: apptParam } = Route.useSearch();
+  const openedApptRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (loading || !apptParam || openedApptRef.current === apptParam) return;
+    const found = appts.find((x) => x.id === apptParam);
+    if (!found) return;
+    openedApptRef.current = apptParam;
+    setPractitionerFilter("all");
+    setLocationFilter("all");
+    setAnchor(new Date(found.scheduled_date + "T12:00:00"));
+    setView("day");
+    setSelectedAppt(found);
+  }, [loading, apptParam, appts]);
 
   useEffect(() => {
     if (!loading && scrollRef.current && view !== "month") {

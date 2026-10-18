@@ -179,8 +179,7 @@ export function NotificationsBell({ className }: { className?: string }) {
                   <li key={n.id} className={cn("cursor-pointer", !n.read_at && "bg-primary/[0.03]")}
                     onClick={() => {
                       onOpenItem(n);
-                      const target = n.resolved_link || n.link;
-                      if (target) navigate({ to: target as string });
+                      openNotification(n as any, navigate);
                     }}
                   >
                     {content}

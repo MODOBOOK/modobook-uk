@@ -95,8 +95,7 @@ function NotificationsPage() {
       setUnread((u) => Math.max(0, u - 1));
       await markOne({ data: { id: n.id } }).catch(() => {});
     }
-    const target = n.resolved_link || n.link;
-    if (target) navigate({ to: target as string });
+    openNotification(n as any, navigate);
   }
 
   async function removeOne(id: string) {
