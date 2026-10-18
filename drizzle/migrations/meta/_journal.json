@@ -71,6 +71,13 @@
       "when": 1792274337059,
       "tag": "0009_release_cancelled_model_slots",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792355872652,
+      "tag": "0010_migration",
+      "breakpoints": true
     }
   ]
 }
