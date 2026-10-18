@@ -1,5 +1,8 @@
 # Mobile redesign — practitioner dashboard
 
+## Model-slot locations
+- [x] Restrict assigned slots to the selected location in both public lists; both location-rule tests pass (Ryan's current treatment eligibility prevents a populated-slot browser check)
+
 ## Model-slot booking mismatch
 - [x] Release cancelled appointment model-slot claims and repair Supreme's stale slots
 - [x] Verify cancellation regression and preserve confirmed bookings
