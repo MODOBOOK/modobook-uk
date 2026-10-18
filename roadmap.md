@@ -1,7 +1,7 @@
 # Mobile redesign — practitioner dashboard
 
 ## Zero-minute booking availability
-- [ ] Fix zero-minute date/time availability and verify regressions and patient flow in preview
+- [x] Fix zero-minute date/time availability; regression tests pass and Ryan's 0-minute Personalised Program shows selectable times on 6 November in preview
 
 ## Model-slot locations
 - [x] Restrict assigned slots to the selected location in both public lists; both location-rule tests pass (Ryan's current treatment eligibility prevents a populated-slot browser check)
