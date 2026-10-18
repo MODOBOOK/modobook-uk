@@ -63,6 +63,8 @@ import {
   createPaymentLink,
   emailPaymentLink,
   completeAppointmentCheckout,
+  listTreatmentsForSwitch,
+  changeAppointmentTreatment,
 } from "@/lib/payment-links.functions";
 import { refundAppointment } from "@/lib/stripe.functions";
 import { markAppointmentPaymentReceived, rescheduleAppointment } from "@/lib/appointments.functions";
@@ -2023,6 +2025,28 @@ function CheckoutSheet({
   const cancel = useServerFn(cancelAppointment);
   const updateAfter = useServerFn(updateAppointmentAftercareAndAllergy);
   const checkout = useServerFn(completeAppointmentCheckout);
+  const loadSwitchTreatments = useServerFn(listTreatmentsForSwitch);
+  const switchTreatment = useServerFn(changeAppointmentTreatment);
+  const [switchList, setSwitchList] = useState<{ id: string; name: string; price: number }[] | null>(null);
+  const [switchTo, setSwitchTo] = useState("");
+  async function openSwitch() {
+    if (switchList) { setSwitchList(null); return; }
+    try { setSwitchList(await loadSwitchTreatments()); } catch (e) { toast.error((e as Error).message); }
+  }
+  async function doSwitch() {
+    if (!switchTo) return;
+    setBusy(true);
+    try {
+      const r = await switchTreatment({ data: { appointmentId: a.id, treatmentId: switchTo } });
+      onPatch({
+        treatment_name_snapshot: r.treatment_name_snapshot,
+        total_amount: r.total_amount,
+        treatments: { ...(a.treatments ?? {}), name: r.treatment_name },
+      } as Partial<Appt>);
+      setSwitchList(null); setSwitchTo("");
+      toast.success(`Changed to ${r.treatment_name}`);
+    } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
+  }
   const checkOut = useServerFn(checkOutAppointment);
   const undoCheckOut = useServerFn(undoCheckoutAppointment);
   const createLink = useServerFn(createPaymentLink);
@@ -2422,6 +2446,32 @@ function CheckoutSheet({
             <Button size="sm" disabled={busy || cancelled || isNoShow} onClick={doCheckOut}>
               <CircleCheck className="h-4 w-4 mr-1" /> Check out
             </Button>
+          )}
+        </div>
+        <div className="rounded-md border p-2.5 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <Label className="text-xs">Treatment</Label>
+              <p className="truncate text-sm font-medium">{treatmentLabel(a) ?? "—"}</p>
+            </div>
+            <Button size="sm" variant="outline" disabled={busy || cancelled} onClick={openSwitch}>
+              {switchList ? "Close" : "Change treatment"}
+            </Button>
+          </div>
+          {switchList && (
+            <div className="flex gap-2">
+              <select
+                className="min-w-0 flex-1 rounded-md border bg-background px-2 py-1.5 text-sm"
+                value={switchTo}
+                onChange={(e) => setSwitchTo(e.target.value)}
+              >
+                <option value="">Choose a treatment…</option>
+                {switchList.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name} — £{t.price.toFixed(2)}</option>
+                ))}
+              </select>
+              <Button size="sm" disabled={busy || !switchTo} onClick={doSwitch}>Save</Button>
+            </div>
           )}
         </div>
         <div className="grid grid-cols-[1fr_auto] gap-2">
