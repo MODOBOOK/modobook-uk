@@ -541,6 +541,19 @@ function BookingsPage() {
     return () => clearInterval(i);
   }, []);
 
+  // Strip views start a fortnight back: land on the chosen day, not the first column.
+  useEffect(() => {
+    if (loading || !isStrip) return;
+    const sc = scrollRef.current;
+    if (!sc) return;
+    const raf = requestAnimationFrame(() => {
+      const el = sc.querySelector(`[data-day="${ymd(anchor)}"]`) as HTMLElement | null;
+      const gutter = isMobile ? 38 : 56;
+      if (el) sc.scrollLeft = Math.max(0, el.offsetLeft - gutter);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [loading, isStrip, anchor, view, isMobile]);
+
   // Opened from a notification: jump to that day and open the booking.
   const { appt: apptParam } = Route.useSearch();
   const openedApptRef = useRef<string | null>(null);
@@ -566,11 +579,12 @@ function BookingsPage() {
   // Day and 3-day views render a long horizontal strip so you can keep
   // scrolling sideways through following days.
   const STRIP_DAYS = 21;
+  const STRIP_BACK = 14;
   const isStrip = view === "3day" || view === "day";
 
   const days = useMemo(() => {
-    if (view === "day") return Array.from({ length: STRIP_DAYS }, (_, i) => addDays(anchor, i));
-    if (view === "3day") return Array.from({ length: STRIP_DAYS }, (_, i) => addDays(anchor, i));
+    // Include the previous fortnight so you can scroll back as well as forward.
+    if (view === "day" || view === "3day") return Array.from({ length: STRIP_BACK + STRIP_DAYS }, (_, i) => addDays(anchor, i - STRIP_BACK));
     if (view === "week") {
       const start = startOfWeek(anchor);
       return Array.from({ length: 7 }, (_, i) => addDays(start, i));
