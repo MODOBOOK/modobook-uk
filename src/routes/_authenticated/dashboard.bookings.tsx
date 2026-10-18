@@ -1273,7 +1273,7 @@ function BookingsPage() {
 
       {/* Appointment Checkout sheet */}
       <Dialog open={!!selectedAppt} onOpenChange={(o) => !o && setSelectedAppt(null)}>
-        <DialogContent className="max-h-[90dvh] w-[calc(100vw-1rem)] max-w-lg overflow-y-auto overflow-x-hidden">
+        <DialogContent className="max-h-[90dvh] w-[calc(100vw-1rem)] max-w-lg grid-cols-[minmax(0,1fr)] overflow-y-auto overflow-x-hidden">
           <DialogHeader>
             <DialogTitle>Appointment checkout</DialogTitle>
           </DialogHeader>
@@ -2293,7 +2293,7 @@ function CheckoutSheet({
 
 
   return (
-    <div className="space-y-3 text-sm">
+    <div className="min-w-0 max-w-full space-y-3 text-sm [&_*]:min-w-0">
       <div className="rounded-md border-l-4 p-2" style={{ borderLeftColor: color, backgroundColor: hexToRgba(color, 0.12) }}>
         <div className="flex items-center gap-1.5 font-semibold">
           {a.patient_name}
@@ -2507,7 +2507,7 @@ function CheckoutSheet({
             </div>
           )}
         </div>
-        <div className="grid grid-cols-[1fr_auto] gap-2">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
           <div>
             <Label className="text-xs">Discount</Label>
             <Input type="number" inputMode="decimal" step="0.01" min="0" value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="0" />
