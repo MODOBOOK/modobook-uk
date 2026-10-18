@@ -1044,7 +1044,9 @@ function BookingsPage() {
                     className="relative cursor-cell border-r last:border-r-0"
                     onClick={(e) => {
                       // Only empty space — appointment/block buttons handle their own clicks.
-                      if (e.target !== e.currentTarget) return;
+                      // Background shading/grid lines inside the column count as empty space.
+                      const hit = (e.target as HTMLElement).closest("button, a, [role=button], [data-appt], [data-block]");
+                      if (hit && e.currentTarget.contains(hit)) return;
                       const rect = e.currentTarget.getBoundingClientRect();
                       const hr = START_HOUR + (e.clientY - rect.top) / hourH;
                       const snapped = Math.min(Math.max(Math.floor(hr * 2) / 2, START_HOUR), END_HOUR - 0.5);
