@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { openNotification } from "@/lib/notification-target";
 import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Bell, PartyPopper, Trash2, CheckCheck, Loader2, X, ChevronRight } from "lucide-react";

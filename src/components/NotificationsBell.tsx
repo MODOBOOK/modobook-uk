@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { openNotification } from "@/lib/notification-target";
 import { Bell, X, PartyPopper, Trash2, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
