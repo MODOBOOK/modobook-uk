@@ -543,7 +543,7 @@ function BookingsPage() {
 
   // Strip views start a fortnight back: land on the chosen day, not the first column.
   useEffect(() => {
-    if (loading || !isStrip) return;
+    if (loading || !(view === "3day" || view === "day")) return;
     const sc = scrollRef.current;
     if (!sc) return;
     const raf = requestAnimationFrame(() => {
@@ -552,7 +552,7 @@ function BookingsPage() {
       if (el) sc.scrollLeft = Math.max(0, el.offsetLeft - gutter);
     });
     return () => cancelAnimationFrame(raf);
-  }, [loading, isStrip, anchor, view, isMobile]);
+  }, [loading, anchor, view, isMobile]);
 
   // Opened from a notification: jump to that day and open the booking.
   const { appt: apptParam } = Route.useSearch();
