@@ -394,3 +394,47 @@ export const expireUnpaidDeposits = createServerFn({ method: "POST" })
       .eq("profile_id", profile.id);
     return { cancelled: ids.length };
   });
+
+// Treatments the clinic can switch a booking to at checkout.
+export const listTreatmentsForSwitch = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const profile = await getProfile(context.supabase, context.userId);
+    if (!profile) return [] as { id: string; name: string; price: number }[];
+    const { data } = await context.supabase
+      .from("treatments")
+      .select("id, name, price")
+      .eq("profile_id", profile.id)
+      .eq("active", true)
+      .order("name");
+    return (data ?? []).map((t: any) => ({ id: t.id as string, name: t.name as string, price: Number(t.price ?? 0) }));
+  });
+
+// Change the treatment on a booking (e.g. Baby Botox -> 2 areas). Price
+// follows the new treatment; extras and money already paid are kept.
+export const changeAppointmentTreatment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { appointmentId: string; treatmentId: string }) => d)
+  .handler(async ({ data, context }) => {
+    const profile = await getProfile(context.supabase, context.userId);
+    if (!profile) throw new Error("Profile not found");
+    const [{ data: t }, { data: cur }] = await Promise.all([
+      context.supabase.from("treatments").select("id, name, price").eq("id", data.treatmentId).eq("profile_id", profile.id).maybeSingle(),
+      context.supabase.from("appointments").select("base_amount, total_amount").eq("id", data.appointmentId).eq("profile_id", profile.id).maybeSingle(),
+    ]);
+    if (!t) throw new Error("Treatment not found");
+    if (!cur) throw new Error("Booking not found");
+    const price = Number((t as any).price ?? 0);
+    const extras = Math.max(0, Number((cur as any).total_amount ?? 0) - Number((cur as any).base_amount ?? 0));
+    const total = Math.round((price + extras) * 100) / 100;
+    const patch = {
+      treatment_id: (t as any).id,
+      treatment_name_snapshot: (t as any).name,
+      treatment_price_snapshot: price,
+      base_amount: price,
+      total_amount: total,
+    };
+    const { error } = await context.supabase.from("appointments").update(patch as never).eq("id", data.appointmentId).eq("profile_id", profile.id);
+    if (error) throw error;
+    return { ...patch, treatment_name: (t as any).name as string };
+  });
