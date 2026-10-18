@@ -824,7 +824,6 @@ function NewAppointmentPage() {
                     // Keep any time already picked — the times below still show so it
                     // can be changed if that time isn't free on the new date.
                   }}
-                  disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
                   initialFocus
                   className="p-3 pointer-events-auto"
                 />
