@@ -62,6 +62,7 @@ import { formatPrice, BADGE_LABEL, badgeClasses, treatmentPricing, type Treatmen
 
 
 import { describeCancellationRules } from "@/lib/policy";
+import { modelSlotMatchesLocation } from "@/lib/model-slot-location";
 
 
 type Treatment = Database["public"]["Tables"]["treatments"]["Row"];
@@ -1152,7 +1153,11 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
   const heroSubheading = theme?.hero_subheading;
   const logoUrl = theme?.logo_url;
   const publicModelSlots = modelSlots.filter(
-    (s) => treatById.has(s.treatment_id) && isAvailableAtLocation(treatById.get(s.treatment_id)!, s.location_id ?? locationId),
+    (s) => {
+      const treatment = treatById.get(s.treatment_id);
+      return modelSlotMatchesLocation(s.location_id, locationId) &&
+        !!treatment && isAvailableAtLocation(treatment, locationId);
+    },
   );
   const locById = new Map(locations.map((l) => [l.id, l]));
   const groupedPublicModelSlots: { category: string; items: typeof publicModelSlots }[] = (() => {
@@ -2368,9 +2373,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
                     Tick all the treatments you'd like, then press Book Now.
                   </p>
                   {(() => {
-                    const treatById = new Map(treatments.map((t) => [t.id, t]));
-                    const slots = modelSlots
-                      .filter((s) => treatById.has(s.treatment_id) && isAvailableAtLocation(treatById.get(s.treatment_id)!, s.location_id ?? locationId));
+                    const slots = publicModelSlots;
                     const locById = new Map(locations.map((l) => [l.id, l]));
                     const modelPosition = profile.model_slots_position === "bottom" ? "bottom" : "top";
 

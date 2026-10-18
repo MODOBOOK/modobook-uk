@@ -1,5 +1,8 @@
 # Mobile redesign — practitioner dashboard
 
+## Model-slot locations
+- [ ] Restrict assigned slots to the selected location in both public lists; verify shared slots remain visible everywhere
+
 ## Model-slot booking mismatch
 - [x] Release cancelled appointment model-slot claims and repair Supreme's stale slots
 - [x] Verify cancellation regression and preserve confirmed bookings
