@@ -1,5 +1,8 @@
 # Mobile redesign — practitioner dashboard
 
+## Zero-minute booking availability
+- [ ] Fix zero-minute date/time availability and verify regressions and patient flow in preview
+
 ## Model-slot locations
 - [x] Restrict assigned slots to the selected location in both public lists; both location-rule tests pass (Ryan's current treatment eligibility prevents a populated-slot browser check)
 
