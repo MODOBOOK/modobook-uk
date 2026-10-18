@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { platformFeeCents } from "@/lib/platform-fee";
+import { bookingFitsGap } from "@/lib/booking-duration";
 import { isFullName, cleanPatientName, FULL_NAME_MESSAGE } from "@/lib/patient-name";
 import { eligiblePractitionerIds, resolveBookingPractitioner } from "./practitioner-assign.server";
 
@@ -711,9 +712,8 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
       }
 
       // A day is only bookable if it still has ONE continuous gap long enough
-      // for the whole appointment. Fall back to a token 15 minutes when the
-      // caller hasn't told us how long the booking is.
-      const needed = Math.max(15, Math.round(Number(data.durationMinutes ?? 0)) || 15);
+      // for the whole appointment. Explicit zero-minute bookings still need
+      // an available start time, but must not require a 15-minute gap.
       // Check every day the patient could click: weekly rota days AND one-off
       // open dates (clinics that work purely from one-off dates have no rota).
       for (const iso of Array.from(new Set([...openDates, ...overrideDates]))) {
@@ -736,7 +736,7 @@ export const getMonthAvailability = createServerFn({ method: "GET" })
           }
           if (cursor < w.end) maxGap = Math.max(maxGap, w.end - cursor);
         }
-        if (maxGap < needed) fullDates.push(iso);
+        if (!bookingFitsGap(maxGap, data.durationMinutes)) fullDates.push(iso);
       }
     } catch (e) {
       console.error("[getMonthAvailability] fully-booked check failed", e);

@@ -16,3 +16,4 @@
 - Payment links tied to an appointment are created on the treating practitioner's payout account (payoutAccountForAppointment). Why: a team member on their own Stripe must receive that booking's money.
 - Model-slot claims are released by an appointment cancellation database trigger, scoped to the still-linked appointment and clinic. Why: every cancellation path, including abandoned checkout, must reopen the slot without freeing a replacement booking.
 - Public model-slot sections share modelSlotMatchesLocation before treatment eligibility checks. Why: counts and lists must use the same selected-location restriction.
+- Booking duration helpers preserve explicit zero duration and enforce a positive time-grid step. Why: calendar gap checks must not impose a minimum treatment duration or let slot loops stall.
