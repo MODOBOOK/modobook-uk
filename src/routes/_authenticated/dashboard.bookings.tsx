@@ -2045,6 +2045,7 @@ function CheckoutSheet({
   const switchTreatment = useServerFn(changeAppointmentTreatment);
   const [switchList, setSwitchList] = useState<{ id: string; name: string; price: number }[] | null>(null);
   const [switchTo, setSwitchTo] = useState("");
+  const [switchQuery, setSwitchQuery] = useState("");
   async function openSwitch() {
     if (switchList) { setSwitchList(null); return; }
     try { setSwitchList(await loadSwitchTreatments()); } catch (e) { toast.error((e as Error).message); }
@@ -2059,7 +2060,7 @@ function CheckoutSheet({
         total_amount: r.total_amount,
         treatments: { ...(a.treatments ?? {}), name: r.treatment_name },
       } as Partial<Appt>);
-      setSwitchList(null); setSwitchTo("");
+      setSwitchList(null); setSwitchTo(""); setSwitchQuery("");
       toast.success(`Changed to ${r.treatment_name}`);
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   }
@@ -2475,18 +2476,34 @@ function CheckoutSheet({
             </Button>
           </div>
           {switchList && (
-            <div className="flex min-w-0 gap-2">
-              <select
-                className="w-0 min-w-0 flex-1 truncate rounded-md border bg-background px-2 py-1.5 text-sm"
-                value={switchTo}
-                onChange={(e) => setSwitchTo(e.target.value)}
-              >
-                <option value="">Choose a treatment…</option>
-                {switchList.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name} — £{t.price.toFixed(2)}</option>
-                ))}
-              </select>
+            <div className="min-w-0 space-y-2">
+              <Input
+                value={switchQuery}
+                onChange={(e) => setSwitchQuery(e.target.value)}
+                placeholder="Search treatments…"
+                aria-label="Search treatments"
+              />
+              <div className="max-h-56 overflow-y-auto rounded-md border divide-y">
+                {(() => {
+                  const q = switchQuery.trim().toLowerCase();
+                  const list = q ? switchList.filter((t) => t.name.toLowerCase().includes(q)) : switchList;
+                  if (!list.length) return <p className="p-2 text-sm text-muted-foreground">No treatments found</p>;
+                  return list.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setSwitchTo(t.id)}
+                      className={`flex w-full min-w-0 items-center justify-between gap-2 px-2 py-2 text-left text-sm ${switchTo === t.id ? "bg-accent font-medium" : ""}`}
+                    >
+                      <span className="min-w-0 truncate">{t.name}</span>
+                      <span className="shrink-0 text-muted-foreground">£{t.price.toFixed(2)}</span>
+                    </button>
+                  ));
+                })()}
+              </div>
+              <div className="flex justify-end">
               <Button size="sm" disabled={busy || !switchTo} onClick={doSwitch}>Save</Button>
+              </div>
             </div>
           )}
         </div>
