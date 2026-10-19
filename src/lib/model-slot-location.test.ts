@@ -13,3 +13,12 @@ test("a model slot with no assigned location appears at all locations", () => {
   assert.equal(modelSlotMatchesLocation(null, "snatchural"), true);
   assert.equal(modelSlotMatchesLocation(null, null), true);
 });
+import { modelSlotMatchesPractitioner } from "./model-slot-location";
+test("chosen practitioner hides another practitioner's model slot", () => {
+  expect(modelSlotMatchesPractitioner("callie", "rebecca")).toBe(false);
+  expect(modelSlotMatchesPractitioner("callie", "callie")).toBe(true);
+});
+test("slot with no practitioner shows for any pick; no pick shows all", () => {
+  expect(modelSlotMatchesPractitioner(null, "rebecca")).toBe(true);
+  expect(modelSlotMatchesPractitioner("callie", null)).toBe(true);
+});
