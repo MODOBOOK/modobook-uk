@@ -5,3 +5,15 @@ export function modelSlotMatchesLocation(
 ): boolean {
   return slotLocationId === null || slotLocationId === selectedLocationId;
 }
+
+/**
+ * Once a patient picks a practitioner, only that practitioner's model slots
+ * (and slots with nobody set) are shown. No pick = every slot shows.
+ */
+export function modelSlotMatchesPractitioner(
+  slotPractitionerId: string | null | undefined,
+  chosenPractitionerId: string | null | undefined,
+): boolean {
+  if (!chosenPractitionerId || !slotPractitionerId) return true;
+  return slotPractitionerId === chosenPractitionerId;
+}

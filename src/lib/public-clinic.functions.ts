@@ -117,7 +117,7 @@ export const getPublicClinic = createServerFn({ method: "GET" })
       supabase.from("concerns").select("*").eq("profile_id", profile.id).order("sort_order"),
       supabase.from("concern_treatments").select("concern_id, treatment_id, sort_order").eq("profile_id", profile.id),
       supabase.from("model_slots")
-        .select("id, treatment_id, location_id, slot_date, start_time, end_time, price_mode, price_value, notes, booked_appointment_id, active, is_flexible")
+        .select("id, treatment_id, location_id, slot_date, start_time, end_time, price_mode, price_value, notes, booked_appointment_id, active, is_flexible, practitioner_id")
         .eq("profile_id", profile.id).eq("active", true).is("booked_appointment_id", null)
         .or(`is_flexible.eq.true,slot_date.gte.${new Date().toISOString().slice(0, 10)}`)
         .order("slot_date", { ascending: true }),
