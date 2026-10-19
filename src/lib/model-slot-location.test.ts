@@ -15,10 +15,10 @@ test("a model slot with no assigned location appears at all locations", () => {
 });
 import { modelSlotMatchesPractitioner } from "./model-slot-location";
 test("chosen practitioner hides another practitioner's model slot", () => {
-  expect(modelSlotMatchesPractitioner("callie", "rebecca")).toBe(false);
-  expect(modelSlotMatchesPractitioner("callie", "callie")).toBe(true);
+  assert.equal(modelSlotMatchesPractitioner("callie", "rebecca"), false);
+  assert.equal(modelSlotMatchesPractitioner("callie", "callie"), true);
 });
 test("slot with no practitioner shows for any pick; no pick shows all", () => {
-  expect(modelSlotMatchesPractitioner(null, "rebecca")).toBe(true);
-  expect(modelSlotMatchesPractitioner("callie", null)).toBe(true);
+  assert.equal(modelSlotMatchesPractitioner(null, "rebecca"), true);
+  assert.equal(modelSlotMatchesPractitioner("callie", null), true);
 });
