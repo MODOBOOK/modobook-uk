@@ -975,6 +975,15 @@ export const requestBooking = createServerFn({ method: "POST" })
         .eq("profile_id", data.profileId)
         .maybeSingle();
       modelSlotPractitionerId = (ms as { practitioner_id?: string | null } | null)?.practitioner_id ?? null;
+      if (
+        modelSlotPractitionerId &&
+        data.practitionerId &&
+        data.practitionerId !== modelSlotPractitionerId
+      ) {
+        throw new Error(
+          "This model slot is with a different practitioner. Please go back and choose another slot.",
+        );
+      }
     }
     // The practitioner decides whose Stripe account takes the deposit, so the
     // patient's choice is validated and never silently swapped for someone

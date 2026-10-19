@@ -62,7 +62,7 @@ import { formatPrice, BADGE_LABEL, badgeClasses, treatmentPricing, type Treatmen
 
 
 import { describeCancellationRules } from "@/lib/policy";
-import { modelSlotMatchesLocation } from "@/lib/model-slot-location";
+import { modelSlotMatchesLocation, modelSlotMatchesPractitioner } from "@/lib/model-slot-location";
 
 
 type Treatment = Database["public"]["Tables"]["treatments"]["Row"];
@@ -1156,6 +1156,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
     (s) => {
       const treatment = treatById.get(s.treatment_id);
       return modelSlotMatchesLocation(s.location_id, locationId) &&
+        modelSlotMatchesPractitioner((s as { practitioner_id?: string | null }).practitioner_id, practitionerId) &&
         !!treatment && isAvailableAtLocation(treatment, locationId);
     },
   );
