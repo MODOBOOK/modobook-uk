@@ -9,6 +9,7 @@
 ## Model-slot booking mismatch
 - [x] Release cancelled appointment model-slot claims and repair Supreme's stale slots
 - [x] Verify cancellation regression and preserve confirmed bookings
+- [x] Hide other practitioners' model slots once a patient picks someone, and refuse mismatches server-side; published to modobook.uk 19 Oct (live check: Supreme badge 8 -> 7 for Rebecca; no clinic currently has an open practitioner-assigned slot, so that exact case is covered by tests only)
 
 ## Practitioner messages
 - [x] List clinics with no recorded sign-in for four weeks and flag The Nursing Lab's seven upcoming bookings
