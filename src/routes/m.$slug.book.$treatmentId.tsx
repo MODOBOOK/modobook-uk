@@ -664,6 +664,9 @@ function BookTreatmentPage() {
           practitionerId: chosenPractitionerId,
           paymentChoice,
           modelSlotId: activeModelSlot?.id ?? null,
+          discountCode: discount?.code ?? null,
+          addonIds: [...addonPicks],
+          useCredit,
 
 
 

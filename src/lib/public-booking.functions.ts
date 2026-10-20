@@ -866,6 +866,9 @@ export const requestBooking = createServerFn({ method: "POST" })
       practitionerId?: string | null;
       paymentChoice?: PaymentChoice | null;
       modelSlotId?: string | null;
+      discountCode?: string | null;
+      addonIds?: string[];
+      useCredit?: boolean;
     }) => input,
   )
 
@@ -904,6 +907,68 @@ export const requestBooking = createServerFn({ method: "POST" })
       .maybeSingle();
     if (blk) throw new Error("Unable to book online. Please contact the clinic directly.");
 
+    // Never trust the browser's price: recompute it from the clinic's own
+    // settings (practitioner override, sale window, model slot, add-ons,
+    // promo/gift-card/points code and membership credit) and reject the
+    // booking when the browser's amount doesn't match.
+    const {
+      treatmentListPrice,
+      addonTotalCents,
+      verifyDiscountCode,
+      creditApplicableCents,
+      assertPriceMatches,
+      PRICE_TOLERANCE,
+    } = await import("./booking-price.server");
+    let expectedPrice = await treatmentListPrice(supabaseAdmin, {
+      profileId: data.profileId,
+      treatmentId: data.treatmentId,
+      practitionerId: data.practitionerId ?? null,
+      modelSlotId: data.modelSlotId ?? null,
+    });
+    if (data.discountCode) {
+      const disc = await verifyDiscountCode(supabaseAdmin, {
+        slug: prof?.slug ?? "",
+        code: data.discountCode,
+        treatmentIds: [data.treatmentId],
+        totalPounds: expectedPrice,
+        patientUserId: data.patientUserId ?? null,
+      });
+      if (disc && disc.appliesTo.includes(data.treatmentId)) {
+        const off = disc.kind === "percent" ? expectedPrice * (disc.amount / 100) : disc.amount;
+        expectedPrice = Math.max(0, expectedPrice - Math.min(off, expectedPrice));
+      }
+    }
+    expectedPrice +=
+      (await addonTotalCents(supabaseAdmin, data.profileId, [data.treatmentId], data.addonIds ?? [])) / 100;
+    if (data.useCredit && data.patientUserId) {
+      const creditCents = await creditApplicableCents(supabaseAdmin, {
+        profileId: data.profileId,
+        patientUserId: data.patientUserId,
+        treatmentIds: [data.treatmentId],
+        totalCents: Math.round(expectedPrice * 100),
+      });
+      expectedPrice = Math.max(0, expectedPrice - creditCents / 100);
+    }
+    // Split-payment plans charge one session's share per appointment.
+    const { data: treatRow } = await supabaseAdmin
+      .from("treatments")
+      .select("session_count, allow_split_payment")
+      .eq("id", data.treatmentId)
+      .maybeSingle();
+    const sessionCount = Math.max(1, Number((treatRow as { session_count?: number } | null)?.session_count ?? 1));
+    const splitAllowed =
+      Boolean((treatRow as { allow_split_payment?: boolean } | null)?.allow_split_payment) && sessionCount > 1;
+    let serverPrice: number;
+    try {
+      serverPrice = assertPriceMatches(expectedPrice, data.basePrice);
+    } catch (e) {
+      if (splitAllowed && Math.abs(expectedPrice / sessionCount - data.basePrice) <= PRICE_TOLERANCE) {
+        serverPrice = expectedPrice / sessionCount;
+      } else {
+        throw e;
+      }
+    }
+
     // Idempotency guard: reject duplicate submissions of the same booking
     // (same clinic + treatment + slot + patient email) inside a 5-minute window.
     {
@@ -921,7 +986,7 @@ export const requestBooking = createServerFn({ method: "POST" })
         .maybeSingle();
       if (dup) {
         const unpaidBooking = dup.payment_status !== "paid";
-        if (unpaidBooking && bookingNeedsStripePayment(prof, paymentChoice, data.basePrice)) {
+        if (unpaidBooking && bookingNeedsStripePayment(prof, paymentChoice, serverPrice)) {
           await supabaseAdmin
             .from("appointments")
             .update({ status: "cancelled", payment_hold_expires_at: null } as never)
@@ -1025,8 +1090,8 @@ export const requestBooking = createServerFn({ method: "POST" })
       notes: data.notes ?? null,
       status,
       payment_status: "pending",
-      base_amount: data.basePrice,
-      total_amount: data.basePrice,
+      base_amount: serverPrice,
+      total_amount: serverPrice,
       model_slot_id: data.modelSlotId ?? null,
     });
     if (error) throw new Error(error.message);
@@ -1102,7 +1167,7 @@ export const requestBooking = createServerFn({ method: "POST" })
       payment = await maybeCreateBookingCheckout({
         profile: await resolvePayoutProfile(prof, data.profileId, assignedPractitionerId ?? null),
         appointmentIds: [id],
-        totalAmount: data.basePrice,
+        totalAmount: serverPrice,
         patientEmail: data.patientEmail,
         description: `Booking with ${prof?.clinic_name ?? "clinic"}`,
         choice: paymentChoice,
@@ -1117,7 +1182,7 @@ export const requestBooking = createServerFn({ method: "POST" })
       });
     } catch (e) {
       console.error("[requestBooking] checkout failed", e);
-      if (bookingNeedsStripePayment(prof, paymentChoice, data.basePrice)) {
+      if (bookingNeedsStripePayment(prof, paymentChoice, serverPrice)) {
         await supabaseAdmin
           .from("appointments")
           .update({ status: "cancelled", payment_hold_expires_at: null } as never)
@@ -1127,7 +1192,7 @@ export const requestBooking = createServerFn({ method: "POST" })
         throw new Error("Card payment could not be started. Please try again — your appointment has not been confirmed.");
       }
     }
-    if (!payment && !payNotes.waived && bookingNeedsStripePayment(prof, paymentChoice, data.basePrice)) {
+    if (!payment && !payNotes.waived && bookingNeedsStripePayment(prof, paymentChoice, serverPrice)) {
       await supabaseAdmin
         .from("appointments")
         .update({ status: "cancelled", payment_hold_expires_at: null } as never)
@@ -1807,6 +1872,12 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       practitionerId?: string | null;
       packagePurchases?: { packageId: string }[];
       paymentChoice?: PaymentChoice | null;
+      discountCode?: string | null;
+      addonIds?: string[];
+      /** The treatments the patient explicitly picked (package auto-includes excluded). */
+      explicitTreatmentIds?: string[];
+      /** Per-package payment plan choice ("full" | "split"). */
+      packagePlans?: Record<string, "full" | "split">;
     }) => input,
   )
 
@@ -1841,6 +1912,128 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       .maybeSingle();
     if (blk) throw new Error("Unable to book online. Please contact the clinic directly.");
 
+    // Never trust the browser's prices: recompute every line from the
+    // clinic's own settings (practitioner/location overrides, sale windows,
+    // package prices, add-ons and promo/gift-card/points codes) and reject
+    // the booking when a line doesn't match.
+    const {
+      treatmentListPrice,
+      addonTotalCents,
+      verifyDiscountCode,
+      PriceMismatchError,
+    } = await import("./booking-price.server");
+    const expectedCents: number[] = await (async () => {
+      const bookingIds = data.bookings.map((b) => b.treatmentId);
+      const explicitIds = (data.explicitTreatmentIds ?? bookingIds).filter(Boolean);
+      const packageIds = (data.packagePurchases ?? []).map((p) => p.packageId).filter(Boolean);
+      const { data: pkgRows } = packageIds.length
+        ? await supabaseAdmin
+            .from("packages")
+            .select("id, price, session_count, allow_split_payment, treatment_id, treatment_ids")
+            .in("id", packageIds)
+            .eq("profile_id", data.profileId)
+        : { data: [] as unknown[] };
+      const pkgs = (pkgRows ?? []) as Array<{
+        id: string;
+        price: number;
+        session_count: number | null;
+        allow_split_payment: boolean | null;
+        treatment_id: string | null;
+        treatment_ids: string[] | null;
+      }>;
+      const pkgTreatmentIds = (p: (typeof pkgs)[number]) => {
+        const ids = (p.treatment_ids ?? []).filter(Boolean);
+        return ids.length ? ids : p.treatment_id ? [p.treatment_id] : [];
+      };
+      // A package books as one price on its first covered line; the other
+      // covered lines are free. Treatments the patient picked explicitly keep
+      // their own price.
+      const packageCoveredIds = new Set<string>();
+      for (const p of pkgs) {
+        for (const tid of pkgTreatmentIds(p)) if (!explicitIds.includes(tid)) packageCoveredIds.add(tid);
+      }
+      const pkgByTreatment = new Map<string, (typeof pkgs)[number]>();
+      const zeroPricedIds = new Set<string>();
+      const leftoverPackages: typeof pkgs = [];
+      for (const p of pkgs) {
+        const covered = pkgTreatmentIds(p).filter((tid) => packageCoveredIds.has(tid));
+        const priceLine = covered.find((tid) => !pkgByTreatment.has(tid));
+        if (priceLine) {
+          pkgByTreatment.set(priceLine, p);
+          for (const tid of covered) if (tid !== priceLine) zeroPricedIds.add(tid);
+        } else {
+          leftoverPackages.push(p);
+          for (const tid of covered) zeroPricedIds.add(tid);
+        }
+      }
+      const depositOverridesSplit =
+        paymentChoice?.mode === "deposit" || paymentChoice?.mode === "cash_deposit";
+      const leftoverPackageCents = Math.round(
+        leftoverPackages.reduce((s, p) => {
+          const sessions = Math.max(1, Number(p.session_count ?? 1));
+          const useSplit =
+            !depositOverridesSplit &&
+            Boolean(p.allow_split_payment) &&
+            sessions > 1 &&
+            (data.packagePlans?.[p.id] ?? "full") === "split";
+          return s + (useSplit ? Number(p.price ?? 0) / sessions : Number(p.price ?? 0));
+        }, 0) * 100,
+      );
+      const addonCents = await addonTotalCents(
+        supabaseAdmin,
+        data.profileId,
+        bookingIds,
+        data.addonIds ?? [],
+      );
+      // Pass 1: pre-discount line prices, so fixed-amount codes can be capped
+      // against the real cart total.
+      const lineBase: number[] = [];
+      for (const b of data.bookings) {
+        const pkg = pkgByTreatment.get(b.treatmentId);
+        if (pkg) lineBase.push(Number(pkg.price ?? 0));
+        else if (zeroPricedIds.has(b.treatmentId)) lineBase.push(0);
+        else {
+          lineBase.push(
+            await treatmentListPrice(supabaseAdmin, {
+              profileId: data.profileId,
+              treatmentId: b.treatmentId,
+              locationId: data.locationId ?? null,
+              practitionerId: data.practitionerId ?? null,
+              useLocationPricing: true,
+            }),
+          );
+        }
+      }
+      const totalBeforeDiscount =
+        lineBase.reduce((s, v) => s + v, 0) + addonCents / 100 + leftoverPackageCents / 100;
+      const disc = data.discountCode
+        ? await verifyDiscountCode(supabaseAdmin, {
+            slug: prof?.slug ?? "",
+            code: data.discountCode,
+            treatmentIds: bookingIds,
+            packageIds,
+            totalPounds: totalBeforeDiscount,
+            patientUserId: data.patientUserId ?? null,
+          })
+        : null;
+      // Pass 2: apply the code per applicable line, exactly as the page does.
+      return data.bookings.map((b, i) => {
+        const pkg = pkgByTreatment.get(b.treatmentId);
+        let price = lineBase[i];
+        if (!pkg && !zeroPricedIds.has(b.treatmentId) && disc && disc.appliesTo.includes(b.treatmentId)) {
+          const off = disc.kind === "percent" ? price * (disc.amount / 100) : disc.amount;
+          price = Math.max(0, price - Math.min(off, price));
+        }
+        return Math.round(price * 100) + (i === 0 ? addonCents + leftoverPackageCents : 0);
+      });
+    })();
+    for (let i = 0; i < data.bookings.length; i++) {
+      if (Math.abs(expectedCents[i] - Math.round(data.bookings[i].priceCents)) > 1) {
+        throw new PriceMismatchError();
+      }
+    }
+    const serverTotalCents = expectedCents.reduce((s, v) => s + v, 0);
+
     // Idempotency: if the exact same multi-booking (same clinic, patient email,
     // date + start time, and treatment ids) was submitted in the last 5 minutes,
     // return the existing appointments instead of duplicating them.
@@ -1865,7 +2058,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
           const unpaidBooking = recent
             .filter((r) => existing.some((e) => e.id === (r.id as string)))
             .every((r) => r.payment_status !== "paid");
-          if (unpaidBooking && bookingNeedsStripePayment(prof, paymentChoice, data.bookings.reduce((s, b) => s + b.priceCents / 100, 0))) {
+          if (unpaidBooking && bookingNeedsStripePayment(prof, paymentChoice, serverTotalCents / 100)) {
             await supabaseAdmin
               .from("appointments")
               .update({ status: "cancelled", payment_hold_expires_at: null } as never)
@@ -1925,14 +2118,15 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       requireAll: false,
     });
     const { practitionerOffersTreatments } = await import("./practitioner-assign.server");
-    for (const b of data.bookings) {
+    for (const [bi, b] of data.bookings.entries()) {
 
       const id = crypto.randomUUID();
       const end = addMinutesToTime(cursor, b.durationMin);
       const sessionCount = Math.max(1, Number(b.sessionCount ?? 1));
+      const serverLinePrice = expectedCents[bi] / 100;
       const paymentNote = sessionCount > 1
         ? b.paymentPlan === "split"
-          ? `Payment plan: Pay over ${sessionCount} appointments (£${((b.priceCents / 100) / sessionCount).toFixed(2)} per appointment)`
+          ? `Payment plan: Pay over ${sessionCount} appointments (£${(serverLinePrice / sessionCount).toFixed(2)} per appointment)`
           : `Payment plan: Pay in full for ${sessionCount} appointments`
         : null;
       const appointmentNotes = [data.notes, paymentNote].filter(Boolean).join("\n") || null;
@@ -1972,10 +2166,10 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         notes: appointmentNotes,
         status,
         payment_status: "pending",
-        base_amount: b.priceCents / 100,
+        base_amount: serverLinePrice,
         total_amount: sessionCount > 1 && b.paymentPlan === "split"
-          ? (b.priceCents / 100) / sessionCount
-          : b.priceCents / 100,
+          ? serverLinePrice / sessionCount
+          : serverLinePrice,
       } as never);
 
 
@@ -2096,7 +2290,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     let payment: BookingPaymentResult | null = null;
     const payNotes: { waived?: boolean } = {};
     try {
-      const totalAmount = data.bookings.reduce((sum, b) => sum + b.priceCents / 100, 0);
+      const totalAmount = serverTotalCents / 100;
       payment = await maybeCreateBookingCheckout({
         // The deposit always follows the practitioner the patient chose.
         profile: await resolvePayoutProfile(prof, data.profileId, validatedPractitionerId ?? firstAssignedPractitionerId ?? null),
@@ -2117,7 +2311,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
 
     } catch (e) {
       console.error("[requestMultiBooking] checkout failed", e);
-      if (bookingNeedsStripePayment(prof, paymentChoice, data.bookings.reduce((s, b) => s + b.priceCents / 100, 0)) && created.length > 0) {
+      if (bookingNeedsStripePayment(prof, paymentChoice, serverTotalCents / 100) && created.length > 0) {
         await supabaseAdmin
           .from("appointments")
           .update({ status: "cancelled", payment_hold_expires_at: null } as never)
@@ -2125,7 +2319,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         throw new Error("Card payment could not be started. Please try again — your appointments have not been confirmed.");
       }
     }
-    if (!payment && !payNotes.waived && bookingNeedsStripePayment(prof, paymentChoice, data.bookings.reduce((s, b) => s + b.priceCents / 100, 0)) && created.length > 0) {
+    if (!payment && !payNotes.waived && bookingNeedsStripePayment(prof, paymentChoice, serverTotalCents / 100) && created.length > 0) {
       await supabaseAdmin
         .from("appointments")
         .update({ status: "cancelled", payment_hold_expires_at: null } as never)

@@ -866,6 +866,10 @@ function MultiBookPage() {
           practitionerId: chosenPractitionerId,
           packagePurchases: selectedPackages.map((p) => ({ packageId: p.id })),
           paymentChoice,
+          discountCode: discount?.code ?? null,
+          addonIds: [...addonPicks],
+          explicitTreatmentIds: ids,
+          packagePlans: packagePaymentPlans,
 
         },
       });

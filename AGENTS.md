@@ -18,3 +18,6 @@
 - Model-slot claims are released by an appointment cancellation database trigger, scoped to the still-linked appointment and clinic. Why: every cancellation path, including abandoned checkout, must reopen the slot without freeing a replacement booking.
 - Public model-slot sections share modelSlotMatchesLocation before treatment eligibility checks. Why: counts and lists must use the same selected-location restriction.
 - Booking duration helpers preserve explicit zero duration and enforce a positive time-grid step. Why: calendar gap checks must not impose a minimum treatment duration or let slot loops stall.
+- Public booking prices are recomputed server-side (src/lib/booking-price.server.ts) from treatment/practitioner/location/model-slot/add-on/package data plus re-validated codes and credit; requestBooking and requestMultiBooking reject mismatches and charge the server value. Why: the browser must never set what a patient pays.
+- Training course server functions enforce the Collective plan via assertTrainingAccess, not just the menu. Why: hiding a menu item never stops direct calls.
+- Consent-form emails always go to the patient's email on file, never a caller-chosen address. Why: a caller-supplied recipient would leak signing links.
