@@ -1,5 +1,41 @@
 import { createServerFn } from "@tanstack/react-start";
 
+type AdminClient = Awaited<
+  typeof import("@/integrations/supabase/client.server").supabaseAdmin
+>;
+
+/**
+ * Every Stripe account a payment for this clinic could live on: the clinic's
+ * own connected account plus any team member set to be paid into their OWN
+ * Stripe. Booking payments are created on the treating practitioner's payout
+ * account (resolvePayoutProfile), so confirming with only the clinic account
+ * fails with "No such payment_intent" and the booking is never confirmed.
+ */
+async function candidatePayoutAccountIds(
+  supabaseAdmin: AdminClient,
+  profileId: string | undefined,
+  clinicAccountId: string,
+): Promise<string[]> {
+  const ids = [clinicAccountId];
+  if (!profileId) return ids;
+  try {
+    const { data } = await supabaseAdmin
+      .from("staff_members")
+      .select("stripe_account_id")
+      .eq("profile_id", profileId)
+      .eq("payout_mode", "own_account")
+      .not("stripe_account_id", "is", null);
+    for (const row of (data ?? []) as Array<{ stripe_account_id?: string | null }>) {
+      if (row.stripe_account_id && !ids.includes(row.stripe_account_id)) {
+        ids.push(row.stripe_account_id);
+      }
+    }
+  } catch (e) {
+    console.error("[stripe-confirm] staff payout account lookup failed", e);
+  }
+  return ids;
+}
+
 /**
  * Reconcile a completed Stripe Checkout Session with our appointments.
  *
@@ -41,15 +77,31 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
     const Stripe = (await import("stripe")).default;
     const stripe = new Stripe(key, { apiVersion: "2026-06-24.dahlia", typescript: true });
 
+    // The session may live on a team member's own Stripe account (the
+    // treating practitioner's payout account), not the clinic's — try each.
+    const accountIds = await candidatePayoutAccountIds(
+      supabaseAdmin,
+      (profile as { id?: string } | null)?.id,
+      accountId,
+    );
     let session;
-    try {
-      session = await stripe.checkout.sessions.retrieve(
-        sessionId,
-        { expand: ["payment_intent"] },
-        { stripeAccount: accountId },
-      );
-    } catch (e) {
-      console.error("[confirmCheckoutSession] retrieve failed", e);
+    let sessionAccountId = accountId;
+    let lastRetrieveError: unknown;
+    for (const acct of accountIds) {
+      try {
+        session = await stripe.checkout.sessions.retrieve(
+          sessionId,
+          { expand: ["payment_intent"] },
+          { stripeAccount: acct },
+        );
+        sessionAccountId = acct;
+        break;
+      } catch (e) {
+        lastRetrieveError = e;
+      }
+    }
+    if (!session) {
+      console.error("[confirmCheckoutSession] retrieve failed", lastRetrieveError);
       return { ok: false, reason: "retrieve_failed" as const };
     }
 
@@ -76,7 +128,7 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
     // How the client actually paid (card, Klarna, Clearpay…) so the diary can
     // show a payment-method symbol.
     const { paymentMethodLabelForIntent } = await import("./payment-method.server");
-    const methodLabel = await paymentMethodLabelForIntent(stripe, accountId, paymentIntentId);
+    const methodLabel = await paymentMethodLabelForIntent(stripe, sessionAccountId, paymentIntentId);
 
     let updated = 0;
     const confirmedAppointmentIds: string[] = [];
@@ -114,7 +166,7 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
       const { saveCardOnFileFromPaymentIntent } = await import("./card-on-file.server");
       await saveCardOnFileFromPaymentIntent({
         stripe,
-        accountId,
+        accountId: sessionAccountId,
         paymentIntentId,
         patientEmail: metadata.patient_email ?? session.customer_details?.email ?? null,
         patientName: session.customer_details?.name ?? null,
@@ -170,17 +222,25 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
     ].filter((key, index, keys): key is string => Boolean(key) && keys.indexOf(key) === index);
     if (candidateKeys.length === 0) return { ok: false, reason: "no_key" as const };
 
+    // The payment may live on a team member's own Stripe account (the
+    // treating practitioner's payout account), not the clinic's — try each
+    // account with each key before giving up.
+    const accountIds = await candidatePayoutAccountIds(supabaseAdmin, prof?.id, accountId);
     let stripe: InstanceType<typeof Stripe> | null = null;
     let pi: Awaited<ReturnType<InstanceType<typeof Stripe>["paymentIntents"]["retrieve"]>> | null = null;
+    let resolvedAccountId = accountId;
     let lastRetrieveError: unknown;
-    for (const key of candidateKeys) {
-      const candidate = new Stripe(key, { apiVersion: "2026-06-24.dahlia", typescript: true });
-      try {
-        pi = await candidate.paymentIntents.retrieve(paymentIntentId, {}, { stripeAccount: accountId });
-        stripe = candidate;
-        break;
-      } catch (error) {
-        lastRetrieveError = error;
+    outer: for (const acct of accountIds) {
+      for (const key of candidateKeys) {
+        const candidate = new Stripe(key, { apiVersion: "2026-06-24.dahlia", typescript: true });
+        try {
+          pi = await candidate.paymentIntents.retrieve(paymentIntentId, {}, { stripeAccount: acct });
+          stripe = candidate;
+          resolvedAccountId = acct;
+          break outer;
+        } catch (error) {
+          lastRetrieveError = error;
+        }
       }
     }
     if (!stripe || !pi) {
@@ -204,7 +264,7 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
 
     // How the client actually paid (card, Klarna, Clearpay…).
     const { paymentMethodLabelForIntent } = await import("./payment-method.server");
-    const methodLabel = await paymentMethodLabelForIntent(stripe, accountId, pi.id);
+    const methodLabel = await paymentMethodLabelForIntent(stripe, resolvedAccountId, pi.id);
 
     const confirmedAppointmentIds: string[] = [];
     for (const apptId of ids) {
@@ -237,7 +297,7 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
       const { saveCardOnFileFromPaymentIntent } = await import("./card-on-file.server");
       const res = await saveCardOnFileFromPaymentIntent({
         stripe,
-        accountId,
+        accountId: resolvedAccountId,
         paymentIntentId: pi.id,
         patientEmail: metadata.patient_email ?? null,
         appointmentId: confirmedAppointmentIds[0] ?? null,
@@ -288,14 +348,18 @@ export const confirmCardCaptureSetupIntent = createServerFn({ method: "POST" })
       process.env.STRIPE_PLATFORM_SECRET_KEY,
     ].filter((k, i, a): k is string => Boolean(k) && a.indexOf(k) === i);
 
+    // Card captures can also live on a team member's own Stripe account.
+    const accountIds = await candidatePayoutAccountIds(supabaseAdmin, prof.id, accountId);
     let si: import("stripe").Stripe.SetupIntent | null = null;
-    for (const key of keys) {
-      const s = new Stripe(key, { apiVersion: "2026-06-24.dahlia", typescript: true });
-      try {
-        si = await s.setupIntents.retrieve(setupIntentId, { expand: ["payment_method"] }, { stripeAccount: accountId });
-        break;
-      } catch {
-        /* try next key */
+    outer: for (const acct of accountIds) {
+      for (const key of keys) {
+        const s = new Stripe(key, { apiVersion: "2026-06-24.dahlia", typescript: true });
+        try {
+          si = await s.setupIntents.retrieve(setupIntentId, { expand: ["payment_method"] }, { stripeAccount: acct });
+          break outer;
+        } catch {
+          /* try next account/key */
+        }
       }
     }
     if (!si) return { ok: false, reason: "retrieve_failed" as const };
