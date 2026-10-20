@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { confirmationAccountIds } from "./stripe-confirm-accounts";
 
 type AdminClient = Awaited<
   typeof import("@/integrations/supabase/client.server").supabaseAdmin
@@ -14,16 +15,16 @@ type AdminClient = Awaited<
 async function candidatePayoutAccountIds(
   supabaseAdmin: AdminClient,
   profileId: string | undefined,
-  clinicAccountId: string,
+  clinicAccountId: string | null | undefined,
 ): Promise<string[]> {
-  const ids = [clinicAccountId];
+  const ids = confirmationAccountIds(clinicAccountId, []);
   if (!profileId) return ids;
   try {
     const { data } = await supabaseAdmin
       .from("staff_members")
       .select("stripe_account_id")
       .eq("profile_id", profileId)
-      .eq("payout_mode", "own_account")
+      // Retain accounts which may have taken payment before payout settings changed.
       .not("stripe_account_id", "is", null);
     for (const row of (data ?? []) as Array<{ stripe_account_id?: string | null }>) {
       if (row.stripe_account_id && !ids.includes(row.stripe_account_id)) {
@@ -62,7 +63,7 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
       .maybeSingle();
     const accountId = (profile as { stripe_connect_account_id?: string | null } | null)
       ?.stripe_connect_account_id;
-    if (!accountId) return { ok: false, reason: "no_connected_account" as const };
+    if (!profile?.id) return { ok: false, reason: "no_connected_account" as const };
 
     const isLiveSession = sessionId.startsWith("cs_live_");
     const key = isLiveSession
@@ -84,6 +85,7 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
       (profile as { id?: string } | null)?.id,
       accountId,
     );
+    if (accountIds.length === 0) return { ok: false, reason: "no_connected_account" as const };
     let session;
     let sessionAccountId = accountId;
     let lastRetrieveError: unknown;
@@ -146,12 +148,16 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
       }
       // Atomic + idempotent money write: if the webhook already recorded this
       // exact payment, the database ignores it instead of adding it twice.
-      await supabaseAdmin.rpc("record_appointment_payment", {
+      const { error: paymentError } = await supabaseAdmin.rpc("record_appointment_payment", {
         p_appointment_id: apptId,
         p_payment_intent: paymentIntentId ?? "",
         p_amount_cents: shares.get(apptId) ?? 0,
         p_payment_method: methodLabel,
       });
+      if (paymentError) {
+        console.error("[confirmCheckoutSession] payment recording failed", paymentError);
+        continue;
+      }
       const { error } = await supabaseAdmin
         .from("appointments")
         .update(patch as never)
@@ -207,7 +213,7 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
       .maybeSingle();
     const prof = profile as { id?: string; stripe_connect_account_id?: string | null } | null;
     const accountId = prof?.stripe_connect_account_id;
-    if (!accountId) return { ok: false, reason: "no_connected_account" as const };
+    if (!prof?.id) return { ok: false, reason: "no_connected_account" as const };
 
     const Stripe = (await import("stripe")).default;
     // PaymentIntent IDs do not identify whether they belong to live or test
@@ -226,6 +232,7 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
     // treating practitioner's payout account), not the clinic's — try each
     // account with each key before giving up.
     const accountIds = await candidatePayoutAccountIds(supabaseAdmin, prof?.id, accountId);
+    if (accountIds.length === 0) return { ok: false, reason: "no_connected_account" as const };
     let stripe: InstanceType<typeof Stripe> | null = null;
     let pi: Awaited<ReturnType<InstanceType<typeof Stripe>["paymentIntents"]["retrieve"]>> | null = null;
     let resolvedAccountId = accountId;
@@ -279,12 +286,16 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
         patch.checkout_completed_at = new Date().toISOString();
       }
       // Atomic + idempotent: the same payment can only ever be counted once.
-      await supabaseAdmin.rpc("record_appointment_payment", {
+      const { error: paymentError } = await supabaseAdmin.rpc("record_appointment_payment", {
         p_appointment_id: apptId,
         p_payment_intent: pi.id,
         p_amount_cents: shares.get(apptId) ?? 0,
         p_payment_method: methodLabel,
       });
+      if (paymentError) {
+        console.error("[confirmBookingPaymentIntent] payment recording failed", paymentError);
+        continue;
+      }
       const { error } = await supabaseAdmin
         .from("appointments")
         .update(patch as never)
@@ -338,7 +349,7 @@ export const confirmCardCaptureSetupIntent = createServerFn({ method: "POST" })
       .maybeSingle();
     const prof = profile as { id?: string; stripe_connect_account_id?: string | null } | null;
     const accountId = prof?.stripe_connect_account_id;
-    if (!accountId || !prof?.id) return { ok: false, reason: "no_connected_account" as const };
+    if (!prof?.id) return { ok: false, reason: "no_connected_account" as const };
 
     const Stripe = (await import("stripe")).default;
     const keys = [
@@ -350,6 +361,7 @@ export const confirmCardCaptureSetupIntent = createServerFn({ method: "POST" })
 
     // Card captures can also live on a team member's own Stripe account.
     const accountIds = await candidatePayoutAccountIds(supabaseAdmin, prof.id, accountId);
+    if (accountIds.length === 0) return { ok: false, reason: "no_connected_account" as const };
     let si: import("stripe").Stripe.SetupIntent | null = null;
     outer: for (const acct of accountIds) {
       for (const key of keys) {
