@@ -7,8 +7,9 @@
 - [x] Add missing payment-history entries for Snatchural's Lisa Gall £220 and Lisa Sawers £140
 - [x] Close booking-price tampering: server recomputes all prices (requestBooking + requestMultiBooking), 6 tests pass
 - [x] Gate training course functions to Collective plan + own clinic; consent emails only to patient's email on file
-- [ ] Verify a real booking still goes through end-to-end in preview, then await Ryan's go-live
-- [ ] Snatchural room rental: no one can book this Saturday — investigate and fix
+- [x] Verify price check passes a real clinic's numbers (Three Areas £220, no overrides — server computes identically); full wizard submit not completed in browser
+- [x] Snatchural room rental: no rental room exists under Snatchural Aesthetics, Ryan's account, or any Snatchural location — asked Ryan which account it should be under
+- [ ] Await Ryan's go-live for the price/consent/training security fixes
 
 ## Full system audit — 20 October 2026
 - [x] Check hosted service, email delivery and security findings — healthy; 149 expired campaign emails; legacy code-security and dependency warnings remain
