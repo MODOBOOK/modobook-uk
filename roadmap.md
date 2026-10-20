@@ -1,5 +1,11 @@
 # Mobile redesign — practitioner dashboard
 
+## Full system audit — 20 October 2026
+- [ ] Check hosted service, email delivery and security findings
+- [ ] Check live patient booking links and calendars with a real signed-in account
+- [ ] Audit successful Stripe payments and card capture against booking records
+- [ ] Report exceptions and audit limitations without changing bookings or publishing
+
 ## Paid booking confirmation recovery
 - [x] Check seven pending attempts directly against Stripe; six received zero, seventh has no metadata-matched payment
 - [x] Check successful retained practitioner-account payments against MODO; all 17 linked appointments are confirmed
