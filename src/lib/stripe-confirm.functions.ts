@@ -1,10 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 
 type AdminClient = Awaited<
-  ReturnType<typeof import("@/integrations/supabase/client.server").supabaseAdmin["from"]>
-> extends never
-  ? never
-  : Awaited<typeof import("@/integrations/supabase/client.server").supabaseAdmin>;
+  typeof import("@/integrations/supabase/client.server").supabaseAdmin
+>;
 
 /**
  * Every Stripe account a payment for this clinic could live on: the clinic's
