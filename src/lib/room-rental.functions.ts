@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { rentalDayHasAvailability } from "@/lib/room-rental-availability";
 
 async function __activeProfileId(supabase: any, userId: string) {
   const { activeProfileId } = await import("./clinic-context.server");
@@ -1005,19 +1006,7 @@ export const getRoomMonthAvailability = createServerFn({ method: "GET" })
       const blocks = allBlocks.filter((b) => b.block_date === date);
       const booked = allBookings.filter((b) => b.booking_date === date);
 
-      // Build the hourly grid, then look for `need` contiguous free hours.
-      let run = 0;
-      let ok = false;
-      for (const h of dayHours) {
-        run = 0;
-        for (let mm = toMin(h.start_time); mm + step <= toMin(h.end_time); mm += step) {
-          const usable = capacity - blockedUnits(blocks, capacity, mm, mm + step);
-          const used = booked.filter((b: any) => mm < toMin(b.end_time) && mm + step > toMin(b.start_time)).length;
-          run = usable - used > 0 ? run + 1 : 0;
-          if (run >= need) { ok = true; break; }
-        }
-        if (ok) break;
-      }
+      const ok = rentalDayHasAvailability({ dayHours, blocks, booked, capacity, step, needSlots: need });
       if (!ok) unavailable.push(date);
     }
     return { unavailable };
