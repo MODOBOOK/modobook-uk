@@ -85,9 +85,10 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
       (profile as { id?: string } | null)?.id,
       accountId,
     );
-    if (accountIds.length === 0) return { ok: false, reason: "no_connected_account" as const };
+    const firstAccountId = accountIds[0];
+    if (!firstAccountId) return { ok: false, reason: "no_connected_account" as const };
     let session;
-    let sessionAccountId = accountId;
+    let sessionAccountId = firstAccountId;
     let lastRetrieveError: unknown;
     for (const acct of accountIds) {
       try {
@@ -232,10 +233,11 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
     // treating practitioner's payout account), not the clinic's — try each
     // account with each key before giving up.
     const accountIds = await candidatePayoutAccountIds(supabaseAdmin, prof?.id, accountId);
-    if (accountIds.length === 0) return { ok: false, reason: "no_connected_account" as const };
+    const firstAccountId = accountIds[0];
+    if (!firstAccountId) return { ok: false, reason: "no_connected_account" as const };
     let stripe: InstanceType<typeof Stripe> | null = null;
     let pi: Awaited<ReturnType<InstanceType<typeof Stripe>["paymentIntents"]["retrieve"]>> | null = null;
-    let resolvedAccountId = accountId;
+    let resolvedAccountId = firstAccountId;
     let lastRetrieveError: unknown;
     outer: for (const acct of accountIds) {
       for (const key of candidateKeys) {
