@@ -166,7 +166,7 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
       const { saveCardOnFileFromPaymentIntent } = await import("./card-on-file.server");
       await saveCardOnFileFromPaymentIntent({
         stripe,
-        accountId,
+        accountId: sessionAccountId,
         paymentIntentId,
         patientEmail: metadata.patient_email ?? session.customer_details?.email ?? null,
         patientName: session.customer_details?.name ?? null,
@@ -222,17 +222,25 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
     ].filter((key, index, keys): key is string => Boolean(key) && keys.indexOf(key) === index);
     if (candidateKeys.length === 0) return { ok: false, reason: "no_key" as const };
 
+    // The payment may live on a team member's own Stripe account (the
+    // treating practitioner's payout account), not the clinic's — try each
+    // account with each key before giving up.
+    const accountIds = await candidatePayoutAccountIds(supabaseAdmin, prof?.id, accountId);
     let stripe: InstanceType<typeof Stripe> | null = null;
     let pi: Awaited<ReturnType<InstanceType<typeof Stripe>["paymentIntents"]["retrieve"]>> | null = null;
+    let resolvedAccountId = accountId;
     let lastRetrieveError: unknown;
-    for (const key of candidateKeys) {
-      const candidate = new Stripe(key, { apiVersion: "2026-06-24.dahlia", typescript: true });
-      try {
-        pi = await candidate.paymentIntents.retrieve(paymentIntentId, {}, { stripeAccount: accountId });
-        stripe = candidate;
-        break;
-      } catch (error) {
-        lastRetrieveError = error;
+    outer: for (const acct of accountIds) {
+      for (const key of candidateKeys) {
+        const candidate = new Stripe(key, { apiVersion: "2026-06-24.dahlia", typescript: true });
+        try {
+          pi = await candidate.paymentIntents.retrieve(paymentIntentId, {}, { stripeAccount: acct });
+          stripe = candidate;
+          resolvedAccountId = acct;
+          break outer;
+        } catch (error) {
+          lastRetrieveError = error;
+        }
       }
     }
     if (!stripe || !pi) {
