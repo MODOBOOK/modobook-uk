@@ -10,8 +10,16 @@ export const Route = createFileRoute("/m/$slug/")({
   loader: async ({ params, deps }) =>
     getPublicClinic({ data: { slug: params.slug, draft: deps.draft } }),
 
-  head: ({ params }) => ({
-    meta: [{ property: "og:url", content: `https://modobook.uk/m/${params.slug}` }],
+  head: ({ params, loaderData }) => ({
+    meta: [
+      { title: `${loaderData?.profile.clinic_name || "Clinic"} | Book with MODO` },
+      { name: "description", content: `Browse treatments and book with ${loaderData?.profile.clinic_name || "this clinic"} on MODO.` },
+      { property: "og:title", content: `${loaderData?.profile.clinic_name || "Clinic"} | Book with MODO` },
+      { property: "og:description", content: `Browse treatments and book with ${loaderData?.profile.clinic_name || "this clinic"} on MODO.` },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: `https://modobook.uk/m/${params.slug}` },
+    ],
     links: [{ rel: "canonical", href: `https://modobook.uk/m/${params.slug}` }],
   }),
   component: ClinicHomeRoute,

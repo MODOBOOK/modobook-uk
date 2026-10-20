@@ -21,3 +21,4 @@
 - Public booking prices are recomputed server-side (src/lib/booking-price.server.ts) from treatment/practitioner/location/model-slot/add-on/package data plus re-validated codes and credit; requestBooking and requestMultiBooking reject mismatches and charge the server value. Why: the browser must never set what a patient pays.
 - Training course server functions enforce the Collective plan via assertTrainingAccess, not just the menu. Why: hiding a menu item never stops direct calls.
 - Consent-form emails always go to the patient's email on file, never a caller-chosen address. Why: a caller-supplied recipient would leak signing links.
+- Course option lists filter shared descriptions per option via courseOptionDescription, and new editor options start with blank descriptions. Why: editing one option must not reveal inherited copy on its siblings; existing stored wording remains intact.
