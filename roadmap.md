@@ -1,10 +1,10 @@
 # Mobile redesign — practitioner dashboard
 
 ## Full system audit — 20 October 2026
-- [ ] Check hosted service, email delivery and security findings
-- [ ] Check live patient booking links and calendars with a real signed-in account
-- [ ] Audit successful Stripe payments and card capture against booking records
-- [ ] Report exceptions and audit limitations without changing bookings or publishing
+- [x] Check hosted service, email delivery and security findings — healthy; 149 expired campaign emails; legacy code-security and dependency warnings remain
+- [x] Check live patient booking links and calendars with a real signed-in account — 60 URLs respond; three treatment/date/time journeys work; Ryan live diary, booking deep link, search and previous/next month verified
+- [x] Audit successful Stripe payments and card capture against booking records — 37 accounts; 339 successful payments and 15 setups; no metadata-linked pending bookings; Caitlin deposit accounting missing and Abbie successful setup not persisted; metadata-free objects unresolved
+- [x] Report exceptions and audit limitations without changing bookings or publishing — audit only; no fresh charged booking, no all-clinic signed-in calendar UI test; Supreme/Mr Skulpt unassigned bookings, historic routing differences and overlap/zero-price candidates need review
 
 ## Paid booking confirmation recovery
 - [x] Check seven pending attempts directly against Stripe; six received zero, seventh has no metadata-matched payment
