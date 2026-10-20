@@ -92,3 +92,5 @@ Goal: MODO runs in an app WebView; dashboard must feel native on phones.
 - [x] Send one follow-up 30 days later, then stop until another completed visit
 - [x] Keep treatment-specific rebook and top-up reminders available
 - [x] Verify the settings screen and reminder email in preview
+
+- [x] Room rental: Saturdays (shorter opening hours) were greyed out for full-day bookings — fixed month availability so a full-day booking means the whole open day; verified Sat 24/31 Oct bookable on Snatchural page. PREVIEW ONLY until go live.
