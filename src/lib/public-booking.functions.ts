@@ -1143,7 +1143,15 @@ export const requestBooking = createServerFn({ method: "POST" })
       const holdUntil = new Date(Date.now() + 10 * 60 * 1000).toISOString();
       await supabaseAdmin
         .from("appointments")
-        .update({ status: "pending", payment_hold_expires_at: holdUntil } as never)
+        .update({
+          status: "pending",
+          payment_hold_expires_at: holdUntil,
+          // Remember the payment reference so reconciliation can find the
+          // right Stripe account even when it belongs to a team member.
+          ...(payment.kind === "embedded"
+            ? { stripe_payment_intent_id: payment.paymentIntentId }
+            : {}),
+        } as never)
         .eq("id", id);
     }
 
@@ -2132,7 +2140,15 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       const holdUntil = new Date(Date.now() + 10 * 60 * 1000).toISOString();
       await supabaseAdmin
         .from("appointments")
-        .update({ status: "pending", payment_hold_expires_at: holdUntil } as never)
+        .update({
+          status: "pending",
+          payment_hold_expires_at: holdUntil,
+          // Remember the payment reference so reconciliation can find the
+          // right Stripe account even when it belongs to a team member.
+          ...(payment.kind === "embedded"
+            ? { stripe_payment_intent_id: payment.paymentIntentId }
+            : {}),
+        } as never)
         .in("id", created.map((c) => c.id));
     }
 
