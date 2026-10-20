@@ -128,7 +128,7 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
     // How the client actually paid (card, Klarna, Clearpay…) so the diary can
     // show a payment-method symbol.
     const { paymentMethodLabelForIntent } = await import("./payment-method.server");
-    const methodLabel = await paymentMethodLabelForIntent(stripe, accountId, paymentIntentId);
+    const methodLabel = await paymentMethodLabelForIntent(stripe, sessionAccountId, paymentIntentId);
 
     let updated = 0;
     const confirmedAppointmentIds: string[] = [];
