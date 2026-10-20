@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Sparkles } from "lucide-react";
 import { courseGroupLabel } from "@/lib/course-group-label";
 import { TreatmentLeafletButton } from "@/components/TreatmentLeafletButton";
+import { courseOptionDescription } from "@/lib/course-option-description";
 
 export type CourseOption = {
   id: string;
@@ -126,14 +127,10 @@ export function CourseGroupRow({
     }
     return `${days} day${days === 1 ? "" : "s"} apart`;
   };
-  // Per-session descriptions only matter when the clinic actually customised
-  // one — when every option shares the same description (the common case),
-  // the group blurb already covers it, so skip repeating it in the pop-ups.
+  // Decide for each option independently: one custom edit must not reveal
+  // copied treatment descriptions on every other option.
   const allDescs = sorted.map((o) => (o.description ?? "").trim());
-  const nonEmptyDescs = allDescs.filter(Boolean);
-  const distinctDescs = new Set(nonEmptyDescs);
-  const showPerOptionDesc =
-    distinctDescs.size > 1 || (distinctDescs.size === 1 && nonEmptyDescs.length !== allDescs.length);
+  const descriptionFor = (option: CourseOption) => courseOptionDescription(option.description, allDescs);
 
   const recommended = sorted.find((o) => o.recommended);
   const detailOption = single;
@@ -290,8 +287,8 @@ export function CourseGroupRow({
                         {o.duration ? `${o.duration} min each` : ""}
                         {o.full ? " · fully booked" : ""}
                       </div>
-                      {showPerOptionDesc && o.description && (
-                        <p className="mt-1 whitespace-pre-line text-xs leading-relaxed opacity-80">{o.description}</p>
+                      {descriptionFor(o) && (
+                        <p className="mt-1 whitespace-pre-line text-xs leading-relaxed opacity-80">{descriptionFor(o)}</p>
                       )}
                       {o.session_count > 1 && (
                         <p className="mt-1 text-xs opacity-70">
@@ -392,8 +389,8 @@ export function CourseGroupRow({
                       {o.duration ? `${o.duration} min each` : null}
                       {spacingLabel(o.interval_days) ? ` · ${spacingLabel(o.interval_days)}` : ""}
                     </div>
-                    {showPerOptionDesc && o.description && (
-                      <p className="mt-1 whitespace-pre-line text-xs leading-relaxed opacity-80">{o.description}</p>
+                    {descriptionFor(o) && (
+                      <p className="mt-1 whitespace-pre-line text-xs leading-relaxed opacity-80">{descriptionFor(o)}</p>
                     )}
                     {o.allow_split_payment && o.session_count > 1 && (
                       <div className="mt-0.5 text-xs font-medium" style={{ color: brand }}>

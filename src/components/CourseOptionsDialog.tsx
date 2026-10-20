@@ -446,6 +446,7 @@ export function CourseOptionsEditor({
     const option: CourseTreatment = {
       ...treatment,
       id,
+      description: null,
       name: `${displayLabel} — ${sessionLabel}`,
       course_option_label: sessionLabel,
       price: 0,
