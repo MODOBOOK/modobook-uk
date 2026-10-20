@@ -264,7 +264,7 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
 
     // How the client actually paid (card, Klarna, Clearpay…).
     const { paymentMethodLabelForIntent } = await import("./payment-method.server");
-    const methodLabel = await paymentMethodLabelForIntent(stripe, accountId, pi.id);
+    const methodLabel = await paymentMethodLabelForIntent(stripe, resolvedAccountId, pi.id);
 
     const confirmedAppointmentIds: string[] = [];
     for (const apptId of ids) {
@@ -297,7 +297,7 @@ export const confirmBookingPaymentIntent = createServerFn({ method: "POST" })
       const { saveCardOnFileFromPaymentIntent } = await import("./card-on-file.server");
       const res = await saveCardOnFileFromPaymentIntent({
         stripe,
-        accountId,
+        accountId: resolvedAccountId,
         paymentIntentId: pi.id,
         patientEmail: metadata.patient_email ?? null,
         appointmentId: confirmedAppointmentIds[0] ?? null,
@@ -348,14 +348,18 @@ export const confirmCardCaptureSetupIntent = createServerFn({ method: "POST" })
       process.env.STRIPE_PLATFORM_SECRET_KEY,
     ].filter((k, i, a): k is string => Boolean(k) && a.indexOf(k) === i);
 
+    // Card captures can also live on a team member's own Stripe account.
+    const accountIds = await candidatePayoutAccountIds(supabaseAdmin, prof.id, accountId);
     let si: import("stripe").Stripe.SetupIntent | null = null;
-    for (const key of keys) {
-      const s = new Stripe(key, { apiVersion: "2026-06-24.dahlia", typescript: true });
-      try {
-        si = await s.setupIntents.retrieve(setupIntentId, { expand: ["payment_method"] }, { stripeAccount: accountId });
-        break;
-      } catch {
-        /* try next key */
+    outer: for (const acct of accountIds) {
+      for (const key of keys) {
+        const s = new Stripe(key, { apiVersion: "2026-06-24.dahlia", typescript: true });
+        try {
+          si = await s.setupIntents.retrieve(setupIntentId, { expand: ["payment_method"] }, { stripeAccount: acct });
+          break outer;
+        } catch {
+          /* try next account/key */
+        }
       }
     }
     if (!si) return { ok: false, reason: "retrieve_failed" as const };
