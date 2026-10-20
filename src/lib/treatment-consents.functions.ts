@@ -66,19 +66,22 @@ export const sendConsentToClient = createServerFn({ method: "POST" })
     const id = r.id as string;
     const token = r.token as string;
 
-    if (data.sendEmail && data.email) {
+    if (data.sendEmail) {
       try {
         const [{ data: tpl }, { data: client }, { data: profile }] = await Promise.all([
           context.supabase.from("consent_templates").select("name").eq("id", data.template_id).maybeSingle(),
-          context.supabase.from("clinic_clients").select("full_name").eq("id", data.client_id).maybeSingle(),
+          context.supabase.from("clinic_clients").select("full_name, email").eq("id", data.client_id).maybeSingle(),
           context.supabase.from("profiles").select("id, clinic_name").eq("id", await __activeProfileId(context.supabase, context.userId)).maybeSingle(),
         ]);
+        // Always send to the patient's email on file, never a caller-chosen address.
+        const to = (client as { email?: string | null } | null)?.email;
+        if (!to) throw new Error("No email on file for this patient");
         const { tryEnqueueAppEmail, getPractitionerBranding } = await import("@/lib/email/send.server");
         const branding = await getPractitionerBranding((profile as { id?: string } | null)?.id);
         const origin = process.env.PUBLIC_APP_URL || process.env.APP_URL || "https://modobook.uk";
         await tryEnqueueAppEmail({
           templateName: "medical-form-request",
-          recipientEmail: data.email,
+          recipientEmail: to,
           messageId: `consent-request-${id}`,
           templateData: {
             patientName: (client?.full_name ?? "").split(" ")[0] || "there",

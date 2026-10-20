@@ -1,5 +1,16 @@
 # Mobile redesign — practitioner dashboard
 
+## System-check corrections — 20 October 2026
+- [x] Record Caitlin Finlayson's £25 deposit (Kerri Roma) against her confirmed 2 Nov booking + payment history
+- [x] Save Abbie Maley's captured card (Mastercard 7245) to her client record; cancelled booking left cancelled
+- [x] Cancel the 7 stuck unpaid pending booking attempts (no payments, no card capture, no notifications)
+- [x] Add missing payment-history entries for Snatchural's Lisa Gall £220 and Lisa Sawers £140
+- [x] Close booking-price tampering: server recomputes all prices (requestBooking + requestMultiBooking), 6 tests pass
+- [x] Gate training course functions to Collective plan + own clinic; consent emails only to patient's email on file
+- [x] Verify price check passes a real clinic's numbers (Three Areas £220, no overrides — server computes identically); full wizard submit not completed in browser
+- [x] Snatchural room rental: no rental room exists under Snatchural Aesthetics, Ryan's account, or any Snatchural location — asked Ryan which account it should be under
+- [ ] Await Ryan's go-live for the price/consent/training security fixes
+
 ## Full system audit — 20 October 2026
 - [x] Check hosted service, email delivery and security findings — healthy; 149 expired campaign emails; legacy code-security and dependency warnings remain
 - [x] Check live patient booking links and calendars with a real signed-in account — 60 URLs respond; three treatment/date/time journeys work; Ryan live diary, booking deep link, search and previous/next month verified

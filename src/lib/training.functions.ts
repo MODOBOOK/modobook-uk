@@ -55,11 +55,26 @@ async function getProfileId(
 
 /* ---------------- Courses ---------------- */
 
+/**
+ * Training courses are a MODO Collective feature. The menu hides them for
+ * Solo clinics, but the server functions must enforce that too — otherwise
+ * any signed-in user could call them directly.
+ */
+async function assertTrainingAccess(supabase: any, userId: string) {
+  const profileId = await getProfileId(supabase, userId);
+  const { data: prof } = await supabase
+    .from("profiles").select("plan_tier").eq("id", profileId).single();
+  if ((prof as { plan_tier?: string | null } | null)?.plan_tier === "solo") {
+    throw new Error("Training courses are part of MODO Collective.");
+  }
+  return profileId;
+}
+
 export const listMyCourses = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const profileId = await getProfileId(supabase, userId);
+    const profileId = await assertTrainingAccess(supabase, userId);
     const { data, error } = await supabase
       .from("training_courses")
       .select("*")
@@ -75,8 +90,9 @@ export const getCourseWithSessions = createServerFn({ method: "GET" })
   .inputValidator((i: { id: string }) => i)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+    const profileId = await assertTrainingAccess(supabase, userId);
     const { data: course, error } = await supabase
-      .from("training_courses").select("*").eq("id", data.id).single();
+      .from("training_courses").select("*").eq("id", data.id).eq("profile_id", profileId).single();
     if (error) throw error;
     const { data: sessions, error: sErr } = await supabase
       .from("training_course_sessions")
