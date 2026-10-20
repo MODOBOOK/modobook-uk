@@ -77,15 +77,31 @@ export const confirmCheckoutSession = createServerFn({ method: "POST" })
     const Stripe = (await import("stripe")).default;
     const stripe = new Stripe(key, { apiVersion: "2026-06-24.dahlia", typescript: true });
 
+    // The session may live on a team member's own Stripe account (the
+    // treating practitioner's payout account), not the clinic's — try each.
+    const accountIds = await candidatePayoutAccountIds(
+      supabaseAdmin,
+      (profile as { id?: string } | null)?.id,
+      accountId,
+    );
     let session;
-    try {
-      session = await stripe.checkout.sessions.retrieve(
-        sessionId,
-        { expand: ["payment_intent"] },
-        { stripeAccount: accountId },
-      );
-    } catch (e) {
-      console.error("[confirmCheckoutSession] retrieve failed", e);
+    let sessionAccountId = accountId;
+    let lastRetrieveError: unknown;
+    for (const acct of accountIds) {
+      try {
+        session = await stripe.checkout.sessions.retrieve(
+          sessionId,
+          { expand: ["payment_intent"] },
+          { stripeAccount: acct },
+        );
+        sessionAccountId = acct;
+        break;
+      } catch (e) {
+        lastRetrieveError = e;
+      }
+    }
+    if (!session) {
+      console.error("[confirmCheckoutSession] retrieve failed", lastRetrieveError);
       return { ok: false, reason: "retrieve_failed" as const };
     }
 
