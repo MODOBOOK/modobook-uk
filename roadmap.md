@@ -1,5 +1,11 @@
 # Mobile redesign — practitioner dashboard
 
+## Paid booking confirmation recovery
+- [x] Check seven pending attempts directly against Stripe; six received zero, seventh has no metadata-matched payment
+- [x] Check successful retained practitioner-account payments against MODO; all 17 linked appointments are confirmed
+- [x] Remove clinic-account prerequisite in payment/card confirmation; three regression tests pass and browser invocation finds Mr Skulpt's practitioner-account intent without confirming its unpaid attempt; build OK
+- [x] Check confirmation delivery for the successful practitioner-account bookings; sent confirmations found except Jordan Morrison (suppressed); Emma Tuck's two treatments share one sent confirmation
+
 ## Zero-minute booking availability
 - [x] Fix zero-minute date/time availability; regression tests pass and Ryan's 0-minute Personalised Program shows selectable times on 6 November in preview
 
