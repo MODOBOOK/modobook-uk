@@ -1,5 +1,43 @@
 import { createServerFn } from "@tanstack/react-start";
 
+type AdminClient = Awaited<
+  ReturnType<typeof import("@/integrations/supabase/client.server").supabaseAdmin["from"]>
+> extends never
+  ? never
+  : Awaited<typeof import("@/integrations/supabase/client.server").supabaseAdmin>;
+
+/**
+ * Every Stripe account a payment for this clinic could live on: the clinic's
+ * own connected account plus any team member set to be paid into their OWN
+ * Stripe. Booking payments are created on the treating practitioner's payout
+ * account (resolvePayoutProfile), so confirming with only the clinic account
+ * fails with "No such payment_intent" and the booking is never confirmed.
+ */
+async function candidatePayoutAccountIds(
+  supabaseAdmin: AdminClient,
+  profileId: string | undefined,
+  clinicAccountId: string,
+): Promise<string[]> {
+  const ids = [clinicAccountId];
+  if (!profileId) return ids;
+  try {
+    const { data } = await supabaseAdmin
+      .from("staff_members")
+      .select("stripe_account_id")
+      .eq("profile_id", profileId)
+      .eq("payout_mode", "own_account")
+      .not("stripe_account_id", "is", null);
+    for (const row of (data ?? []) as Array<{ stripe_account_id?: string | null }>) {
+      if (row.stripe_account_id && !ids.includes(row.stripe_account_id)) {
+        ids.push(row.stripe_account_id);
+      }
+    }
+  } catch (e) {
+    console.error("[stripe-confirm] staff payout account lookup failed", e);
+  }
+  return ids;
+}
+
 /**
  * Reconcile a completed Stripe Checkout Session with our appointments.
  *
