@@ -18,6 +18,8 @@ import {
 import { RentalCalendar } from "@/components/room-rental/RentalCalendar";
 import { RentalDaySheet } from "@/components/room-rental/RentalDaySheet";
 import { ManualBookingDialog } from "@/components/room-rental/ManualBookingDialog";
+import { InvoiceDetails } from "@/components/room-rental/InvoiceDetails";
+import type { RentalInvoicePaymentMethod } from "@/lib/rental-invoice-options";
 import { getMyProfile } from "@/lib/profiles.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +41,10 @@ export const Route = createFileRoute("/_authenticated/dashboard/room-rental")({
     meta: [
       { title: "Room rental · MODO" },
       { name: "description", content: "Rent your treatment rooms out by the hour, half day or full day." },
+      { property: "og:title", content: "Room rental · MODO" },
+      { property: "og:description", content: "Manage room bookings, rental invoices and payment details in MODO." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: RoomRentalPage,
@@ -169,6 +175,7 @@ function RoomRentalPage() {
             <TabsTrigger value="hours">Opening hours</TabsTrigger>
             <TabsTrigger value="blocks">Closures</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            <TabsTrigger value="invoice-details">Invoice details</TabsTrigger>
           </TabsList>
         </div>
 
@@ -265,8 +272,11 @@ function RoomRentalPage() {
             <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">No bookings for this person.</CardContent></Card>
           )}
           {filteredBookings.map((b) => (
-            <BookingRow key={b.id} booking={b} roomName={rooms.find((r) => r.id === b.room_id)?.name ?? "Room"} onChanged={refresh} />
+            <BookingRow key={b.id} booking={b} roomName={rooms.find((r) => r.id === b.room_id)?.name ?? "Room"} defaultPaymentMethod={profile?.rental_invoice_payment_method ?? "both"} onChanged={refresh} />
           ))}
+        </TabsContent>
+        <TabsContent value="invoice-details" className="mt-4">
+          {profile && <InvoiceDetails key={profile.id} profile={profile} onSaved={() => qc.invalidateQueries({ queryKey: ["my-profile"] })} />}
         </TabsContent>
       </Tabs>
 
@@ -448,7 +458,7 @@ function RoomDialog({
             <span className="text-sm">
               Auto-send an invoice
               <span className="block text-xs text-muted-foreground">
-                The renting practitioner gets your branded invoice by email as soon as they book (or as soon as their payment clears), with a pay button and your bank details.
+                The renting practitioner gets your branded invoice by email as soon as they book (or their payment clears), using your saved invoice details and payment option.
               </span>
             </span>
           </label>
@@ -596,7 +606,7 @@ function BlocksCard({ rooms, blocks, onChanged }: { rooms: Room[]; blocks: any[]
   );
 }
 
-function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: string; onChanged: () => void }) {
+function BookingRow({ booking, roomName, defaultPaymentMethod, onChanged }: { booking: any; roomName: string; defaultPaymentMethod: RentalInvoicePaymentMethod; onChanged: () => void }) {
   const update = useServerFn(updateRentalBooking);
   const reschedule = useServerFn(rescheduleRentalBooking);
   const sendLink = useServerFn(sendRentalPaymentLink);
@@ -605,6 +615,7 @@ function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: 
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkMessage, setLinkMessage] = useState("");
   const [mode, setMode] = useState<"link" | "invoice">("link");
+  const [paymentMethod, setPaymentMethod] = useState<RentalInvoicePaymentMethod>(defaultPaymentMethod);
   const [editOpen, setEditOpen] = useState(false);
   const [editBusy, setEditBusy] = useState(false);
   const [editDate, setEditDate] = useState("");
@@ -662,7 +673,7 @@ function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: 
             size="sm"
             variant="outline"
             disabled={sending}
-            onClick={() => { setMode("invoice"); setLinkOpen(true); }}
+            onClick={() => { setMode("invoice"); setPaymentMethod(defaultPaymentMethod); setLinkOpen(true); }}
           >
             <FileText className="mr-2 h-4 w-4 shrink-0" /> <span className="truncate">Invoice</span>
           </Button>
@@ -720,6 +731,13 @@ function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: 
             <DialogTitle>{mode === "invoice" ? "Send invoice" : "Send payment link"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
+            {mode === "invoice" && booking.payment_status !== "paid" && <div className="space-y-2 pb-3">
+              <Label htmlFor={`invoice-payment-${booking.id}`}>Payment option</Label>
+              <Select value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as RentalInvoicePaymentMethod)}>
+                <SelectTrigger id={`invoice-payment-${booking.id}`}><SelectValue /></SelectTrigger>
+                <SelectContent><SelectItem value="bank">Bank transfer</SelectItem><SelectItem value="stripe">Stripe payment link</SelectItem><SelectItem value="both">Bank transfer and Stripe</SelectItem></SelectContent>
+              </Select>
+            </div>}
             <Label>Message (optional)</Label>
             <Textarea
               rows={4}
@@ -737,7 +755,7 @@ function BookingRow({ booking, roomName, onChanged }: { booking: any; roomName: 
                 setSending(true);
                 try {
                   if (mode === "invoice") {
-                    await sendInvoice({ data: { id: booking.id, origin: window.location.origin, message: linkMessage || null } });
+                    await sendInvoice({ data: { id: booking.id, origin: window.location.origin, message: linkMessage || null, paymentMethod } });
                     toast.success(`Invoice emailed to ${booking.renter_email}`);
                   } else {
                     await sendLink({ data: { id: booking.id, origin: window.location.origin, message: linkMessage || null } });
