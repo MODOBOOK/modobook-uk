@@ -8053,6 +8053,7 @@ export type Database = {
           quiz_intro: string | null
           quiz_outro: string | null
           reminder_hours_before: number[]
+          rental_invoice_payment_method: string
           require_account_to_book: boolean
           require_address: boolean
           require_deposit_to_confirm: boolean
@@ -8202,6 +8203,7 @@ export type Database = {
           quiz_intro?: string | null
           quiz_outro?: string | null
           reminder_hours_before?: number[]
+          rental_invoice_payment_method?: string
           require_account_to_book?: boolean
           require_address?: boolean
           require_deposit_to_confirm?: boolean
@@ -8351,6 +8353,7 @@ export type Database = {
           quiz_intro?: string | null
           quiz_outro?: string | null
           reminder_hours_before?: number[]
+          rental_invoice_payment_method?: string
           require_account_to_book?: boolean
           require_address?: boolean
           require_deposit_to_confirm?: boolean

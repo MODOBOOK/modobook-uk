@@ -289,6 +289,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       invoice_company_number?: string | null;
       invoice_show_bank_details?: boolean;
       invoice_show_logo?: boolean;
+      rental_invoice_payment_method?: "bank" | "stripe" | "both";
       display_name_mode?: "clinic" | "practitioner" | "both";
       specialties?: string[];
       qualifications?: { label: string; year?: string }[];
@@ -382,6 +383,7 @@ export const updateProfile = createServerFn({ method: "POST" })
       "invoice_account_number","invoice_iban","invoice_swift",
       "invoice_payment_reference","invoice_footer_notes","invoice_vat_number",
       "invoice_company_number","invoice_show_bank_details","invoice_show_logo",
+      "rental_invoice_payment_method",
       "display_name_mode",
     ] as const;
     for (const k of passthroughKeys) {

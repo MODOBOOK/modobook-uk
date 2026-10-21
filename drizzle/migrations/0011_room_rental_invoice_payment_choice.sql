@@ -1,0 +1,2 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS rental_invoice_payment_method text NOT NULL DEFAULT 'both';
+COMMENT ON COLUMN public.profiles.rental_invoice_payment_method IS 'Default room rental invoice payment choice: bank, stripe, or both.';

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { rentalDayHasAvailability } from "@/lib/room-rental-availability";
+import { rentalInvoiceOptions, type RentalInvoicePaymentMethod } from "./rental-invoice-options";
 
 async function __activeProfileId(supabase: any, userId: string) {
   const { activeProfileId } = await import("./clinic-context.server");
@@ -673,12 +674,13 @@ async function sendRentalInvoiceEmail(opts: {
   origin?: string | null;
   message?: string | null;
   payUrl?: string | null;
+  paymentMethod?: RentalInvoicePaymentMethod;
 }) {
   const { sb, booking } = opts;
   const { data: p } = await sb
     .from("profiles")
     .select(
-      "clinic_name, full_name, email, phone, address, invoice_bank_name, invoice_account_name, invoice_sort_code, invoice_account_number, invoice_iban, invoice_swift, invoice_payment_reference, invoice_footer_notes, invoice_vat_number, invoice_company_number, invoice_show_bank_details",
+      "clinic_name, full_name, email, phone, address, slug, stripe_connect_account_id, rental_invoice_payment_method, invoice_bank_name, invoice_account_name, invoice_sort_code, invoice_account_number, invoice_iban, invoice_swift, invoice_payment_reference, invoice_footer_notes, invoice_vat_number, invoice_company_number, invoice_show_bank_details",
     )
     .eq("user_id", opts.userId)
     .maybeSingle();
@@ -687,6 +689,15 @@ async function sendRentalInvoiceEmail(opts: {
   const total = Number(booking.price ?? 0);
   const paid = booking.payment_status === "paid" ? total : 0;
   const due = Math.max(0, total - paid);
+  const method = opts.paymentMethod ?? p?.rental_invoice_payment_method ?? "both";
+  const options = rentalInvoiceOptions(method, p ?? {}, Boolean(opts.paymentMethod) && due > 0);
+  let payUrl = options.stripe ? opts.payUrl : null;
+  if (options.stripe && due > 0 && !payUrl && p?.stripe_connect_account_id) {
+    payUrl = await buildRentalPaymentLink({
+      prof: { ...p, user_id: opts.userId }, booking, roomName: opts.roomName, amount: due,
+      origin: (await import("./safe-origin")).safeOrigin(opts.origin || "https://modobook.uk"),
+    });
+  }
   const when = `${booking.booking_date} · ${hhmm(booking.start_time)}–${hhmm(booking.end_time)}`;
   const reference = String(booking.id).slice(0, 8).toUpperCase();
 
@@ -696,7 +707,7 @@ async function sendRentalInvoiceEmail(opts: {
     .join("\n");
 
   const bank =
-    p?.invoice_show_bank_details
+    options.bank && (opts.paymentMethod || method === "bank" || p?.invoice_show_bank_details)
       ? [
           "\nBank transfer",
           p.invoice_account_name ? `Account name: ${p.invoice_account_name}` : null,
@@ -722,6 +733,8 @@ async function sendRentalInvoiceEmail(opts: {
     `Amount due: £${due.toFixed(2)}\n` +
     (bank ? `${bank}\n` : "") +
     (addressLines ? `\n${clinicName}\n${addressLines}\n` : "") +
+    (p?.email ? `Email: ${p.email}\n` : "") +
+    (p?.phone ? `Phone: ${p.phone}\n` : "") +
     (p?.invoice_vat_number ? `VAT no. ${p.invoice_vat_number}\n` : "") +
     (p?.invoice_company_number ? `Company no. ${p.invoice_company_number}\n` : "") +
     (p?.invoice_footer_notes ? `\n${p.invoice_footer_notes}\n` : "") +
@@ -734,7 +747,7 @@ async function sendRentalInvoiceEmail(opts: {
     subject: `Invoice ${reference} from ${clinicName}`,
     body,
     actionLabel: `Pay £${due.toFixed(2)}`,
-    actionUrl: due > 0 ? opts.payUrl || undefined : undefined,
+    actionUrl: due > 0 ? payUrl || undefined : undefined,
   });
 
   await sb.from("rental_bookings").update({ invoice_sent_at: new Date().toISOString() }).eq("id", booking.id);
@@ -763,7 +776,7 @@ export async function sendRentalInvoiceForBooking(bookingId: string) {
 /** Send (or resend) the invoice for a booking to the practitioner who hired the room. */
 export const sendRentalInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { id: string; origin: string; message?: string | null }) => d)
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), origin: z.string().url(), message: z.string().max(2000).nullable().optional(), paymentMethod: z.enum(["bank", "stripe", "both"]).optional() }).parse(d))
   .handler(async ({ data, context }) => {
     const sb = context.supabase as any;
     const uid = context.userId;
@@ -774,22 +787,6 @@ export const sendRentalInvoice = createServerFn({ method: "POST" })
     if (!booking) throw new Error("Booking not found");
     const { data: room } = await sb.from("rental_rooms").select("name").eq("id", booking.room_id).maybeSingle();
 
-    let payUrl: string | null = null;
-    const due = Number(booking.price ?? 0);
-    if (booking.payment_status !== "paid" && due > 0 && prof.stripe_connect_account_id) {
-      try {
-        payUrl = await buildRentalPaymentLink({
-          prof: { ...prof, user_id: uid },
-          booking,
-          roomName: room?.name ?? "Room",
-          amount: due,
-          origin: (await import("./safe-origin")).safeOrigin(data.origin),
-        });
-      } catch (e) {
-        console.error("[room-rental] invoice payment link failed", e);
-      }
-    }
-
     await sendRentalInvoiceEmail({
       sb,
       userId: uid,
@@ -798,7 +795,7 @@ export const sendRentalInvoice = createServerFn({ method: "POST" })
       roomName: room?.name ?? "Room",
       origin: (await import("./safe-origin")).safeOrigin(data.origin),
       message: data.message ?? null,
-      payUrl,
+      paymentMethod: data.paymentMethod,
     });
     return { ok: true };
   });

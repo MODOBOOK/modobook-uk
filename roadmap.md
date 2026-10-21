@@ -1,5 +1,10 @@
 # Mobile redesign — practitioner dashboard
 
+## Room-rental invoice options
+- [x] Offer bank transfer or Stripe on room-rental invoices
+- [x] Add editable saved details reused on future invoices
+- [x] Verify payment choices and saved details in preview — signed in as Ryan, saved existing details and reloaded; both choices available; three rule tests pass. No invoice emails sent during verification.
+
 ## System-check corrections — 20 October 2026
 - [x] Record Caitlin Finlayson's £25 deposit (Kerri Roma) against her confirmed 2 Nov booking + payment history
 - [x] Save Abbie Maley's captured card (Mastercard 7245) to her client record; cancelled booking left cancelled
