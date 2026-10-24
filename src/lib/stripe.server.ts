@@ -369,6 +369,9 @@ export async function ensureMembershipPrice(params: {
       unit_amount: Math.round(params.amountCents),
       recurring: { interval: params.interval },
       lookup_key: `membership_${params.planId}`,
+      // Move the key off the old price when the amount/interval changes,
+      // otherwise Stripe rejects the new price as a duplicate key.
+      transfer_lookup_key: true,
       nickname: params.name.slice(0, 200),
       product_data: { name: params.name.slice(0, 200) },
       metadata: { kind: "membership", plan_id: params.planId },
