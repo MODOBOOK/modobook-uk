@@ -85,6 +85,13 @@
       "when": 1792590220380,
       "tag": "0011_room_rental_invoice_payment_choice",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793286285627,
+      "tag": "0012_fix_record_appointment_payment_dedupe",
+      "breakpoints": true
     }
   ]
 }
