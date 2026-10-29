@@ -120,7 +120,7 @@ function Hero({ slug, count, page }: { slug: string; count: number; page: Traini
           {page?.eyebrow || "Academy"}
         </p>
         <h1 className="mt-2 max-w-2xl font-serif text-3xl leading-tight sm:text-5xl">
-          {page?.headline || "Training courses taught by a practising clinician"}
+          {page?.headline || "Training courses taught by a practitioner"}
         </h1>
         <p className="mt-4 max-w-xl whitespace-pre-line text-sm text-muted-foreground sm:text-base">
           {page?.intro ||

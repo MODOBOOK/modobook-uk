@@ -876,7 +876,7 @@ function TrainingPageEditor({ onClose }: { onClose: () => void }) {
             <Label>Headline</Label>
             <Input
               value={current.headline}
-              placeholder="Training courses taught by a practising clinician"
+              placeholder="Training courses taught by a practitioner"
               onChange={(e) => set({ headline: e.target.value })}
             />
           </div>
