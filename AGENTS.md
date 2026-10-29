@@ -24,3 +24,4 @@
 - Consent-form emails always go to the patient's email on file, never a caller-chosen address. Why: a caller-supplied recipient would leak signing links.
 - Course option lists filter shared descriptions per option via courseOptionDescription, and new editor options start with blank descriptions. Why: editing one option must not reveal inherited copy on its siblings; existing stored wording remains intact.
 - record_appointment_payment dedupes on the payments history (appointment + payment intent), never on appointments.stripe_payment_intent_id, and records amounts excluding passed-on Stripe fees. Why: the booking flow stores the intent before payment, which previously made every embedded card deposit skip recording.
+- Public inserts into tables visitors cannot read (e.g. training_bookings) mint the id server-side and never chain .select() after insert. Why: RETURNING needs SELECT permission, so the insert is rejected as an RLS violation.

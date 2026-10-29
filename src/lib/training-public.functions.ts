@@ -394,7 +394,11 @@ export const createTrainingBooking = createServerFn({ method: "POST" })
       appointment_end = `${data.appointment_end}:00`;
     }
 
+    // Public visitors may insert but not read training_bookings, so we mint the
+    // id here instead of asking the database to return it (RETURNING needs SELECT).
+    const bookingId = crypto.randomUUID();
     const insertPayload = {
+      id: bookingId,
       course_id: course.id,
       profile_id: course.profile_id,
       session_id: data.session_id ?? null,
@@ -412,12 +416,11 @@ export const createTrainingBooking = createServerFn({ method: "POST" })
       notes: data.notes?.trim() || null,
     };
 
-    const { data: row, error } = await supabase
+    const { error } = await supabase
       .from("training_bookings")
-      .insert(insertPayload as never)
-      .select("id")
-      .single();
+      .insert(insertPayload as never);
     if (error) throw error;
+    const row = { id: bookingId };
 
     // Fixed-date courses: put the session on the practitioner's calendar too,
     // so training shows up alongside treatments.
