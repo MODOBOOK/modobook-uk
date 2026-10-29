@@ -19,6 +19,27 @@ async function getMyProfileId(context: { supabase: any; userId: string }) {
 }
 
 /**
+ * Practitioners only have SELECT on practitioner_subscriptions (RLS), so
+ * writes through context.supabase silently no-op. Every caller here is
+ * already verified via requireSupabaseAuth + getMyProfileId, so persist
+ * through the admin client and surface real errors instead of failing silently.
+ */
+async function writeMySubscription(
+  existingId: string | null,
+  patch: Record<string, unknown>,
+  insert?: Record<string, unknown>,
+) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  if (existingId) {
+    const { error } = await supabaseAdmin.from("practitioner_subscriptions").update(patch as never).eq("id", existingId);
+    if (error) throw error;
+  } else if (insert) {
+    const { error } = await supabaseAdmin.from("practitioner_subscriptions").insert(insert as never);
+    if (error) throw error;
+  }
+}
+
+/**
  * Associates billing: the module is a flat monthly fee covering the first 5
  * associates, then every further block of 5 adds one extra seat fee.
  * Returns what should actually be charged for this clinic right now.
@@ -538,11 +559,11 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
       extra_practitioners: data.extraPractitioners ?? 0,
       cancel_at_period_end: false,
     };
-    if (existing) {
-      await context.supabase.from("practitioner_subscriptions").update(payload).eq("id", existing.id);
-    } else {
-      await context.supabase.from("practitioner_subscriptions").insert({ ...payload, status: "pending" });
-    }
+    await writeMySubscription(
+      existing?.id ?? null,
+      payload,
+      { ...payload, status: "pending" },
+    );
 
     if (!session.url) throw new Error("Stripe returned no checkout URL. Please try again.");
     return { url: session.url };
@@ -563,11 +584,11 @@ export const saveAddonSelection = createServerFn({ method: "POST" })
       extra_practitioners: Math.max(0, data.extraPractitioners | 0),
     };
     if (data.basePlanId) payload.plan_id = data.basePlanId;
-    if (existing) {
-      await context.supabase.from("practitioner_subscriptions").update(payload).eq("id", existing.id);
-    } else {
-      await context.supabase.from("practitioner_subscriptions").insert({ ...payload, profile_id: profile.id, status: "pending" });
-    }
+    await writeMySubscription(
+      existing?.id ?? null,
+      payload,
+      { ...payload, profile_id: profile.id, status: "pending" },
+    );
     return { ok: true };
   });
 
@@ -857,14 +878,11 @@ export const updateMySubscriptionItems = createServerFn({ method: "POST" })
       proration_behavior: "none",
     });
 
-    await context.supabase
-      .from("practitioner_subscriptions")
-      .update({
-        plan_id: base.id,
-        extra_locations: data.extraLocations,
-        extra_practitioners: data.extraPractitioners,
-      })
-      .eq("id", sub.id);
+    await writeMySubscription(sub.id, {
+      plan_id: base.id,
+      extra_locations: data.extraLocations,
+      extra_practitioners: data.extraPractitioners,
+    });
 
     return { ok: true };
   });
@@ -965,7 +983,7 @@ export const redeemDiscountCode = createServerFn({ method: "POST" })
       update.cancel_at_period_end = false;
       update.stripe_subscription_id = null;
     }
-    await context.supabase.from("practitioner_subscriptions").update(update as any).eq("id", sub!.id);
+    await writeMySubscription(sub!.id, update);
 
     // If this was another practitioner's referral code, record the introduction
     // so they bank their reward once this clinic starts paying.
@@ -1003,10 +1021,7 @@ export const removeDiscountCode = createServerFn({ method: "POST" })
         console.error("[removeDiscountCode] stripe error", err instanceof Error ? err.message : err);
       }
     }
-    await context.supabase
-      .from("practitioner_subscriptions")
-      .update({ discount_code_id: null } as any)
-      .eq("id", sub.id);
+    await writeMySubscription(sub.id, { discount_code_id: null });
     return { ok: true as const };
   });
 
@@ -1026,7 +1041,7 @@ export const cancelMySubscription = createServerFn({ method: "POST" })
       const stripe = getStripe();
       await stripe.subscriptions.update(sub.stripe_subscription_id, { cancel_at_period_end: true });
     }
-    await context.supabase.from("practitioner_subscriptions").update({ cancel_at_period_end: true }).eq("id", sub.id);
+    await writeMySubscription(sub.id, { cancel_at_period_end: true });
     return { ok: true };
   });
 
@@ -1045,6 +1060,6 @@ export const resumeMySubscription = createServerFn({ method: "POST" })
       const stripe = getStripe();
       await stripe.subscriptions.update(sub.stripe_subscription_id, { cancel_at_period_end: false });
     }
-    await context.supabase.from("practitioner_subscriptions").update({ cancel_at_period_end: false }).eq("id", sub.id);
+    await writeMySubscription(sub.id, { cancel_at_period_end: false });
     return { ok: true };
   });
