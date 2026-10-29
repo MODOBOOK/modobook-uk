@@ -10932,24 +10932,15 @@ export type Database = {
           read_ct: number
         }[]
       }
-      record_appointment_payment:
-        | {
-            Args: {
-              p_amount_cents: number
-              p_appointment_id: string
-              p_payment_intent: string
-            }
-            Returns: boolean
-          }
-        | {
-            Args: {
-              p_amount_cents: number
-              p_appointment_id: string
-              p_payment_intent: string
-              p_payment_method?: string
-            }
-            Returns: boolean
-          }
+      record_appointment_payment: {
+        Args: {
+          p_amount_cents: number
+          p_appointment_id: string
+          p_payment_intent: string
+          p_payment_method?: string
+        }
+        Returns: boolean
+      }
       record_platform_terms_acceptance: {
         Args: {
           p_context?: string
