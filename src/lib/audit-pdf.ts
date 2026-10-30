@@ -33,8 +33,7 @@ function hexToRgb(hex?: string | null): [number, number, number] {
 const ukDate = (d?: string | null) =>
   d ? new Date(d.length === 10 ? d + "T12:00:00" : d).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "—";
 
-export function generateAuditPdf(d: AuditPdfData): jsPDF {
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
+function renderAudit(doc: jsPDF, d: AuditPdfData, startPage: number) {
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
   const M = 44;
@@ -172,15 +171,77 @@ export function generateAuditPdf(d: AuditPdfData): jsPDF {
       ),
     );
 
-  // Footer on every page
-  const pages = doc.getNumberOfPages();
-  for (let i = 1; i <= pages; i++) {
+  // Footer on every page of this audit
+  const endPage = doc.getNumberOfPages();
+  for (let i = startPage; i <= endPage; i++) {
     doc.setPage(i);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
     doc.setTextColor(140, 140, 140);
     doc.text(`${d.clinicName || "Clinic"} · ${a.name} · Generated ${new Date().toLocaleDateString("en-GB")}`, M, H - 24);
-    doc.text(`Page ${i} of ${pages}`, W - M, H - 24, { align: "right" });
+    doc.text(`Page ${i} of ${endPage}`, W - M, H - 24, { align: "right" });
   }
+}
+
+export function generateAuditPdf(d: AuditPdfData): jsPDF {
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  renderAudit(doc, d, 1);
+  return doc;
+}
+
+export function generateAllAuditsPdf(items: AuditPdfData[]): jsPDF {
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
+  const M = 44;
+
+  // Cover page: index of every audit in the pack
+  const first = items[0];
+  const [br, bg, bb] = hexToRgb(first?.brandColor);
+  doc.setFillColor(br, bg, bb);
+  doc.rect(0, 0, W, 8, "F");
+  doc.setTextColor(br, bg, bb);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.text((first?.clinicName || "Clinic").toUpperCase(), M, 64, { charSpace: 1.5 });
+  doc.setFont("times", "italic");
+  doc.setFontSize(24);
+  doc.text("Audit record", M, 96);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(90, 90, 90);
+  doc.text(`${items.length} audit${items.length === 1 ? "" : "s"} · Generated ${new Date().toLocaleDateString("en-GB")}`, M, 116);
+
+  let y = 150;
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(20, 20, 20);
+  items.forEach((d, i) => {
+    if (y > H - 60) {
+      doc.addPage();
+      doc.setFillColor(br, bg, bb);
+      doc.rect(0, 0, W, 8, "F");
+      y = 64;
+    }
+    doc.setTextColor(br, bg, bb);
+    doc.text(`${String(i + 1).padStart(2, "0")}`, M, y);
+    doc.setTextColor(20, 20, 20);
+    doc.text(doc.splitTextToSize(d.audit.name, W - M * 2 - 150)[0] as string, M + 26, y);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(120, 120, 120);
+    doc.text(
+      `${ukDate(d.audit.conducted_on)}${d.audit.score_percent == null ? "" : ` · ${d.audit.score_percent}%`}`,
+      W - M,
+      y,
+      { align: "right" },
+    );
+    doc.setFont("helvetica", "bold");
+    y += 20;
+  });
+
+  items.forEach((d, i) => {
+    doc.addPage();
+    renderAudit(doc, d, doc.getNumberOfPages());
+  });
   return doc;
 }

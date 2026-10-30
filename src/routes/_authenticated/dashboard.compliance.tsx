@@ -629,7 +629,36 @@ function Page() {
             </Card>
           ))}
 
-          <h2 className="pt-2 text-sm font-semibold text-muted-foreground">Completed audits</h2>
+          <div className="flex items-center justify-between pt-2">
+            <h2 className="text-sm font-semibold text-muted-foreground">Completed audits</h2>
+            {!!(data?.audits ?? []).length && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const { generateAllAuditsPdf } = await import("@/lib/audit-pdf");
+                    const doc = generateAllAuditsPdf(
+                      (data?.audits ?? []).map((a: Any) => ({
+                        clinicName: data?.clinicName ?? "",
+                        brandColor: data?.brandColor ?? null,
+                        audit: a as AuditPdfData["audit"],
+                        actions: (data?.actions ?? []).filter((x: Any) => x.audit_id === a.id),
+                      })),
+                    );
+                    const safeClinic = String(data?.clinicName ?? "clinic")
+                      .replace(/[^a-z0-9]+/gi, "-")
+                      .toLowerCase();
+                    doc.save(`audits-${safeClinic}-${new Date().toISOString().slice(0, 10)}.pdf`);
+                  } catch {
+                    toast.error("Could not create the PDF");
+                  }
+                }}
+              >
+                <Download className="mr-1.5 h-4 w-4" /> Download all
+              </Button>
+            )}
+          </div>
           {!(data?.audits ?? []).length ? (
             <Empty text="No audits run yet." />
           ) : (
