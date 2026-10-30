@@ -1,3 +1,4 @@
+import type { AuditPdfData } from "@/lib/audit-pdf";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -55,6 +56,7 @@ import {
 import {
   CheckCircle2,
   ClipboardCheck,
+  Download,
   NotebookPen,
   Pencil,
   Plus,
@@ -652,6 +654,27 @@ function Page() {
                     </p>
                   </div>
                   <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          const { generateAuditPdf } = await import("@/lib/audit-pdf");
+                          const doc = generateAuditPdf({
+                            clinicName: data?.clinicName ?? "",
+                            brandColor: data?.brandColor ?? null,
+                            audit: a as AuditPdfData["audit"],
+                            actions: (data?.actions ?? []).filter((x: Any) => x.audit_id === a.id),
+                          });
+                          const safe = String(a.name).replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+                          doc.save(`audit-${safe}-${a.conducted_on}.pdf`);
+                        } catch {
+                          toast.error("Could not create the PDF");
+                        }
+                      }}
+                    >
+                      <Download className="mr-1.5 h-4 w-4" /> PDF
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"
