@@ -33,8 +33,7 @@ function hexToRgb(hex?: string | null): [number, number, number] {
 const ukDate = (d?: string | null) =>
   d ? new Date(d.length === 10 ? d + "T12:00:00" : d).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "—";
 
-export function generateAuditPdf(d: AuditPdfData): jsPDF {
-  const doc = new jsPDF({ unit: "pt", format: "a4" });
+function renderAudit(doc: jsPDF, d: AuditPdfData, startPage: number) {
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
   const M = 44;
