@@ -1,3 +1,4 @@
+import type { AuditPdfData } from "@/lib/audit-pdf";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -662,7 +663,7 @@ function Page() {
                           const doc = generateAuditPdf({
                             clinicName: data?.clinicName ?? "",
                             brandColor: data?.brandColor ?? null,
-                            audit: a,
+                            audit: a as AuditPdfData["audit"],
                             actions: (data?.actions ?? []).filter((x: Any) => x.audit_id === a.id),
                           });
                           const safe = String(a.name).replace(/[^a-z0-9]+/gi, "-").toLowerCase();
