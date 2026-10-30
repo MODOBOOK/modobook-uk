@@ -655,6 +655,27 @@ function Page() {
                     <Button
                       size="sm"
                       variant="outline"
+                      onClick={async () => {
+                        try {
+                          const { generateAuditPdf } = await import("@/lib/audit-pdf");
+                          const doc = generateAuditPdf({
+                            clinicName: data?.clinicName ?? "",
+                            brandColor: data?.brandColor ?? null,
+                            audit: a,
+                            actions: (data?.actions ?? []).filter((x: Any) => x.audit_id === a.id),
+                          });
+                          const safe = String(a.name).replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+                          doc.save(`audit-${safe}-${a.conducted_on}.pdf`);
+                        } catch {
+                          toast.error("Could not create the PDF");
+                        }
+                      }}
+                    >
+                      <Download className="mr-1.5 h-4 w-4" /> PDF
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
                       onClick={() =>
                         openAudit(
                           { id: a.template_id, name: a.name, questions: a.questions, category: null },

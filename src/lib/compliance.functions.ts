@@ -114,7 +114,7 @@ export const getCompliance = createServerFn({ method: "GET" })
     // often don't need it). When off we return empty data and never seed.
     const { data: prof } = await db
       .from("profiles")
-      .select("compliance_enabled, plan_tier")
+      .select("compliance_enabled, plan_tier, clinic_name, brand_color")
       .eq("id", a.profileId)
       .maybeSingle();
     const notInPlan = prof?.plan_tier === "solo";
@@ -193,6 +193,8 @@ export const getCompliance = createServerFn({ method: "GET" })
       audits: auditRuns.data ?? [],
       actions: actions.data ?? [],
       notes: notes.data ?? [],
+      clinicName: (prof?.clinic_name as string | null) ?? "",
+      brandColor: (prof?.brand_color as string | null) ?? null,
       today: todayIso(),
     };
   });
