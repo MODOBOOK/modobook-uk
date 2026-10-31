@@ -179,7 +179,7 @@ function renderAudit(doc: jsPDF, d: AuditPdfData, startPage: number) {
     doc.setFontSize(7.5);
     doc.setTextColor(140, 140, 140);
     doc.text(`${d.clinicName || "Clinic"} · ${a.name} · Generated ${new Date().toLocaleDateString("en-GB")}`, M, H - 24);
-    doc.text(`Page ${i} of ${endPage}`, W - M, H - 24, { align: "right" });
+    doc.text(`Page ${i - startPage + 1} of ${endPage - startPage + 1}`, W - M, H - 24, { align: "right" });
   }
 }
 
