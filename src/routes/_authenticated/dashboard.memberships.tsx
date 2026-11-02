@@ -713,6 +713,18 @@ function MembershipsPage() {
                 <p className="text-xs text-muted-foreground">
                   The patient's savings pot. Often set slightly above the price so membership feels rewarding (pay £50, get £55).
                 </p>
+                {!editing.credit_cents && editing.price_cents > 0 && (
+                  <div className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
+                    This is blank, so members' payments won't go into their pot. For a savings pot, enter the monthly price (£{(editing.price_cents / 100).toFixed(2)}) or more.{" "}
+                    <button
+                      type="button"
+                      className="underline font-medium"
+                      onClick={() => setEditing({ ...editing, credit_cents: editing.price_cents })}
+                    >
+                      Use £{(editing.price_cents / 100).toFixed(2)}
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label>What can they spend the pot on?</Label>
