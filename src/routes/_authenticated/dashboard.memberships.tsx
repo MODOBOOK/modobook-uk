@@ -252,6 +252,13 @@ function MembershipsPage() {
 
   async function handleSave() {
     if (!editing) return;
+    if (
+      !editing.credit_cents &&
+      editing.price_cents > 0 &&
+      !window.confirm(
+        "No savings-pot credit is set, so members' payments won't be added to their pot. Save anyway?",
+      )
+    ) return;
     setSaving(true);
     try {
       await saveFn({
