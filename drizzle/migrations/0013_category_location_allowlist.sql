@@ -1,0 +1,2 @@
+ALTER TABLE public.treatment_categories ADD COLUMN IF NOT EXISTS allowed_location_ids uuid[] DEFAULT NULL;
+COMMENT ON COLUMN public.treatment_categories.allowed_location_ids IS 'Optional public-menu location allowlist for the category and its offers; NULL leaves existing visibility unchanged.';
