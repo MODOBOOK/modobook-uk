@@ -63,6 +63,7 @@ import { formatPrice, BADGE_LABEL, badgeClasses, treatmentPricing, type Treatmen
 
 import { describeCancellationRules } from "@/lib/policy";
 import { modelSlotMatchesLocation, modelSlotMatchesPractitioner } from "@/lib/model-slot-location";
+import { categoryMatchesLocation } from "@/lib/category-location";
 
 
 type Treatment = Database["public"]["Tables"]["treatments"]["Row"];
@@ -733,6 +734,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
   };
   // Expired / not-yet-started / sold-out limited offers drop out of the menu
   const catWindowLive = (categoryId: string | null | undefined) => {
+    if (!categoryMatchesLocation(categoryId, locationId, categories)) return false;
     if (!categoryId) return true;
     const c = (categories as unknown as {
       id: string; is_limited?: boolean | null; limited_starts_at?: string | null; limited_ends_at?: string | null;
