@@ -9586,6 +9586,7 @@ export type Database = {
       }
       treatment_categories: {
         Row: {
+          allowed_location_ids: string[] | null
           coming_soon_at: string | null
           created_at: string
           description: string | null
@@ -9605,6 +9606,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allowed_location_ids?: string[] | null
           coming_soon_at?: string | null
           created_at?: string
           description?: string | null
@@ -9624,6 +9626,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allowed_location_ids?: string[] | null
           coming_soon_at?: string | null
           created_at?: string
           description?: string | null
