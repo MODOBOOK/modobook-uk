@@ -8,6 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+- Category public-menu location allowlists apply to the category, descendants and offers without restricting shared underlying treatments. Why: location-specific edits must not hide unrelated services.
 - Room-rental invoice payment choices are independent of booking mode and reuse profiles.invoice_* details; bank-only delivery never creates Stripe checkout. Why: saved invoice settings must stay consistent without changing how renters book.
  - Calendar appointment cards and all their descendants disable native text selection, touch callouts and browser dragging so long presses remain available for rescheduling.
  - Patient PDF leaflets use browser-only PDF.js rendering of all pages at container width rather than native iframe viewers, because mobile in-app browsers can crop documents and omit later pages.
