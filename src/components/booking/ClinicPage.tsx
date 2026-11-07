@@ -1089,7 +1089,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
         (c) => (c as { kind?: string | null }).kind !== "package" && catWindowLive(c.id),
       ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [categories, nowTs],
+    [categories, nowTs, locationId],
   );
   const { roots, uncategorised } = useMemo(
     () => buildTree(treatmentCategories, visibleTreatments),
