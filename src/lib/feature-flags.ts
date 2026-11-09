@@ -157,10 +157,9 @@ export function membershipsEnabled(slug?: string | null) {
 
 
 /**
- * Paid SMS marketing blasts — still pilot only while we finish billing checks.
- * (Transactional SMS notifications are live for everyone.)
+ * Paid SMS marketing blasts — live for everyone (empty allowlist).
  */
-export const SMS_MARKETING_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
+export const SMS_MARKETING_SLUGS: string[] = [];
 
 export function smsMarketingEnabled(slug?: string | null) {
   return isFeatureLive(SMS_MARKETING_SLUGS, slug);
