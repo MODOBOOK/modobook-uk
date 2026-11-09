@@ -35,7 +35,7 @@ function normalize(value: any): FaceMapValue {
   return {
     pins: value.pins ?? [],
     strokes: value.strokes ?? [],
-    bg: value.bg ?? "realistic",
+    bg: value.bg === "upload" ? "upload" : "realistic",
     bgUrl: value.bgUrl ?? null,
   };
 }
@@ -198,7 +198,6 @@ export function FaceMapAnnotator({
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Background:</span>
         <ToolBtn active={v.bg === "realistic"} onClick={() => setBg("realistic")} icon={<User className="h-3.5 w-3.5" />}>Realistic</ToolBtn>
-        <ToolBtn active={v.bg === "diagram"} onClick={() => setBg("diagram")} icon={<ImageIcon className="h-3.5 w-3.5" />}>Diagram</ToolBtn>
         <ToolBtn
           active={v.bg === "upload"}
           onClick={() => { if (v.bgUrl) setBg("upload"); else fileRef.current?.click(); }}
