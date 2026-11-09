@@ -99,6 +99,10 @@ function RewardsSettingsPage() {
   const [pointsPerPoundEarn, setPointsPerPoundEarn] = useState<string>("1");
   const [tiersOn, setTiersOn] = useState(false);
 
+  // Minimum booking spend for referral rewards
+  const [minSpendOn, setMinSpendOn] = useState(false);
+  const [minSpendPounds, setMinSpendPounds] = useState<string>("50");
+
   // Copy
   const [headline, setHeadline] = useState("");
   const [description, setDescription] = useState("");
@@ -135,6 +139,9 @@ function RewardsSettingsPage() {
     setEarnOn(!!s.earn_on_spend_enabled);
     setPointsPerPoundEarn(String(s.points_per_pound_earn ?? 1));
     setTiersOn(!!s.tiers_enabled);
+    const minP = Number(s.referral_min_spend_pennies ?? 0);
+    setMinSpendOn(minP > 0);
+    setMinSpendPounds(String(minP > 0 ? minP / 100 : 50));
 
     setHeadline(s.headline ?? "");
     setDescription(s.description ?? "");
@@ -153,6 +160,11 @@ function RewardsSettingsPage() {
   const friendCreditPercent = friendOn && friendKind === "percent"
     ? Math.max(0, Math.min(100, Math.floor(Number(friendPercent || 0))))
     : 0;
+
+  const minSpendPennies = minSpendOn
+    ? Math.max(0, Math.round(Number(minSpendPounds || 0) * 100))
+    : 0;
+  const minSpendNote = minSpendPennies > 0 ? ` over ${fmtGBP(minSpendPennies)}` : "";
 
   const nothingOn = !creditOn && !pointsOn && !friendOn && !redeemOn && !earnOn && !tiersOn;
 
@@ -179,6 +191,7 @@ function RewardsSettingsPage() {
           earn_on_spend_enabled: earnOn,
           points_per_pound_earn: Math.max(0, Number(pointsPerPoundEarn || 1)),
           tiers_enabled: tiersOn,
+          referral_min_spend_pennies: minSpendPennies,
           headline: headline.trim() || null,
           description: description.trim() || null,
         },
@@ -361,6 +374,27 @@ function RewardsSettingsPage() {
               )}
             </div>
           </RewardRow>
+
+          <RewardRow
+            icon={<ShoppingBag className="h-5 w-5" />}
+            title="Minimum spend"
+            hint="The friend's first booking must reach this amount for referral rewards to apply."
+            on={minSpendOn}
+            setOn={setMinSpendOn}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">£</span>
+              <Input
+                type="number"
+                min="0"
+                step="1"
+                className="w-24"
+                value={minSpendPounds}
+                onChange={(e) => setMinSpendPounds(e.target.value)}
+                disabled={!minSpendOn}
+              />
+            </div>
+          </RewardRow>
         </section>
 
         <section className="space-y-3">
@@ -485,10 +519,10 @@ function RewardsSettingsPage() {
               <li>• You earn <strong>{referrerPoints} points</strong> per successful referral</li>
             )}
             {friendOn && friendKind === "pennies" && friendCreditPennies > 0 && (
-              <li>• Your friend gets <strong>{fmtGBP(friendCreditPennies)} off</strong> their first booking</li>
+              <li>• Your friend gets <strong>{fmtGBP(friendCreditPennies)} off</strong> their first booking{minSpendNote}</li>
             )}
             {friendOn && friendKind === "percent" && friendCreditPercent > 0 && (
-              <li>• Your friend gets <strong>{friendCreditPercent}% off</strong> their first booking</li>
+              <li>• Your friend gets <strong>{friendCreditPercent}% off</strong> their first booking{minSpendNote}</li>
             )}
             {earnOn && (
               <li>• Earn <strong>{pointsPerPoundEarn} points</strong> for every £1 spent</li>

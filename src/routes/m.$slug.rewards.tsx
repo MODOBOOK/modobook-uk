@@ -37,10 +37,12 @@ function describeReferrerReward(s: any): string | null {
 
 function describeFriendReward(s: any): string | null {
   if (!s) return null;
+  const min = Number(s.referral_min_spend_pennies ?? 0);
+  const note = min > 0 ? ` over ${fmtGBP(min)}` : "";
   if (s.friend_credit_kind === "percent" && s.friend_credit_percent > 0)
-    return `${s.friend_credit_percent}% off their first booking`;
+    return `${s.friend_credit_percent}% off their first booking${note}`;
   if (s.friend_credit_pennies > 0)
-    return `${fmtGBP(s.friend_credit_pennies)} off their first booking`;
+    return `${fmtGBP(s.friend_credit_pennies)} off their first booking${note}`;
   return null;
 }
 

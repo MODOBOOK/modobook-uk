@@ -49,6 +49,7 @@ const SaveSchema = z.object({
   earn_on_spend_enabled: z.boolean().default(false),
   points_per_pound_earn: z.number().min(0).max(1000).default(1),
   tiers_enabled: z.boolean().default(false),
+  referral_min_spend_pennies: z.number().int().min(0).max(10_000_000).default(0),
   headline: z.string().trim().max(120).nullable().optional(),
   description: z.string().trim().max(600).nullable().optional(),
 });
@@ -77,6 +78,7 @@ export const saveReferralSettings = createServerFn({ method: "POST" })
           earn_on_spend_enabled: data.earn_on_spend_enabled,
           points_per_pound_earn: data.points_per_pound_earn,
           tiers_enabled: data.tiers_enabled,
+          referral_min_spend_pennies: data.referral_min_spend_pennies,
           trigger_event: "completed_paid",
           max_rewarded_per_year: null,
           headline: data.headline ?? null,
@@ -213,10 +215,24 @@ export const linkReferralToAppointment = createServerFn({ method: "POST" })
     // Load appointment for reward context
     const { data: appt } = await supabase
       .from("appointments")
-      .select("id, profile_id, patient_email, patient_user_id")
+      .select("id, profile_id, patient_email, patient_user_id, total_amount")
       .eq("id", data.appointmentId)
       .maybeSingle();
     if (!appt) return { ok: false, reason: "no_appointment" };
+
+    // Minimum booking spend for referrals (0 = no minimum).
+    {
+      const { data: minRow } = await supabase
+        .from("clinic_referral_settings")
+        .select("referral_min_spend_pennies")
+        .eq("clinic_profile_id", codeRow.clinic_profile_id)
+        .maybeSingle();
+      const minPennies = Number((minRow as any)?.referral_min_spend_pennies ?? 0);
+      const totalPennies = Math.round(Number((appt as any).total_amount ?? 0) * 100);
+      if (minPennies > 0 && totalPennies < minPennies) {
+        return { ok: false, reason: "below_min_spend" };
+      }
+    }
 
     // A referral code only works at the clinic the referrer is registered with.
     const { data: apptClinic } = await supabase
