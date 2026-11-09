@@ -40,7 +40,7 @@ type GiftCard = {
   id: string;
   name: string;
   description: string | null;
-  kind: "value" | "treatment" | "package";
+  kind: "value" | "treatment" | "package" | "custom";
   amount: number | null;
   price: number | null;
   treatment_id: string | null;
@@ -110,9 +110,9 @@ function GiftCardsPage() {
                     <div className="font-semibold">{c.name}</div>
                     {!c.active && <Badge variant="secondary">Hidden</Badge>}
                     <Badge variant="outline">
-                      {c.kind === "value" ? `£${Number(c.amount ?? 0).toFixed(2)}` : c.kind === "treatment" ? "Treatment" : "Package"}
+                      {c.kind === "value" ? `£${Number(c.amount ?? 0).toFixed(2)}` : c.kind === "custom" ? (Number(c.amount ?? 0) > 0 ? `Custom · min £${Number(c.amount).toFixed(2)}` : "Custom amount") : c.kind === "treatment" ? "Treatment" : "Package"}
                     </Badge>
-                    {c.price != null && Number(c.price) > 0 && Number(c.price) !== Number(c.amount ?? 0) && (
+                    {c.kind !== "custom" && c.price != null && Number(c.price) > 0 && Number(c.price) !== Number(c.amount ?? 0) && (
                       <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Sells for £{Number(c.price).toFixed(2)}</Badge>
                     )}
                     {c.expires_months && <Badge variant="outline">Expires {c.expires_months}m</Badge>}
@@ -190,7 +190,9 @@ function GiftCardDialog({
       // For value cards the amount comes from the amount field. For treatment/package
       // cards we save the price override (blank = mirror the treatment/package price).
       const savedAmount =
-        form.kind === "value"
+        form.kind === "custom"
+          ? (form.amount.trim() === "" ? null : Number(form.amount))
+          : form.kind === "value"
           ? Number(form.amount)
           : form.amount.trim() === ""
             ? null
@@ -202,7 +204,7 @@ function GiftCardDialog({
           description: form.description || null,
           kind: form.kind,
           amount: savedAmount,
-          price: form.price.trim() === "" ? null : Number(form.price),
+          price: form.kind === "custom" || form.price.trim() === "" ? null : Number(form.price),
           treatment_ids: form.kind === "treatment" ? form.treatment_ids : [],
           package_ids: form.kind === "package" ? form.package_ids : [],
           image_url: form.image_url || null,
@@ -235,6 +237,7 @@ function GiftCardDialog({
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="value">Monetary value (£)</SelectItem>
+                <SelectItem value="custom">Custom amount (buyer chooses)</SelectItem>
                 <SelectItem value="treatment">Specific treatment</SelectItem>
                 <SelectItem value="package">Specific package</SelectItem>
               </SelectContent>
@@ -247,7 +250,14 @@ function GiftCardDialog({
               <p className="mt-1 text-xs text-muted-foreground">The credit the recipient can spend with you.</p>
             </div>
           )}
-          <SalePrice form={form} setForm={setForm} faceValue={form.kind === "value" ? Number(form.amount || 0) : (form.amount.trim() !== "" ? Number(form.amount) : mirroredTotal)} />
+          {form.kind === "custom" && (
+            <div>
+              <Label>Minimum amount (£) — optional</Label>
+              <Input type="number" min="0" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="e.g. 20" />
+              <p className="mt-1 text-xs text-muted-foreground">Buyers type any amount they like (at or above this minimum) and pay exactly that.</p>
+            </div>
+          )}
+          {form.kind !== "custom" && <SalePrice form={form} setForm={setForm} faceValue={form.kind === "value" ? Number(form.amount || 0) : (form.amount.trim() !== "" ? Number(form.amount) : mirroredTotal)} />}
           {form.kind === "treatment" && (
             <div className="space-y-2">
               <Label>Treatments (select one or more)</Label>
@@ -383,6 +393,7 @@ function IssueDialog({ card, onClose, onIssued }: { card: GiftCard; onClose: () 
 
   async function submit() {
     if (!form.recipient_name || !form.recipient_email) return toast.error("Recipient name and email required");
+    if (card.kind === "custom" && !(Number(form.custom_amount) > 0)) return toast.error("Enter the amount to load");
     setBusy(true);
     try {
       const custom = form.custom_amount.trim() === "" ? null : Number(form.custom_amount);
@@ -393,7 +404,7 @@ function IssueDialog({ card, onClose, onIssued }: { card: GiftCard; onClose: () 
         buyer_name: form.buyer_name || undefined,
         message: form.message || undefined,
         send_now: form.send_now,
-        custom_amount: card.kind === "value" ? custom : null,
+        custom_amount: card.kind === "value" || card.kind === "custom" ? custom : null,
       } });
       toast.success(`Issued · code ${res.code}`);
       onIssued();
@@ -417,7 +428,7 @@ function IssueDialog({ card, onClose, onIssued }: { card: GiftCard; onClose: () 
             <div><Label>Recipient email</Label><Input type="email" value={form.recipient_email} onChange={(e) => setForm({ ...form, recipient_email: e.target.value })} /></div>
           </div>
           <div><Label>From (optional)</Label><Input value={form.buyer_name} onChange={(e) => setForm({ ...form, buyer_name: e.target.value })} placeholder="e.g. Nurse Ryan / The Clinic Team" /></div>
-          {card.kind === "value" && (
+          {(card.kind === "value" || card.kind === "custom") && (
             <div>
               <Label>Amount to load (£)</Label>
               <Input

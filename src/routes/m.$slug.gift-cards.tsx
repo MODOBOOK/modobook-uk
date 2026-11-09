@@ -23,7 +23,7 @@ export const Route = createFileRoute("/m/$slug/gift-cards")({
   component: PublicGiftCards,
 });
 
-type Card = { id: string; name: string; description: string | null; kind: "value" | "treatment" | "package"; amount: number | null; price: number | null; image_url: string | null };
+type Card = { id: string; name: string; description: string | null; kind: "value" | "treatment" | "package" | "custom"; amount: number | null; price: number | null; image_url: string | null };
 
 function PublicGiftCards() {
   const { slug } = useParams({ from: "/m/$slug/gift-cards" });
@@ -61,6 +61,11 @@ function PublicGiftCards() {
             <CardContent className="space-y-2 p-4">
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-semibold">{c.name}</h3>
+                {c.kind === "custom" && (
+                  <span className="shrink-0 rounded-full bg-black/5 px-2 py-0.5 text-sm font-semibold">
+                    {Number(c.amount ?? 0) > 0 ? `From £${Number(c.amount).toFixed(2)}` : "Any amount"}
+                  </span>
+                )}
                 {c.kind === "value" && c.amount != null && (
                   <span className="flex shrink-0 items-baseline gap-1.5 rounded-full bg-black/5 px-2 py-0.5 text-sm font-semibold">
                     {c.price != null && Number(c.price) > 0 && Number(c.price) < Number(c.amount) && (
@@ -95,11 +100,20 @@ function BuyDialog({ card, slug, onClose }: { card: Card; slug: string; onClose:
     recipient_name: "", recipient_email: "",
     message: "", delivery: "recipient" as "buyer" | "recipient",
   });
+  const isCustom = card.kind === "custom";
+  const minAmount = Number(card.amount ?? 0);
+  const [customAmount, setCustomAmount] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function submit() {
     if (!form.buyer_name || !form.buyer_email) return toast.error("Your name and email are required");
     if (!form.recipient_name || !form.recipient_email) return toast.error("Recipient name and email are required");
+    const chosen = Number(customAmount);
+    if (isCustom) {
+      if (!(chosen > 0)) return toast.error("Please enter a gift card amount");
+      if (minAmount > 0 && chosen < minAmount) return toast.error(`The minimum amount is £${minAmount.toFixed(2)}`);
+      if (chosen > 5000) return toast.error("The maximum amount is £5,000");
+    }
     setBusy(true);
     try {
       const res = await buy({
@@ -107,6 +121,7 @@ function BuyDialog({ card, slug, onClose }: { card: Card; slug: string; onClose:
           slug,
           gift_card_id: card.id,
           ...form,
+          ...(isCustom ? { custom_amount: Math.round(chosen * 100) / 100 } : {}),
           return_origin: window.location.origin,
         },
       });
@@ -122,6 +137,13 @@ function BuyDialog({ card, slug, onClose }: { card: Card; slug: string; onClose:
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-md">
         <DialogHeader><DialogTitle>Buy "{card.name}"</DialogTitle></DialogHeader>
         <div className="space-y-3">
+          {isCustom && (
+            <div>
+              <Label>Gift card amount (£)</Label>
+              <Input type="number" inputMode="decimal" min={minAmount > 0 ? minAmount : 1} step="0.01" value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} placeholder={minAmount > 0 ? `Minimum £${minAmount.toFixed(2)}` : "e.g. 75"} />
+              {Number(customAmount) > 0 && <p className="mt-1 text-xs opacity-70">You'll pay £{Number(customAmount).toFixed(2)}</p>}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div><Label>Your name</Label><Input value={form.buyer_name} onChange={(e) => setForm({ ...form, buyer_name: e.target.value })} /></div>
             <div><Label>Your email</Label><Input type="email" value={form.buyer_email} onChange={(e) => setForm({ ...form, buyer_email: e.target.value })} /></div>

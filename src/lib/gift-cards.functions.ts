@@ -28,7 +28,7 @@ const upsertSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().min(1).max(120),
   description: z.string().max(2000).nullable().optional(),
-  kind: z.enum(["value", "treatment", "package"]),
+  kind: z.enum(["value", "treatment", "package", "custom"]),
   amount: z.number().nonnegative().nullable().optional(),
   /** What the buyer pays. Null = same as the card value (no discount). */
   price: z.number().nonnegative().nullable().optional(),
@@ -128,6 +128,9 @@ export const issueGiftCardManually = createServerFn({ method: "POST" })
 
     const baseAmount = card.kind === "value" ? Number(card.amount ?? 0) : 0;
     const amount = data.custom_amount != null ? Number(data.custom_amount) : baseAmount;
+    if (card.kind === "custom" && !(amount > 0)) throw new Error("Enter an amount for this gift card");
+    // Custom-amount cards behave exactly like a monetary card once issued.
+    const purchaseKind = card.kind === "custom" ? "value" : card.kind;
     const expiresAt = card.expires_months
       ? new Date(Date.now() + card.expires_months * 30 * 24 * 3600 * 1000).toISOString()
       : null;
@@ -150,7 +153,7 @@ export const issueGiftCardManually = createServerFn({ method: "POST" })
         profile_id: context.userId,
         gift_card_id: card.id,
         code,
-        kind: card.kind,
+        kind: purchaseKind,
         treatment_id: card.treatment_id,
         package_id: card.package_id,
         treatment_ids: card.treatment_ids ?? [],
@@ -181,7 +184,7 @@ export const issueGiftCardManually = createServerFn({ method: "POST" })
             recipientName: data.recipient_name,
             code,
             cardName: card.name,
-            amount: card.kind === "value" ? amount : null,
+            amount: purchaseKind === "value" ? amount : null,
             expiresAt,
             message: data.message ?? null,
             buyerName: data.buyer_name ?? null,
@@ -231,6 +234,8 @@ const purchaseSchema = z.object({
   message: z.string().max(1000).optional(),
   delivery: z.enum(["buyer", "recipient"]),
   return_origin: z.string().url(),
+  /** Buyer-chosen value, only for "custom" cards. */
+  custom_amount: z.number().positive().max(5000).optional(),
 });
 
 /**
@@ -279,11 +284,19 @@ export const purchaseGiftCard = createServerFn({ method: "POST" })
         .from("packages").select("price").in("id", pIds);
       amount = (rows ?? []).reduce((s, r) => s + Number(r.price ?? 0), 0);
     }
+    if (card.kind === "custom") {
+      const min = Number(card.amount ?? 0);
+      const chosen = Math.round(Number(data.custom_amount ?? 0) * 100) / 100;
+      if (!(chosen > 0)) throw new Error("Please enter a gift card amount");
+      if (min > 0 && chosen < min) throw new Error(`The minimum amount is £${min.toFixed(2)}`);
+      amount = chosen;
+    }
     if (!amount || amount <= 0) throw new Error("Gift card price is not set");
 
     // What the buyer actually pays. A lower sale price than the card value is a
-    // discount (e.g. pay £80, get £100 of credit).
-    const chargeAmount = card.price != null && Number(card.price) > 0 ? Number(card.price) : amount;
+    // discount (e.g. pay £80, get £100 of credit). Custom cards always charge the chosen value.
+    const chargeAmount = card.kind !== "custom" && card.price != null && Number(card.price) > 0 ? Number(card.price) : amount;
+    const purchaseKind = card.kind === "custom" ? "value" : card.kind;
 
     const expiresAt = card.expires_months
       ? new Date(Date.now() + card.expires_months * 30 * 24 * 3600 * 1000).toISOString()
@@ -296,7 +309,7 @@ export const purchaseGiftCard = createServerFn({ method: "POST" })
         profile_id: prof.user_id,
         gift_card_id: card.id,
         code,
-        kind: card.kind,
+        kind: purchaseKind,
         treatment_id: tIds[0] ?? null,
         package_id: pIds[0] ?? null,
         treatment_ids: tIds,
