@@ -228,7 +228,7 @@ function DashboardLayout() {
                 <p className="text-sm font-bold leading-tight">Give &amp; get back</p>
               </div>
               <p className="mt-2 text-xs leading-snug text-primary-foreground/90">
-                Refer a fellow practitioner to MODO — they save 25%, you earn 50% off a month.
+                Refer a fellow practitioner to MODO — they save 25%, you get a month free.
               </p>
               <p className="mt-2 text-[11px] font-semibold underline underline-offset-2">Share your code →</p>
             </Link>

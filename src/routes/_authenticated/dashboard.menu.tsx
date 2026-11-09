@@ -205,7 +205,7 @@ function MenuPage() {
                 <div className="min-w-0 flex-1">
                   <p className="text-lg font-extrabold leading-tight">Give &amp; get back</p>
                   <p className="mt-0.5 text-xs leading-snug text-primary-foreground/90">
-                    Refer a fellow practitioner to MODO — they get 25% off for 3 months, you earn 50% off a month for every referral.
+                    Refer a fellow practitioner to MODO — they get 25% off 3 months after their trial, you get a free month for every referral.
                   </p>
                 </div>
                 <ChevronRight className="h-5 w-5 shrink-0" />

@@ -173,7 +173,7 @@ function AuthPage() {
                   autoComplete="off"
                 />
                 {referralCode.trim() && (
-                  <p className="text-xs text-primary">Referred — 25% off your first 3 paid months will apply automatically.</p>
+                  <p className="text-xs text-primary">Referred — 25% off your 3 months after the free trial will apply automatically.</p>
                 )}
               </div>
               <label className="flex items-start gap-3 rounded-xl border p-3 text-xs leading-relaxed" style={{ borderColor: "var(--hairline)", background: "var(--paper)" }}>

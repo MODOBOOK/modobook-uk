@@ -71,9 +71,9 @@ function ReferralsPage() {
       <div>
         <h1 className="text-2xl font-semibold">Refer a practitioner</h1>
         <p className="text-sm text-muted-foreground">
-          Share your code with another practitioner. They get 25% off their first 3 months, and once
-          they start paying you get 50% off one month — one rewarded month for every practitioner you
-          bring in.
+          Share your code with another practitioner. After their free trial month they get 25% off their
+          next 3 months, and once they've completed their first paid month you get a whole month of
+          MODO free — one free month for every practitioner you bring in.
         </p>
       </div>
 
@@ -99,8 +99,8 @@ function ReferralsPage() {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              They enter this on their Plan &amp; billing page when they join. It only counts once
-              they start paying for MODO.
+              They enter this on their Plan &amp; billing page when they join. It counts once they've
+              completed their first paid month of MODO.
             </p>
           </CardContent>
         </Card>
@@ -116,7 +116,7 @@ function ReferralsPage() {
             </p>
             <p className="flex items-center gap-2">
               <Gift className="h-4 w-4 text-muted-foreground" />
-              {data?.rewardMonthsRemaining ?? 0} half-price {(data?.rewardMonthsRemaining ?? 0) === 1 ? "month" : "months"} banked
+              {data?.rewardMonthsRemaining ?? 0} free {(data?.rewardMonthsRemaining ?? 0) === 1 ? "month" : "months"} banked
             </p>
             <p className="text-xs text-muted-foreground">
               Earned in total: {data?.rewardMonthsEarned ?? 0}
@@ -143,7 +143,7 @@ function ReferralsPage() {
                     </p>
                   </div>
                   <Badge variant={s.status === "qualified" ? "default" : "secondary"}>
-                    {s.status === "qualified" ? "Reward earned" : "Awaiting first payment"}
+                    {s.status === "qualified" ? "Reward earned" : "Awaiting first full paid month"}
                   </Badge>
                 </li>
               ))}
