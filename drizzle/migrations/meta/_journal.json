@@ -99,6 +99,13 @@
       "when": 1794052267802,
       "tag": "0013_category_location_allowlist",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1794259069901,
+      "tag": "0014_gift_card_custom_kind",
+      "breakpoints": true
     }
   ]
 }
