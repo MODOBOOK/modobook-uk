@@ -37,7 +37,7 @@ export function FaceMapView({
   const v: FaceMapValue = {
     pins: value.pins ?? [],
     strokes: value.strokes ?? [],
-    bg: value.bg ?? "realistic",
+    bg: value.bg === "upload" ? "upload" : "realistic",
     bgUrl: value.bgUrl ?? null,
   };
   if (v.pins.length === 0 && v.strokes.length === 0) return null;
