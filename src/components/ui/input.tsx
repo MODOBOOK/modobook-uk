@@ -2,21 +2,17 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+const ZERO_RE = /^-?0+(\.0+)?$/;
+
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, onFocus, onClick, onTouchEnd, ...props }, ref) => {
-    const clearIfZero = (el: HTMLInputElement) => {
-      if (type !== "number") return;
-      const v = el.value;
-      if (v === "0" || v === "0.00" || v === "0.0" || /^0+(\.0+)?$/.test(v)) {
-        // Clear the 0 so typing replaces it on all devices (mobile/iPad/desktop).
-        // Use the native setter so React's controlled value updates correctly.
-        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
-        setter?.call(el, "");
-        el.dispatchEvent(new Event("input", { bubbles: true }));
-      } else {
-        try { el.select(); } catch { /* noop */ }
-      }
-    };
+  ({ className, type, onFocus, onBlur, onChange, value, ...props }, ref) => {
+    // For number fields, keep what the user is typing locally while focused so
+    // parents that coerce "" -> 0 can't snap a zero back into the box.
+    const [draft, setDraft] = React.useState<string | null>(null);
+    const isNumber = type === "number";
+
+    const shown = isNumber && draft !== null ? draft : value;
+
     return (
       <input
         type={type}
@@ -25,9 +21,35 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className,
         )}
         ref={ref}
-        onFocus={(e) => { clearIfZero(e.currentTarget); onFocus?.(e); }}
-        onClick={(e) => { clearIfZero(e.currentTarget); onClick?.(e); }}
-        onTouchEnd={(e) => { clearIfZero(e.currentTarget); onTouchEnd?.(e); }}
+        {...(value !== undefined ? { value: shown ?? "" } : {})}
+        onFocus={(e) => {
+          if (isNumber) {
+            const v = e.currentTarget.value;
+            if (ZERO_RE.test(v)) setDraft("");
+            else {
+              setDraft(v);
+              const el = e.currentTarget;
+              requestAnimationFrame(() => { try { el.select(); } catch { /* noop */ } });
+            }
+          }
+          onFocus?.(e);
+        }}
+        onChange={(e) => {
+          if (isNumber) {
+            let v = e.currentTarget.value;
+            // Strip leading zeros like "05" -> "5" (keep "0.5").
+            if (/^-?0\d/.test(v)) {
+              v = v.replace(/^(-?)0+(?=\d)/, "$1");
+              e.currentTarget.value = v;
+            }
+            setDraft(v);
+          }
+          onChange?.(e);
+        }}
+        onBlur={(e) => {
+          if (isNumber) setDraft(null);
+          onBlur?.(e);
+        }}
         {...props}
       />
     );
