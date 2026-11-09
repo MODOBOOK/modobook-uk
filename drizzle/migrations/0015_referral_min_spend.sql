@@ -1,0 +1,1 @@
+ALTER TABLE public.clinic_referral_settings ADD COLUMN IF NOT EXISTS referral_min_spend_pennies integer NOT NULL DEFAULT 0;

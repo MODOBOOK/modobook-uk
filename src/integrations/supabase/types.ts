@@ -2321,6 +2321,7 @@ export type Database = {
           points_per_pound_earn: number
           points_per_pound_redeem: number
           points_redemption_enabled: boolean
+          referral_min_spend_pennies: number
           referrer_credit_kind: string
           referrer_credit_pennies: number
           referrer_credit_percent: number
@@ -2344,6 +2345,7 @@ export type Database = {
           points_per_pound_earn?: number
           points_per_pound_redeem?: number
           points_redemption_enabled?: boolean
+          referral_min_spend_pennies?: number
           referrer_credit_kind?: string
           referrer_credit_pennies?: number
           referrer_credit_percent?: number
@@ -2367,6 +2369,7 @@ export type Database = {
           points_per_pound_earn?: number
           points_per_pound_redeem?: number
           points_redemption_enabled?: boolean
+          referral_min_spend_pennies?: number
           referrer_credit_kind?: string
           referrer_credit_pennies?: number
           referrer_credit_percent?: number
