@@ -505,8 +505,14 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
         .eq("id", (existing as any).discount_code_id)
         .maybeSingle();
       if (full) {
-        const { ensureStripeCoupon } = await import("./discount-codes.server");
-        redeemedCouponId = await ensureStripeCoupon(full as any);
+        const rr = await import("./referral-rewards.server");
+        if (await rr.isReferralDiscountCode((full as any).id)) {
+          // Referral: 25% for 3 paid months after the trial (removed by webhook).
+          redeemedCouponId = await rr.ensureJoinerCoupon().catch(() => null);
+        } else {
+          const { ensureStripeCoupon } = await import("./discount-codes.server");
+          redeemedCouponId = await ensureStripeCoupon(full as any);
+        }
       }
     }
 
@@ -962,8 +968,10 @@ export const redeemDiscountCode = createServerFn({ method: "POST" })
             prorate: false,
           } as any);
         } else if (full) {
-          const { ensureStripeCoupon } = await import("./discount-codes.server");
-          const couponId = await ensureStripeCoupon(full as any);
+          const rr = await import("./referral-rewards.server");
+          const couponId = (await rr.isReferralDiscountCode((full as any).id))
+            ? await rr.ensureJoinerCoupon()
+            : await (await import("./discount-codes.server")).ensureStripeCoupon(full as any);
           if (couponId) {
             await stripe.subscriptions.update(sub!.stripe_subscription_id, {
               discounts: [{ coupon: couponId }],

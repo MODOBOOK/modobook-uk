@@ -6591,6 +6591,8 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          joiner_discount_ended_at: string | null
+          paid_invoice_ids: string[]
           qualified_at: string | null
           referral_code_id: string
           referred_profile_id: string
@@ -6601,6 +6603,8 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          joiner_discount_ended_at?: string | null
+          paid_invoice_ids?: string[]
           qualified_at?: string | null
           referral_code_id: string
           referred_profile_id: string
@@ -6611,6 +6615,8 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          joiner_discount_ended_at?: string | null
+          paid_invoice_ids?: string[]
           qualified_at?: string | null
           referral_code_id?: string
           referred_profile_id?: string

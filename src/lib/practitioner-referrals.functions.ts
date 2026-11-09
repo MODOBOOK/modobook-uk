@@ -5,12 +5,12 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * Practitioner-to-practitioner referrals.
  *
  * Each practitioner gets one personal code. A new practitioner who redeems it
- * on Plan & billing gets 25% off their first 3 months; once they start paying,
- * the referrer banks one month at 50% off (one banked month per referral).
+ * on Plan & billing gets 25% off their 3 paid months after the trial; once they
+ * complete their first paid month, the referrer gets one free month.
  */
 
-const JOINER_DISCOUNT_LABEL = "25% off their first 3 months";
-const REFERRER_REWARD_LABEL = "50% off one month of your MODO plan";
+const JOINER_DISCOUNT_LABEL = "25% off their 3 months after the free trial";
+const REFERRER_REWARD_LABEL = "1 free month of your MODO plan";
 
 async function myProfile(context: { supabase: any; userId: string }) {
   const { data, error } = await context.supabase
