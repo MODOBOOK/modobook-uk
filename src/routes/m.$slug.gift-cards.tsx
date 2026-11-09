@@ -137,6 +137,13 @@ function BuyDialog({ card, slug, onClose }: { card: Card; slug: string; onClose:
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-md">
         <DialogHeader><DialogTitle>Buy "{card.name}"</DialogTitle></DialogHeader>
         <div className="space-y-3">
+          {isCustom && (
+            <div>
+              <Label>Gift card amount (£)</Label>
+              <Input type="number" inputMode="decimal" min={minAmount > 0 ? minAmount : 1} step="0.01" value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} placeholder={minAmount > 0 ? `Minimum £${minAmount.toFixed(2)}` : "e.g. 75"} />
+              {Number(customAmount) > 0 && <p className="mt-1 text-xs opacity-70">You'll pay £{Number(customAmount).toFixed(2)}</p>}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div><Label>Your name</Label><Input value={form.buyer_name} onChange={(e) => setForm({ ...form, buyer_name: e.target.value })} /></div>
             <div><Label>Your email</Label><Input type="email" value={form.buyer_email} onChange={(e) => setForm({ ...form, buyer_email: e.target.value })} /></div>
