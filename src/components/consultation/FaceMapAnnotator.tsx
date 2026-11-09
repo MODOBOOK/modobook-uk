@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { MousePointer2, Pencil, Eraser, Undo2, Trash2, Upload, ImageIcon, User, Zap, X } from "lucide-react";
-import { AESTHETIC_PRODUCTS, getProductsForCategory } from "@/lib/aesthetic-products";
+import { AESTHETIC_PRODUCTS, getProductsForCategory, saveCustomProduct } from "@/lib/aesthetic-products";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -411,8 +411,16 @@ function PinDialog({ open, initial, onClose, onSave }: {
               <SelectTrigger><SelectValue placeholder="Select product…" /></SelectTrigger>
               <SelectContent className="max-h-64">
                 {products.map((p) => (<SelectItem key={p} value={p}>{p}</SelectItem>))}
+                {product && !products.includes(product) && (
+                  <SelectItem value={product}>{product}</SelectItem>
+                )}
               </SelectContent>
             </Select>
+            <Input
+              placeholder="Or enter custom product"
+              value={products.includes(product) ? "" : product}
+              onChange={(e) => setProduct(e.target.value)}
+            />
           </div>
           <div className="space-y-2">
             <Label className="text-xs">Amount per dot</Label>
@@ -444,8 +452,12 @@ function PinDialog({ open, initial, onClose, onSave }: {
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button
-            onClick={() => onSave({ category, product: product || undefined, amount: amount || undefined, label: product || undefined })}
-            disabled={!product && !amount}
+            onClick={() => {
+              const name = product.trim();
+              if (name && !products.includes(name)) saveCustomProduct(category, name);
+              onSave({ category, product: name || undefined, amount: amount || undefined, label: name || undefined });
+            }}
+            disabled={!product.trim() && !amount}
           >Save tag</Button>
         </DialogFooter>
       </DialogContent>
