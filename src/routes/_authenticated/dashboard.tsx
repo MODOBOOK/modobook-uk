@@ -456,10 +456,13 @@ function DashboardLayout() {
           </div>
           <div className="flex items-center gap-2">
             <NotificationsBell />
-            <Link to="/dashboard/bookings" aria-label="Calendar" title="Calendar">
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <CalendarDays className="h-5 w-5" />
-              </Button>
+            <Link
+              to="/dashboard/bookings"
+              aria-label="Calendar"
+              title="Calendar"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border-2 border-primary/30 bg-primary text-primary-foreground shadow-sm transition hover:bg-primary/90"
+            >
+              <CalendarDays className="h-5 w-5" />
             </Link>
             {isPrescriber && (
               <Link to="/prescriber"><Button variant="ghost" size="sm" className="rounded-full">Prescriber view</Button></Link>
