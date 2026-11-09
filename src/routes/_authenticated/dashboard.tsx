@@ -456,10 +456,9 @@ function DashboardLayout() {
           </div>
           <div className="flex items-center gap-2">
             <NotificationsBell />
-            <Link to="/dashboard/bookings">
-              <Button variant="outline" size="sm" className="rounded-full px-4">
-                <CalendarDays className="mr-2 h-4 w-4" />
-                Calendar
+            <Link to="/dashboard/bookings" aria-label="Calendar" title="Calendar">
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <CalendarDays className="h-5 w-5" />
               </Button>
             </Link>
             {isPrescriber && (
