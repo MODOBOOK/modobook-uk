@@ -346,7 +346,7 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
     staleTime: 60_000,
   });
   const giftCards = (giftCardsQuery.data?.cards ?? []) as Array<{
-    id: string; name: string; description: string | null; kind: "value" | "treatment" | "package";
+    id: string; name: string; description: string | null; kind: "value" | "treatment" | "package" | "custom";
     amount: number | null; image_url: string | null;
   }>;
   const hasGiftCards = giftCards.length > 0;
@@ -2791,6 +2791,9 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
                           <CardContent className="space-y-2 p-4">
                             <div className="flex items-start justify-between gap-2">
                               <h3 className="font-semibold">{c.name}</h3>
+                              {c.kind === "custom" && (
+                                <span className="shrink-0 text-sm font-semibold">{Number(c.amount ?? 0) > 0 ? `From £${Number(c.amount).toFixed(2)}` : "Any amount"}</span>
+                              )}
                               {c.kind === "value" && c.amount != null && (
                                 <span className="shrink-0 rounded-full bg-black/5 px-2 py-0.5 text-sm font-semibold">
                                   £{Number(c.amount).toFixed(2)}
