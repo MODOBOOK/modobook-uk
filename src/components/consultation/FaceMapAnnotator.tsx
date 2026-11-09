@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { MousePointer2, Pencil, Eraser, Undo2, Trash2, Upload, ImageIcon, User, Zap, X } from "lucide-react";
-import { AESTHETIC_PRODUCTS, getProductsForCategory } from "@/lib/aesthetic-products";
+import { AESTHETIC_PRODUCTS, getProductsForCategory, saveCustomProduct } from "@/lib/aesthetic-products";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -457,8 +457,7 @@ function PinDialog({ open, initial, onClose, onSave }: {
               if (name && !products.includes(name)) saveCustomProduct(category, name);
               onSave({ category, product: name || undefined, amount: amount || undefined, label: name || undefined });
             }}
-            data-x={() => onSave({ category, product: product || undefined, amount: amount || undefined, label: product || undefined })}
-            disabled={!product && !amount}
+            disabled={!product.trim() && !amount}
           >Save tag</Button>
         </DialogFooter>
       </DialogContent>
