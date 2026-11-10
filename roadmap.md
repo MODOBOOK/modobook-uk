@@ -2,7 +2,7 @@
 
 ## WhatsApp chat buttons
 - [x] Normalize UK numbers across patient, clinic, form and payment-link buttons without changing stored contact details
-- [ ] Verify number tests and a real clinic's WhatsApp button in preview
+- [x] Four number-format tests pass; Jen's public WhatsApp button renders with an international chat address in preview; app build OK. External WhatsApp chat and signed-in patient/form/payment screens not exercised.
 
 ## Room-rental invoice options
 - [x] Offer bank transfer or Stripe on room-rental invoices
