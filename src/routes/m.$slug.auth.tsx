@@ -1,3 +1,4 @@
+import { createConfirmedPatient } from "@/lib/patient-signup.functions";
 import { createFileRoute, useParams, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,7 +47,7 @@ function PatientAuth() {
 
   async function sendReset(e: React.FormEvent) {
     e.preventDefault();
-    const target = forgotEmail || loginEmail;
+    const target = (forgotEmail || loginEmail).trim().toLowerCase();
     if (!target) return;
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(target, {
@@ -80,22 +81,16 @@ function PatientAuth() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}${search.redirect ?? `/m/${slug}/account`}`,
-          data: { full_name: name, phone },
-        },
-      });
-      if (error) throw error;
+      const cleanEmail = email.trim().toLowerCase();
+      await createConfirmedPatient({ data: { email: cleanEmail, password, fullName: name, phone } });
+      const { data } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
       let session = data.session ?? (await waitForSession());
 
       // Repeated signups for an existing confirmed email return no session.
       // If the password matches, sign them in and continue instead of leaving
       // them stuck on the account creation screen.
       if (!session) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
         if (!signInError) session = await waitForSession();
 
         if (!session) {
@@ -126,7 +121,7 @@ function PatientAuth() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
+      const { error } = await supabase.auth.signInWithPassword({ email: loginEmail.trim().toLowerCase(), password: loginPassword });
       if (error) throw error;
       await waitForSession();
       await ensure({ data: { fullName: loginEmail.split("@")[0], linkSlug: slug } });
