@@ -71,7 +71,7 @@ function AuthPage() {
         toast.error(res.error);
         return;
       }
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
       setLoading(false);
       if (error) { toast.error(error.message); return; }
       try {
@@ -93,7 +93,7 @@ function AuthPage() {
     e.preventDefault();
     if (!forgotEmail) return;
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim().toLowerCase(), {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     setLoading(false);
@@ -106,7 +106,7 @@ function AuthPage() {
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
     setLoading(false);
     if (error) { toast.error(error.message); return; }
     router.navigate(postAuthTo());

@@ -165,6 +165,14 @@ export const adminSendPasswordReset = createServerFn({ method: "POST" })
       options: data.redirectTo ? { redirectTo: data.redirectTo } : undefined,
     });
     if (error) throw error;
+    // Also email the reset link to the user (goes through the branded auth email hook).
+    try {
+      const { createClient } = await import("@supabase/supabase-js");
+      const anon = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+        auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+      });
+      await anon.auth.resetPasswordForEmail(data.email.trim().toLowerCase(), data.redirectTo ? { redirectTo: data.redirectTo } : undefined);
+    } catch (e) { console.error("admin reset email failed", e); }
     return { actionLink: link.properties?.action_link ?? null };
   });
 
