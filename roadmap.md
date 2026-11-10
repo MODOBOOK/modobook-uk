@@ -1,5 +1,10 @@
 # Mobile redesign — practitioner dashboard
 
+## Read-only platform sweep — 10 November 2026
+- [x] Check live health, sign-in logs, booking/payment records, email queues, SMS and Project monitoring; 40 rule tests pass.
+- [x] Verify Ryan's signed-in preview calendar and SMS page plus live homepage and two public booking pages; no sends, payments or record changes.
+- [x] Report exceptions: two expired unpaid holds; 1,056 marketing emails expired over seven days (queues currently empty); 13 historic consultation medical mirrors absent across five clinics, none updated in the last seven days; one stale model slot dated 2 October; referral wording and member-credit/add-on findings remain. Fresh Stripe reconciliation, new patient password-reset delivery and full paid booking journeys not exercised.
+
 ## WhatsApp chat buttons
 - [x] Normalize UK numbers across patient, clinic, form and payment-link buttons without changing stored contact details
 - [x] Four number-format tests pass; Jen's public WhatsApp button renders with an international chat address in preview; app build OK. External WhatsApp chat and signed-in patient/form/payment screens not exercised.
