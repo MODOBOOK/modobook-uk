@@ -392,6 +392,32 @@ function BookTreatmentPage() {
   });
   const availableAddons: PublicAddon[] = addonsQuery.data ?? [];
   const [addonPicks, setAddonPicks] = useState<Set<string>>(new Set());
+
+  // Keep the patient's picks when they leave to sign in / sign up and come back.
+  const draftKey = `modo:bookingDraft:${redirectPath}`;
+  const saveBookingDraft = () => {
+    try {
+      window.sessionStorage.setItem(draftKey, JSON.stringify({ locationId, date, slot, addons: Array.from(addonPicks), at: Date.now() }));
+    } catch { /* ignore */ }
+  };
+  const draftRestored = useRef(false);
+  useEffect(() => {
+    if (draftRestored.current) return;
+    draftRestored.current = true;
+    try {
+      const raw = window.sessionStorage.getItem(draftKey);
+      if (!raw) return;
+      window.sessionStorage.removeItem(draftKey);
+      const d = JSON.parse(raw) as { locationId?: string | null; date?: string; slot?: string | null; addons?: string[]; step?: string; at?: number };
+      if (!d.at || Date.now() - d.at > 60 * 60 * 1000) return;
+      if (d.locationId && ctx.locations.some((l: Loc) => l.id === d.locationId)) setLocationId(d.locationId);
+      if (d.date) { setDate(d.date); setMonth(fromIsoDate(d.date)); }
+      if (Array.isArray(d.addons)) setAddonPicks(new Set(d.addons));
+      
+      if (d.slot) { const s = d.slot; setTimeout(() => setSlot(s), 0); }
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const toggleAddon = (id: string) =>
     setAddonPicks((prev) => {
       const next = new Set(prev);
@@ -1100,7 +1126,7 @@ function BookTreatmentPage() {
               <Link
                 to="/m/$slug/auth"
                 params={{ slug }}
-                search={{ redirect: redirectPath }}
+                search={{ redirect: redirectPath }} onClick={saveBookingDraft}
               >
                 <Button className="w-full" style={{ backgroundColor: brand, color: "#fff" }}>
                   <LogIn className="mr-2 h-4 w-4" /> Sign in
@@ -1109,7 +1135,7 @@ function BookTreatmentPage() {
               <Link
                 to="/m/$slug/auth"
                 params={{ slug }}
-                search={{ tab: "signup", redirect: redirectPath }}
+                search={{ tab: "signup", redirect: redirectPath }} onClick={saveBookingDraft}
               >
                 <Button variant="outline" className="w-full" style={{ color: brand, borderColor: `${brand}55` }}>
                   <UserPlus className="mr-2 h-4 w-4" /> Sign up
