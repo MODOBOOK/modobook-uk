@@ -1,5 +1,9 @@
 # Mobile redesign — practitioner dashboard
 
+## WhatsApp chat buttons
+- [x] Normalize UK numbers across patient, clinic, form and payment-link buttons without changing stored contact details
+- [ ] Verify number tests and a real clinic's WhatsApp button in preview
+
 ## Room-rental invoice options
 - [x] Offer bank transfer or Stripe on room-rental invoices
 - [x] Add editable saved details reused on future invoices
