@@ -13,6 +13,7 @@ import { Loader2, Mail, MessageSquare, Copy, ExternalLink, CheckCircle2 } from "
 import { toast } from "sonner";
 import { listForms, sendFormToClient } from "@/lib/medical-forms.functions";
 import { logCommunication } from "@/lib/patient-hub.functions";
+import { whatsappLink } from "@/lib/whatsapp-link";
 
 export function SendFormDialog({
   open,
@@ -119,7 +120,8 @@ export function SendFormDialog({
   async function sendWa(urlOverride?: string) {
     const url = urlOverride || link;
     if (!url || !phone) return;
-    const wa = `https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(makeMessage(url))}`;
+    const wa = whatsappLink(phone, makeMessage(url));
+    if (!wa) { toast.error("Enter a valid phone number for WhatsApp"); return; }
     window.open(wa, "_blank");
     await logComm({ data: { clientId: client.id, channel: "whatsapp", body: makeMessage(url) } });
     onSent?.();
@@ -177,7 +179,7 @@ export function SendFormDialog({
             <div className="grid grid-cols-2 gap-2">
               <Button variant="outline" onClick={() => sendEmail()} disabled={!email}><Mail className="mr-1.5 h-4 w-4" />Email</Button>
               <Button variant="outline" onClick={() => sendSms()} disabled={!phone}><MessageSquare className="mr-1.5 h-4 w-4" />SMS</Button>
-              <Button variant="outline" onClick={() => sendWa()} disabled={!phone}><MessageSquare className="mr-1.5 h-4 w-4" />WhatsApp</Button>
+              <Button variant="outline" onClick={() => sendWa()} disabled={!whatsappLink(phone)}><MessageSquare className="mr-1.5 h-4 w-4" />WhatsApp</Button>
               <Button variant="outline" onClick={copyLink}><Copy className="mr-1.5 h-4 w-4" />Copy link</Button>
             </div>
             <Button variant="ghost" className="w-full" asChild>

@@ -51,9 +51,18 @@ import { useLinkFee, useFeesAbsorbed } from "@/lib/use-link-fee";
 import { createPaymentLink } from "@/lib/payment-links.functions";
 import { chargeCardOnFile, removeCardOnFile } from "@/lib/card-on-file.functions";
 import { TreatmentPlansPanel } from "@/components/TreatmentPlansPanel";
+import { whatsappLink } from "@/lib/whatsapp-link";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard/patients/$id/details")({
+  head: () => ({ meta: [
+    { title: "Patient details | MODO" },
+    { name: "description", content: "Manage patient appointments, clinical records and communications in MODO." },
+    { property: "og:title", content: "Patient details | MODO" },
+    { property: "og:description", content: "Manage patient appointments, clinical records and communications in MODO." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   ssr: false,
   component: PatientProfilePage,
 });
@@ -209,6 +218,7 @@ function PatientProfilePage() {
   if (!client) return <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin" /></div>;
 
   const visibleAppts = showCancelled ? appts : appts.filter(a => a.status !== "cancelled");
+  const patientWaHref = whatsappLink(client.phone);
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4 pb-20">
@@ -229,9 +239,9 @@ function PatientProfilePage() {
               <a href={`sms:${client.phone}`}><MessageSquare className="mr-1.5 h-4 w-4" />SMS</a>
             </Button>
           )}
-          {client.phone && (
+          {patientWaHref && (
             <Button size="sm" variant="outline" className="shrink-0" asChild>
-              <a href={`https://wa.me/${client.phone.replace(/\D/g,"")}`} target="_blank" rel="noreferrer">
+              <a href={patientWaHref} target="_blank" rel="noreferrer">
                 <MessageSquare className="mr-1.5 h-4 w-4" />WhatsApp
               </a>
             </Button>
@@ -1572,7 +1582,7 @@ function PaymentLinkDialog({
   }
 
   const smsHref = client.phone && url ? `sms:${client.phone}?&body=${encodeURIComponent(`Payment link: ${url}`)}` : null;
-  const waHref = client.phone && url ? `https://wa.me/${client.phone.replace(/\D/g, "")}?text=${encodeURIComponent(`Payment link: ${url}`)}` : null;
+  const waHref = url ? whatsappLink(client.phone, `Payment link: ${url}`) : null;
 
   async function markLogged(channel: "email" | "sms" | "whatsapp") {
     try {

@@ -23,9 +23,18 @@ import { getMyRewardsForClinic } from "@/lib/rewards.functions";
 import { getMyClinicCredit } from "@/lib/patient-credit.functions";
 import { getMyMembershipForClinic } from "@/lib/memberships.functions";
 import { autoRefundCancelledAppointment } from "@/lib/refunds.functions";
+import { whatsappLink } from "@/lib/whatsapp-link";
 
 
 export const Route = createFileRoute("/m/$slug/account")({
+  head: () => ({ meta: [
+    { title: "Your bookings & account | MODO" },
+    { name: "description", content: "Manage your clinic bookings, forms and account with MODO." },
+    { property: "og:title", content: "Your bookings & account | MODO" },
+    { property: "og:description", content: "Manage your clinic bookings, forms and account with MODO." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: Account,
 });
 
@@ -1184,7 +1193,8 @@ function PrivacyContactSection({
   const phone = profile.phone;
   const sms = profile.contact_sms_number;
   const wa = profile.contact_whatsapp_number;
-  const hasAnyContact = !!(email || phone || sms || wa);
+  const waHref = whatsappLink(wa);
+  const hasAnyContact = !!(email || phone || sms || waHref);
 
   return (
     <section className="mt-8">
@@ -1215,8 +1225,8 @@ function PrivacyContactSection({
                     <Phone className="h-4 w-4" /> {sms} (SMS)
                   </a>
                 )}
-                {wa && (
-                  <a href={`https://wa.me/${wa.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 underline">
+                {waHref && (
+                  <a href={waHref} target="_blank" rel="noreferrer" className="flex items-center gap-2 underline">
                     <Phone className="h-4 w-4" /> {wa} (WhatsApp)
                   </a>
                 )}

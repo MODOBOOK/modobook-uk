@@ -50,6 +50,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { mapsUrl, formatAddress } from "@/lib/maps";
+import { whatsappLink } from "@/lib/whatsapp-link";
 import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { SafeHtml } from "@/components/SafeHtml";
@@ -1318,7 +1319,8 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
     const igLink = showInstagram ? ig?.trim() : null;
     const items: { href: string; label: string; sub?: string; Icon: typeof Phone }[] = [];
     if (sms) items.push({ href: `sms:${sms}`, label: "Text us", sub: sms, Icon: Phone });
-    if (wa) items.push({ href: `https://wa.me/${wa.replace(/[^0-9]/g, "")}`, label: "WhatsApp", sub: wa, Icon: MessageCircle });
+    const waHref = whatsappLink(wa);
+    if (waHref) items.push({ href: waHref, label: "WhatsApp", sub: wa ?? undefined, Icon: MessageCircle });
     if (igLink) items.push({ href: igLink.startsWith("http") ? igLink : `https://instagram.com/${igLink.replace("@", "")}`, label: "Instagram", sub: igLink, Icon: Instagram });
     if (fb) items.push({ href: fb.startsWith("http") ? fb : `https://facebook.com/${fb}`, label: "Facebook", sub: fb.replace(/^https?:\/\//, ""), Icon: Facebook });
     if (items.length === 0) return null;
