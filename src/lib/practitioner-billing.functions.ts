@@ -506,7 +506,7 @@ export const startBillingCheckout = createServerFn({ method: "POST" })
         .maybeSingle();
       if (full) {
         const rr = await import("./referral-rewards.server");
-        if (await rr.isReferralDiscountCode((full as any).id)) {
+        if (rr.REFERRAL_RULES_V2_LIVE && (await rr.isReferralDiscountCode((full as any).id))) {
           // Referral: 25% for 3 paid months after the trial (removed by webhook).
           redeemedCouponId = await rr.ensureJoinerCoupon().catch(() => null);
         } else {
@@ -969,7 +969,7 @@ export const redeemDiscountCode = createServerFn({ method: "POST" })
           } as any);
         } else if (full) {
           const rr = await import("./referral-rewards.server");
-          const couponId = (await rr.isReferralDiscountCode((full as any).id))
+          const couponId = (rr.REFERRAL_RULES_V2_LIVE && (await rr.isReferralDiscountCode((full as any).id)))
             ? await rr.ensureJoinerCoupon()
             : await (await import("./discount-codes.server")).ensureStripeCoupon(full as any);
           if (couponId) {

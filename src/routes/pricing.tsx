@@ -116,7 +116,7 @@ function PricingPage() {
             <div className="border border-[color:var(--hairline)] bg-[color:var(--card)] px-5 py-4 text-sm text-[color:var(--ink-soft)]">
               Referral code <strong className="text-[color:var(--ink)]">{ref}</strong> saved — it'll
               be applied automatically on your Plan &amp; billing page when you sign up. That's 25%
-              off your 3 months after the free trial.
+              off your first 3 months.
             </div>
           </div>
         )}

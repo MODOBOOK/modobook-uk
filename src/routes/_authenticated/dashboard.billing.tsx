@@ -108,7 +108,7 @@ function BillingPage() {
       try {
         const res = await redeem({ data: { code: stored } });
         if (res.ok) {
-          toast.success(`Referral code ${res.code} applied — 25% off your 3 months after the free trial`);
+          toast.success(`Referral code ${res.code} applied — 25% off your first 3 months`);
           clearStoredReferral();
           setCode("");
           reload();

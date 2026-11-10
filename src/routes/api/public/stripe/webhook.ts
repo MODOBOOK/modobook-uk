@@ -1082,8 +1082,13 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                 // the practitioner who introduced them banks their reward.
                 if (profileId) {
                   try {
-                    const { handleReferralInvoicePaid } = await import("@/lib/referral-rewards.server");
-                    await handleReferralInvoicePaid(profileId, inv.id!, Number(inv.amount_paid ?? 0));
+                    const rr = await import("@/lib/referral-rewards.server");
+                    if (rr.REFERRAL_RULES_V2_LIVE) {
+                      await rr.handleReferralInvoicePaid(profileId, inv.id!, Number(inv.amount_paid ?? 0));
+                    } else {
+                      const { qualifyReferralForProfile } = await import("@/lib/practitioner-referrals.functions");
+                      await qualifyReferralForProfile(profileId);
+                    }
                   } catch (e) {
                     console.error("[stripe-webhook] referral qualify failed", e);
                   }

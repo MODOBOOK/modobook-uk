@@ -9,6 +9,9 @@
  *   banked and applied one at a time as a 100%-off-once coupon.
  */
 
+/** Held back from live until Ryan approves the new referral rules. */
+export const REFERRAL_RULES_V2_LIVE = false;
+
 export const JOINER_DISCOUNTED_INVOICES = 3;
 export const REFERRER_QUALIFY_AFTER_INVOICES = 2;
 
