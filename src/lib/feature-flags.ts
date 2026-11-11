@@ -69,9 +69,10 @@ export function linkButtonEnabled(slug?: string | null) {
 
 /**
  * Treatment information leaflets (open/close panel on the booking page) —
- * pilot account only for now.
+ * live for everyone: any clinic that attaches a PDF or leaflet text gets the
+ * button on its booking page.
  */
-export const TREATMENT_LEAFLET_SLUGS = ["aestheticsbynurseryan", "aesthetiqbyjen"];
+export const TREATMENT_LEAFLET_SLUGS: string[] = [];
 
 export function treatmentLeafletsEnabled(slug?: string | null) {
   return isFeatureLive(TREATMENT_LEAFLET_SLUGS, slug);

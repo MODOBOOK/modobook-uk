@@ -1,4 +1,4 @@
-import { getCookie } from "@tanstack/react-start/server";
+import { createServerOnlyFn } from "@tanstack/react-start";
 
 export type StaffRole = "admin" | "practitioner" | "receptionist" | "viewer";
 
@@ -24,13 +24,21 @@ const NONE: ClinicAccess = {
   canUsePrescribing: false,
 };
 
-function selectedClinicCookie(): string | null {
+/**
+ * Reads the clinic-selection cookie. Wrapped in `createServerOnlyFn` so the
+ * `@tanstack/react-start/server` import stays out of the browser bundle — the
+ * dev server's import guard rejects that specifier in the client environment,
+ * which breaks the whole preview bundle when a server function module reaches
+ * this file.
+ */
+const readClinicCookie = createServerOnlyFn(async (): Promise<string | null> => {
   try {
+    const { getCookie } = await import("@tanstack/react-start/server");
     return (getCookie("modo_clinic") as string | undefined) || null;
   } catch {
     return null;
   }
-}
+});
 
 export async function resolveClinicAccess(
   supabase: any,
@@ -65,7 +73,7 @@ export async function resolveClinicAccess(
     staff = [];
   }
 
-  const wanted = selectedClinicCookie();
+  const wanted = await readClinicCookie();
 
   // An explicit clinic selection (ClinicSwitcher cookie) always wins — even
   // for users who own a clinic but are staff/admin of another. Without this,
