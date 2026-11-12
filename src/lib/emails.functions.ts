@@ -155,11 +155,21 @@ export const sendTestEmail = createServerFn({ method: 'POST' })
 
     // Per-template sample data. `profileId` triggers the send helper to merge
     // in the practitioner's saved subject/intro/body/closing overrides.
+    const { data: firstPract } = await supabase
+      .from('practitioners')
+      .select('name')
+      .eq('profile_id', profileId)
+      .eq('active', true)
+      .order('display_order')
+      .limit(1)
+      .maybeSingle()
+    const samplePractitionerName =
+      (firstPract as { name?: string | null } | null)?.name?.trim() || clinicName
     const samples: Record<string, Record<string, unknown>> = {
       'booking-confirmation': {
         patientName: 'Alex',
         treatmentName: 'Lip filler consultation',
-        practitionerName: 'You',
+        practitionerName: samplePractitionerName,
         location: profile.clinic_name || 'Your studio',
         date: 'Fri 12 Jul 2026',
         time: '14:30',
