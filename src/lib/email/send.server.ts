@@ -603,6 +603,8 @@ export async function sendBookingConfirmationEmails(
         patientName: (a.patient_name ?? '').split(' ')[0] || 'there',
         clinicName: a.profiles?.clinic_name ?? branding.clinicName,
         treatmentName: treatmentSummary || 'your treatment',
+        practitionerName: Array.from(new Set(group.map((g) => g.practitioners?.name?.trim()).filter(Boolean))).join(', ') || undefined,
+        dateTime: formatBookingDateTime(a.scheduled_date, a.start_time),
         services: services.length > 1 ? services : undefined,
         totalPrice,
         date,

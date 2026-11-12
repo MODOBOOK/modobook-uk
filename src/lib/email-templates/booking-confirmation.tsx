@@ -7,6 +7,7 @@ interface Props {
   patientName?: string
   clinicName?: string
   treatmentName?: string
+  practitionerName?: string | null
   services?: { name: string; price?: string }[]
   date?: string
   time?: string
@@ -62,6 +63,7 @@ const Email = ({
   patientName = 'Sarah',
   clinicName = 'Example Aesthetics',
   treatmentName = 'Consultation',
+  practitionerName,
   services,
   date = 'Fri 26 Sep 2026',
   time = '10:30',
@@ -136,6 +138,7 @@ const Email = ({
                               {treatments.map((service, index) => <React.Fragment key={`${service.name}-${index}`}>{index > 0 ? <br /> : null}{service.name}</React.Fragment>)}
                             </DetailRow>
                             <DetailRow label="When">{date}<br />{time} · {duration}</DetailRow>
+                            {practitionerName?.trim() ? <DetailRow label="With">{practitionerName}</DetailRow> : null}
                             <DetailRow label="Where" last>{location}</DetailRow>
                           </tbody>
                         </table>
@@ -208,6 +211,7 @@ export const template = {
     clinicName: 'Example Aesthetics',
     patientName: 'Sarah',
     treatmentName: 'Consultation',
+    practitionerName: 'Dr Jamie Reid',
     date: 'Fri 26 Sep 2026',
     time: '10:30',
     duration: '60 minutes',
