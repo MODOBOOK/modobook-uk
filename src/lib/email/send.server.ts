@@ -495,7 +495,7 @@ export async function sendBookingConfirmationEmails(
         dateTime: formatBookingDateTime(a.scheduled_date, a.start_time),
         locationName: loc?.name ?? loc?.city ?? undefined,
         locationAddress: loc ? [loc.address_line1, loc.city, loc.postcode].filter(Boolean).join(', ') : undefined,
-        practitionerName: a.practitioners?.name ?? undefined,
+        practitionerName: Array.from(new Set(group.map((g) => g.practitioners?.name?.trim()).filter(Boolean))).join(', ') || undefined,
         manageUrl,
       }
       // A clinic can choose to hold the confirmation text back; the
