@@ -392,9 +392,9 @@ export function buildWhatsAppBody(kind: WhatsAppKind, c: ApptMessageContext): st
   // reschedules also carry the address. Links are never sent.
   switch (kind) {
     case 'booking-confirmation':
-      return `Hi ${first}, you're booked in with ${clinic}${withWho}${at}${when}.${where}`
+      return `Hi ${first}, you're booked in at ${clinic}${withWho}${at}${when}.${where}`
     case 'appointment-reminder':
-      return `Hi ${first}, reminder: your appointment with ${clinic}${withWho}${at}${when}.${where}`
+      return `Hi ${first}, reminder: your appointment at ${clinic}${withWho}${at}${when}.${where}`
     case 'review-request':
       return `Hi ${first}, your appointment with ${clinic} is complete. Check your emails for your review and aftercare. Any issues, please contact your practitioner.`
     case 'booking-cancellation':
