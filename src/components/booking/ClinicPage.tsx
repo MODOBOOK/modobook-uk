@@ -777,7 +777,11 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
         if (locationId && all.length > 0) {
           const anyHere = all.some((id) => {
             const t = treatById.get(id);
-            return t ? isAvailableAtLocation(t) : false;
+            if (t) return isAvailableAtLocation(t);
+            // Hidden package-only backing services aren't in the public menu;
+            // treat them as offered unless this location explicitly disables them.
+            const row = pricing.find((pr) => pr.treatment_id === id && pr.location_id === locationId);
+            return row ? row.available !== false : true;
           });
           if (!anyHere) return false;
         }
