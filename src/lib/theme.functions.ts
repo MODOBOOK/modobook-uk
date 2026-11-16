@@ -284,7 +284,10 @@ export const upsertMyTheme = createServerFn({ method: "POST" })
 // ---------------------------------------------------------------------------
 
 function sanitizeTheme(data: ClinicThemeInput): ClinicThemeInput {
-  const sanitized: ClinicThemeInput = { ...data };
+  const src = (data ?? {}) as Record<string, unknown>;
+  const picked: Record<string, unknown> = {};
+  for (const k of THEME_FIELDS) if (src[k] !== undefined) picked[k] = src[k];
+  const sanitized = picked as ClinicThemeInput;
   if (typeof sanitized.heading_font === "string") {
     sanitized.heading_font = sanitized.heading_font.replace(/[^a-zA-Z0-9\s\-_,'"]/g, "").slice(0, 80);
   }
