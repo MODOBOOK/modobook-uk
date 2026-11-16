@@ -1,12 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { test } from "node:test";
+import assert from "node:assert/strict";
 import { sanitizeAssociatePatch } from "./associates.functions";
-describe("sanitizeAssociatePatch", () => {
-  it("drops associate_profile_id and other link columns", () => {
-    const out = sanitizeAssociatePatch({ associate_profile_id: "x", clinic_profile_id: "y", invite_token: "t", accepted_at: "n", notes: "ok" });
-    expect(out).toEqual({ notes: "ok" });
-  });
-  it("never lets status be forced to active", () => {
-    expect(() => sanitizeAssociatePatch({ status: "active" })).toThrow();
-    expect(sanitizeAssociatePatch({ status: "revoked" })).toEqual({ status: "revoked" });
-  });
+
+test("drops associate_profile_id and other link columns", () => {
+  const out = sanitizeAssociatePatch({ associate_profile_id: "x", clinic_profile_id: "y", invite_token: "t", accepted_at: "n", notes: "ok" });
+  assert.deepEqual(out, { notes: "ok" });
+});
+test("never lets status be forced to active", () => {
+  assert.throws(() => sanitizeAssociatePatch({ status: "active" }));
+  assert.deepEqual(sanitizeAssociatePatch({ status: "revoked" }), { status: "revoked" });
 });
