@@ -153,7 +153,7 @@ function ClinicPage() {
                   <CardContent>
                     <p className="text-sm text-muted-foreground">{pkg.session_count} sessions</p>
                     <div className="mt-4 flex items-end justify-between">
-                      <span className="text-2xl font-bold">£{(pkg.price / 100).toFixed(2)}</span>
+                      <span className="text-2xl font-bold">£{Number(pkg.price).toFixed(2)}</span>
                       <span className="text-sm text-muted-foreground">{pkg.expiry_days ? `Valid for ${pkg.expiry_days} days` : "No expiry"}</span>
                     </div>
                     <Link to="/">
@@ -234,7 +234,7 @@ function TreatmentCard({
       </CardHeader>
       <CardContent className="pt-0">
         <div className="mb-3 flex items-center justify-between">
-          <span className="text-xl font-bold">£{(treatment.price / 100).toFixed(2)}</span>
+          <span className="text-xl font-bold">£{Number(treatment.price).toFixed(2)}</span>
           <span className="text-xs text-muted-foreground">{treatment.payment_mode === "pay_in_clinic" ? "Pay in clinic" : "Book online"}</span>
         </div>
         <Button
