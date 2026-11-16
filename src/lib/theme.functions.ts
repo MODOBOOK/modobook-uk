@@ -106,6 +106,99 @@ export type ClinicThemeInput = {
 };
 
 
+export const THEME_FIELDS = [
+  "primary_color",
+  "accent_color",
+  "background_color",
+  "text_color",
+  "header_bg_color",
+  "header_text_color",
+  "footer_bg_color",
+  "footer_text_color",
+  "heading_font",
+  "body_font",
+  "logo_url",
+  "favicon_url",
+  "hero_image_url",
+  "hero_heading",
+  "hero_subheading",
+  "hero_use_logo",
+  "hero_text_color",
+  "custom_css",
+  "menu_card_bg",
+  "menu_card_border_color",
+  "menu_category_bg",
+  "menu_category_text",
+  "menu_treatment_name_color",
+  "menu_price_color",
+  "menu_treatment_size",
+  "menu_treatment_bold",
+  "menu_category_bold",
+  "preset_key",
+  "layout_key",
+  "hero_carousel_enabled",
+  "hero_carousel_urls",
+  "welcome_card_show_logo",
+  "welcome_card_show_name",
+  "welcome_card_show_tagline",
+  "welcome_card_show_rating",
+  "welcome_card_show_actions",
+  "welcome_card_show_contact",
+  "welcome_card_show_sms",
+  "welcome_card_show_whatsapp",
+  "welcome_card_show_instagram",
+  "welcome_card_show_facebook",
+  "welcome_card_size",
+  "welcome_card_mobile_size",
+  "welcome_card_position",
+  "welcome_card_background_type",
+  "welcome_card_bg_color",
+  "welcome_card_gradient_from",
+  "welcome_card_gradient_to",
+  "welcome_card_border_color",
+  "welcome_card_border_radius",
+  "welcome_card_border_width",
+  "welcome_card_padding",
+  "welcome_card_shadow",
+  "welcome_card_opacity",
+  "welcome_card_blur",
+  "header_sticky",
+  "header_logo_size",
+  "header_show_name",
+  "header_show_tagline",
+  "header_button_label",
+  "hero_height",
+  "hero_fit",
+  "hero_overlay_opacity",
+  "hero_overlay_color",
+  "hero_text_alignment",
+  "hero_show_text",
+  "button_color",
+  "button_text_color",
+  "button_radius",
+  "button_size",
+  "button_uppercase",
+  "page_density",
+  "section_gap",
+  "link_button_enabled",
+  "link_button_label",
+  "link_button_subtitle",
+  "link_button_url",
+  "contact_tile_layout",
+  "contact_tile_icon_size",
+  "contact_tile_bg_color",
+  "contact_tile_border_color",
+  "dashboard_follow_brand",
+  "dashboard_palette",
+  "dashboard_heading_font",
+  "dashboard_body_font",
+  "page_preset",
+  "carousel_height",
+  "carousel_hidden",
+  "section_visibility",
+  "section_order",
+] as const;
+
 async function getProfileId(
   supabase: { from: (table: string) => any },
   userId: string,
@@ -140,8 +233,11 @@ export const upsertMyTheme = createServerFn({ method: "POST" })
 
     // Sanitize practitioner-controlled fields that end up rendered inside a
     // <style> element on the public /m/:slug page.
-    const sanitized: ClinicThemeInput = { ...data };
-    for (const k of ["id", "profile_id", "created_at", "updated_at"]) delete (sanitized as Record<string, unknown>)[k];
+    // Only approved theme columns are written; any other key is dropped.
+    const src = (data ?? {}) as Record<string, unknown>;
+    const picked: Record<string, unknown> = {};
+    for (const k of THEME_FIELDS) if (src[k] !== undefined) picked[k] = src[k];
+    const sanitized = picked as ClinicThemeInput;
     if (typeof sanitized.heading_font === "string") {
       sanitized.heading_font = sanitized.heading_font
         .replace(/[^a-zA-Z0-9\s\-_,'"]/g, "")
