@@ -666,8 +666,9 @@ function NewAppointmentPage() {
           : "Confirmed.",
       });
 
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(depositUrl ?? manageUrl ?? "");
+      const copyText = depositUrl ?? manageUrl;
+      if (copyText && navigator.clipboard) {
+        navigator.clipboard.writeText(copyText).catch(() => { /* clipboard blocked — booking already saved */ });
       }
       navigate({ to: "/dashboard/bookings" });
     } catch (e) {

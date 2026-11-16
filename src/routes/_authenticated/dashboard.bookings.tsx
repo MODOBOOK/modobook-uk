@@ -1529,7 +1529,7 @@ function PaymentLinkDialog({ open, onOpenChange }: { open: boolean; onOpenChange
       const u = (row as { stripe_url: string | null }).stripe_url;
       setUrl(u);
       setFeeCents(Number((row as { surcharge_cents?: number }).surcharge_cents ?? 0));
-      if (u && navigator.clipboard) await navigator.clipboard.writeText(u);
+      if (u && navigator.clipboard) navigator.clipboard.writeText(u).catch(() => {});
       toast.success("Stripe payment link created — copied to clipboard");
     } catch (e) {
       toast.error((e as Error).message);
@@ -2258,7 +2258,7 @@ function CheckoutSheet({
           markPaid: false,
         },
       });
-      if (url && navigator.clipboard) await navigator.clipboard.writeText(url);
+      if (url && navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
 
       // Prefer SMS when we have a phone number — open the device's native
       // SMS composer prefilled with the link and price breakdown. Fall back
@@ -2647,7 +2647,7 @@ function CheckoutSheet({
                         },
                       });
                       const url = (row as { stripe_url: string | null }).stripe_url;
-                      if (url && navigator.clipboard) await navigator.clipboard.writeText(url);
+                      if (url && navigator.clipboard) navigator.clipboard.writeText(url).catch(() => {});
                       if (url && a.patient_phone) {
                         const body = encodeURIComponent(
                           `Hi ${a.patient_name}, please tap this secure link to complete your £${amt.toFixed(2)} payment (${reason.trim()}):\n\n${url}`,
