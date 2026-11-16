@@ -212,12 +212,32 @@ export const updateAssociate = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await (supabaseAdmin as any)
       .from("clinic_associates")
-      .update(data.patch)
+      .update(sanitizeAssociatePatch(data.patch))
       .eq("id", data.id)
       .eq("clinic_profile_id", prof.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+const BOOL_FIELDS = [
+  "oversight_records", "oversight_appointments", "oversight_incidents",
+  "room_allocation_enabled", "block_when_no_room", "charge_room_rent", "seat_sponsored",
+] as const;
+const NULLABLE_STRING_FIELDS = ["room_id", "location_id", "notes"] as const;
+
+/** Only clinic-editable settings may be written; link/identity columns are never accepted. */
+export function sanitizeAssociatePatch(patch: unknown): Record<string, unknown> {
+  const p = (patch && typeof patch === "object" ? patch : {}) as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  if (typeof p.invited_name === "string") out.invited_name = p.invited_name.slice(0, 200);
+  for (const k of BOOL_FIELDS) if (typeof p[k] === "boolean") out[k] = p[k];
+  for (const k of NULLABLE_STRING_FIELDS) {
+    if (p[k] === null || typeof p[k] === "string") out[k] = p[k];
+  }
+  if (p.status === "revoked") out.status = "revoked";
+  if (Object.keys(out).length === 0) throw new Error("Nothing to update");
+  return out;
+}
 
 export const removeAssociate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
