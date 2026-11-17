@@ -31,13 +31,14 @@ async function computeBookableFrom(
     if (batch.length === 0) break;
     const { data: cats } = await sb
       .from("treatment_categories")
-      .select("id, parent_id, coming_soon_at")
+      .select("id, parent_id, coming_soon_at, is_limited, limited_starts_at")
       .eq("profile_id", profileId)
       .in("id", batch);
     for (const c of cats ?? []) {
-      const csa = (c as { coming_soon_at: string | null }).coming_soon_at;
-      if (csa) {
-        const iso = csa.slice(0, 10);
+      const row = c as { coming_soon_at: string | null; is_limited?: boolean | null; limited_starts_at?: string | null };
+      for (const d of [row.coming_soon_at, row.is_limited ? row.limited_starts_at : null]) {
+        if (!d) continue;
+        const iso = d.slice(0, 10);
         if (iso > todayIso && (!latest || iso > latest)) latest = iso;
       }
       const pid = (c as { parent_id: string | null }).parent_id;
