@@ -745,7 +745,9 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
     const ends = c.limited_ends_at ? new Date(c.limited_ends_at).getTime() : null;
     // A limited category with no window set yet is not ready to go public.
     if (starts == null && ends == null) return false;
-    return (starts == null || nowTs >= starts) && (ends == null || nowTs < ends);
+    // Upcoming categories stay visible with a "Book from" badge; the booking
+    // calendar blocks dates before the start (see computeBookableFrom).
+    return ends == null || nowTs < ends;
   };
   const catEndsAt = (categoryId: string | null | undefined) => {
     if (!categoryId) return null;
@@ -3416,9 +3418,14 @@ function CategoryTree({
     <div className={depth === 0 ? "space-y-4" : "space-y-3"}>
       {visible.map((node) => {
         const isSub = depth > 0;
-        const isComingSoon = !!node.coming_soon_at && new Date(node.coming_soon_at) > new Date();
+        const lim = node as { is_limited?: boolean | null; limited_starts_at?: string | null };
+        const releaseAt = [node.coming_soon_at, lim.is_limited ? lim.limited_starts_at : null]
+          .filter((d): d is string => !!d && new Date(d) > new Date())
+          .sort()
+          .pop() ?? null;
+        const isComingSoon = !!releaseAt;
         const comingLabel = isComingSoon
-          ? new Date(node.coming_soon_at!).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
+          ? new Date(releaseAt!).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
           : "";
         return (
           <Accordion key={node.id} type="single" collapsible>
