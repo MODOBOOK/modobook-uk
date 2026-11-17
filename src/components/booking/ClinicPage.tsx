@@ -745,9 +745,8 @@ export function ClinicPage({ data, view, slug }: { data: ClinicPageData; view: C
     const ends = c.limited_ends_at ? new Date(c.limited_ends_at).getTime() : null;
     // A limited category with no window set yet is not ready to go public.
     if (starts == null && ends == null) return false;
-    // Upcoming categories stay visible with a "Book from" badge; the booking
-    // calendar blocks dates before the start (see computeBookableFrom).
-    return ends == null || nowTs < ends;
+    // Time-limited categories stay hidden until their start time arrives.
+    return (starts == null || nowTs >= starts) && (ends == null || nowTs < ends);
   };
   const catEndsAt = (categoryId: string | null | undefined) => {
     if (!categoryId) return null;
