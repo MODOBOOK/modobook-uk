@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { enforceServicePaymentChoice, hasServicePaymentOverride, servicePaymentDueCents, type ServicePaymentLine } from "./service-payment";
 import { platformFeeCents } from "@/lib/platform-fee";
 import { bookingFitsGap } from "@/lib/booking-duration";
 import { isFullName, cleanPatientName, FULL_NAME_MESSAGE } from "@/lib/patient-name";
@@ -890,7 +891,8 @@ export const requestBooking = createServerFn({ method: "POST" })
     if (prof?.require_account_to_book && !data.patientUserId) {
       throw new Error("Please sign in to book — this clinic requires an account.");
     }
-    const paymentChoice = (await treatmentsArePayInClinic([data.treatmentId]))
+    const paymentTreatments = await getServicePaymentTreatments(data.profileId, [data.treatmentId]);
+    let paymentChoice = (paymentTreatments.every((t) => t.payment_mode === "pay_in_clinic") && !paymentTreatments.some((t) => t.service_payment_requirement === "full"))
       ? ({ mode: "cash", method: "card" } as PaymentChoice)
       : normaliseBookingPaymentChoice(prof, data.paymentChoice ?? null);
     // Auto-confirm target status once we know payment isn't required. We always
@@ -958,7 +960,7 @@ export const requestBooking = createServerFn({ method: "POST" })
       .maybeSingle();
     const sessionCount = Math.max(1, Number((treatRow as { session_count?: number } | null)?.session_count ?? 1));
     const splitAllowed =
-      Boolean((treatRow as { allow_split_payment?: boolean } | null)?.allow_split_payment) && sessionCount > 1;
+      Boolean((treatRow as { allow_split_payment?: boolean } | null)?.allow_split_payment) && sessionCount > 1 && !paymentTreatments.some((t) => t.service_payment_requirement === "full");
     let serverPrice: number;
     try {
       serverPrice = assertPriceMatches(expectedPrice, data.basePrice);
@@ -969,6 +971,14 @@ export const requestBooking = createServerFn({ method: "POST" })
         throw e;
       }
     }
+
+    const servicePaymentLines = paymentTreatments.map((t) => ({
+      amountCents: Math.round(serverPrice * 100),
+      requirement: t.service_payment_requirement,
+      depositAmount: t.deposit_amount,
+      defaultBaseCents: data.modelSlotId ? Math.round(serverPrice * 100) : Math.round(Number(t.price ?? 0) * 100),
+    }));
+    paymentChoice = enforceServicePaymentChoice(paymentChoice, servicePaymentLines, clinicDepositSettings(prof)) as PaymentChoice | null;
 
     // Idempotency guard: reject duplicate submissions of the same booking
     // (same clinic + treatment + slot + patient email) inside a 5-minute window.
@@ -1172,6 +1182,7 @@ export const requestBooking = createServerFn({ method: "POST" })
         patientEmail: data.patientEmail,
         description: `Booking with ${prof?.clinic_name ?? "clinic"}`,
         choice: paymentChoice,
+        servicePaymentLines,
         notes: payNotes,
         dedupeKey: bookingDedupeKey({
           profileId: data.profileId,
@@ -1326,6 +1337,7 @@ async function maybeCreateBookingCheckout(args: {
 
   } | null;
   appointmentIds: string[];
+  servicePaymentLines: ServicePaymentLine[];
   totalAmount: number;
   patientEmail: string;
   description: string;
@@ -1341,6 +1353,8 @@ async function maybeCreateBookingCheckout(args: {
   notes?: { waived?: boolean };
 }): Promise<BookingPaymentResult | null> {
   const p = args.profile;
+  const serviceOverride = hasServicePaymentOverride(args.servicePaymentLines);
+  const serviceDue = servicePaymentDueCents(args.servicePaymentLines, clinicDepositSettings(p));
   const waive = () => { if (args.notes) args.notes.waived = true; return null; };
   if (!p) return null;
   // Free bookings (£0) never require a deposit or checkout, regardless of the
@@ -1349,7 +1363,7 @@ async function maybeCreateBookingCheckout(args: {
 
   // Patient chose to pay in cash at the appointment — nothing is charged and no
   // card is stored. The booking is simply confirmed and settled in clinic.
-  if (args.choice?.mode === "cash") return waive();
+  if (args.choice?.mode === "cash" && !(serviceOverride && serviceDue > 0)) return waive();
   if (!p.stripe_connect_account_id) return null;
   if (p.stripe_connect_onboarding_status && p.stripe_connect_onboarding_status !== "active") return null;
 
@@ -1358,7 +1372,7 @@ async function maybeCreateBookingCheckout(args: {
   // except it confirms a SetupIntent so nothing is charged today. The patient's
   // acceptance of the cancellation policy is recorded on the appointment and
   // the booking is confirmed once the card is stored (webhook).
-  if (args.choice?.mode === "card_capture" && p.payment_card_capture_enabled && args.choice.policyAgreed) {
+  if (!(serviceOverride && serviceDue > 0) && args.choice?.mode === "card_capture" && p.payment_card_capture_enabled && args.choice.policyAgreed) {
     const policyText = (p.card_capture_policy_text ?? "").trim() || DEFAULT_CARD_CAPTURE_POLICY;
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -1416,7 +1430,7 @@ async function maybeCreateBookingCheckout(args: {
   const depositPer = Math.max(0, Number(p.deposit_amount_cents ?? 0));
   const depositTypeMode: "fixed" | "percent" = (p.deposit_type === "percent") ? "percent" : "fixed";
   const depositPct = Math.max(0, Math.min(100, Number(p.deposit_percent ?? 0)));
-  const fullEnabled = p.payment_card_full_enabled !== false
+  const fullEnabled = serviceOverride || p.payment_card_full_enabled !== false
     || !!p.payment_klarna_enabled
     || !!p.payment_clearpay_enabled;
 
@@ -1424,6 +1438,7 @@ async function maybeCreateBookingCheckout(args: {
   // Treatment-level `deposit_amount` (in GBP) always wins. Otherwise use the
   // clinic default: a fixed £ amount, or a % of the treatment price.
   async function computeDepositTotalCents(): Promise<number> {
+    if (serviceOverride) return serviceDue;
     if (args.appointmentIds.length === 0) return 0;
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -1509,6 +1524,8 @@ async function maybeCreateBookingCheckout(args: {
   // when the patient hasn't opted for full payment.
   const wantsDeposit = args.choice?.mode === "full"
     ? false
+    : serviceOverride && serviceDue > 0
+    ? true
     : args.choice?.mode === "cash_deposit"
     ? true
     : depositRequiredForProfile(p)
@@ -1516,7 +1533,7 @@ async function maybeCreateBookingCheckout(args: {
     : args.choice
     ? args.choice.mode === "deposit"
     : depositEnabled && (depositPer >= 100 || (depositTypeMode === "percent" && depositPct > 0));
-  if (wantsDeposit && depositEnabled) {
+  if (wantsDeposit && (depositEnabled || serviceOverride)) {
     amountCents = await computeDepositTotalCents();
     if (amountCents < 100) {
       // Deposit waived (e.g. treatment-level £0 override). Fall back to a full
@@ -1549,7 +1566,7 @@ async function maybeCreateBookingCheckout(args: {
   // so a clinic that only enabled BNPL for full payments must still take card
   // here, otherwise the patient has no way to pay a deposit.
   const enabled = {
-    card: p.payment_card_full_enabled !== false || (kind === "deposit" && depositEnabled),
+    card: serviceOverride || p.payment_card_full_enabled !== false || (kind === "deposit" && depositEnabled),
     klarna: !!p.payment_klarna_enabled,
     clearpay: !!p.payment_clearpay_enabled,
   };
@@ -1785,13 +1802,32 @@ function bookingNeedsStripePayment(
  * A service set to "Pay in clinic" (e.g. a prescribing clinic) is never charged
  * online, whatever the clinic-wide deposit / card settings say.
  */
-async function treatmentsArePayInClinic(treatmentIds: string[]): Promise<boolean> {
+async function getServicePaymentTreatments(profileId: string, treatmentIds: string[]) {
   const ids = Array.from(new Set(treatmentIds.filter(Boolean)));
-  if (ids.length === 0) return false;
+  if (ids.length === 0) throw new Error("Choose a service to book.");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data } = await supabaseAdmin.from("treatments").select("id, payment_mode").in("id", ids);
-  if (!data || data.length !== ids.length) return false;
-  return data.every((t) => (t as { payment_mode?: string | null }).payment_mode === "pay_in_clinic");
+  const { data, error } = await supabaseAdmin.from("treatments")
+    .select("id, payment_mode, service_payment_requirement, deposit_amount, price")
+    .eq("profile_id", profileId).in("id", ids);
+  if (error) throw error;
+  if (!data || data.length !== ids.length) throw new Error("A selected service is not available at this clinic.");
+  return data;
+}
+
+function clinicDepositSettings(profile: {
+  payment_deposit_enabled?: boolean | null;
+  deposit_amount_cents?: number | null;
+  deposit_type?: string | null;
+  deposit_percent?: number | string | null;
+  deposit_per_booking?: boolean | null;
+} | null) {
+  return {
+    enabled: !!profile?.payment_deposit_enabled,
+    fixedCents: Math.max(0, Number(profile?.deposit_amount_cents ?? 0)),
+    type: profile?.deposit_type === "percent" ? "percent" as const : "fixed" as const,
+    percent: Number(profile?.deposit_percent ?? 0),
+    perBooking: !!profile?.deposit_per_booking,
+  };
 }
 
 function depositRequiredForProfile(profile: { payment_deposit_enabled?: boolean | null; require_deposit_to_confirm?: boolean | null } | null) {
@@ -1899,7 +1935,8 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
     if (prof?.require_account_to_book && !data.patientUserId) {
       throw new Error("Please sign in to book — this clinic requires an account.");
     }
-    const paymentChoice = (await treatmentsArePayInClinic(data.bookings.map((b) => b.treatmentId)))
+    const paymentTreatments = await getServicePaymentTreatments(data.profileId, data.bookings.map((b) => b.treatmentId));
+    let paymentChoice = (paymentTreatments.every((t) => t.payment_mode === "pay_in_clinic") && !paymentTreatments.some((t) => t.service_payment_requirement === "full"))
       ? ({ mode: "cash", method: "card" } as PaymentChoice)
       : normaliseBookingPaymentChoice(prof, data.paymentChoice ?? null);
     const finalStatus = prof?.auto_confirm_bookings === false ? "pending" : "confirmed";
@@ -2034,6 +2071,16 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       }
     }
     const serverTotalCents = expectedCents.reduce((s, v) => s + v, 0);
+    const servicePaymentLines = data.bookings.map((b, index) => {
+      const t = paymentTreatments.find((t) => t.id === b.treatmentId);
+      return {
+        amountCents: expectedCents[index] ?? 0,
+        requirement: t?.service_payment_requirement,
+        depositAmount: t?.deposit_amount ?? null,
+        defaultBaseCents: Math.round(Number(t?.price ?? 0) * 100),
+      };
+    });
+    paymentChoice = enforceServicePaymentChoice(paymentChoice, servicePaymentLines, clinicDepositSettings(prof)) as PaymentChoice | null;
 
     // Idempotency: if the exact same multi-booking (same clinic, patient email,
     // date + start time, and treatment ids) was submitted in the last 5 minutes,
@@ -2125,8 +2172,10 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
       const end = addMinutesToTime(cursor, b.durationMin);
       const sessionCount = Math.max(1, Number(b.sessionCount ?? 1));
       const serverLinePrice = expectedCents[bi] / 100;
+      const fullRequired = paymentTreatments.find((t) => t.id === b.treatmentId)?.service_payment_requirement === "full";
+      const splitPlan = !fullRequired && b.paymentPlan === "split";
       const paymentNote = sessionCount > 1
-        ? b.paymentPlan === "split"
+        ? splitPlan
           ? `Payment plan: Pay over ${sessionCount} appointments (£${(serverLinePrice / sessionCount).toFixed(2)} per appointment)`
           : `Payment plan: Pay in full for ${sessionCount} appointments`
         : null;
@@ -2168,7 +2217,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         status,
         payment_status: "pending",
         base_amount: serverLinePrice,
-        total_amount: sessionCount > 1 && b.paymentPlan === "split"
+        total_amount: sessionCount > 1 && splitPlan
           ? serverLinePrice / sessionCount
           : serverLinePrice,
       } as never);
@@ -2300,6 +2349,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         patientEmail: data.patientEmail,
         description: `Booking with ${prof?.clinic_name ?? "clinic"}`,
         choice: paymentChoice,
+        servicePaymentLines,
         notes: payNotes,
         dedupeKey: bookingDedupeKey({
           profileId: data.profileId,

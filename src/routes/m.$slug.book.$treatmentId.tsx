@@ -33,6 +33,7 @@ import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import { servicePaymentRequirement } from "@/lib/service-payment";
 import { treatmentPricing } from "@/lib/price-display";
 type Rule = Database["public"]["Tables"]["availability_rules"]["Row"];
 type LocOptional = "is_public" | "notes" | "phone" | "coming_soon" | "coming_soon_label";
@@ -52,6 +53,14 @@ function fromIsoDate(iso: string) {
 }
 
 export const Route = createFileRoute("/m/$slug/book/$treatmentId")({
+  head: () => ({ meta: [
+    { title: "Book your treatment | MODO" },
+    { name: "description", content: "Choose your appointment time and complete your treatment booking securely with MODO." },
+    { property: "og:title", content: "Book your treatment | MODO" },
+    { property: "og:description", content: "Choose a treatment appointment and complete your clinic booking." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   validateSearch: (search: Record<string, unknown>): { locationId?: string; model?: string; practitionerId?: string } => ({
     locationId: typeof search.locationId === "string" ? search.locationId : undefined,
     model: typeof search.model === "string" ? search.model : undefined,
@@ -312,7 +321,8 @@ function BookTreatmentPage() {
   const submitLockRef = useRef(false);
   const sessionCount = Math.max(1, Number((treatment as { session_count?: number }).session_count ?? 1));
   const sessionSpacing = formatSessionSpacing((treatment as { session_interval_days?: number | null }).session_interval_days);
-  const splitAllowed = Boolean((treatment as { allow_split_payment?: boolean }).allow_split_payment) && sessionCount > 1;
+  const fullPaymentRequired = servicePaymentRequirement(treatment.service_payment_requirement, treatment.deposit_amount) === "full";
+  const splitAllowed = !fullPaymentRequired && Boolean((treatment as { allow_split_payment?: boolean }).allow_split_payment) && sessionCount > 1;
   const [paymentPlan, setPaymentPlan] = useState<"full" | "split">("full");
   const [splitAgreed, setSplitAgreed] = useState(false);
   const [discount, setDiscount] = useState<AppliedDiscount | null>(null);
@@ -440,9 +450,10 @@ function BookTreatmentPage() {
     return Math.min(off, price);
   }, [discount, price, treatment.id]);
   const totalAfterDiscount = Math.max(0, totalBeforeDiscount - discountTotal);
+  const totalAfterCredit = Math.max(0, totalAfterDiscount - (useCredit ? Math.min((creditPreview?.applicableCents ?? 0) / 100, totalAfterDiscount) : 0));
   const dueTodayAmount = splitAllowed && paymentPlan === "split"
-    ? totalAfterDiscount / sessionCount
-    : totalAfterDiscount;
+    ? totalAfterCredit / sessionCount
+    : totalAfterCredit;
 
 
 
@@ -1407,6 +1418,12 @@ function BookTreatmentPage() {
       <BookingPaymentPicker
         slug={slug}
         totalAmount={dueTodayAmount}
+        servicePaymentLines={[{
+          amountCents: Math.round(dueTodayAmount * 100),
+          requirement: treatment.service_payment_requirement,
+          depositAmount: treatment.deposit_amount,
+          defaultBaseCents: Math.round((activeModelSlot ? dueTodayAmount : Number(treatment.price ?? 0)) * 100),
+        }]}
         value={paymentChoice}
         onChange={setPaymentChoice}
         accent={brand}
@@ -1415,7 +1432,7 @@ function BookTreatmentPage() {
           return override != null ? Math.max(0, Math.round(Number(override) * 100)) : null;
         })()}
         splitInfo={splitAllowed && paymentPlan === "split" ? { sessionCount } : null}
-        payInClinicOnly={(treatment as { payment_mode?: string | null }).payment_mode === "pay_in_clinic"}
+        payInClinicOnly={!fullPaymentRequired && (treatment as { payment_mode?: string | null }).payment_mode === "pay_in_clinic"}
       />
 
 

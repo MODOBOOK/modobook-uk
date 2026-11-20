@@ -10184,6 +10184,7 @@ export type Database = {
           quiz_tags: Json
           rebook_reminder_days: number | null
           requires_prescriber: boolean
+          service_payment_requirement: string
           session_count: number
           session_interval_days: number | null
           sort_order: number
@@ -10240,6 +10241,7 @@ export type Database = {
           quiz_tags?: Json
           rebook_reminder_days?: number | null
           requires_prescriber?: boolean
+          service_payment_requirement?: string
           session_count?: number
           session_interval_days?: number | null
           sort_order?: number
@@ -10296,6 +10298,7 @@ export type Database = {
           quiz_tags?: Json
           rebook_reminder_days?: number | null
           requires_prescriber?: boolean
+          service_payment_requirement?: string
           session_count?: number
           session_interval_days?: number | null
           sort_order?: number

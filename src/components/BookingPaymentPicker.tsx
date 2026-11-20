@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo } from "react";
 import { getPublicPaymentOptions, type PaymentChoice } from "@/lib/public-booking.functions";
 import { CreditCard, ShieldCheck } from "lucide-react";
+import { hasServicePaymentOverride, servicePaymentDueCents, servicePaymentRequirement, type ServicePaymentLine } from "@/lib/service-payment";
 import { platformFeeCents, PLATFORM_FEE_LABEL } from "@/lib/platform-fee";
 
 type BookingMode = "deposit" | "full" | "cash" | "cash_deposit" | "card_capture";
@@ -48,6 +49,7 @@ type Props = {
   accent?: string;
   /** Optional per-treatment deposit total in pence, overrides clinic default. */
   depositOverrideCents?: number | null;
+  servicePaymentLines?: ServicePaymentLine[];
   /** Multi-treatment bookings: one entry per treatment. overrideCents null means
    *  "use the clinic default" for that treatment; an explicit 0 waives just that
    *  treatment's deposit. Takes precedence over depositOverrideCents. */
@@ -65,7 +67,7 @@ function formatGBP(pence: number) {
   return `£${(pence / 100).toFixed(2)}`;
 }
 
-function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent, depositOverrideCents, depositItems, splitInfo }: Props) {
+function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent, depositOverrideCents, depositItems, splitInfo, servicePaymentLines }: Props) {
   const fn = useServerFn(getPublicPaymentOptions);
   const q = useQuery({
     queryKey: ["publicPaymentOptions", slug],
@@ -76,6 +78,11 @@ function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent,
   const configured = opts && "configured" in opts && opts.configured;
 
   const treatmentTotalCents = Math.round(totalAmount * 100);
+  const serviceOverride = !!servicePaymentLines && hasServicePaymentOverride(servicePaymentLines);
+  const requiresServicePayment = !!servicePaymentLines && servicePaymentLines.some((line) => {
+    const requirement = servicePaymentRequirement(line.requirement, line.depositAmount);
+    return line.amountCents > 0 && (requirement === "full" || (requirement === "deposit" && Number(line.depositAmount) > 0));
+  });
 
   // Null means "use the clinic default"; an explicit zero means this treatment
   // has had its deposit waived.
@@ -85,11 +92,15 @@ function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent,
   // the rest of the basket.
   const allItemsWaived = !!depositItems && depositItems.length > 0
     && depositItems.every((it) => it.overrideCents != null && it.overrideCents <= 0);
-  const depositWaived = (opts && "depositPerBooking" in opts && opts.depositPerBooking) ? false : depositItems ? allItemsWaived : effectiveOverride === 0;
+  const depositWaived = !requiresServicePayment && ((opts && "depositPerBooking" in opts && opts.depositPerBooking) ? false : depositItems ? allItemsWaived : effectiveOverride === 0);
 
   const effectiveDepositCents = useMemo(() => {
     if (!configured) return 0;
     const o = opts as ConfiguredOptions;
+    if (serviceOverride && servicePaymentLines) return servicePaymentDueCents(servicePaymentLines, {
+      enabled: o.depositEnabled, fixedCents: o.depositCents, type: o.depositType,
+      percent: o.depositPercent, perBooking: !!o.depositPerBooking,
+    });
     // Multi-treatment: per treatment, use its override when set (zero waives
     // just that treatment), otherwise the clinic default for that treatment —
     // mirroring the server-side calculation.
@@ -118,13 +129,18 @@ function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent,
       return Math.round((treatmentTotalCents * o.depositPercent) / 100);
     }
     return o.depositCents;
-  }, [configured, opts, depositOverrideCents, depositItems, depositWaived, effectiveOverride, treatmentTotalCents]);
+  }, [configured, opts, depositOverrideCents, depositItems, depositWaived, effectiveOverride, treatmentTotalCents, serviceOverride, servicePaymentLines]);
 
 
   const availableModes = useMemo(() => {
     if (!configured) return [] as BookingMode[];
     const arr: BookingMode[] = [];
     const o = opts as ConfiguredOptions;
+    if (requiresServicePayment) {
+      if (effectiveDepositCents > 0 && effectiveDepositCents < treatmentTotalCents) arr.push("deposit");
+      arr.push("full");
+      return arr;
+    }
     // If the deposit equals or exceeds the treatment total, the deposit
     // effectively IS the full payment — hide the deposit option and only
     // offer "Pay in full".
@@ -154,17 +170,17 @@ function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent,
     // no online option is available at all, so booking can still complete.
     if (o.cashEnabled || arr.length === 0) arr.push("cash");
     return arr;
-  }, [configured, opts, depositWaived, effectiveDepositCents, treatmentTotalCents]);
+  }, [configured, opts, depositWaived, effectiveDepositCents, treatmentTotalCents, requiresServicePayment]);
 
 
 
   // "Pay in full in cash" is governed by the clinic's own "Allow pay in
   // clinic" toggle — independent of deposits.
-  const cashFullAvailable = !!configured && (opts as ConfiguredOptions).allowPayInClinic !== false;
+  const cashFullAvailable = !requiresServicePayment && !!configured && (opts as ConfiguredOptions).allowPayInClinic !== false;
   // "Pay deposit now, rest in cash" is available whenever the clinic takes
   // deposits, accepts cash at the clinic (either toggle) and the deposit is
   // smaller than the total.
-  const cashDepositAvailable = !!configured
+  const cashDepositAvailable = !requiresServicePayment && !!configured
     && !depositWaived
     && !!(opts as ConfiguredOptions).depositEnabled
     && effectiveDepositCents >= 100
@@ -179,18 +195,18 @@ function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent,
     const o = opts as ConfiguredOptions;
     const mode = value?.mode ?? availableModes[0];
     if (mode === "deposit" || mode === "cash_deposit" || mode === "card_capture") {
-      return o.cardEnabled ? (["card"] as Array<"card" | "klarna" | "clearpay">) : [];
+      return o.cardEnabled || requiresServicePayment ? (["card"] as Array<"card" | "klarna" | "clearpay">) : [];
     }
     const arr: Array<"card" | "klarna" | "clearpay"> = [];
     // Card in "pay in full" mode is governed by its own toggle — a clinic can
     // take card deposits while keeping full payments Klarna/Clearpay only.
     const depositCoversFull = !depositWaived && o.depositEnabled && o.cardEnabled
       && effectiveDepositCents >= 100 && effectiveDepositCents >= treatmentTotalCents;
-    if (o.fullCardEnabled || depositCoversFull) arr.push("card");
+    if (o.fullCardEnabled || depositCoversFull || requiresServicePayment) arr.push("card");
     if (o.klarnaEnabled) arr.push("klarna");
     if (o.clearpayEnabled) arr.push("clearpay");
     return arr;
-  }, [configured, opts, value?.mode, availableModes, depositWaived, effectiveDepositCents, treatmentTotalCents]);
+  }, [configured, opts, value?.mode, availableModes, depositWaived, effectiveDepositCents, treatmentTotalCents, requiresServicePayment]);
 
   // If the externally controlled value is no longer valid, coerce it. Required
   // deposits are always deposit + card so the server can take payment and save
@@ -203,6 +219,12 @@ function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent,
       return;
     }
     const o = opts as ConfiguredOptions;
+    if (requiresServicePayment) {
+      const mode = value?.mode === "full" ? "full" : effectiveDepositCents >= treatmentTotalCents ? "full" : "deposit";
+      const method = mode === "deposit" ? "card" : availableMethods.includes(value?.method ?? "card") ? value?.method ?? "card" : "card";
+      if (value?.mode !== mode || value.method !== method) onChange({ mode, method });
+      return;
+    }
     if (!value && !depositWaived && o.requireDepositToConfirm && o.depositEnabled && availableMethods.includes("card")) {
       onChange({ mode: "deposit", method: "card" });
       return;
@@ -228,7 +250,7 @@ function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent,
     } else if (normalizedMode !== value.mode || chosenMethod !== value.method) {
       onChange({ ...value, mode: normalizedMode, method: chosenMethod });
     }
-  }, [value, configured, opts, availableModes, availableMethods, effectiveDepositCents, treatmentTotalCents, depositWaived, onChange]);
+  }, [value, configured, opts, availableModes, availableMethods, effectiveDepositCents, treatmentTotalCents, depositWaived, onChange, requiresServicePayment]);
 
 
   const chosen = useMemo(() => {
@@ -257,9 +279,13 @@ function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent,
   const pickerUnavailable = !q.isLoading && treatmentTotalCents > 0
     && (!configured || availableModes.length === 0 || (hasNonCashMode && availableMethods.length === 0));
   useEffect(() => {
-    if (pickerUnavailable && value?.mode !== "cash") onChange({ mode: "cash", method: "card" });
-  }, [pickerUnavailable, value?.mode, onChange]);
+    if (!pickerUnavailable) return;
+    if (requiresServicePayment) {
+      if (value?.mode !== "deposit" || value.method !== "card") onChange({ mode: "deposit", method: "card" });
+    } else if (value?.mode !== "cash") onChange({ mode: "cash", method: "card" });
+  }, [pickerUnavailable, value, onChange, requiresServicePayment]);
 
+  if (pickerUnavailable && requiresServicePayment) return <p role="alert" className="text-sm text-destructive">Payment is required for this service. Online payment is currently unavailable—please contact the clinic.</p>;
   if (!configured || availableModes.length === 0) return null;
   if (hasNonCashMode && availableMethods.length === 0) return null;
 
@@ -352,7 +378,7 @@ function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent,
             className="text-left rounded-xl border-2 px-3 py-2.5 transition"
             style={optionStyle(chosen?.mode === "deposit")}
           >
-            <div className="text-sm font-semibold">Pay deposit</div>
+            <div className="text-sm font-semibold">{requiresServicePayment ? "Pay required amount" : "Pay deposit"}</div>
             <div className="text-xs opacity-75">{formatGBP(effectiveDepositCents)} now — card saved securely for the clinic's booking policy</div>
           </button>
         );
@@ -579,7 +605,7 @@ function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent,
               className="flex items-baseline justify-between border-t pt-2 mt-1"
               style={accent ? { borderColor: `color-mix(in oklab, ${accent} 25%, transparent)` } : undefined}
             >
-              <span className="font-medium">{chosen.mode === "deposit" ? "Deposit today" : "Total today"}</span>
+              <span className="font-medium">{chosen.mode === "deposit" && !requiresServicePayment ? "Deposit today" : "Total today"}</span>
               <span className="text-lg font-bold" style={headingStyle}>{formatGBP(totalCents)}</span>
             </div>
           </div>
@@ -600,7 +626,7 @@ function BookingPaymentPickerInner({ slug, totalAmount, value, onChange, accent,
 
 
 export function BookingPaymentPicker(props: Props) {
-  if (props.payInClinicOnly) return <PayInClinicNotice {...props} />;
+  if (props.payInClinicOnly && !(props.servicePaymentLines && hasServicePaymentOverride(props.servicePaymentLines))) return <PayInClinicNotice {...props} />;
   return <BookingPaymentPickerInner {...props} />;
 }
 

@@ -1,0 +1,2 @@
+ALTER TABLE public.treatments ADD COLUMN service_payment_requirement text NOT NULL DEFAULT 'clinic' CHECK (service_payment_requirement IN ('clinic', 'deposit', 'full'));
+COMMENT ON COLUMN public.treatments.service_payment_requirement IS 'Service booking payment override; clinic inherits settings and existing deposit_amount overrides, deposit uses deposit_amount, full requires the final booked line amount.';

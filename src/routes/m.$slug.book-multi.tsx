@@ -40,6 +40,7 @@ import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { SafeHtml } from "@/components/SafeHtml";
+import { hasServicePaymentOverride, servicePaymentRequirement } from "@/lib/service-payment";
 import { treatmentPricing } from "@/lib/price-display";
 
 type Rule = Database["public"]["Tables"]["availability_rules"]["Row"];
@@ -92,6 +93,14 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/m/$slug/book-multi")({
+  head: () => ({ meta: [
+    { title: "Book multiple treatments | MODO" },
+    { name: "description", content: "Book your selected clinic treatments together and complete payment securely with MODO." },
+    { property: "og:title", content: "Book multiple treatments | MODO" },
+    { property: "og:description", content: "Choose a time for your selected treatments and complete your clinic booking." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => ({ ids: search.ids ?? "", pkgs: search.pkgs ?? "" }),
   loader: ({ params, deps }) => {
@@ -389,7 +398,7 @@ function MultiBookPage() {
     () =>
       treatments.filter((t) => {
         const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
-        return Boolean((t as { allow_split_payment?: boolean }).allow_split_payment) && sessions > 1;
+        return servicePaymentRequirement(t.service_payment_requirement, t.deposit_amount) !== "full" && Boolean((t as { allow_split_payment?: boolean }).allow_split_payment) && sessions > 1;
       }),
     [treatments],
   );
@@ -402,7 +411,7 @@ function MultiBookPage() {
   const [paymentChoice, setPaymentChoice] = useState<PaymentChoice | null>(null);
   const [step, setStep] = useState<"selection" | "datetime" | "details">("selection");
 
-  const selectedPaymentPlan = (t: Treatment) => paymentPlans[t.id] ?? "full";
+  const selectedPaymentPlan = (t: Treatment) => servicePaymentRequirement(t.service_payment_requirement, t.deposit_amount) === "full" ? "full" : paymentPlans[t.id] ?? "full";
   const setTreatmentPaymentPlan = (treatmentId: string, plan: "full" | "split") =>
     setPaymentPlans((prev) => ({ ...prev, [treatmentId]: plan }));
 
@@ -770,23 +779,7 @@ function MultiBookPage() {
 
   }, [dayQuery.data, dayRules, totalDuration, locationId, minNoticeHours, date, smartTimes, visitWindows]);
 
-  async function submit() {
-    if (submitLockRef.current) return;
-    if (!slot || !form.name || !form.email) {
-      toast.error("Please fill name, email and pick a time slot");
-      return;
-    }
-    if (!isFullName(form.name)) {
-      toast.error(FULL_NAME_MESSAGE);
-      return;
-    }
-    if (termsRequired && !agreedToTerms) {
-      toast.error("Please agree to the terms & conditions to continue");
-      return;
-    }
-    submitLockRef.current = true;
-    setSubmitting(true);
-    try {
+  function paymentBookings() {
       const applicableIds = new Set(discount?.applies_to_treatment_ids ?? []);
       const depositOverridesSplit = paymentChoice?.mode === "deposit" || paymentChoice?.mode === "cash_deposit";
       const pickedAddonTotalCents = Math.round(
@@ -818,7 +811,7 @@ function MultiBookPage() {
         }, 0) * 100,
       );
 
-      const bookings = treatments.map((t, index) => {
+      return treatments.map((t, index) => {
         const pkg = pkgByTreatment.get(t.id);
         let price = pkg ? Number(pkg.price ?? 0) : zeroPricedIds.has(t.id) ? 0 : priceFor(t);
         if (!pkg && !zeroPricedIds.has(t.id) && discount && applicableIds.has(t.id)) {
@@ -844,6 +837,26 @@ function MultiBookPage() {
           clinicVisitId: visitSelections[t.id] ?? null,
         };
       });
+  }
+
+  async function submit() {
+    if (submitLockRef.current) return;
+    if (!slot || !form.name || !form.email) {
+      toast.error("Please fill name, email and pick a time slot");
+      return;
+    }
+    if (!isFullName(form.name)) {
+      toast.error(FULL_NAME_MESSAGE);
+      return;
+    }
+    if (termsRequired && !agreedToTerms) {
+      toast.error("Please agree to the terms & conditions to continue");
+      return;
+    }
+    submitLockRef.current = true;
+    setSubmitting(true);
+    try {
+      const bookings = paymentBookings();
 
 
       const res = await reqFn({
@@ -1842,13 +1855,19 @@ function MultiBookPage() {
                 )}
 
                 {(() => {
-                  const anySplit = splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split");
+                  const lines = paymentBookings().map((b) => {
+                    const t = treatments.find((t) => t.id === b.treatmentId);
+                    return { amountCents: b.priceCents, requirement: t?.service_payment_requirement, depositAmount: t?.deposit_amount ?? null, defaultBaseCents: Math.round(Number(t?.price ?? 0) * 100) };
+                  });
+                  const overrides = hasServicePaymentOverride(lines);
+                  const anySplit = !overrides && splitEligibleTreatments.some((t) => selectedPaymentPlan(t) === "split");
                   // Per-session today: split treatments contribute price/sessions; others contribute full price.
                   let perSessionToday = 0;
                   let remainingPerSession = 0;
                   treatments.forEach((t) => {
                     const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
                     const isSplit =
+                      servicePaymentRequirement(t.service_payment_requirement, t.deposit_amount) !== "full" &&
                       Boolean((t as { allow_split_payment?: boolean }).allow_split_payment) &&
                       sessions > 1 &&
                       selectedPaymentPlan(t) === "split";
@@ -1875,7 +1894,8 @@ function MultiBookPage() {
                   return (
                     <BookingPaymentPicker
                       slug={slug}
-                      totalAmount={anySplit ? perSessionToday : totalAfterDiscount}
+                      totalAmount={overrides ? lines.reduce((sum, line) => sum + line.amountCents, 0) / 100 : anySplit ? perSessionToday : totalAfterDiscount}
+                      servicePaymentLines={lines}
                       value={paymentChoice}
                       onChange={setPaymentChoice}
                       accent={brand}
@@ -1889,7 +1909,7 @@ function MultiBookPage() {
                         };
                       })}
 
-                      payInClinicOnly={treatments.length > 0 && treatments.every((t) => (t as { payment_mode?: string | null }).payment_mode === "pay_in_clinic")}
+                      payInClinicOnly={!overrides && treatments.length > 0 && treatments.every((t) => (t as { payment_mode?: string | null }).payment_mode === "pay_in_clinic")}
                       splitInfo={anySplit ? { sessionCount: maxSessions, remainingPerSessionCents: Math.round(remainingPerSession * 100) } : null}
                     />
                   );
@@ -1904,6 +1924,7 @@ function MultiBookPage() {
                     const sessions = Math.max(1, Number((t as { session_count?: number }).session_count ?? 1));
                     const isSplit =
                       !isDeposit &&
+                      servicePaymentRequirement(t.service_payment_requirement, t.deposit_amount) !== "full" &&
                       Boolean((t as { allow_split_payment?: boolean }).allow_split_payment) &&
                       sessions > 1 &&
                       selectedPaymentPlan(t) === "split";

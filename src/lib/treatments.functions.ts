@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { courseGroupLabel } from "./course-group-label";
+import { servicePaymentRequirement, type ServicePaymentRequirement } from "./service-payment";
 
 
 async function __activeProfileId(supabase: any, userId: string) {
@@ -54,7 +55,8 @@ export const createTreatment = createServerFn({ method: "POST" })
       consent_form_url?: string;
       picture_url?: string;
       payment_mode?: Database["public"]["Enums"]["payment_mode"];
-      deposit_amount?: number;
+      deposit_amount?: number | null;
+      service_payment_requirement?: ServicePaymentRequirement;
       is_consultation?: boolean;
       deductible_against?: string[];
       deductible_window_days?: number;
@@ -79,6 +81,8 @@ export const createTreatment = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
+    if (data.service_payment_requirement !== undefined && !["clinic", "deposit", "full"].includes(data.service_payment_requirement)) throw new Error("Choose a valid service payment option.");
+    if (data.service_payment_requirement === "deposit" && !(Number.isFinite(data.deposit_amount) && Number(data.deposit_amount) >= 0)) throw new Error("Enter a valid deposit amount.");
     const { data: profile, error } = await supabase
       .from("profiles")
       .select("id")
@@ -97,7 +101,8 @@ export const createTreatment = createServerFn({ method: "POST" })
         consent_form_url: data.consent_form_url,
         picture_url: data.picture_url,
         payment_mode: data.payment_mode ?? "full",
-        deposit_amount: data.deposit_amount,
+        deposit_amount: data.service_payment_requirement === "full" || data.service_payment_requirement === "clinic" ? null : data.deposit_amount,
+        service_payment_requirement: servicePaymentRequirement(data.service_payment_requirement, data.deposit_amount),
         is_consultation: data.is_consultation ?? false,
         deductible_against: data.deductible_against,
         deductible_window_days: data.deductible_window_days,
@@ -108,7 +113,7 @@ export const createTreatment = createServerFn({ method: "POST" })
         course_recommended: data.course_recommended ?? false,
         course_option_label: data.course_option_label ?? null,
         session_count: data.session_count ?? 1,
-        allow_split_payment: data.allow_split_payment ?? false,
+        allow_split_payment: data.service_payment_requirement === "full" ? false : data.allow_split_payment ?? false,
         rebook_reminder_days: data.rebook_reminder_days ?? null,
         topup_reminder_days: data.topup_reminder_days ?? null,
         session_interval_days: data.session_interval_days ?? null,
@@ -136,6 +141,7 @@ export const updateTreatment = createServerFn({ method: "POST" })
       picture_url?: string;
       payment_mode?: Database["public"]["Enums"]["payment_mode"];
       deposit_amount?: number | null;
+      service_payment_requirement?: ServicePaymentRequirement;
 
       active?: boolean;
       is_consultation?: boolean;
@@ -194,6 +200,12 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.picture_url !== undefined) update.picture_url = data.picture_url;
     if (data.payment_mode !== undefined) update.payment_mode = data.payment_mode;
     if (data.deposit_amount !== undefined) update.deposit_amount = data.deposit_amount;
+    if (data.service_payment_requirement !== undefined) {
+      if (!["clinic", "deposit", "full"].includes(data.service_payment_requirement)) throw new Error("Choose a valid service payment option.");
+      if (data.service_payment_requirement === "deposit" && !(Number.isFinite(data.deposit_amount) && Number(data.deposit_amount) >= 0)) throw new Error("Enter a valid deposit amount.");
+      update.service_payment_requirement = data.service_payment_requirement;
+      if (data.service_payment_requirement !== "deposit") update.deposit_amount = null;
+    }
     if (data.active !== undefined) update.active = data.active;
     if (data.is_consultation !== undefined) update.is_consultation = data.is_consultation;
     if (data.deductible_against !== undefined) update.deductible_against = data.deductible_against;
@@ -207,6 +219,7 @@ export const updateTreatment = createServerFn({ method: "POST" })
     if (data.course_option_label !== undefined) update.course_option_label = data.course_option_label;
     if (data.session_count !== undefined) update.session_count = data.session_count;
     if (data.allow_split_payment !== undefined) update.allow_split_payment = data.allow_split_payment;
+    if (data.service_payment_requirement === "full") update.allow_split_payment = false;
     if (data.rebook_reminder_days !== undefined) update.rebook_reminder_days = data.rebook_reminder_days;
     if (data.topup_reminder_days !== undefined) update.topup_reminder_days = data.topup_reminder_days;
     if (data.session_interval_days !== undefined) update.session_interval_days = data.session_interval_days;

@@ -89,6 +89,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { toast } from "sonner";
+import { servicePaymentRequirement, type ServicePaymentRequirement } from "@/lib/service-payment";
 import {
   DndContext,
   PointerSensor,
@@ -106,6 +107,14 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 export const Route = createFileRoute("/_authenticated/dashboard/services")({
+  head: () => ({ meta: [
+    { title: "Services & booking payments | MODO" },
+    { name: "description", content: "Manage your clinic’s services, prices and service-specific booking payments in MODO." },
+    { property: "og:title", content: "Services & booking payments | MODO" },
+    { property: "og:description", content: "Manage clinic services and booking payment requirements." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
+  ] }),
   component: ServicesPage,
 });
 
@@ -590,6 +599,7 @@ function ServicesPage() {
               picture_url: base.picture_url,
               payment_mode: base.payment_mode,
               deposit_amount: base.deposit_amount,
+              service_payment_requirement: base.service_payment_requirement,
               active: base.active,
             };
             const editingId = svcDialog?.treat?.id ?? null;
@@ -1582,7 +1592,8 @@ function ServiceDialog({
     active?: boolean;
     picture_url?: string;
     payment_mode?: "full" | "deposit" | "pay_in_clinic";
-    deposit_amount?: number;
+    deposit_amount?: number | null;
+    service_payment_requirement?: ServicePaymentRequirement;
     consent_ids?: string[];
     aftercare_template_ids?: string[];
     auto_send_medical_forms?: boolean;
@@ -1638,6 +1649,7 @@ function ServiceDialog({
   const [pictureUrl, setPictureUrl] = useState<string | null>(null);
   const [paymentMode, setPaymentMode] = useState<"full" | "deposit" | "pay_in_clinic">("full");
   const [depositAmount, setDepositAmount] = useState<string>("");
+  const [paymentRequirement, setPaymentRequirement] = useState<ServicePaymentRequirement>("clinic");
   const [consentIds, setConsentIds] = useState<string[]>([]);
   // True once we know this treatment's saved consents (or it's a new treatment).
   // Until then, saving must not overwrite existing consent links with an empty list.
@@ -1695,6 +1707,7 @@ function ServiceDialog({
       setPictureUrl(null);
       setPaymentMode("full");
       setDepositAmount("");
+      setPaymentRequirement("clinic");
       setConsentIds([]);
       setConsentsLoaded(true);
       setAftercareIds([]);
@@ -1736,6 +1749,8 @@ function ServiceDialog({
         setActive(t.active !== false);
         setPictureUrl((t.picture_url as string) ?? null);
         setDepositAmount(t.deposit_amount == null ? "" : String(t.deposit_amount));
+        setPaymentRequirement(servicePaymentRequirement(t.service_payment_requirement, t.deposit_amount));
+        setPaymentMode(t.payment_mode === "pay_in_clinic" ? "pay_in_clinic" : "full");
         setAutoSendForms(t.auto_send_medical_forms !== false);
         setAftercareHtml(String(t.aftercare_html ?? ""));
         setAftercareDelay(Number(t.aftercare_delay_hours ?? 2));
@@ -2058,9 +2073,18 @@ function ServiceDialog({
                 </span>
               </label>
             )}
-            {depEnabled && (
-              <div className="space-y-1.5 border-t pt-3">
-                <Label htmlFor="s-dep">Deposit override (£) <span className="text-[11px] font-normal text-muted-foreground">— optional, leave blank to use default</span></Label>
+              <div className="space-y-2 border-t pt-3">
+                <Label htmlFor="s-payment-requirement">Payment at booking</Label>
+                <Select value={paymentRequirement} onValueChange={(value) => setPaymentRequirement(value as ServicePaymentRequirement)}>
+                  <SelectTrigger id="s-payment-requirement"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="clinic">Use clinic settings</SelectItem>
+                    <SelectItem value="deposit">Custom deposit</SelectItem>
+                    <SelectItem value="full">Require full payment</SelectItem>
+                  </SelectContent>
+                </Select>
+                {paymentRequirement === "deposit" && <>
+                <Label htmlFor="s-dep">Deposit amount (£)</Label>
                 <Input
                   id="s-dep"
                   type="number"
@@ -2069,11 +2093,9 @@ function ServiceDialog({
                   onChange={(e) => setDepositAmount(e.target.value)}
                   placeholder={`Default £${depDefault}`}
                 />
-                <p className="text-[11px] text-muted-foreground">
-                  Payment methods (full / deposit / Klarna / Clearpay / pay in clinic) are managed in <a href="/dashboard/settings" className="underline">Booking settings</a>. Klarna &amp; Clearpay always charge the full amount at booking.
-                </p>
+                </>}
+                {paymentRequirement === "full" && <p className="text-xs text-muted-foreground">100% of this service’s final price is due at booking.</p>}
               </div>
-            )}
           </SvcSection>
 
           <SvcSection
@@ -2299,7 +2321,7 @@ function ServiceDialog({
             </Button>
             <Button
               className="h-11 flex-[2]"
-              disabled={!name.trim() || saving}
+              disabled={!name.trim() || saving || (paymentRequirement === "deposit" && (!depositAmount.trim() || !Number.isFinite(Number(depositAmount)) || Number(depositAmount) < 0))}
               onClick={async () => {
                 setSaving(true);
                 await onSubmit({
@@ -2309,15 +2331,16 @@ function ServiceDialog({
                   description: description.trim() || undefined,
                   category_id: categoryId === "__none__" ? null : categoryId,
                   session_count: sessionCount,
-                  allow_split_payment: sessionCount > 1 ? allowSplit : false,
+                  allow_split_payment: sessionCount > 1 && paymentRequirement !== "full" ? allowSplit : false,
                   rebook_reminder_days: rebookDays.trim() ? Number(rebookDays) : null,
                   topup_reminder_days: topupDays.trim() ? Number(topupDays) : null,
                   session_interval_days: sessionCount > 1 && intervalDays.trim() ? Number(intervalDays) * (intervalUnit === "weeks" ? 7 : 1) : null,
                   color,
                   active,
                   picture_url: pictureUrl ?? undefined,
-                  payment_mode: depEnabled ? "deposit" : "full",
-                  deposit_amount: depositAmount.trim() ? Number(depositAmount) : undefined,
+                  payment_mode: paymentRequirement === "clinic" && paymentMode === "pay_in_clinic" ? "pay_in_clinic" : depEnabled ? "deposit" : "full",
+                  service_payment_requirement: paymentRequirement,
+                  deposit_amount: paymentRequirement === "deposit" ? Number(depositAmount) : null,
                   consent_ids: consentsLoaded ? consentIds : undefined,
                   aftercare_template_ids: aftercareIds,
                   auto_send_medical_forms: autoSendForms,

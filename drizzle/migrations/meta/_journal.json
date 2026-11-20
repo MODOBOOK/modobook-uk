@@ -134,6 +134,13 @@
       "when": 1794865735977,
       "tag": "0018_lock_create_notification",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1795211337940,
+      "tag": "0019_service_payment_requirement",
+      "breakpoints": true
     }
   ]
 }

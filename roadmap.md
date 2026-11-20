@@ -1,5 +1,10 @@
 # Mobile redesign — practitioner dashboard
 
+## Service payment overrides
+- [x] Add clinic-default, custom-deposit and full-payment choices to service editing without changing existing settings
+- [x] Enforce service payment requirements in single and multi-service booking checkout
+- [x] Test payment rules and verify service editing and public booking choices in preview; 20 tests pass, three choices saved/reloaded through the signed-in UI, inactive verification service deleted, real-clinic payment selector checked at desktop/mobile widths. No charged booking or publish performed.
+
 ## Read-only platform sweep — 10 November 2026
 - [x] Check live health, sign-in logs, booking/payment records, email queues, SMS and Project monitoring; 40 rule tests pass.
 - [x] Verify Ryan's signed-in preview calendar and SMS page plus live homepage and two public booking pages; no sends, payments or record changes.
