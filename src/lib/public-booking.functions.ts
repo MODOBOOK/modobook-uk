@@ -1029,12 +1029,14 @@ export const requestBooking = createServerFn({ method: "POST" })
     const slotRanges = [{ start: data.startTime, end: data.endTime }];
     // Model slots are explicitly advertised by the practitioner, so they are
     // not re-checked against the normal diary here.
-    if (!data.modelSlotId) {
+    // Only pre-check when the patient chose a practitioner; auto-assigned
+    // bookings pick a free team member and are verified by the race check.
+    if (!data.modelSlotId && data.practitionerId) {
       await assertSlotAvailable({
         admin: supabaseAdmin,
         profileId: data.profileId,
         date: data.date,
-        ranges: slotRanges,
+        ranges: slotRanges.map((r) => ({ ...r, practitionerId: data.practitionerId })),
         locationId: data.locationId ?? null,
       });
     }
@@ -1114,7 +1116,7 @@ export const requestBooking = createServerFn({ method: "POST" })
         admin: supabaseAdmin,
         profileId: data.profileId,
         date: data.date,
-        ranges: slotRanges,
+        ranges: slotRanges.map((r) => ({ ...r, practitionerId: assignedPractitionerId ?? null })),
         ownIds: [id],
         locationId: data.locationId ?? null,
       })
@@ -2143,16 +2145,21 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         c = e;
       }
     }
-    await assertSlotAvailable({
-      admin: supabaseAdmin,
-      profileId: data.profileId,
-      date: data.date,
-      ranges: multiRanges,
-      locationId: data.locationId ?? null,
-    });
+    // Pre-check only when a practitioner was chosen (scoped to them); the
+    // race check below verifies each line against its assigned practitioner.
+    if (data.practitionerId) {
+      await assertSlotAvailable({
+        admin: supabaseAdmin,
+        profileId: data.profileId,
+        date: data.date,
+        ranges: multiRanges.map((r) => ({ ...r, practitionerId: data.practitionerId })),
+        locationId: data.locationId ?? null,
+      });
+    }
 
     let cursor = data.startTime;
     const created: { id: string; treatmentId: string }[] = [];
+    const assignedRanges: { start: string; end: string; practitionerId: string | null }[] = [];
     const consents: { token: string; consent_template_id: string }[] = [];
     let firstAssignedPractitionerId: string | null = null;
     // Check the patient's practitioner choice once, before writing anything,
@@ -2225,6 +2232,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
 
       if (error) throw new Error(error.message);
       created.push({ id, treatmentId: b.treatmentId });
+      assignedRanges.push({ start: cursor, end, practitionerId: assignedPractitionerId ?? null });
 
       const { data: links } = await sb
         .from("treatment_consents")
@@ -2248,7 +2256,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
         admin: supabaseAdmin,
         profileId: data.profileId,
         date: data.date,
-        ranges: multiRanges,
+        ranges: assignedRanges,
         ownIds: created.map((c) => c.id),
         locationId: data.locationId ?? null,
       })

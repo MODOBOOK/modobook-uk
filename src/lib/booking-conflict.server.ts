@@ -8,7 +8,12 @@
  * the loser of a race is rolled back instead of double-booked.
  */
 
-export type TimeRange = { start: string; end: string };
+/**
+ * practitionerId scopes the check: an appointment only clashes when it belongs
+ * to the same practitioner, or when either side has no practitioner (treated
+ * as clinic-wide). Team members can therefore take bookings at the same time.
+ */
+export type TimeRange = { start: string; end: string; practitionerId?: string | null };
 
 const toMin = (t: string) => {
   const [h, m] = String(t).split(":").map(Number);
@@ -20,6 +25,7 @@ type ApptRow = {
   start_time: string;
   end_time: string;
   location_id: string | null;
+  practitioner_id: string | null;
   status: string | null;
   payment_status: string | null;
   payment_hold_expires_at: string | null;
@@ -43,7 +49,7 @@ async function loadBusy(
 
   const { data: rows } = await admin
     .from("appointments")
-    .select("id,start_time,end_time,location_id,status,payment_status,payment_hold_expires_at,created_at")
+    .select("id,start_time,end_time,location_id,practitioner_id,status,payment_status,payment_hold_expires_at,created_at")
     .eq("profile_id", profileId)
     .eq("scheduled_date", date)
     .neq("status", "cancelled");
@@ -66,13 +72,19 @@ async function loadBusy(
     .map((r) => ({
       id: r.id,
       createdAt: r.created_at,
+      practitionerId: r.practitioner_id,
       startMin: toMin(r.start_time) - bufferBefore,
       endMin: toMin(r.end_time) + bufferAfter,
     }));
 }
 
-const overlaps = (busy: { startMin: number; endMin: number }, r: TimeRange) =>
-  toMin(r.start) < busy.endMin && busy.startMin < toMin(r.end);
+export const overlaps = (
+  busy: { startMin: number; endMin: number; practitionerId?: string | null },
+  r: TimeRange,
+) =>
+  (!r.practitionerId || !busy.practitionerId || r.practitionerId === busy.practitionerId) &&
+  toMin(r.start) < busy.endMin &&
+  busy.startMin < toMin(r.end);
 
 export const SLOT_TAKEN_MESSAGE =
   "Sorry — that time was just booked by someone else. Please pick another slot.";
@@ -86,6 +98,7 @@ export async function assertSlotAvailable(args: {
   excludeIds?: string[];
   locationId?: string | null;
 }) {
+  if (args.ranges.length === 0) return;
   const busy = await loadBusy(args.admin, args.profileId, args.date, args.excludeIds ?? [], args.locationId);
   const clash = busy.some((b) => args.ranges.some((r) => overlaps(b, r)));
   if (clash) throw new Error(SLOT_TAKEN_MESSAGE);
