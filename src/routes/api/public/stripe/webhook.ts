@@ -336,6 +336,52 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                         },
                       });
                     }
+                    // Clinic alerts: in-app bell + email. profile_id may be the owner's login id.
+                    try {
+                      const { data: clinic } = await supabaseAdmin
+                        .from("profiles")
+                        .select("id, email, new_booking_email_to")
+                        .or(`id.eq.${p.profile_id},user_id.eq.${p.profile_id}`)
+                        .limit(1)
+                        .maybeSingle();
+                      const c = clinic as { id: string; email: string | null; new_booking_email_to: string | null } | null;
+                      const amountNum = p.kind === "value" ? Number(p.initial_amount) : null;
+                      const valueText = amountNum && amountNum > 0 ? `a £${amountNum.toFixed(2)} gift card` : "a gift card";
+                      if (c) {
+                        await supabaseAdmin.rpc("create_notification", {
+                          p_profile_id: c.id,
+                          p_type: "gift_card_purchase",
+                          p_title: "New gift card purchased",
+                          p_body: `${p.buyer_name || p.buyer_email || "A customer"} purchased ${valueText}${p.recipient_name ? ` for ${p.recipient_name}` : ""}.`,
+                          p_emoji: "🎁",
+                          p_link: "/dashboard/gift-cards",
+                          p_entity_id: p.id,
+                          p_entity_type: "gift_card_purchase",
+                        } as never);
+                        const clinicTo = (c.new_booking_email_to || c.email || "").trim();
+                        if (clinicTo) {
+                          const { enqueueAppEmail } = await import("@/lib/email/send.server");
+                          await enqueueAppEmail({
+                            templateName: "gift-card-clinic-alert",
+                            recipientEmail: clinicTo,
+                            messageId: `gift-card-clinic-${p.id}`,
+                            templateData: {
+                              buyerName: p.buyer_name,
+                              buyerEmail: p.buyer_email,
+                              recipientName: p.recipient_name,
+                              recipientEmail: p.recipient_email,
+                              cardName: p.gift_cards?.name ?? "Gift card",
+                              amount: amountNum,
+                              code: p.code,
+                              message: p.message,
+                              profileId: p.profile_id,
+                            },
+                          });
+                        }
+                      }
+                    } catch (e) {
+                      console.error("[stripe-webhook] gift card clinic alert failed", e);
+                    }
                   }
                 } catch (e) {
                   console.error("[stripe-webhook] gift card activation failed", e);

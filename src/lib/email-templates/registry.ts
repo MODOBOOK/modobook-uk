@@ -15,6 +15,7 @@ import { template as waitlistWelcome } from './waitlist-welcome'
 import { template as waitlistOpen } from './waitlist-open'
 import { template as prescriberInvoice } from './prescriber-invoice'
 import { template as giftCardDelivery } from './gift-card-delivery'
+import { template as giftCardClinicAlert } from './gift-card-clinic-alert'
 import { template as newBookingPractitioner } from './new-booking-practitioner'
 import { template as complianceReminder } from './compliance-reminder'
 import { template as trialActivation } from './trial-activation'
@@ -52,6 +53,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'waitlist-open': waitlistOpen,
   'prescriber-invoice': prescriberInvoice,
   'gift-card-delivery': giftCardDelivery,
+  'gift-card-clinic-alert': giftCardClinicAlert,
   'new-booking-practitioner': newBookingPractitioner,
   'compliance-reminder': complianceReminder,
   'trial-activation': trialActivation,
