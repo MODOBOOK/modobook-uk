@@ -834,10 +834,15 @@ export async function getPractitionerBranding(
   if (!profileId) return fallback
   try {
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
-    const [{ data: prof }, { data: theme }] = await Promise.all([
-      supabaseAdmin.from('profiles').select('clinic_name, brand_color, hero_url, about_page, social_links').eq('id', profileId).maybeSingle(),
-      supabaseAdmin.from('clinic_theme').select('logo_url, primary_color, hero_image_url').eq('profile_id', profileId).maybeSingle(),
-    ])
+    // Some records (e.g. gift cards) store the owner's login id rather than the
+    // clinic profile id — resolve either to the clinic profile.
+    let { data: prof } = await supabaseAdmin.from('profiles').select('id, clinic_name, brand_color, hero_url, about_page, social_links').eq('id', profileId).maybeSingle()
+    if (!prof) {
+      const r = await supabaseAdmin.from('profiles').select('id, clinic_name, brand_color, hero_url, about_page, social_links').eq('user_id', profileId).maybeSingle()
+      prof = r.data
+    }
+    const themeKey = (prof as { id?: string } | null)?.id ?? profileId
+    const { data: theme } = await supabaseAdmin.from('clinic_theme').select('logo_url, primary_color, hero_image_url').in('profile_id', [themeKey, profileId]).limit(1).maybeSingle()
     const p = prof as { clinic_name?: string | null; brand_color?: string | null; hero_url?: string | null; about_page?: { contact_email?: string | null; website?: string | null } | null; social_links?: { instagram?: string | null; website?: string | null } | null } | null
     const t = theme as { logo_url?: string | null; primary_color?: string | null; hero_image_url?: string | null } | null
     return {
