@@ -109,7 +109,7 @@ export const resendConsentToClient = createServerFn({ method: "POST" })
 
     const { data: row, error } = await context.supabase
       .from("appointment_consents")
-      .select("id, token, template:template_id (name)")
+      .select("id, token, template:consent_templates(name)")
       .eq("id", data.id)
       .eq("profile_id", profile.id)
       .single();
