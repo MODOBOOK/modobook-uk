@@ -23,23 +23,22 @@ export const Route = createFileRoute("/api/public/hooks/aftercare-dispatch")({
           },
         });
 
-        const cutoff = new Date(Date.now() - 2 * 60 * 60 * 1000);
-        const cutoffDate = cutoff.toISOString().slice(0, 10);
-        const cutoffTime = cutoff.toISOString().slice(11, 19);
-        // Only ever look back a short window: this sweep is a fallback for
-        // appointments that finished recently but were never checked out.
-        // Without a lower bound it would email months of historical patients.
-        const lookbackDate = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-        const { data: appts, error } = await supabase
-          .from("appointments")
-          .select("id, patient_name, patient_email, patient_phone, aftercare_html, aftercare_sent_at, checked_out_at, scheduled_date, start_time, end_time, profile_id, status")
-          .gte("scheduled_date", lookbackDate)
-          .or(`scheduled_date.lt.${cutoffDate},and(scheduled_date.eq.${cutoffDate},end_time.lte.${cutoffTime})`)
-          .not("aftercare_html", "is", null)
-          .is("aftercare_sent_at", null)
-          .is("checked_out_at", null)
-          .not("status", "in", "(cancelled,no_show)")
-          .order("scheduled_date", { ascending: false })
+        const now = new Date();
+        // Never email historic patients: anything due more than 48h ago is retired.
+        const staleBefore = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
+        const { count: expired } = await supabase
+          .from("appointment_aftercare")
+          .update({ status: "expired", updated_at: now.toISOString() } as never, { count: "exact" })
+          .eq("status", "scheduled")
+          .lt("send_at", staleBefore);
+
+        const { data: rows, error } = await supabase
+          .from("appointment_aftercare")
+          .select("id, appointment_id, profile_id, body_html, recipient_email, send_at")
+          .eq("status", "scheduled")
+          .lte("send_at", now.toISOString())
+          .gte("send_at", staleBefore)
+          .order("send_at", { ascending: true })
           .limit(100);
 
         if (error) {
@@ -51,40 +50,51 @@ export const Route = createFileRoute("/api/public/hooks/aftercare-dispatch")({
         let sent = 0;
         let skipped = 0;
 
-        for (const raw of (appts ?? []) as any[]) {
-          if (!raw.patient_email || !raw.aftercare_html) {
-            skipped++;
-            continue;
-          }
+        for (const row of (rows ?? []) as any[]) {
+          const mark = (status: string, extra: Record<string, unknown> = {}) =>
+            supabase.from("appointment_aftercare")
+              .update({ status, updated_at: new Date().toISOString(), ...extra } as never)
+              .eq("id", row.id).eq("status", "scheduled");
           try {
-            const branding = await getPractitionerBranding(raw.profile_id);
-            const firstName = (raw.patient_name ?? "").split(" ")[0] || "there";
+            const { data: appt } = await supabase
+              .from("appointments")
+              .select("id, patient_name, patient_email, profile_id, status, aftercare_sent_at")
+              .eq("id", row.appointment_id)
+              .maybeSingle();
+            const a = appt as any;
+            if (!a || a.status === "cancelled" || a.status === "no_show") { await mark("cancelled"); skipped++; continue; }
+            if (a.aftercare_sent_at) { await mark("sent", { sent_at: a.aftercare_sent_at }); skipped++; continue; }
+            const email = row.recipient_email || a.patient_email;
+            if (!email || !row.body_html) { await mark("skipped"); skipped++; continue; }
+
+            const profileId = a.profile_id ?? row.profile_id;
+            const branding = await getPractitionerBranding(profileId);
+            const firstName = (a.patient_name ?? "").split(" ")[0] || "there";
             await tryEnqueueAppEmail({
               templateName: "patient-message",
-              recipientEmail: raw.patient_email,
-              messageId: `aftercare-${raw.id}`,
+              recipientEmail: email,
+              messageId: `aftercare-${a.id}`,
               templateData: {
-                profileId: raw.profile_id,
-                patientName: raw.patient_name,
+                profileId,
+                patientName: a.patient_name,
                 clinicName: branding.clinicName,
                 subject: `Aftercare instructions from ${branding.clinicName}`,
-                body: `Hi ${firstName},\n\nThank you for visiting ${branding.clinicName}.\n\n${raw.aftercare_html}\n\nIf you have any questions, please contact your practitioner.`,
+                body: `Hi ${firstName},\n\nThank you for visiting ${branding.clinicName}.\n\n${row.body_html}\n\nIf you have any questions, please contact your practitioner.`,
                 logoUrl: branding.logoUrl,
                 brandColor: branding.brandColor,
               },
             });
-            await supabase
-              .from("appointments")
-              .update({ aftercare_sent_at: new Date().toISOString() } as never)
-              .eq("id", raw.id);
+            const at = new Date().toISOString();
+            await mark("sent", { sent_at: at, sent_via: { email: true } });
+            await supabase.from("appointments").update({ aftercare_sent_at: at } as never).eq("id", a.id);
             sent++;
           } catch (e) {
-            console.error(`[aftercare-dispatch] failed for ${raw.id}`, e);
+            console.error(`[aftercare-dispatch] failed for ${row.id}`, e);
             skipped++;
           }
         }
 
-        return new Response(JSON.stringify({ ok: true, sent, skipped, checked: (appts ?? []).length }), { status: 200 });
+        return new Response(JSON.stringify({ ok: true, sent, skipped, expired: expired ?? 0, checked: (rows ?? []).length }), { status: 200 });
       },
     },
   },
