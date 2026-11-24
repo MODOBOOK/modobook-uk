@@ -155,6 +155,7 @@ export async function enqueueAppEmail(
       if (!baseData.brandColor) baseData.brandColor = branding.brandColor
       if (!baseData.websiteUrl) baseData.websiteUrl = branding.websiteUrl
       if (!baseData.instagramUrl) baseData.instagramUrl = branding.instagramUrl
+      if (!baseData.bookingUrl && branding.bookingUrl) baseData.bookingUrl = branding.bookingUrl
       if (input.resolveProfileReplyTo === false && !resolvedReplyTo && branding.contactEmail) resolvedReplyTo = branding.contactEmail
       const [{ data: cust }, { data: prof }] = await Promise.all([
         supabase
@@ -822,6 +823,7 @@ export interface PractitionerBranding {
   contactEmail: string | null
   websiteUrl: string | null
   instagramUrl: string | null
+  bookingUrl?: string | null
 }
 
 /** Fetch a practitioner's clinic name, logo and brand colour for emails.
@@ -836,14 +838,14 @@ export async function getPractitionerBranding(
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server')
     // Some records (e.g. gift cards) store the owner's login id rather than the
     // clinic profile id — resolve either to the clinic profile.
-    let { data: prof } = await supabaseAdmin.from('profiles').select('id, clinic_name, brand_color, hero_url, about_page, social_links').eq('id', profileId).maybeSingle()
+    let { data: prof } = await supabaseAdmin.from('profiles').select('id, slug, clinic_name, brand_color, hero_url, about_page, social_links').eq('id', profileId).maybeSingle()
     if (!prof) {
-      const r = await supabaseAdmin.from('profiles').select('id, clinic_name, brand_color, hero_url, about_page, social_links').eq('user_id', profileId).maybeSingle()
+      const r = await supabaseAdmin.from('profiles').select('id, slug, clinic_name, brand_color, hero_url, about_page, social_links').eq('user_id', profileId).maybeSingle()
       prof = r.data
     }
     const themeKey = (prof as { id?: string } | null)?.id ?? profileId
     const { data: theme } = await supabaseAdmin.from('clinic_theme').select('logo_url, primary_color, hero_image_url').in('profile_id', [themeKey, profileId]).limit(1).maybeSingle()
-    const p = prof as { clinic_name?: string | null; brand_color?: string | null; hero_url?: string | null; about_page?: { contact_email?: string | null; website?: string | null } | null; social_links?: { instagram?: string | null; website?: string | null } | null } | null
+    const p = prof as { slug?: string | null; clinic_name?: string | null; brand_color?: string | null; hero_url?: string | null; about_page?: { contact_email?: string | null; website?: string | null } | null; social_links?: { instagram?: string | null; website?: string | null } | null } | null
     const t = theme as { logo_url?: string | null; primary_color?: string | null; hero_image_url?: string | null } | null
     return {
       clinicName: p?.clinic_name || 'MODO',
@@ -853,6 +855,7 @@ export async function getPractitionerBranding(
       contactEmail: p?.about_page?.contact_email?.trim() || null,
       websiteUrl: p?.about_page?.website?.trim() || p?.social_links?.website?.trim() || null,
       instagramUrl: p?.social_links?.instagram?.trim() || null,
+      bookingUrl: p?.slug ? `https://modobook.uk/m/${p.slug}` : null,
     }
   } catch (e) {
     console.error('[email] getPractitionerBranding failed', e)

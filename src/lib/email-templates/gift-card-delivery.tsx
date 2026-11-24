@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Html, Preview, Heading, Text, Section, Hr } from '@react-email/components'
+import { Html, Preview, Heading, Text, Section, Hr, Button } from '@react-email/components'
 import { ModoShell, Head, styles, brand } from './_modo-brand'
 import type { TemplateEntry } from './registry'
 
@@ -14,6 +14,9 @@ interface Props {
   clinicName?: string
   logoUrl?: string | null
   brandColor?: string | null
+  bookingUrl?: string | null
+  websiteUrl?: string | null
+  instagramUrl?: string | null
 }
 
 const Email = ({
@@ -24,9 +27,12 @@ const Email = ({
   expiresAt,
   message,
   buyerName,
-  clinicName = 'MODO',
+  clinicName = 'your clinic',
   logoUrl,
   brandColor,
+  bookingUrl,
+  websiteUrl,
+  instagramUrl,
 }: Props) => {
   const expiryText = expiresAt
     ? new Date(expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -39,7 +45,7 @@ const Email = ({
     <Html lang="en" dir="ltr">
       <Head />
       <Preview>{buyerName ? `${buyerName} sent you a gift` : `A gift from ${clinicName}`} — code inside</Preview>
-      <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor}>
+      <ModoShell preview="" siteName={clinicName} logoUrl={logoUrl} brandColor={brandColor} websiteUrl={websiteUrl} instagramUrl={instagramUrl} platform>
         <Text style={{ ...styles.text, textAlign: 'center' as const, textTransform: 'uppercase' as const, letterSpacing: '3px', fontSize: 10, color: accent, margin: '0 0 6px', fontWeight: 600 }}>
           A gift for you
         </Text>
@@ -112,6 +118,14 @@ const Email = ({
         <Text style={{ ...styles.text, margin: '0 0 6px' }}>2. At checkout, paste the code above into the gift-card field.</Text>
         <Text style={{ ...styles.text, margin: '0 0 18px' }}>3. Enjoy your treatment — the balance is applied automatically.</Text>
 
+        {bookingUrl && (
+          <Section style={{ textAlign: 'center' as const, margin: '0 0 22px' }}>
+            <Button href={bookingUrl} style={{ backgroundColor: accent, color: '#fff', borderRadius: 999, padding: '12px 26px', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+              Book at {clinicName}
+            </Button>
+          </Section>
+        )}
+
         <Hr style={{ borderColor: brand.border, margin: '10px 0 14px' }} />
         <Text style={{ ...styles.text, fontSize: 12, color: brand.muted, margin: 0, textAlign: 'center' as const }}>
           Keep this email safe — the code above is your proof of gift.
@@ -131,6 +145,8 @@ export const template = {
     cardName: '£100 Gift Card',
     amount: 100,
     buyerName: 'Alex',
+    clinicName: 'Your Clinic',
+    bookingUrl: 'https://modobook.uk',
     message: 'Happy birthday! Treat yourself to something lovely x',
   },
 } satisfies TemplateEntry
