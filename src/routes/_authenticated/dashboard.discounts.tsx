@@ -147,6 +147,7 @@ type Code = {
   starts_at: string | null; ends_at: string | null;
   days_of_week: number[] | null; max_uses: number | null;
   uses_count: number; active: boolean;
+  appointment_starts_on?: string | null; appointment_ends_on?: string | null;
 };
 type Treat = {
   id: string; name: string; price: number;
@@ -324,6 +325,8 @@ function CodeEditor({ treatments, categories, onSaved, editing, onClose }: {
   const [dows, setDows] = useState<number[]>(editing?.days_of_week ?? []);
   const [maxUses, setMaxUses] = useState<string>(editing?.max_uses?.toString() ?? "");
   const [active, setActive] = useState(editing?.active ?? true);
+  const [apptStart, setApptStart] = useState(editing?.appointment_starts_on ?? "");
+  const [apptEnd, setApptEnd] = useState(editing?.appointment_ends_on ?? "");
 
   useEffect(() => {
     if (!editing) return;
@@ -335,11 +338,13 @@ function CodeEditor({ treatments, categories, onSaved, editing, onClose }: {
     setDows(editing.days_of_week ?? []);
     setMaxUses(editing.max_uses?.toString() ?? "");
     setActive(editing.active);
+    setApptStart(editing.appointment_starts_on ?? "");
+    setApptEnd(editing.appointment_ends_on ?? "");
   }, [editing]);
 
   function reset() {
     setCode(""); setLabel(""); setKind("percent"); setAmount("");
-    setTIds([]); setStart(""); setEnd(""); setDows([]); setMaxUses(""); setActive(true);
+    setTIds([]); setStart(""); setEnd(""); setDows([]); setMaxUses(""); setActive(true); setApptStart(""); setApptEnd("");
   }
 
   async function submit() {
@@ -358,6 +363,8 @@ function CodeEditor({ treatments, categories, onSaved, editing, onClose }: {
         days_of_week: dows.length ? dows : null,
         max_uses: maxUses ? Number(maxUses) : null,
         active,
+        appointment_starts_on: apptStart || null,
+        appointment_ends_on: apptEnd || null,
       }});
       toast.success("Saved");
       onSaved(); reset(); setOpen(false); onClose?.();
@@ -398,6 +405,15 @@ function CodeEditor({ treatments, categories, onSaved, editing, onClose }: {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div><Label>Starts</Label><Input type="date" value={start} onChange={(e) => setStart(e.target.value)} /></div>
             <div><Label>Ends</Label><Input type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></div>
+          </div>
+          <p className="-mt-1 text-xs text-muted-foreground">When patients can enter the code.</p>
+          <div>
+            <Label className="mb-1 block">Appointment dates (optional)</Label>
+            <p className="mb-1 text-xs text-muted-foreground">Only accept the code for appointments taking place between these dates.</p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div><Label className="text-xs">From</Label><Input type="date" value={apptStart} onChange={(e) => setApptStart(e.target.value)} /></div>
+              <div><Label className="text-xs">To</Label><Input type="date" value={apptEnd} onChange={(e) => setApptEnd(e.target.value)} /></div>
+            </div>
           </div>
           <div>
             <Label className="mb-1 block">Days only (optional)</Label>

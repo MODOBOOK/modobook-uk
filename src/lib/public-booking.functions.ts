@@ -935,6 +935,7 @@ export const requestBooking = createServerFn({ method: "POST" })
         treatmentIds: [data.treatmentId],
         totalPounds: expectedPrice,
         patientUserId: data.patientUserId ?? null,
+        appointmentDate: data.date,
       });
       if (disc && disc.appliesTo.includes(data.treatmentId)) {
         const off = disc.kind === "percent" ? expectedPrice * (disc.amount / 100) : disc.amount;
@@ -2054,6 +2055,7 @@ export const requestMultiBooking = createServerFn({ method: "POST" })
             packageIds,
             totalPounds: totalBeforeDiscount,
             patientUserId: data.patientUserId ?? null,
+            appointmentDate: data.date,
           })
         : null;
       // Pass 2: apply the code per applicable line, exactly as the page does.

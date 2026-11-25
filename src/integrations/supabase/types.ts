@@ -3506,6 +3506,8 @@ export type Database = {
         Row: {
           active: boolean
           amount: number
+          appointment_ends_on: string | null
+          appointment_starts_on: string | null
           code: string
           created_at: string
           days_of_week: number[] | null
@@ -3523,6 +3525,8 @@ export type Database = {
         Insert: {
           active?: boolean
           amount: number
+          appointment_ends_on?: string | null
+          appointment_starts_on?: string | null
           code: string
           created_at?: string
           days_of_week?: number[] | null
@@ -3540,6 +3544,8 @@ export type Database = {
         Update: {
           active?: boolean
           amount?: number
+          appointment_ends_on?: string | null
+          appointment_starts_on?: string | null
           code?: string
           created_at?: string
           days_of_week?: number[] | null
@@ -10523,6 +10529,13 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      discount_code_appointment_window: {
+        Args: { p_code: string; p_slug: string }
+        Returns: {
+          appointment_ends_on: string
+          appointment_starts_on: string
+        }[]
+      }
       email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
@@ -11037,17 +11050,34 @@ export type Database = {
         Returns: boolean
       }
       treating_staff_count: { Args: { _profile_id: string }; Returns: number }
-      validate_discount_code: {
-        Args: { p_code: string; p_slug: string; p_treatment_ids: string[] }
-        Returns: {
-          amount: number
-          applies_to_treatment_ids: string[]
-          code: string
-          id: string
-          kind: string
-          label: string
-        }[]
-      }
+      validate_discount_code:
+        | {
+            Args: { p_code: string; p_slug: string; p_treatment_ids: string[] }
+            Returns: {
+              amount: number
+              applies_to_treatment_ids: string[]
+              code: string
+              id: string
+              kind: string
+              label: string
+            }[]
+          }
+        | {
+            Args: {
+              p_appointment_date: string
+              p_code: string
+              p_slug: string
+              p_treatment_ids: string[]
+            }
+            Returns: {
+              amount: number
+              applies_to_treatment_ids: string[]
+              code: string
+              id: string
+              kind: string
+              label: string
+            }[]
+          }
       verify_cron_secret: { Args: { p_secret: string }; Returns: boolean }
     }
     Enums: {

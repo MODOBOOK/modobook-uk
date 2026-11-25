@@ -75,6 +75,8 @@ export const upsertDiscountCode = createServerFn({ method: "POST" })
     days_of_week?: number[] | null;
     max_uses?: number | null;
     active?: boolean;
+    appointment_starts_on?: string | null;
+    appointment_ends_on?: string | null;
   }) => i)
   .handler(async ({ data, context }) => {
     const pid = await ownProfileId(context.supabase, context.userId);
@@ -90,6 +92,8 @@ export const upsertDiscountCode = createServerFn({ method: "POST" })
       days_of_week: data.days_of_week ?? null,
       max_uses: data.max_uses ?? null,
       active: data.active ?? true,
+      appointment_starts_on: data.appointment_starts_on || null,
+      appointment_ends_on: data.appointment_ends_on || null,
     };
     if (data.id) {
       const { error } = await (context.supabase as any)
@@ -115,16 +119,26 @@ export const deleteDiscountCode = createServerFn({ method: "POST" })
   });
 
 export const validateDiscountCode = createServerFn({ method: "POST" })
-  .inputValidator((i: { slug: string; code: string; treatment_ids: string[] }) => i)
+  .inputValidator((i: { slug: string; code: string; treatment_ids: string[]; appointment_date?: string | null }) => i)
   .handler(async ({ data }) => {
     const sb = publicClient();
+    const slug = data.slug.toLowerCase();
     const { data: rows, error } = await (sb as any).rpc("validate_discount_code", {
-      p_slug: data.slug.toLowerCase(),
+      p_slug: slug,
       p_code: data.code,
       p_treatment_ids: data.treatment_ids,
+      p_appointment_date: data.appointment_date || null,
     });
     if (error) throw error;
-    return (rows && rows[0]) ?? null;
+    const row = (rows && rows[0]) ?? null;
+    if (row) return row;
+    const { data: win } = await (sb as any).rpc("discount_code_appointment_window", { p_slug: slug, p_code: data.code });
+    const w = (win && win[0]) as { appointment_starts_on: string | null; appointment_ends_on: string | null } | undefined;
+    if (w) {
+      const { appointmentWindowMessage } = await import("./discount-window");
+      return { window_error: appointmentWindowMessage(w.appointment_starts_on, w.appointment_ends_on) };
+    }
+    return null;
   });
 
 // ---- Model slots ----

@@ -1655,6 +1655,7 @@ function MultiBookPage() {
                   <Card className="mb-6">
                     <CardContent className="p-4">
                       <DiscountCodeBox
+                        appointmentDate={date}
                         slug={slug}
                         treatmentIds={treatments.map((t) => t.id)}
                         packageIds={selectedPackages.map((p) => p.id)}

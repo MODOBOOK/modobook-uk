@@ -141,6 +141,13 @@
       "when": 1795211337940,
       "tag": "0019_service_payment_requirement",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1795644166466,
+      "tag": "0020_discount_code_appointment_window",
+      "breakpoints": true
     }
   ]
 }

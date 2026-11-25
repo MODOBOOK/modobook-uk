@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { validateDiscountCode } from "@/lib/discounts.functions";
 import { previewGiftCardCode } from "@/lib/gift-cards.functions";
@@ -31,7 +31,9 @@ export function DiscountCodeBox({
   brand,
   value,
   onChange,
+  appointmentDate,
 }: {
+  appointmentDate?: string | null;
   slug: string;
   treatmentIds: string[];
   packageIds?: string[];
@@ -48,6 +50,27 @@ export function DiscountCodeBox({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Re-check an applied promo code when the appointment date changes, so a
+  // code limited to certain appointment dates drops off for other dates.
+  useEffect(() => {
+    if (!value || value.isGiftCard || value.isPointsRedemption) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = (await validate({
+          data: { slug, code: value.code, treatment_ids: treatmentIds, appointment_date: appointmentDate ?? null },
+        })) as (AppliedDiscount & { window_error?: string }) | null;
+        if (cancelled) return;
+        if (!res || res.window_error || !res.applies_to_treatment_ids?.length) {
+          onChange(null);
+          setError(res?.window_error ?? "This code no longer applies to your booking.");
+        }
+      } catch { /* keep as-is; the server re-checks at booking */ }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appointmentDate]);
+
   async function apply() {
     const raw = code.trim();
     if (!raw) return;
@@ -56,8 +79,12 @@ export function DiscountCodeBox({
     try {
       // 1) Try discount codes first.
       const res = (await validate({
-        data: { slug, code: raw, treatment_ids: treatmentIds },
-      })) as AppliedDiscount | null;
+        data: { slug, code: raw, treatment_ids: treatmentIds, appointment_date: appointmentDate ?? null },
+      })) as (AppliedDiscount & { window_error?: string }) | null;
+      if (res?.window_error) {
+        setError(res.window_error);
+        return;
+      }
       if (res && res.applies_to_treatment_ids?.length) {
         onChange({
           id: res.id,

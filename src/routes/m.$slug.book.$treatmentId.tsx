@@ -1372,6 +1372,7 @@ function BookTreatmentPage() {
           {showPrices && (
             <div className="sm:col-span-2">
               <DiscountCodeBox
+                appointmentDate={date}
                 slug={slug}
                 treatmentIds={[treatment.id]}
                 total={price}

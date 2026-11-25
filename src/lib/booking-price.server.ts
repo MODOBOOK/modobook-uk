@@ -226,6 +226,8 @@ export async function verifyDiscountCode(
     packageIds?: string[];
     totalPounds: number;
     patientUserId?: string | null;
+    /** Appointment date (YYYY-MM-DD); codes limited to certain appointment dates check it. */
+    appointmentDate?: string | null;
   },
 ): Promise<VerifiedDiscount> {
   const code = opts.code.trim().toUpperCase();
@@ -236,6 +238,7 @@ export async function verifyDiscountCode(
     p_slug: opts.slug.toLowerCase(),
     p_code: code,
     p_treatment_ids: opts.treatmentIds,
+    p_appointment_date: opts.appointmentDate || null,
   });
   const promo = (Array.isArray(rows) ? rows[0] : null) as {
     kind: "percent" | "fixed";
