@@ -56,7 +56,25 @@ export const getClientCredit = createServerFn({ method: "POST" })
 
     const entries = (rows ?? []) as LedgerRow[];
     const balanceCents = entries.reduce((s, r) => s + Number(r.delta_pennies ?? 0), 0);
-    return { linked: true as const, balanceCents, entries };
+    const { data: mems } = await supabaseAdmin
+      .from("patient_memberships")
+      .select("id, status, current_period_end, membership_plans(name, price_cents, interval, credit_cents)")
+      .eq("profile_id", clinicProfileId)
+      .eq("patient_user_id", account.user_id)
+      .in("status", ["active", "past_due", "paused"]);
+    const memberships = ((mems ?? []) as Array<{
+      id: string; status: string; current_period_end: string | null;
+      membership_plans: { name: string; price_cents: number; interval: string; credit_cents: number } | null;
+    }>).map((m) => ({
+      id: m.id,
+      status: m.status,
+      nextBilling: m.current_period_end,
+      planName: m.membership_plans?.name ?? "Membership",
+      priceCents: Number(m.membership_plans?.price_cents ?? 0),
+      interval: m.membership_plans?.interval ?? "month",
+      creditCents: Number(m.membership_plans?.credit_cents ?? 0),
+    }));
+    return { linked: true as const, balanceCents, entries, memberships };
   });
 
 const AdjustSchema = z.object({

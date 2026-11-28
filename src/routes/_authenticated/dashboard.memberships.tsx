@@ -270,7 +270,11 @@ function MembershipsPage() {
           interval: editing.interval,
           treatmentFrequencyMonths: editing.treatment_frequency_months ?? 1,
           minCommitmentMonths: editing.min_commitment_months ?? 0,
-          creditCents: editing.credit_cents,
+          // A plan with no included treatments is a savings pot: a blank pot
+          // amount would silently credit £0, so default it to the price.
+          creditCents:
+            editing.credit_cents ||
+            ((editing.included_treatments ?? []).length === 0 ? editing.price_cents : 0),
           spendMode: editing.spend_mode,
           eligibleTreatmentIds: editing.eligible_treatment_ids ?? [],
           includedTreatments: editing.included_treatments,

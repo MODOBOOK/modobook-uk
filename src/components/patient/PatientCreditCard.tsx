@@ -101,6 +101,26 @@ export function PatientCreditCard({ clientId }: { clientId: string }) {
           </div>
         </div>
 
+        {d && "memberships" in d && !!d.memberships?.length && (
+          <div className="space-y-1 rounded-lg border p-2">
+            {d.memberships!.map((m) => (
+              <div key={m.id} className="flex items-center justify-between gap-3 text-xs">
+                <span className="min-w-0 truncate">
+                  <span className="font-medium">{m.planName}</span>
+                  <span className="text-muted-foreground">
+                    {" "}· {gbp(m.priceCents)}/{m.interval}
+                    {m.creditCents > 0 ? ` · ${gbp(m.creditCents)} to pot each cycle` : " · no pot credit"}
+                    {m.nextBilling ? ` · renews ${new Date(m.nextBilling).toLocaleDateString()}` : ""}
+                  </span>
+                </span>
+                <span className={m.status === "active" ? "shrink-0 text-emerald-600" : "shrink-0 text-destructive"}>
+                  {m.status === "past_due" ? "Payment overdue" : m.status === "paused" ? "Paused" : "Active member"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {!!d?.entries?.length && (
           <div className="space-y-1 rounded-lg border p-2">
             {d.entries.slice(0, 5).map((e) => (

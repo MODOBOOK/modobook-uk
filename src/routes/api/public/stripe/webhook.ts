@@ -182,6 +182,17 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
                       ...patch,
                     } as never);
                   }
+                  // invoice.paid often arrives before this row exists and is
+                  // dropped, so credit any already-paid invoices now (idempotent).
+                  try {
+                    const { syncMembershipCredits } = await import("@/lib/membership-credit-sync.server");
+                    await syncMembershipCredits({
+                      profileId: metadata.profile_id,
+                      patientUserId: metadata.patient_user_id,
+                    });
+                  } catch (e) {
+                    console.error("[stripe webhook] membership first credit sync failed", e);
+                  }
                   try {
                     const { data: plan } = await supabaseAdmin
                       .from("membership_plans")
